@@ -9,6 +9,9 @@
 	(c) Stuart Wallace, 2011.
 */
 
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "dfu.h"
 #include "disasm.h"
 #include "ds17485.h"

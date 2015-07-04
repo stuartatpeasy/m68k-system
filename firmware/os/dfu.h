@@ -14,6 +14,7 @@
 #include "kutil/kutil.h"
 #include "asm/reset.h"
 #include "duart.h"			/* for led_on() */
+#include "string.h"
 
 
 #define FLASH_BASE			(0xf00000)

@@ -10,8 +10,8 @@
 
 #include "memory/kmalloc.h"
 
-/* heap_ctx is a struct defined by whichever allocator is selected */
-heap_ctx g_heap;
+/* mem_ctx is a struct defined by whichever allocator is selected */
+mem_ctx g_heap;
 
 #if defined(KMALLOC_HEAP)
 

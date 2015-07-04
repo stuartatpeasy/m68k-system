@@ -11,6 +11,7 @@
 
 #include <stdarg.h>
 #include "include/types.h"
+#include "klibc/string.h"
 
 
 s32 date_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len);
@@ -23,32 +24,6 @@ s32 day_of_week(ks32 year, ks32 month, ks32 day);
 s32 is_leap_year(ks32 year);
 s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt);
 
-void bcopy(const void *src, void *dest, u32 n);
-
-void kbzero(void *s, u32 n);
-void *kmemcpy(void *dest, const void *src, ku32 n);
-void kprintf(ks8 *format, ...);
-s32 kputchar(s32 c);
-void kput(ks8 *s);
-void kputs(ks8 *s);
-s8 *kstrcat(s8 *dest, ks8 *src);
-s32 kstrcmp(ks8 *s1, ks8 *s2);
-s8 *kstrcpy(s8 *dest, ks8 *src);
-s8 *kstrdup(ks8 *s);
-u32 kstrlen(ks8 *s);
-s32 kstrncmp(ks8 *s1, ks8 *s2, u32 n);
-s8 *kstrncpy(s8 *dest, ks8 *src, u32 n);
-s8 *kstrstr(ks8 *haystack, ks8 *needle);
-u32 kstrtoul(ks8 *nptr, s8 **endptr, s32 base);
-
-s32 printf(const char *format, ...);
-s32 snprintf(char *str, u32 size, const char *format, ...);
-s32 sprintf(char *str, const char *format, ...);
-s32 vprintf(const char *format, va_list ap);
-s32 vsprintf(char *str, const char *format, va_list ap);
-s32 vsnprintf(char *str, u32 size, const char *format, va_list ap);
-
-ks8 *strerror(ks32 errnum);
 
 #define VALID_RTC_DATE(d)                                   \
     (((d)->year < 2200) && ((d)->year >= 1900)              \

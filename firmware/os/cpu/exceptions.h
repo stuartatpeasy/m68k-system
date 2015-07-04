@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include "stdio.h"
+#include <stdio.h>
 #include "include/types.h"
 #include "cpu/utilities.h"
 #include "cpu/exceptionstackframes.h"

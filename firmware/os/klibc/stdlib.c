@@ -1,20 +1,55 @@
 /*
-	kstrcmp.c - implementation of kstrcmp() [= libc strcmp()]
+    stdlib.c - implementation of various libc functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
-	(c) Stuart Wallace <stuartw@atom.net>, 2012-07
 
-	
-	This function doesn't warrant its own module.  The k*() utility functions should
-	all be combined into a single library.
+    (c) Stuart Wallace, 2012-2015.
 */
 
-#include "include/types.h"
-#include "include/limits.h"
+#include "stdlib.h"
 
 
-u32 kstrtoul(ks8 *nptr, s8 **endptr, s32 base)
+/*
+    calloc()
+*/
+void *calloc(ku32 nmemb, ku32 size)
+{
+    return kcalloc(nmemb, size);
+}
+
+
+/*
+    free()
+*/
+void free(void *ptr)
+{
+    kfree(ptr);
+}
+
+
+/*
+    malloc()
+*/
+void *malloc(u32 size)
+{
+    return kmalloc(size);
+}
+
+
+/*
+    realloc()
+*/
+void *realloc(void *ptr, u32 size)
+{
+    return krealloc(ptr, size);
+}
+
+
+/*
+    strtoul()
+*/
+u32 strtoul(ks8 *nptr, s8 **endptr, s32 base)
 {
 	u32 n = 0;
 	u64 n_;
@@ -66,7 +101,7 @@ u32 kstrtoul(ks8 *nptr, s8 **endptr, s32 base)
 	/* if base == 16 and there is a "0x" or "0X" prefix, step over the prefix. */
 	if((base == 16) && (*nptr == '0') && ((*(nptr + 1) == 'x') || (*(nptr + 1) == 'X')))
 		nptr += 2;
-	
+
 	/* process numeric characters */
 	for(; *nptr; ++nptr)
 	{
@@ -76,7 +111,7 @@ u32 kstrtoul(ks8 *nptr, s8 **endptr, s32 base)
 			digit = (*nptr - 'a') + 10;
 		else if((*nptr >= 'A') && (*nptr <= 'Z'))
 			digit = (*nptr - 'A') + 10;
-		else 
+		else
 			digit = 255;		/* flag this digit as invalid */
 
 		if(digit >= base)
@@ -120,4 +155,3 @@ u32 kstrtoul(ks8 *nptr, s8 **endptr, s32 base)
 
 	return neg ? -n : n;
 }
-

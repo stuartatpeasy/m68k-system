@@ -1,7 +1,22 @@
 #ifndef _EXT2_H_
 #define _EXT2_H_
+/*
+	ext2 file system driver
 
+	Part of the as-yet-unnamed MC68010 operating system.
+
+
+	(c) Stuart Wallace <stuartw@atom.net>, December 2012.
+*/
+
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include "ext2-defs.h"
+#include "include/defs.h"
+#include "kutil/kutil.h"
+#include "memory/kmalloc.h"
+
 
 u32 block_group_contains_superblock(const ext2_filesystem_t *fs, ku32 block_group);
 u32 ext2_read_block(const ext2_filesystem_t *fs, ku32 block, u8 **ppbuf);

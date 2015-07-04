@@ -13,6 +13,8 @@
 #include "device/devctl.h"
 #include "mbr.h"
 
+#include <strings.h>
+
 #define MAX_PARTITIONS	(16)		/* FIXME: remove this; use dynamic allocation */
 
 /* devctls */

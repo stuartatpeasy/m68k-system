@@ -1,5 +1,6 @@
-#ifndef __INCLUDE_KUTIL_LIMITS_H__
-#define __INCLUDE_KUTIL_LIMITS_H__
+#ifndef KLIBC_LIMITS_H_INC
+#define KLIBC_LIMITS_H_INC
+
 /*
     limits.h - integer (and any other) limit constants
 
@@ -31,4 +32,4 @@
 #define LLONG_MIN			(−LLONG_MAX - 1LL)
 #define ULLONG_MAX			(18446744073709551615ULL)
 
-#endif // __INCLUDE_KUTIL_LIMITS_H__
+#endif

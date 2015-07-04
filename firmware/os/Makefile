@@ -15,21 +15,20 @@ CSOURCES=dfu.c ds17485.c duart.c main.c \
 		 device/device.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
-		 fs/ext2/ext2.c fs/mount.c fs/vfs.c \
+		 fs/mount.c fs/vfs.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c \
 		 sched/sched.c
 
 ASMSOURCES=sched/irq_task.S cpu/syscall.S
 
-OBJLIBS=libkutil.a libmonitor.a
+OBJLIBS=libc.a libkutil.a libmonitor.a
 
 #
 # FIXME: _mulsi3 is used somewhere; find where.
 #
 LDFLAGS=-g -T rom.ld -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
-#LIBS=-lc-sw -lgcc -lkutil -lmonitor
-LIBS=-lgcc -lkutil -lmonitor
+LIBS=-lgcc -lc -lkutil -lmonitor
 
 LDSCRIPT=rom.ld
 
@@ -68,8 +67,12 @@ dfu:
 
 clean:
 	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom
+	$(MAKE) $(MFLAGS) -Cklibc clean
 	$(MAKE) $(MFLAGS) -Ckutil clean
 	$(MAKE) $(MFLAGS) -Cmonitor clean
+
+libc.a:
+	$(MAKE) $(MFLAGS) -Cklibc
 
 libkutil.a:
 	$(MAKE) $(MFLAGS) -Ckutil
@@ -103,7 +106,7 @@ device/block/partition/partition.o: device/block/partition/partition.c \
 									device/block/partition/mbr.h include/defs.h include/types.h \
 									device/device.h kutil/kutil.h asm/bswap.h device/devctl.h
 
-fs/ext2/ext2.o: fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h include/errno.h kutil/kutil.h \
+fs/ext2/ext2.o: fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h kutil/kutil.h \
                 memory/kmalloc.h
 fs/mount.o: fs/mount.c fs/mount.h include/types.h device/device.h include/defs.h
 fs/vfs.o: fs/vfs.c fs/vfs.h fs/mount.h include/types.h include/defs.h

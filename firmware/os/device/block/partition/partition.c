@@ -71,8 +71,8 @@ printf("part: looking for partitions on %s\n", dev->name);
 			if(m.mbr_signature != MBR_SIGNATURE)
 				continue;		/* Sector is not a MBR */
 
-			kbzero(name, sizeof(name));
-			kstrncpy(name, dev->name, sizeof(name) - 1);
+			bzero(name, sizeof(name));
+			strncpy(name, dev->name, sizeof(name) - 1);
 			for(pn = name; *pn; ++pn) ;
 
 			for(part = 0; part < MBR_NUM_PARTITIONS; ++part)
@@ -97,7 +97,7 @@ printf("part: looking for partitions on %s\n", dev->name);
 				data->type			= p->type;
 				data->status		= p->status;
 
-printf("%s: offset=%u len=%u type=%02x status=%02x\n", name, data->offset * bytes_per_sector, 
+printf("%s: offset=%u len=%u type=%02x status=%02x\n", name, data->offset * bytes_per_sector,
 				data->len * bytes_per_sector, data->type, data->status);
 
 				/* Not checking retval as there's nothing we can do if this fails */

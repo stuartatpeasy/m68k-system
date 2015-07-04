@@ -1,12 +1,17 @@
-#ifndef __ERRNO_H__
-#define __ERRNO_H__
-/*
-	errno.h
+#ifndef KLIBC_ERRNO_H_INC
+#define KLIBC_ERRNO_H_INC
 
-	part of libc-sw
+/*
+	errno.h - declarations of error-number constants
+
+	Part of the as-yet-unnamed MC68010 operating system
+
 
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-07-01.
 */
+
+
+#include "../include/types.h"
 
 #define EPERM				(1)		/* Operation not permitted							*/
 #define ENOENT				(2)		/* No such file or directory						*/
@@ -142,9 +147,9 @@
 #define ENOTRECOVERABLE		(131)	/* State not recoverable							*/
 #define ERFKILL				(132)	/* Operation not possible due to RF-kill			*/
 
-extern int errno;
+extern s32 errno;
 
-typedef int error_t;
+typedef s32 error_t;
 
 #endif
 

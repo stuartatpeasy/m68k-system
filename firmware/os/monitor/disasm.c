@@ -809,23 +809,23 @@ int disassemble(unsigned short **p, char *str)
 		if(size)
 			sprintf(str, "%s.%c", pf, size);
 		else
-			kstrcat(str, pf);
+			strcat(str, pf);
 
 
 		if(*a1)
 		{
-			kstrcat(str, " ");
-			kstrcat(str, a1);
+			strcat(str, " ");
+			strcat(str, a1);
 			if(*a2)
 			{
-				kstrcat(str, ", ");
-				kstrcat(str, a2);
+				strcat(str, ", ");
+				strcat(str, a2);
 			}
 		}
 		return 0;
 	}
 
-	kstrcat(str, "???");
+	strcat(str, "???");
 	return 1;
 }
 
@@ -918,7 +918,7 @@ char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, c
 							break;
 
 						default:
-							kstrcat(str, "???");
+							strcat(str, "???");
 							break;
 					}
 					break;

@@ -1,18 +1,131 @@
 /*
-	strerror.c - implementation of strerror(), part of string
+    string.c - implementation of various libc string-related functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, 2011-07
+    (c) Stuart Wallace, 2012-2015.
 */
 
-#include "kutil.h"
-
-#include "include/errno.h"
-#include "include/types.h"
+#include "string.h"
 
 
+/*
+    memcmp()
+*/
+s32 memcmp(const void *s1, const void *s2, u32 n)
+{
+    u8 *s1_ = (u8 *) s1,
+       *s2_ = (u8 *) s2;
+
+	if(!n)
+		return 0;
+
+	for(; n-- && (*s1_ == *s2_); ++s1_, ++s2_)
+		if(*s1_ == 0)
+			return 0;
+
+	return *s1_ - *s2_;
+}
+
+
+/*
+    memcpy()
+*/
+void *memcpy(void *dest, const void *src, ku32 n)
+{
+	s8 *src_ = (s8 *) src,
+		 *dest_ = (s8 *) dest;
+
+	if(n > 8)
+	{
+		u32 n_ = n - 8;
+		for(; n_--; *dest_++ = *src_++) ;
+	}
+
+	if(n)
+	{
+		switch(n)
+		{
+			case 8:		*dest_++ = *src_++;
+			case 7:		*dest_++ = *src_++;
+			case 6:		*dest_++ = *src_++;
+			case 5:		*dest_++ = *src_++;
+			case 4:		*dest_++ = *src_++;
+			case 3:		*dest_++ = *src_++;
+			case 2:		*dest_++ = *src_++;
+			case 1:		*dest_++ = *src_++;
+			case 0:
+			default:
+				break;
+		}
+	}
+
+	return dest;
+}
+
+
+/*
+    strcat()
+*/
+s8 *strcat(s8 *dest, ks8 *src)
+{
+	s8 *dest_ = dest + strlen(dest);
+	strcpy(dest_, src);
+
+	return dest;
+}
+
+
+/*
+    strcmp()
+*/
+s32 strcmp(ks8 *s1, ks8 *s2)
+{
+	for(; *s1 == *s2; ++s1, ++s2)
+		if(*s1 == 0)
+			return 0;
+	return *(u8 *) s1 - *(u8 *) s2;
+}
+
+
+/*
+    strcpy()
+*/
+s8 *strcpy(s8 *dest, ks8 *src)
+{
+	do
+	{
+		*dest++ = *src;
+	} while(*src++);
+
+	return dest;
+}
+
+
+/*
+    strdup()
+*/
+s8 *strdup(ks8 *s)
+{
+	ku32 len = strlen(s);
+	s8 *buf = malloc(len + 1);
+
+	if(buf == NULL)
+	{
+		/* TODO: set error code */
+		return 0;
+	}
+
+	strcpy(buf, s);
+
+	return buf;
+}
+
+
+/*
+    strerror()
+*/
 ks8 *strerror(ks32 errnum)
 {
 	switch(errnum)
@@ -90,7 +203,7 @@ ks8 *strerror(ks32 errnum)
 		case ECOMM:				return "Communication error on send";
 		case EPROTO:			return "Protocol error";
 		case EMULTIHOP:			return "Multihop attempted";
-		case EDOTDOT:			return "RFS specific error";	
+		case EDOTDOT:			return "RFS specific error";
 		case EBADMSG:			return "Bad message";
 		case EOVERFLOW:			return "Value too large for defined data type";
 		case ENOTUNIQ:			return "Name not unique on network";
@@ -155,3 +268,66 @@ ks8 *strerror(ks32 errnum)
 	}
 }
 
+
+/*
+    strlen()
+*/
+u32 strlen(const s8 *s)
+{
+	const s8 *s_ = s;
+	for(s_ = s; *s; ++s) ;
+	return s - s_;
+}
+
+
+/*
+    strncmp()
+*/
+s32 strncmp(ks8 *s1, ks8 *s2, u32 n)
+{
+	if(!n)
+		return 0;
+
+	for(; n-- && (*s1 == *s2); ++s1, ++s2)
+		if(*s1 == 0)
+			return 0;
+
+	return *(u8 *) s1 - *(u8 *) s2;
+}
+
+
+/*
+    strncpy()
+*/
+s8 *strncpy(s8 *dest, ks8 *src, u32 n)
+{
+	u32 n_;
+
+	for(n_ = 0; (n_ < n) && (src[n_] != '\0'); n_++)
+		dest[n_] = src[n_];
+
+	for(; n_ < n; n_++)
+		dest[n_] = '\0';
+
+	return dest;
+}
+
+
+/*
+    strstr()
+*/
+s8 *strstr(ks8 *haystack, ks8 *needle)
+{
+	ks8 *n;
+	for(n = needle; *haystack; ++haystack)
+	{
+		if(*haystack != *n)
+			n = needle;
+
+		if(*haystack == *n)
+			if(!*++n)
+				return (s8 *) haystack - strlen(needle) + 1;
+	}
+
+	return NULL;
+}

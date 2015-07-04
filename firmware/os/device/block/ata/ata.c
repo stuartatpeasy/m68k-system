@@ -11,9 +11,6 @@
 
 #include "ata-internal.h"
 #include "ata.h"
-#include "kutil/kutil.h"
-
-#include "stdio.h"			/* FIXME: remove this */
 
 
 static ata_device_t g_devices[ATA_MAX_DEVICES];
@@ -48,13 +45,13 @@ driver_ret ata_init()
 	int bus, devid;
 	char device_name[DEVICE_NAME_LEN], *dn;
 
-	kbzero(g_devices, sizeof(g_devices));
-	kbzero(device_name, DEVICE_NAME_LEN);
+	bzero(g_devices, sizeof(g_devices));
+	bzero(device_name, DEVICE_NAME_LEN);
 
 	/* The first ATA device is called "ataa", the second "atab", etc.  device_name will pass the
 	 * name of each device to the create_device().  device_name is initialised to "ata"; dn
 	 * points to the next char after "ata".  This makes it easy to form the proper device names */
-	kstrcpy(device_name, g_ata_driver.name);
+	strcpy(device_name, g_ata_driver.name);
 	for(dn = device_name; *dn; ++dn) ;
 
 	for(bus = 0, devid = 0; bus < ATA_NUM_BUSES; ++bus)
@@ -122,9 +119,9 @@ driver_ret ata_init()
 			devp->addr.bus = bus;
 			devp->addr.device = device;
 
-			kstrncpy(devp->model, id.model_number, sizeof(id.model_number));
-			kstrncpy(devp->serial, id.serial_number, sizeof(id.serial_number));
-			kstrncpy(devp->firmware, id.firmware_revision, sizeof(id.firmware_revision));
+			strncpy(devp->model, id.model_number, sizeof(id.model_number));
+			strncpy(devp->serial, id.serial_number, sizeof(id.serial_number));
+			strncpy(devp->firmware, id.firmware_revision, sizeof(id.firmware_revision));
 
 			devp->num_sectors = id.log_cyls * id.log_heads * id.log_sects_per_log_track;
 
@@ -143,7 +140,7 @@ printf("ata: creating device '%s' (%uMB)\n", device_name, devp->num_sectors >> 1
 
 driver_ret ata_shut_down(void)
 {
-	kbzero(g_devices, sizeof(g_devices));
+	bzero(g_devices, sizeof(g_devices));
 
 	return DRIVER_OK;
 }

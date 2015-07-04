@@ -56,7 +56,7 @@ void _main()
 
 	ds17485_init();
 
-	kputs(g_warmup_message);
+    puts(g_warmup_message);
 
     ds17485_get_serial_number(sn);
 
@@ -71,13 +71,13 @@ void _main()
     detect_clock_freq();
 
 	/* Register drivers and initialise devices */
-	kputs("Initialising devices and drivers");
+	puts("Initialising devices and drivers");
 	driver_init();
 
 	printf("%u bytes of heap memory available\n", kfreemem());
 
 	if(vfs_init())
-		kputs("VFS failed to initialise");
+		puts("VFS failed to initialise");
 
 	/* TODO: set up timer interrupt */
 	/* TODO: enable interrupts */

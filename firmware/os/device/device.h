@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include "include/errno.h"
+#include "klibc/errno.h"
 #include "include/types.h"
 
 #define DEVICE_NAME_LEN			(6)		/* Max length of device name, including terminating \0 	*/
@@ -71,7 +71,7 @@ struct device
 	enum device_type type;
 	struct device_driver *driver;
 	char name[DEVICE_NAME_LEN];
-	void *data;	
+	void *data;
 };
 
 typedef struct device device_t;
@@ -79,7 +79,7 @@ typedef struct device device_t;
 
 u32 driver_init();
 void driver_shut_down();
-driver_ret create_device(const enum device_type type, struct device_driver * const driver, 
+driver_ret create_device(const enum device_type type, struct device_driver * const driver,
 							const char *name, void * const data);
 
 u32 driver_num_devices();

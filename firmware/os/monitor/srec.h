@@ -10,9 +10,9 @@
 */
 
 #include "include/types.h"
-#include "stdlib.h"
-#include "string.h"
-#include "ctype.h"
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "monitor/readline.h"
 
@@ -39,7 +39,7 @@ struct srec_data
 	u32				offset;
 	u32				data_records;
 	u8				*data;
-	size_t			data_len;
+	u32 			data_len;
 	u32				line;
 	enum srec_error	error;
 };

@@ -36,10 +36,6 @@
 */
 
 #include "ext2.h"
-#include "include/defs.h"
-#include "include/errno.h"
-#include "kutil/kutil.h"
-#include "memory/kmalloc.h"
 
 #define EXT2_MAX_FILESYSTEMS	(16)
 
@@ -167,7 +163,7 @@ u32 ext2_read_inode(const ext2_filesystem_t *fs, u32 inum, ext2_inode_t *inode)
 		if(ret)
 			return ret;
 
-		kmemcpy(inode, buf + offset, sizeof(ext2_inode_t));
+		memcpy(inode, buf + offset, sizeof(ext2_inode_t));
 		kfree(buf);
 
 		return SUCCESS;
@@ -420,7 +416,7 @@ u32 ext2_parse_path(ext2_filesystem_t *fs, ks8 *path, inum_t *inum)
 			}
 
 			/* FIXME remove */
-			kmemcpy(name, path, len);
+			memcpy(name, path, len);
 			name[end - path] = '\0';
 
 			ret = ext2_read_inode(fs, in, &inode);
@@ -517,7 +513,7 @@ void ext2()
 		ext2_inode_t inode;
 
 		printf("ext2_parse_path() returned %u\n", (u32) inum);
-		kputs("Contents of first data block:");
+		puts("Contents of first data block:");
 
 		ret = ext2_read_inode(fs, inum, &inode);
 		if(ret)
@@ -536,8 +532,8 @@ void ext2()
 			else
 			{
 				ext2_read_block(fs, block_num, &buf);
-				kputs((const char *) buf);
-				kputs((const char *) buf);
+				puts((const char *) buf);
+				puts((const char *) buf);
 			}
 		}
 	}

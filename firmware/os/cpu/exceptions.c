@@ -48,7 +48,7 @@ void __cpu_exc_install_default_handlers(void)
 
 void __cpu_exc_bus_error(const struct __mc68010_address_exc_frame f)
 {
-	kputs("\nException: Bus error");
+	puts("\nException: Bus error");
 	__cpu_dump_address_exc_frame(&f);
 	__cpu_halt();
 }
@@ -56,7 +56,7 @@ void __cpu_exc_bus_error(const struct __mc68010_address_exc_frame f)
 
 void __cpu_exc_address_error(const struct __mc68010_address_exc_frame f)
 {
-	kputs("\nException: Address error");
+	puts("\nException: Address error");
 	__cpu_dump_address_exc_frame(&f);
 	__cpu_halt();
 }
@@ -106,7 +106,7 @@ void __cpu_exc_generic(const struct __mc68010_exc_frame f)
 		}
 
 		if(msg)
-			kputs(msg);
+			puts(msg);
 		else
 			printf("Unknown #%d\n", vec);
 	}
@@ -118,95 +118,95 @@ void __cpu_exc_generic(const struct __mc68010_exc_frame f)
 
 void __cpu_trap_0(void)
 {
-	kputs("TRAP 0");
+	puts("TRAP 0");
 }
 
 
 void __cpu_trap_1(void)
 {
-	kputs("TRAP 1");
+	puts("TRAP 1");
 }
 
 
 void __cpu_trap_2(void)
 {
-	kputs("TRAP 2");
+	puts("TRAP 2");
 }
 
 
 void __cpu_trap_3(void)
 {
-	kputs("TRAP 3");
+	puts("TRAP 3");
 }
 
 
 void __cpu_trap_4(void)
 {
-	kputs("TRAP 4");
+	puts("TRAP 4");
 }
 
 
 void __cpu_trap_5(void)
 {
-	kputs("TRAP 5");
+	puts("TRAP 5");
 }
 
 
 void __cpu_trap_6(void)
 {
-	kputs("TRAP 6");
+	puts("TRAP 6");
 }
 
 
 void __cpu_trap_7(void)
 {
-	kputs("TRAP 7");
+	puts("TRAP 7");
 }
 
 
 void __cpu_trap_8(void)
 {
-	kputs("TRAP 8");
+	puts("TRAP 8");
 }
 
 
 void __cpu_trap_9(void)
 {
-	kputs("TRAP 9");
+	puts("TRAP 9");
 }
 
 
 void __cpu_trap_10(void)
 {
-	kputs("TRAP 10");
+	puts("TRAP 10");
 }
 
 
 void __cpu_trap_11(void)
 {
-	kputs("TRAP 11");
+	puts("TRAP 11");
 }
 
 
 void __cpu_trap_12(void)
 {
-	kputs("TRAP 12");
+	puts("TRAP 12");
 }
 
 
 void __cpu_trap_13(void)
 {
-	kputs("TRAP 13");
+	puts("TRAP 13");
 }
 
 
 void __cpu_trap_14(void)
 {
-	kputs("TRAP 14");
+	puts("TRAP 14");
 }
 
 
 void __cpu_trap_15(void)
 {
-	kputs("TRAP 15");
+	puts("TRAP 15");
 }

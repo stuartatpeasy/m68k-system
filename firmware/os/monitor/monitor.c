@@ -62,14 +62,14 @@ void monitor_main(void)
 
     g_echo = 1;
 	g_history_ptr = 0;
-	kputchar('\n');
+	putchar('\n');
 
 	for(buffer[CMD_MAX_LEN] = '\0'; ;)
 	{
-		kput(g_prompt);
+		put(g_prompt);
 		readline(buffer, CMD_MAX_LEN, g_echo);
 
-		if(kstrlen(buffer))
+		if(strlen(buffer))
 		{
 			dispatch_command(buffer);
 		}
@@ -91,23 +91,23 @@ void dispatch_command(const char *cmdline)
 		command[c++] = *cmdline++) ;
 	command[c] = '\0';
 
-	cmd_len = kstrlen(command);
+	cmd_len = strlen(command);
 	if(!cmd_len)
 		return;
 
 	const struct command *p, *pcommand = NULL;
 	for(p = g_commands; p->name; ++p)
-		if(kstrstr(p->name, command) == p->name)
+		if(strstr(p->name, command) == p->name)
 		{
 			if(pcommand)
 			{
-				kputs("Ambiguous command");
+				puts("Ambiguous command");
 				return;
 			}
 			else
 			{
 				pcommand = p;
-				if(cmd_len == kstrlen(p->name))
+				if(cmd_len == strlen(p->name))
 					break;	/* exact match */
 			}
 		}
@@ -131,7 +131,7 @@ void dispatch_command(const char *cmdline)
 		{
 			if(num_args >= MON_MAX_ARGS)
 			{
-				kputs("Too many arguments");
+				puts("Too many arguments");
 				return;
 			}
 
@@ -149,11 +149,11 @@ void dispatch_command(const char *cmdline)
 
 			if(!(args[num_args] = kmalloc(cmdline - argptr + 1)))
 			{
-				kputs("Out of memory");
+				puts("Out of memory");
 				return;
 			}
 
-			kstrncpy(args[num_args], argptr, cmdline - argptr);
+			strncpy(args[num_args], argptr, cmdline - argptr);
 			args[num_args++][cmdline - argptr] = '\0';
 		}
 	}
@@ -161,23 +161,23 @@ void dispatch_command(const char *cmdline)
 	switch(pcommand->handler(num_args, args))
 	{
 		case MON_E_SYNTAX:
-			kputs("Syntax error");
+			puts("Syntax error");
 			break;
 
 		case MON_E_INVALID_ARG:
-			kputs("Invalid argument");
+			puts("Invalid argument");
 			break;
 
 		case MON_E_NOT_IMPLEMENTED:
-			kputs("Not implemented");
+			puts("Not implemented");
 			break;
 
 		case MON_E_INTERNAL_ERROR:
-			kputs("Internal error");
+			puts("Internal error");
 			break;
 
 		case MON_E_OUT_OF_MEMORY:
-			kputs("Out of memory");
+			puts("Out of memory");
 			break;
 
 		case MON_E_OK:

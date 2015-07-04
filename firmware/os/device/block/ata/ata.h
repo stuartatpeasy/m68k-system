@@ -11,7 +11,11 @@
 
 #include "include/types.h"
 #include "device/device.h"
+#include "kutil/kutil.h"
 
+#include <stdio.h>			/* FIXME: remove this */
+#include <string.h>
+#include <strings.h>
 
 /*
 	"Driver" functions

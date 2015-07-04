@@ -12,6 +12,10 @@
 
 #include "include/defs.h"
 #include "include/types.h"
+#include "klibc/errno.h"
+#include "klibc/string.h"
+#include "kutil/kutil.h"
+#include "memory/kmalloc.h"
 
 /* pointers to blocks will be allocated in units of BVEC_BLOCKPTR_BLOCK_SIZE */
 #define BVEC_BLOCKPTR_BLOCK_SIZE	(8)

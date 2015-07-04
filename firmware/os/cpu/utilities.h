@@ -13,6 +13,8 @@
 #include "include/types.h"
 #include "cpu/exceptionstackframes.h"
 
+#include <stdio.h>
+
 #define __cpu_nop()		do { asm volatile("nop" : ); } while(0)
 
 inline void __cpu_set_irq_mask(u32 u);

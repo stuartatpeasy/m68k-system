@@ -1,5 +1,5 @@
 /*
-	kputs.c: definition of the *printf() family of functions, used in kernel debugging
+	printf.c: definition of the *printf() family of functions, used in kernel debugging
 
 	Part of the as-yet-unnamed MC68010 operating system
 
@@ -7,11 +7,8 @@
 	(c) Stuart Wallace, June 2015.
 */
 
-#include <stdarg.h>
-#include "duart.h"
-#include "kutil/kutil.h"
-#include "include/limits.h"
-#include "memory/kmalloc.h"
+#include "stdio.h"
+
 
 /*
 	Size of the initial buffer used by vprintf() (and therefore printf()).  If this buffer is
@@ -90,7 +87,7 @@ s32 vprintf(const char *format, va_list ap)
 
 	while(1)
 	{
-		buf = (char *) kmalloc(buf_size);
+		buf = (char *) malloc(buf_size);
 		n = vsnprintf(buf, buf_size, format, ap);
 
 		if(n == -1)
@@ -98,12 +95,12 @@ s32 vprintf(const char *format, va_list ap)
 
 		if(n < buf_size)
 		{
-			kput(buf);
-			kfree(buf);
+			put(buf);
+			free(buf);
 			return n;
 		}
 
-		kfree(buf);
+		free(buf);
 		buf_size = n + 1;
 	}
 }

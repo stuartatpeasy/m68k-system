@@ -28,7 +28,7 @@ inline void __cpu_set_irq_mask(u32 u)
 
 inline void __cpu_halt(void)
 {
-	kputs("\nSystem halted.");
+	puts("\nSystem halted.");
 
     /* the arg to "stop" causes the CPU to stay in supervisor mode,
        and sets the interrupt mask to 7 */

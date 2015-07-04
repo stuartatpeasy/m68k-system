@@ -52,7 +52,7 @@ MONITOR_CMD_HANDLER(dfu)
 	if(num_args != 1)
 		return MON_E_SYNTAX;
 
-	len = kstrtoul(args[0], &endptr, 0);
+	len = strtoul(args[0], &endptr, 0);
 	if(*endptr || !len || (len & 1))
 		return MON_E_INVALID_ARG;
 
@@ -82,13 +82,13 @@ MONITOR_CMD_HANDLER(disassemble)
 	if(!num_args || (num_args > 2))
 		return MON_E_SYNTAX;
 
-	start = kstrtoul(args[0], &endptr, 0);
+	start = strtoul(args[0], &endptr, 0);
 	if(*endptr || (start & 1))
 		return MON_E_INVALID_ARG;
 
 	if(num_args == 2)
 	{
-		num_bytes = kstrtoul(args[1], &endptr, 0);
+		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || (num_bytes < 2) || (num_bytes & 1))
 			return MON_E_INVALID_ARG;
 	}
@@ -118,7 +118,7 @@ MONITOR_CMD_HANDLER(disassemble)
 			if(!instr_printed++)
 				printf(" %s\n", line);
 			else
-				kputs("");
+				puts("");
 		}
 	}
 
@@ -167,18 +167,18 @@ s32 dump_mem(ks32 start, ks32 num_bytes, ks8 word_size)
 				}
 			else
 				for(y = (word_size << 1) + 1; y--;)
-					kputchar(' ');
+					putchar(' ');
 		}
-		kputchar(' ');
+		putchar(' ');
 
 		for(x = 0; x < line_length; ++x)
 		{
 			if((offset + x) < num_bytes)
-				kputchar(isprint(line[x]) ? line[x] : '.');
+				putchar(isprint(line[x]) ? line[x] : '.');
 			else
-				kputchar(' ');
+				putchar(' ');
 		}
-		kputs("");
+		puts("");
 	}
 
 	kfree(line);
@@ -200,13 +200,13 @@ MONITOR_CMD_HANDLER(dump)
 	if(!num_args || (num_args > 2))
 		return MON_E_SYNTAX;
 
-	start = kstrtoul(args[0], &endptr, 0);
+	start = strtoul(args[0], &endptr, 0);
 	if(*endptr)
 		return MON_E_INVALID_ARG;
 
 	if(num_args == 2)
 	{
-		num_bytes = kstrtoul(args[1], &endptr, 0);
+		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || (num_bytes < 1))
 			return MON_E_INVALID_ARG;
 	}
@@ -229,7 +229,7 @@ MONITOR_CMD_HANDLER(dumph)
 	if(!num_args || (num_args > 2))
 		return MON_E_SYNTAX;
 
-	start = kstrtoul(args[0], &endptr, 0);
+	start = strtoul(args[0], &endptr, 0);
 	if(*endptr)
 		return MON_E_INVALID_ARG;
 
@@ -238,7 +238,7 @@ MONITOR_CMD_HANDLER(dumph)
 
 	if(num_args == 2)
 	{
-		num_bytes = kstrtoul(args[1], &endptr, 0);
+		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || !num_bytes || (num_bytes & 1))
 			return MON_E_INVALID_ARG;
 	}
@@ -262,7 +262,7 @@ MONITOR_CMD_HANDLER(dumpw)
 	if(!num_args || (num_args > 2))
 		return MON_E_SYNTAX;
 
-	start = kstrtoul(args[0], &endptr, 0);
+	start = strtoul(args[0], &endptr, 0);
 	if(*endptr)
 		return MON_E_INVALID_ARG;
 
@@ -271,7 +271,7 @@ MONITOR_CMD_HANDLER(dumpw)
 
 	if(num_args == 2)
 	{
-		num_bytes = kstrtoul(args[1], &endptr, 0);
+		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || !num_bytes || (num_bytes & 3))
 			return MON_E_INVALID_ARG;
 	}
@@ -292,12 +292,12 @@ MONITOR_CMD_HANDLER(echo)
     for(i = 0; i < num_args; ++i)
     {
         if(i)
-            kputchar(' ');
-        kput(args[i]);
+            putchar(' ');
+        put(args[i]);
     }
 
     if(num_args)
-        kputs("");
+        puts("");
 
     return MON_E_OK;
 }
@@ -312,15 +312,15 @@ MONITOR_CMD_HANDLER(fill)
 	if(num_args != 3)
 		return MON_E_SYNTAX;
 
-	start = (u8 *) kstrtoul(args[0], &endptr, 0);
+	start = (u8 *) strtoul(args[0], &endptr, 0);
 	if(*endptr)
 		return MON_E_INVALID_ARG;
 
-	count = kstrtoul(args[1], &endptr, 0);
+	count = strtoul(args[1], &endptr, 0);
 	if(*endptr | !count)
 		return MON_E_INVALID_ARG;
 
-	data = kstrtoul(args[2], &endptr, 0);
+	data = strtoul(args[2], &endptr, 0);
 	if((*endptr) || (data > 0xff))
 		return MON_E_INVALID_ARG;
 
@@ -340,15 +340,15 @@ MONITOR_CMD_HANDLER(fillh)
 	if(num_args != 3)
 		return MON_E_SYNTAX;
 
-	start = (u16 *) kstrtoul(args[0], &endptr, 0);
+	start = (u16 *) strtoul(args[0], &endptr, 0);
 	if(*endptr || ((u32) start & 0x1))
 		return MON_E_INVALID_ARG;
 
-	count = kstrtoul(args[1], &endptr, 0);
+	count = strtoul(args[1], &endptr, 0);
 	if(*endptr || !count)
 		return MON_E_INVALID_ARG;
 
-	data = kstrtoul(args[2], &endptr, 0);
+	data = strtoul(args[2], &endptr, 0);
 	if((*endptr) || (data > 0xffff))
 		return MON_E_INVALID_ARG;
 
@@ -367,15 +367,15 @@ MONITOR_CMD_HANDLER(fillw)
 	if(num_args != 3)
 		return MON_E_SYNTAX;
 
-	start = (u32 *) kstrtoul(args[0], &endptr, 0);
+	start = (u32 *) strtoul(args[0], &endptr, 0);
 	if(*endptr || ((u32) start & 0x3))
 		return MON_E_INVALID_ARG;
 
-	count = kstrtoul(args[1], &endptr, 0);
+	count = strtoul(args[1], &endptr, 0);
 	if(*endptr | !count)
 		return MON_E_INVALID_ARG;
 
-	data = kstrtoul(args[2], &endptr, 0);
+	data = strtoul(args[2], &endptr, 0);
 	if(*endptr)
 		return MON_E_INVALID_ARG;
 
@@ -406,7 +406,7 @@ MONITOR_CMD_HANDLER(go)
 	if(num_args != 1)
 		return MON_E_SYNTAX;
 
-	addr = (void (*)()) kstrtoul(args[0], &endptr, 0);
+	addr = (void (*)()) strtoul(args[0], &endptr, 0);
 	if(*endptr || ((u32) addr & 1))
 		return MON_E_INVALID_ARG;
 
@@ -423,7 +423,7 @@ MONITOR_CMD_HANDLER(go)
 */
 MONITOR_CMD_HANDLER(help)
 {
-	kputs("Available commands (all can be abbreviated):\n\n"
+	puts("Available commands (all can be abbreviated):\n\n"
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
           "    in YYYYMMDDHHMMSS format, set the RTC date and time accordingly.\n\n"
@@ -474,7 +474,7 @@ MONITOR_CMD_HANDLER(help)
 */
 MONITOR_CMD_HANDLER(id)
 {
-    kputs(OS_NAME " v" OS_VERSION_STR " on " CPU_NAME ", build date " __DATE__ " " __TIME__);
+    puts(OS_NAME " v" OS_VERSION_STR " on " CPU_NAME ", build date " __DATE__ " " __TIME__);
     return MON_E_OK;
 }
 
@@ -486,7 +486,7 @@ MONITOR_CMD_HANDLER(id)
 */
 MONITOR_CMD_HANDLER(raw)
 {
-	kputs("Dumping raw output.  Use ctrl-A to stop.\n");
+	puts("Dumping raw output.  Use ctrl-A to stop.\n");
 	for(;;)
 	{
 		char c = duarta_getc();
@@ -496,7 +496,7 @@ MONITOR_CMD_HANDLER(raw)
 			break;
 	}
 
-	kputs("\n");
+	puts("\n");
 	return MON_E_OK;
 }
 
@@ -522,15 +522,15 @@ MONITOR_CMD_HANDLER(serial)
 {
     if(num_args == 2)
     {
-        if(!kstrcmp(args[0], "echo"))
+        if(!strcmp(args[0], "echo"))
         {
             /* Enable disable echo */
-            if(!kstrcmp(args[1], "on"))
+            if(!strcmp(args[1], "on"))
             {
                 g_echo = 1;
                 return MON_E_OK;
             }
-            else if(!kstrcmp(args[1], "off"))
+            else if(!strcmp(args[1], "off"))
             {
                 g_echo = 0;
                 return MON_E_OK;
@@ -575,7 +575,7 @@ MONITOR_CMD_HANDLER(upload)
 	if(num_args != 1)
 		return MON_E_SYNTAX;
 
-	len = kstrtoul(args[0], &endptr, 0);
+	len = strtoul(args[0], &endptr, 0);
 	if(*endptr || !len)
 		return MON_E_INVALID_ARG;
 
@@ -599,11 +599,11 @@ MONITOR_CMD_HANDLER(write)
 	if(num_args != 2)
 		return MON_E_SYNTAX;
 
-	addr = kstrtoul(args[0], &endptr, 0);
+	addr = strtoul(args[0], &endptr, 0);
 	if(*endptr)
 		return MON_E_INVALID_ARG;
 
-	data = kstrtoul(args[1], &endptr, 0);
+	data = strtoul(args[1], &endptr, 0);
 	if((*endptr) || (data > 0xff))
 		return MON_E_INVALID_ARG;
 
@@ -621,11 +621,11 @@ MONITOR_CMD_HANDLER(writeh)
 	if(num_args != 2)
 		return MON_E_SYNTAX;
 
-	addr = kstrtoul(args[0], &endptr, 0);
+	addr = strtoul(args[0], &endptr, 0);
 	if((*endptr) || (addr & 0x1))
 		return MON_E_INVALID_ARG;
 
-	data = kstrtoul(args[1], &endptr, 0);
+	data = strtoul(args[1], &endptr, 0);
 	if((*endptr) || (data > 0xffff))
 		return MON_E_INVALID_ARG;
 
@@ -643,11 +643,11 @@ MONITOR_CMD_HANDLER(writew)
 	if(num_args != 2)
 		return MON_E_SYNTAX;
 
-	addr = kstrtoul(args[0], &endptr, 0);
+	addr = strtoul(args[0], &endptr, 0);
 	if((*endptr) || (addr & 0x3))
 		return MON_E_INVALID_ARG;
 
-	data = kstrtoul(args[1], &endptr, 0);
+	data = strtoul(args[1], &endptr, 0);
 	if(*endptr)
 		return MON_E_INVALID_ARG;
 

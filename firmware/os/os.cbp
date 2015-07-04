@@ -76,6 +76,7 @@
 		</Unit>
 		<Unit filename="fs/vfs.h" />
 		<Unit filename="include/byteorder.h" />
+		<Unit filename="include/ctype.h" />
 		<Unit filename="include/debug.h" />
 		<Unit filename="include/defs.h" />
 		<Unit filename="include/errno.h" />
@@ -83,55 +84,42 @@
 		<Unit filename="include/syscall.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
+		<Unit filename="klibc/assert.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/assert.h" />
+		<Unit filename="klibc/ctype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/ctype.h" />
+		<Unit filename="klibc/errno.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/errno.h" />
+		<Unit filename="klibc/limits.h" />
+		<Unit filename="klibc/printf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/stdio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/stdio.h" />
+		<Unit filename="klibc/stdlib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/stdlib.h" />
+		<Unit filename="klibc/string.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/string.h" />
+		<Unit filename="klibc/strings.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="klibc/strings.h" />
 		<Unit filename="kutil/bvec.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kutil/bvec.h" />
-		<Unit filename="kutil/kbzero.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kmemcpy.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kprintf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kput.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kputchar.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kputs.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrcat.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrcmp.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrcpy.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrdup.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrlen.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrncmp.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrncpy.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrstr.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kstrtoul.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="kutil/ktime.c">
 			<Option compilerVar="CC" />
 		</Unit>

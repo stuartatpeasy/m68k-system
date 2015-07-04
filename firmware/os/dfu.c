@@ -87,7 +87,7 @@ int dfu(ku16 *data, ku32 len)
 		return DFU_OUT_OF_MEMORY;
 
 	/* Copy the Flash-update routine into RAM */
-	kmemcpy(p_write_flash, write_flash, write_flash_len);
+	memcpy(p_write_flash, write_flash, write_flash_len);
 
 	/* This shouldn't return */
 	p_write_flash(data, len);

@@ -12,7 +12,7 @@
 #define BUDDY_DOUBLE_COALESCE	1
 
 
-void buddy_init(heap_ctx * const ctx, void * const mem, u32 mem_len, u32 min_alloc_unit, s8 *map)
+void buddy_init(buddy_ctx * const ctx, void * const mem, u32 mem_len, u32 min_alloc_unit, s8 *map)
 {
 	ctx->map = map;
 	ctx->mem = mem;
@@ -27,16 +27,16 @@ void buddy_init(heap_ctx * const ctx, void * const mem, u32 mem_len, u32 min_all
 }
 
 
-void buddy_dump(const heap_ctx * const ctx)
+void buddy_dump(const buddy_ctx * const ctx)
 {
 	int i;
 	for(i = 0; i < ctx->end; i++)
 		printf("%3d ", ctx->map[i]);
-	kputs("");
+	puts("");
 }
 
 
-void *buddy_malloc(heap_ctx * const ctx, u32 size)
+void *buddy_malloc(buddy_ctx * const ctx, u32 size)
 {
 	unsigned int min_index = -1, min_order = -1, offset = 0, pool_pos = 0, order, i;
 
@@ -85,7 +85,7 @@ void *buddy_malloc(heap_ctx * const ctx, u32 size)
 }
 
 
-void buddy_free(heap_ctx * const ctx, void *ptr)
+void buddy_free(buddy_ctx * const ctx, void *ptr)
 {
 	const unsigned int p_ = ptr - ctx->mem;	/* = offset of ptr from start of mem block */
 	unsigned int x = 0;
@@ -154,7 +154,7 @@ void buddy_free(heap_ctx * const ctx, void *ptr)
 }
 
 
-u32 buddy_get_free_space(const heap_ctx * const ctx)
+u32 buddy_get_free_space(const buddy_ctx * const ctx)
 {
 	u32 i, free_bytes = 0;
 
@@ -166,7 +166,7 @@ u32 buddy_get_free_space(const heap_ctx * const ctx)
 }
 
 
-u32 buddy_get_used_space(const heap_ctx * const ctx)
+u32 buddy_get_used_space(const buddy_ctx * const ctx)
 {
 	u32 i, used_bytes = 0;
 

@@ -77,14 +77,14 @@ s32 srec(struct srec_data *s)
 
 	for(;;)
 	{
-		size_t len;
+		u32 len;
 		u8 record_type;
 		u32 i, sum, byte_count, checksum;
 
 		readline(line, SREC_MAX_LINE_LENGTH - 1, 0);
 		++(s->line);
 
-		if(!(len = kstrlen(line)))
+		if(!(len = strlen(line)))
 			continue;
 
 		--len;
@@ -171,7 +171,7 @@ s32 srec(struct srec_data *s)
 			if(s->start_address >= s->data_len)
 				return srec_err(s, se_bad_start_address);
 
-			kbzero(s->data + s->data_len, buf_len - s->data_len);
+			bzero(s->data + s->data_len, buf_len - s->data_len);
 
 			return 0;
 		}

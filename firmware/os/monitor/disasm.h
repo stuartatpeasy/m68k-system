@@ -9,7 +9,8 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include "stdio.h"
+#include <stdio.h>
+#include <string.h>
 #include "assert.h"
 #include "kutil/kutil.h"
 

@@ -22,9 +22,6 @@
 
 
 #include "kutil/bvec.h"
-#include "kutil/kutil.h"
-#include "include/errno.h"
-#include "memory/kmalloc.h"
 
 
 u32 bvec_init(u32 block_size, ku32 element_size, bvec_t *bv)
@@ -108,7 +105,7 @@ void *bvec_grow(bvec_t v)
 		}
 
 		/* Copy the existing element pointers */
-		kmemcpy(element_ptr, v->elements, v->nelements * sizeof(void *));
+		memcpy(element_ptr, v->elements, v->nelements * sizeof(void *));
 
 		/* Copy in the new element pointers */
 		for(u = 0; u < v->block_size; ++u)

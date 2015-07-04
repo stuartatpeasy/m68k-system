@@ -7,7 +7,10 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include "stdio.h"			/* FIXME: remove */
+#include "errno.h"
+#include "stdio.h"        /* FIXME - remove */
+#include "string.h"
+#include "strings.h"
 
 #include "kutil/kutil.h"
 #include "kutil/bvec.h"
@@ -52,7 +55,7 @@ u32 driver_init()
 
 
 	/* FIXME: wtf is this? Surely it is broken and can be removed */
-	kbzero(&g_driver_registerers, sizeof(g_driver_registerers));
+	bzero(&g_driver_registerers, sizeof(g_driver_registerers));
 
 	for(x = 0; x < num_drivers; ++x)
 	{
@@ -100,7 +103,7 @@ printf("Shutting down driver %i\n", i);
 		if(((const device_driver_t *) g_drivers->elements[i])->shut_down() != DRIVER_OK)
 		{
 			/* TODO: error */
-kputs("--- shut down failed");
+puts("--- shut down failed");
 		}
 	}
 
@@ -127,7 +130,7 @@ const device_t *get_device_by_name(const char * const name)
 	int i;
 	for(i = 0; i < bvec_size(g_devices); ++i)
 	{
-		if(!kstrcmp(((device_t *) g_devices->elements[i])->name, name))
+		if(!strcmp(((device_t *) g_devices->elements[i])->name, name))
 			return g_devices->elements[i];
 	}
 
@@ -137,7 +140,7 @@ const device_t *get_device_by_name(const char * const name)
 
 /* Create (i.e. register) a new device.  This function is called by each driver's init() function
  * during device enumeration. */
-driver_ret create_device(const enum device_type type, device_driver_t * const driver, 
+driver_ret create_device(const enum device_type type, device_driver_t * const driver,
 							const char *name, void * const data)
 {
 	device_t * const dev = bvec_grow(g_devices);
@@ -150,7 +153,7 @@ driver_ret create_device(const enum device_type type, device_driver_t * const dr
 	dev->data = data;
 
 	/* TODO: check that the name is not a duplicate */
-	kstrncpy(dev->name, name, sizeof(dev->name));
+	strncpy(dev->name, name, sizeof(dev->name));
 
 	return SUCCESS;
 }
@@ -162,7 +165,7 @@ driver_ret device_read(const device_id id, ku32 offset, u32 len, u8 *buf)
 
 	if(dev == NULL)
 		return ENODEV;	/* no such device */
-	
+
 	if(!dev->driver->read)
 		return ENOSYS;	/* not implemented */
 
@@ -176,10 +179,10 @@ driver_ret device_write(const device_id id, ku32 offset, u32 len, ku8 *buf)
 
 	if(dev == NULL)
 		return ENODEV;	/* no such device */
-	
+
 	if(!dev->driver->write)
 		return ENOSYS;	/* not implemented */
-	
+
 	return dev->driver->write(dev->data, offset, len, buf);
 }
 
@@ -193,7 +196,7 @@ driver_ret device_control(const device_id id, ku32 function, void *in, void *out
 
 	if(!dev->driver->control)
 		return ENOSYS;	/* not implemented */
-	
+
 	return dev->driver->control(dev->data, function, in, out);
 }
 

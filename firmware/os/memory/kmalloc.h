@@ -18,12 +18,13 @@
 
 #if defined(KMALLOC_HEAP)
 /*
-	Use heap allocator	
+	Use heap allocator
 */
 
 #include "memory/heap.h"
 
 #define ALLOCATOR_FN(name) heap_##name
+typedef heap_ctx mem_ctx;
 
 #elif defined(KMALLOC_BUDDY)
 /*
@@ -37,12 +38,13 @@
 #include "memory/buddy.h"
 
 #define ALLOCATOR_FN(name) buddy_##name
+typedef buddy_ctx mem_ctx;
 
 #else
 #error "No memory allocator specified (try -DKMALLOC_HEAP or -DKMALLOC_BUDDY)"
 #endif
 
-extern heap_ctx g_Heap;
+extern mem_ctx g_Heap;
 
 void kmeminit();
 void *kmalloc(u32 size);

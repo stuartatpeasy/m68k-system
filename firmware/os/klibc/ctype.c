@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, June 2015
 */
 
-#include "../include/ctype.h"
+#include "ctype.h"
 #include "../include/types.h"
 
 /*

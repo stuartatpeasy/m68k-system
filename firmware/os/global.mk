@@ -16,7 +16,7 @@ LIBCSWDIR=$(PROJECTDIR)/libc-sw
 
 APPNAME=firmware
 
-CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(LIBCSWDIR)/include -I. -c -Wall -Os -m68000 -g -DTARGET_BIGENDIAN -ffreestanding -fomit-frame-pointer
-#CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I. -c -Wall -Os -m68000 -g -DTARGET_BIGENDIAN -ffreestanding -fomit-frame-pointer
+#CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(LIBCSWDIR)/include -I. -c -Wall -Os -m68000 -g -DTARGET_BIGENDIAN -ffreestanding -fomit-frame-pointer
+CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -Os -m68000 -g -DKMALLOC_HEAP -DTARGET_BIGENDIAN -ffreestanding -fomit-frame-pointer
 AFLAGS=-m68000
 

@@ -9,6 +9,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
+#include <stdio.h>
 #include "include/types.h"
 #include "include/defs.h"
 

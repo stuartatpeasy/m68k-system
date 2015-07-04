@@ -9,6 +9,7 @@
 	(c) Stuart Wallace, May 2012.
 */
 
+#include <stdio.h>
 #include "include/types.h"
 #include "kutil/kutil.h"
 
@@ -23,15 +24,15 @@ typedef struct
 	void *mem;			/* pointer to the start of the allocatable region			*/
 	u32 size;			/* size of the block as a power of two						*/
 	u32 min_alloc_unit;	/* minimum allocation unit as a power of two				*/
-} heap_ctx;
+} buddy_ctx;
 
 
-void buddy_init(heap_ctx * const ctx, void * const mem, u32 mem_len, u32 min_alloc_unit, s8 *map);
-void buddy_dump(const heap_ctx * const ctx);
-void *buddy_malloc(heap_ctx * const ctx, u32 size);
-void buddy_free(heap_ctx * const ctx, void *ptr);
-u32 buddy_get_free_space(const heap_ctx * const ctx);
-u32 buddy_get_used_space(const heap_ctx * const ctx);
+void buddy_init(buddy_ctx * const ctx, void * const mem, u32 mem_len, u32 min_alloc_unit, s8 *map);
+void buddy_dump(const buddy_ctx * const ctx);
+void *buddy_malloc(buddy_ctx * const ctx, u32 size);
+void buddy_free(buddy_ctx * const ctx, void *ptr);
+u32 buddy_get_free_space(const buddy_ctx * const ctx);
+u32 buddy_get_used_space(const buddy_ctx * const ctx);
 
 #endif
 

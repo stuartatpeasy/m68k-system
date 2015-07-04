@@ -7,9 +7,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
+#include <errno.h>
 #include "fs/mount.h"
 #include "include/defs.h"
-#include "include/errno.h"
 #include "kutil/kutil.h"
 #include "memory/kmalloc.h"
 
@@ -29,10 +29,10 @@ s32 expand_mount_table(ku32 how_many)
 		return ENOMEM;
 
 	/* Copy the contents of the old table into the new table */
-	kmemcpy(new_table, g_mount_table, sizeof(struct mount_ent) * g_max_mounts);
+	memcpy(new_table, g_mount_table, sizeof(struct mount_ent) * g_max_mounts);
 
 	/* Zero the extra space created in the new table */
-	kbzero(&new_table[g_max_mounts], sizeof(struct mount_ent) * how_many);
+	bzero(&new_table[g_max_mounts], sizeof(struct mount_ent) * how_many);
 
 	/* Release the old table and point g_mount_table at the new table */
 	kfree(g_mount_table);
@@ -49,7 +49,7 @@ s32 mount_init()
 	s32 ret;
 
 	g_mount_table = 0;
-	g_max_mounts = 0; 
+	g_max_mounts = 0;
 	g_mount_end = 0;
 
 	ret = expand_mount_table(MOUNT_INITIAL_NUM_MOUNT_POINTS);
@@ -74,13 +74,13 @@ s32 mount_add(const char * const mount_point, const device_id dev)
 
 	for(i = 0; i < g_mount_end; ++i)
 	{
-		if(!kstrcmp(mount_point, g_mount_table[i].mount_point))
+		if(!strcmp(mount_point, g_mount_table[i].mount_point))
 			return EBUSY;	/* Something else is already mounted here */
 	}
 
-	g_mount_table[g_mount_end].mount_point = kstrdup(mount_point);
+	g_mount_table[g_mount_end].mount_point = strdup(mount_point);
 	if(!g_mount_table[g_mount_end].mount_point)
-		return ENOMEM;		/* kstrdup() failed - OOM */
+		return ENOMEM;		/* strdup() failed - OOM */
 
 	g_mount_table[g_mount_end].device = dev;
 
@@ -95,10 +95,10 @@ s32 mount_remove(const char * const mount_point)
 	s32 i;
 	for(i = 0; i < g_mount_end; ++i)
 	{
-		if(!kstrcmp(mount_point, g_mount_table[i].mount_point))
+		if(!strcmp(mount_point, g_mount_table[i].mount_point))
 		{
 			/* TODO: signal the device that it is being unmounted; flush changed pages, etc */
-			kmemcpy(&g_mount_table[i], &g_mount_table[i + 1], 
+			memcpy(&g_mount_table[i], &g_mount_table[i + 1],
 						(g_mount_end - i - 1) * sizeof(struct mount_ent));
 
 			--g_mount_end;
@@ -116,8 +116,8 @@ s32 mount_find(const char * const path)
 
 	for(i = 0; i < g_mount_end; ++i)
 	{
-		const s32 n = kstrlen(g_mount_table[i].mount_point);
-		if(!kstrncmp(path, g_mount_table[i].mount_point, n) && (n > best_match_len))
+		const s32 n = strlen(g_mount_table[i].mount_point);
+		if(!strncmp(path, g_mount_table[i].mount_point, n) && (n > best_match_len))
 		{
 			best_match = i;
 			best_match_len = n;

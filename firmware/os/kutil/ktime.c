@@ -7,9 +7,10 @@
     (c) Stuart Wallace, June 2015.
 */
 
-#include "../include/defs.h"
-#include "../include/types.h"
-#include "../kutil/kutil.h"
+#include "include/defs.h"
+#include "include/types.h"
+#include "klibc/stdio.h"
+#include "kutil.h"
 
 #define DATETIME_TS_MAX (2147483647)
 
@@ -192,7 +193,7 @@ s32 rtc_time_from_str(const char * const str, struct rtc_time * const tm)
 
     // Set the date and time.  Acceptable format:
     //      date YYYYMMDDHHMMSS
-    if(kstrlen(str) != 14)
+    if(strlen(str) != 14)
         return FAIL;
 
     for(i = 0; i < 14; i++)

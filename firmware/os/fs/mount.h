@@ -9,6 +9,7 @@
 	(c) Stuart Wallace, March 2012.
 */
 
+#include <strings.h>
 #include "include/types.h"
 #include "device/device.h"
 
