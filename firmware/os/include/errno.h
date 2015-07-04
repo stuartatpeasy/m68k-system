@@ -1,12 +1,11 @@
-#ifndef __INCLUDE_ERRNO_H__
-#define __INCLUDE_ERRNO_H__
+#ifndef __ERRNO_H__
+#define __ERRNO_H__
 /*
-	Error constant definitions
+	errno.h
 
-	Part of the as-yet-unnamed MC68010 operating system
+	part of libc-sw
 
-
-	(c) Stuart Wallace <stuartw@atom.net>, July 2011.
+	(c) Stuart Wallace <stuartw@atom.net>, 2011-07-01.
 */
 
 #define EPERM				(1)		/* Operation not permitted							*/
@@ -142,6 +141,10 @@
 #define EOWNERDEAD			(130)	/* Owner died										*/
 #define ENOTRECOVERABLE		(131)	/* State not recoverable							*/
 #define ERFKILL				(132)	/* Operation not possible due to RF-kill			*/
+
+extern int errno;
+
+typedef int error_t;
 
 #endif
 

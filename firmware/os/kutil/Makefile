@@ -2,9 +2,9 @@ include ../global.mk
 
 LIBNAME=../libkutil.a
 
-CSOURCES=bvec.c ctype.c kbzero.c kmemcpy.c kprintf.c kputchar.c kput.c kputs.c kstrcat.c    \
-		 kstrcmp.c kstrcpy.c kstrdup.c kstrlen.c kstrncmp.c kstrncpy.c kstrstr.c kstrtoul.c \
-		 ktime.c
+CSOURCES=bcopy.c bvec.c ctype.c kbzero.c kmemcpy.c kprintf.c kputchar.c kput.c kputs.c      \
+         kstrcat.c kstrcmp.c kstrcpy.c kstrdup.c kstrlen.c kstrncmp.c kstrncpy.c kstrstr.c  \
+		 kstrtoul.c ktime.c strerror.c
 
 OBJECTS=$(CSOURCES:.c=.o)
 
@@ -19,6 +19,11 @@ $(LIBNAME): $(OBJECTS)
 clean:
 	rm -f $(LIBNAME) $(OBJECTS)
 
+#
+# Dependencies from this point on
+#
+
+bcopy.o: bcopy.c kutil.h ../include/types.h
 bvec.o: bvec.c bvec.h kutil.h ../include/errno.h ../include/defs.h ../include/types.h ../memory/kmalloc.h
 ctype.o: ctype.c ../include/ctype.h ../include/types.h
 kbzero.o: kbzero.c kutil.h ../include/types.h
@@ -36,4 +41,5 @@ kstrncpy.o: kstrncpy.c kutil.h ../include/types.h
 kstrstr.o: kstrstr.c kutil.h ../include/types.h
 kstrtoul.o: kstrtoul.c kutil.h ../include/types.h ../include/limits.h
 ktime.o: ktime.c kutil.h ../include/types.h
+strerror.o: strerror.c kutil.h ../include/errno.h ../include/types.h
 

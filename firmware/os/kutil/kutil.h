@@ -23,6 +23,8 @@ s32 day_of_week(ks32 year, ks32 month, ks32 day);
 s32 is_leap_year(ks32 year);
 s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt);
 
+void bcopy(const void *src, void *dest, u32 n);
+
 void kbzero(void *s, u32 n);
 void *kmemcpy(void *dest, const void *src, ku32 n);
 void kprintf(ks8 *format, ...);
@@ -46,6 +48,7 @@ s32 vprintf(const char *format, va_list ap);
 s32 vsprintf(char *str, const char *format, va_list ap);
 s32 vsnprintf(char *str, u32 size, const char *format, va_list ap);
 
+ks8 *strerror(ks32 errnum);
 
 #define VALID_RTC_DATE(d)                                   \
     (((d)->year < 2200) && ((d)->year >= 1900)              \

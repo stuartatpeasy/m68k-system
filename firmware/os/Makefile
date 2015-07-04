@@ -15,7 +15,7 @@ CSOURCES=dfu.c ds17485.c duart.c main.c \
 		 device/device.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
-		 fs/mount.c fs/vfs.c \
+		 fs/ext2/ext2.c fs/mount.c fs/vfs.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c \
 		 sched/sched.c
 
@@ -77,6 +77,10 @@ libkutil.a:
 libmonitor.a:
 	$(MAKE) $(MFLAGS) -Cmonitor
 
+#
+# Dependencies below this point
+#
+
 main.o: main.c ds17485.o duart.o device/device.o sched/sched.o
 dfu.o: dfu.c dfu.h
 ds17485.o: ds17485.c ds17485.h
@@ -99,6 +103,8 @@ device/block/partition/partition.o: device/block/partition/partition.c \
 									device/block/partition/mbr.h include/defs.h include/types.h \
 									device/device.h kutil/kutil.h asm/bswap.h device/devctl.h
 
+fs/ext2/ext2.o: fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h include/errno.h kutil/kutil.h \
+                memory/kmalloc.h
 fs/mount.o: fs/mount.c fs/mount.h include/types.h device/device.h include/defs.h
 fs/vfs.o: fs/vfs.c fs/vfs.h fs/mount.h include/types.h include/defs.h
 
