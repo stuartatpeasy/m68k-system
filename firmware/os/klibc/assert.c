@@ -1,7 +1,8 @@
 /*
 	assert.c - definition of the assert() function
 
-	part of libc-sw
+	Part of the as-yet-unnamed MC68010 operating system
+
 
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-08-28.
 */
@@ -15,8 +16,9 @@ void assert(s32 expression)
 	if(!expression)
 	{
 		puts("assertion failed");
-		/* FIXME: abort execution here! */
-		while(1) ;
+
+        /* TODO: do something better here, i.e. TRAP back into the kernel */
+        while(1) ;
 	}
 }
 

@@ -1,5 +1,5 @@
-#ifndef DS17485_H_INCLUDED
-#define DS17485_H_INCLUDED
+#ifndef DS17485_H_INC
+#define DS17485_H_INC
 /*
     Dallas DS17485 driver function and macro declarations
 
@@ -22,9 +22,42 @@
 /* Yields pointer to DS17485 data register      */
 #define DS17485_DATA        *((vu8 *) (DS17485_BASE + 1))
 
-/* Register read/write macros                   */
-#define DS17485_reg_read(reg)           (DS17485_ADDR = reg, DS17485_DATA)
-#define DS17485_reg_write(reg, data)    (DS17485_ADDR = reg, DS17485_DATA = data)
+/* Read from register r */
+#define DS17485_REG_READ(r)             \
+    ({                                  \
+        DS17485_ADDR = r;               \
+        DS17485_DATA;                   \
+    })
+
+/* Write data to register r */
+#define DS17485_REG_WRITE(r, data)      \
+    ({                                  \
+        DS17485_ADDR = r;               \
+        DS17485_DATA = data;            \
+    })
+
+/* Set bits b in register r */
+#define DS17485_REG_SET_BITS(r, b)      \
+    ({                                  \
+        DS17485_ADDR = r;               \
+        DS17485_DATA |= b;              \
+    })
+
+/* Clear bits b in register r */
+#define DS17485_REG_CLEAR_BITS(r, b)    \
+    ({                                  \
+        DS17485_ADDR = r;               \
+        DS17485_DATA &= ~b;             \
+    })
+
+/* Switch to the DS17485 extended register set */
+#define DS17485_SELECT_EXT_REG()        \
+    DS17485_REG_SET_BITS(DS17485_REG_A, DS17485_DV0)
+
+/* Switch to the DS17485 standard register set */
+#define DS17485_SELECT_STD_REG()        \
+    DS17485_REG_CLEAR_BITS(DS17485_REG_A, DS17485_DV0)
+
 
 /*
     Function declarations
