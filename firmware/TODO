@@ -1,0 +1,17 @@
+- more work on libc-sw
+- [done] memory allocator
+- [done] disassembler
+- complete *printf() implementation
+- add fp support to *printf()
+- OS calls via TRAP
+- [done] complete memory module design
+- clear RAM on boot
+- [done] nBERR generator
+- [done] nBERR handler
+- serial port interrupt drive
+- [done] bring up ATA interface
+- more work on command-line interface: improve line editor
+- [done] write command parser
+- implement some commands
+	- [done] "upload to RAM"
+	- [done] "go"

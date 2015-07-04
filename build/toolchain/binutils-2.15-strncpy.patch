@@ -1,0 +1,162 @@
+diff -crB binutils-2.15/bfd/archive.c binutils-2.15-patched/bfd/archive.c
+*** binutils-2.15/bfd/archive.c	2004-05-17 20:35:56.000000000 +0100
+--- binutils-2.15-patched/bfd/archive.c	2011-09-09 00:38:42.104589026 +0100
+***************
+*** 1335,1340 ****
+--- 1335,1341 ----
+    struct ar_hdr *hdr;
+    char *temp, *temp1;
+    bfd_size_type amt;
++   char date[13], mode[9], size[11];
+  
+    if (member && (member->flags & BFD_IN_MEMORY) != 0)
+      {
+***************
+*** 1364,1370 ****
+    strncpy (hdr->ar_fmag, ARFMAG, 2);
+  
+    /* Goddamned sprintf doesn't permit MAXIMUM field lengths.  */
+!   sprintf ((hdr->ar_date), "%-12ld", (long) status.st_mtime);
+  #ifdef HPUX_LARGE_AR_IDS
+    /* HP has a very "special" way to handle UID/GID's with numeric values
+       > 99999.  */
+--- 1365,1372 ----
+    strncpy (hdr->ar_fmag, ARFMAG, 2);
+  
+    /* Goddamned sprintf doesn't permit MAXIMUM field lengths.  */
+!   sprintf (date, "%-12ld", (long) status.st_mtime);
+!   strncpy (hdr->ar_date, date, sizeof(hdr->ar_date));
+  #ifdef HPUX_LARGE_AR_IDS
+    /* HP has a very "special" way to handle UID/GID's with numeric values
+       > 99999.  */
+***************
+*** 1381,1388 ****
+    else
+  #endif
+    sprintf ((hdr->ar_gid), "%ld", (long) status.st_gid);
+!   sprintf ((hdr->ar_mode), "%-8o", (unsigned int) status.st_mode);
+!   sprintf ((hdr->ar_size), "%-10ld", (long) status.st_size);
+    /* Correct for a lossage in sprintf whereby it null-terminates.  I cannot
+       understand how these C losers could design such a ramshackle bunch of
+       IO operations.  */
+--- 1383,1392 ----
+    else
+  #endif
+    sprintf ((hdr->ar_gid), "%ld", (long) status.st_gid);
+!   sprintf (mode, "%-8o", (unsigned int) status.st_mode);
+!   strncpy (hdr->ar_mode, mode, sizeof(hdr->ar_mode));
+!   sprintf (size, "%-10ld", (long) status.st_size);
+!   strncpy (hdr->ar_size, size, sizeof(hdr->ar_size));
+    /* Correct for a lossage in sprintf whereby it null-terminates.  I cannot
+       understand how these C losers could design such a ramshackle bunch of
+       IO operations.  */
+***************
+*** 1616,1621 ****
+--- 1620,1626 ----
+    bfd_size_type wrote;
+    unsigned int i;
+    int tries;
++   char size[11];
+  
+    /* Verify the viability of all entries; if any of them live in the
+       filesystem (as opposed to living in an archive open for input)
+***************
+*** 1682,1689 ****
+        memset (&hdr, 0, sizeof (struct ar_hdr));
+        strcpy (hdr.ar_name, ename);
+        /* Round size up to even number in archive header.  */
+!       sprintf (&(hdr.ar_size[0]), "%-10d",
+  	       (int) ((elength + 1) & ~(bfd_size_type) 1));
+        strncpy (hdr.ar_fmag, ARFMAG, 2);
+        for (i = 0; i < sizeof (struct ar_hdr); i++)
+  	if (((char *) (&hdr))[i] == '\0')
+--- 1687,1695 ----
+        memset (&hdr, 0, sizeof (struct ar_hdr));
+        strcpy (hdr.ar_name, ename);
+        /* Round size up to even number in archive header.  */
+!       sprintf (size, "%-10d",
+  	       (int) ((elength + 1) & ~(bfd_size_type) 1));
++       strncpy (&(hdr.ar_size[0]), size, sizeof(hdr.ar_size));
+        strncpy (hdr.ar_fmag, ARFMAG, 2);
+        for (i = 0; i < sizeof (struct ar_hdr); i++)
+  	if (((char *) (&hdr))[i] == '\0')
+***************
+*** 2079,2084 ****
+--- 2085,2091 ----
+    struct ar_hdr hdr;
+    unsigned int i;
+    int padit = mapsize & 1;
++   char size[11];
+  
+    if (padit)
+      mapsize++;
+***************
+*** 2091,2097 ****
+  
+    memset (&hdr, 0, sizeof (struct ar_hdr));
+    hdr.ar_name[0] = '/';
+!   sprintf (hdr.ar_size, "%-10d", (int) mapsize);
+    sprintf (hdr.ar_date, "%ld", (long) time (NULL));
+    /* This, at least, is what Intel coff sets the values to.  */
+    sprintf ((hdr.ar_uid), "%d", 0);
+--- 2098,2105 ----
+  
+    memset (&hdr, 0, sizeof (struct ar_hdr));
+    hdr.ar_name[0] = '/';
+!   sprintf (size, "%-10d", (int) mapsize);
+!   strncpy (hdr.ar_size, size, sizeof(hdr.ar_size));
+    sprintf (hdr.ar_date, "%ld", (long) time (NULL));
+    /* This, at least, is what Intel coff sets the values to.  */
+    sprintf ((hdr.ar_uid), "%d", 0);
+diff -crB binutils-2.15/gas/config/tc-m68k.h binutils-2.15-patched/gas/config/tc-m68k.h
+*** binutils-2.15/gas/config/tc-m68k.h	2004-01-26 18:09:30.000000000 +0000
+--- binutils-2.15-patched/gas/config/tc-m68k.h	2011-09-09 00:38:16.794594348 +0100
+***************
+*** 209,214 ****
+--- 209,230 ----
+  #define TARGET_WORD_SIZE 32
+  #define TARGET_ARCH bfd_arch_m68k
+  
++ #ifndef HAVE_RELAX_TYPE
++ #define HAVE_RELAX_TYPE
++ struct relax_type
++ {
++   /* Forward reach. Signed number. > 0.  */
++   long rlx_forward;
++   /* Backward reach. Signed number. < 0.  */
++   long rlx_backward;
++ 
++   /* Bytes length of this address.  */
++   unsigned char rlx_length;
++ 
++   /* Next longer relax-state.  0 means there is no 'next' relax-state.  */
++   relax_substateT rlx_more;
++ };
++ #endif
+  extern struct relax_type md_relax_table[];
+  #define TC_GENERIC_RELAX_TABLE md_relax_table
+  
+diff -crB binutils-2.15/gas/tc.h binutils-2.15-patched/gas/tc.h
+*** binutils-2.15/gas/tc.h	2003-12-03 23:39:38.000000000 +0000
+--- binutils-2.15-patched/gas/tc.h	2011-09-09 00:38:16.794594348 +0100
+***************
+*** 27,32 ****
+--- 27,34 ----
+  /* JF moved this here from as.h under the theory that nobody except MACHINE.c
+     and write.c care about it anyway.  */
+  
++ #ifndef HAVE_RELAX_TYPE
++ #define HAVE_RELAX_TYPE
+  struct relax_type
+  {
+    /* Forward reach. Signed number. > 0.  */
+***************
+*** 40,45 ****
+--- 42,48 ----
+    /* Next longer relax-state.  0 means there is no 'next' relax-state.  */
+    relax_substateT rlx_more;
+  };
++ #endif
+  
+  typedef struct relax_type relax_typeS;
+  

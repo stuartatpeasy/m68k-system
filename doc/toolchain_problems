@@ -1,0 +1,148 @@
+14th August 2011
+
+I've spent some time this weekend working on my implementation of libc.  This will provide header
+files and implementations for as many of the ANSI standard C library functions as possible -
+the printf() family, malloc(), strlen(), etc - as well as definitions of standard types like size_t
+and macros such as NULL.
+
+My aim is to build a static library, libc-sw.a, against which I can link application code.  There
+are plenty of libc implementations available but one of my goals in the ongoing MC68000 computer
+project is to use as little of other people's code as possible so that I gain the deepest possible
+understanding of the principles of operating system design.  The interaction between libc and the
+hardware system on which it runs is quite complex: the operating system provides an abstraction of
+the hardware platform and libc refines this into a standard interface which may be used by
+application software.  This means that libc needs to be able to make certain calls into the
+operating system in order to allocate memory, perform IO and carry out process control functions.
+
+A while ago I built a cross-compiling toolchain based on the GNU gcc and binutils packages.
+Support for the Motorola 68000 architecture was dropped from these tools some time ago so it was
+necessary to obtain fairly old versions: my cross-compiling gcc is version 3.4.2 (the current
+version is 4.6.1) and I am using version 2.15 of binutils (versus the current v2.21).  Building
+these tools on my development machine, which runs a recent version of Ubuntu with up-to-date tools,
+was <LINK_TO_TOOLCHAIN_BUILD_ARTICLE>somewhat challenging</LINK> and, while my toolchain enables me
+to buld firmware, I still occasionally encounter problems.
+
+Today I re-organised my libc source code and made my first build of libc-sw.a.  When I attempted to
+link my firmware against the new library, I hit a problem:
+
+    [user@host ~/68k/firmware/os] $ make
+    m68k-coff-ld main.o duart.o  -ofirmware -T rom.ld -nostdlib -static \
+        -L/opt/m68k/lib/gcc/m68k-coff/3.4.2/m68000 -L../libc-sw -lgcc -lc-sw
+
+    ../libc-sw/libc-sw.a: could not read symbols: Archive has no index; run ranlib to add one
+    make: *** [firmware] Error 1
+
+This seemed odd, as I had built the libc-sw.a archive with an "ar -rcs" command, which should have
+added an index to the file.  I remembered that I was using the host system's ar, instead of the
+cross-compiling toolchain's m68k-coff-ar, because the cross-compiling version tended to crash
+whenever I ran it.  It appeared that the host's ar could not add an index to the .a file because it
+did not recognise the format of the object files contained in the archive.  Rather annoyingly no
+error was reported - ar returned success but created no index.  I tried using my toolchain's
+version of ar; it duly crashed:
+
+    [user@host ~/68k/firmware/libc-sw] $ m68k-coff-ar rcs libc-sw.a *.o
+    *** buffer overflow detected ***: m68k-coff-ar terminated
+    ======= Backtrace: =========
+    /lib/tls/i686/cmov/libc.so.6(__fortify_fail+0x50)[0x845390]
+    /lib/tls/i686/cmov/libc.so.6(+0xe12ca)[0x8442ca]
+    [...etc]
+    ======= Memory map: ========
+    00110000-0012d000 r-xp 00000000 08:01 869949     /lib/libgcc_s.so.1
+    0012d000-0012e000 r--p 0001c000 08:01 869949     /lib/libgcc_s.so.1
+    [...etc]
+    Aborted
+
+Exactly the same crash occurred when I tried to run ranlib on the archive file - clearly my version
+of binutils was buggy.  I started debugging by recompiling my toolchain's binutils package in order
+to obtain a version of the "ar" executable with its debug symbols intact; I then ran this file under
+the debugger in order to find out where the code was crashing.  My debug session went like this:
+
+    [user@host ~/68k/firmware/libc-sw] $ gdb --args ~/68k/build/binutils-2.15/binutils/ar rcs \
+                                                         libc-sw.a *.o
+    GNU gdb (GDB) 7.1-ubuntu
+    [...etc]
+    Reading symbols from ~/68k/build/binutils-2.15/binutils/ar...done.
+    (gdb) start
+    Temporary breakpoint 1 at 0x804bbbf: file ar.c, line 342.
+    (gdb) continue
+    Continuing.
+    *** buffer overflow detected ***: ~/68k/build/binutils-2.15/binutils/ar terminated
+    ======= Backtrace: =========
+    [...etc]
+
+    Program received signal SIGABRT, Aborted.
+    0x0012d422 in __kernel_vsyscall ()
+    (gdb) where
+    #0  0x0012d422 in __kernel_vsyscall ()
+    #1  0x00158651 in *__GI_raise (sig=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:64
+    #2  0x0015ba82 in *__GI_abort () at abort.c:92
+    #3  0x0018f49d in __libc_message (do_abort=2, fmt=0x2620b5 "*** %s ***: %s terminated\n") 
+    #4  0x00210390 in *__GI___fortify_fail (msg=<value optimised out>) at fortify_fail.c:32
+    #5  0x0020f2ca in *__GI___chk_fail () at chk_fail.c:29
+    #6  0x0020ea08 in _IO_str_chk_overflow (fp=0xbfffd5b0, c=32) at vsprintf_chk.c:35
+    #7  0x00197afe in _IO_default_xsputn (f=0xbfffd5b0, data=0x25b350, n=7) at genops.c:485
+    #8  0x0018b5f8 in _IO_padn (fp=0xbfffd5b0, pad=32, count=7) at iopadn.c:68
+    #9  0x0016d6fe in _IO_vfprintf_internal (s=0xbfffd5b0, format=0x8076d2d "%-10d", ap=0xbfffd690 "\204") at vfprintf.c:1613
+    #10 0x0020eabd in ___vsprintf_chk (s=0xbfffd6f0 "132      ", flags=1, slen=10, format=0x8076d2d "%-10d", args=0xbfffd690 "\204") at vsprintf_chk.c:86
+    #11 0x0020e9fd in ___sprintf_chk (s=0xbfffd6f0 "132      ", flags=1, slen=10, format=0x8076d2d "%-10d") at sprintf_chk.c:33
+    #12 0x08050fe5 in sprintf (arch=0x809fb90, elength=0, map=0x80a1d98, symbol_count=12, stridx=79) at /usr/include/bits/stdio2.h:34
+    #13 coff_write_armap (arch=0x809fb90, elength=0, map=0x80a1d98, symbol_count=12, stridx=79) at archive.c:2094
+    #14 0x0804f15e in _bfd_compute_and_write_armap (arch=0x809fb90, elength=0) at archive.c:1882
+    #15 0x08051a72 in _bfd_write_archive_contents (arch=0x809fb90) at archive.c:1674
+    #16 0x080555c8 in bfd_close (abfd=0x809fb90) at opncls.c:411
+    #17 0x0804b8a2 in write_archive (iarch=0x8088d40) at ar.c:1098
+    #18 0x0804c5c4 in replace_members (argc=10, argv=0xbffffa74) at ar.c:1338
+    #19 main (argc=10, argv=0xbffffa74) at ar.c:694
+    (gdb) quit
+
+Reading down through the backtrace the last entry which is still inside binutils code is #13,
+coff_write_armap() in binutils/bfd/archive.c.  That code looks like this:
+
+    2079   struct ar_hdr hdr;
+    [...]
+    2093   hdr.ar_name[0] = '/';
+    2094   sprintf (hdr.ar_size, "%-10d", (int) mapsize);
+    2095   sprintf (hdr.ar_date, "%ld", (long) time (NULL));
+
+A buffer overrun was happening in the sprintf() call on like 2094.  My next step was to find the
+definition of struct ar_hdr and check the declaration of its ar_size member.  I found the struct in
+binutils/include/aout/ar.h:
+
+    42 struct ar_hdr {
+    43   char ar_name[16];     /* name of this member */
+    44   char ar_date[12];     /* file mtime */
+    45   char ar_uid[6];       /* owner uid; printed as decimal */
+    46   char ar_gid[6];       /* owner gid; printed as decimal */
+    47   char ar_mode[8];      /* file mode, printed as octal   */
+    48   char ar_size[10];     /* file size, printed as decimal */
+    49   char ar_fmag[2];      /* should contain ARFMAG */
+    50 };
+
+The problem is fairly obvious: the "%-10d" modifier tells sprintf() to print a left-aligned decimal
+value padded out to ten characters with spaces.  The ar_size field is a char[10], which means there
+is room for the ten-character decimal but not for the terminating zero which sprintf() adds!  The
+___sprintf_chk() function in the host system's libc was correctly detecting a buffer overrun and
+aborting the program.
+
+Clearly modifying the definition of struct ar_hdr would be unwise, so I decided instead to replace
+the offending line of archive.c:
+
+    2079   struct ar_hdr hdr;
+    2080   char size[11];
+    [...]
+    2095   sprintf(size, "%-10d", (int) mapsize);
+    2096   strncpy(hdr.ar_size, size, sizeof(hdr.ar_size));
+
+At first sight it would appear that snprintf() would be a better solution than sprintf() followed
+by a strncpy(), but snprintf() always writes a terminating zero as its last character.  I needed
+a ten-character string consisting of only decimal digits and spaces, so snprintf() would not have
+helped.  My solution is rather ugly but it does the job.  I now have a functioning m68k-coff-ar and
+m68-coff-ranlib, and I was able to use either tool to generate the correct index for my libc-sw.a
+archive.
+
+It seems odd that the offending function was coded in the way it was.  Presumably earlier versions
+of libc did not check sprintf() for buffer overrun conditions; it would appear that the original
+implementation would always write a terminating zero byte past the end of the ar_size buffer,
+corrupting the value in ar_fmag.  For the code to perform correctly it would be necessary to ensure
+that the ar_fmag struct member was always updated after writing ar_size.
+

@@ -1,0 +1,168 @@
+diff -crB gcc-3.4.2-orig/gcc/collect2.c gcc-3.4.2/gcc/collect2.c
+*** gcc-3.4.2-orig/gcc/collect2.c	2004-03-09 15:49:56.000000000 +0000
+--- gcc-3.4.2/gcc/collect2.c	2011-09-09 09:20:35.049570324 +0100
+***************
+*** 1532,1538 ****
+    if (redir)
+      {
+        /* Open response file.  */
+!       redir_handle = open (redir, O_WRONLY | O_TRUNC | O_CREAT);
+  
+        /* Duplicate the stdout and stderr file handles
+  	 so they can be restored later.  */
+--- 1532,1538 ----
+    if (redir)
+      {
+        /* Open response file.  */
+!       redir_handle = open (redir, O_WRONLY | O_TRUNC | O_CREAT, 00644);
+  
+        /* Duplicate the stdout and stderr file handles
+  	 so they can be restored later.  */
+diff -crB gcc-3.4.2-orig/gcc/libgcc2.c gcc-3.4.2/gcc/libgcc2.c
+*** gcc-3.4.2-orig/gcc/libgcc2.c	2004-07-17 22:18:47.000000000 +0100
+--- gcc-3.4.2/gcc/libgcc2.c	2011-09-09 09:20:35.049570324 +0100
+***************
+*** 1204,1212 ****
+  DWtype
+  __fixdfdi (DFtype a)
+  {
+!   if (a < 0)
+!     return - __fixunsdfDI (-a);
+!   return __fixunsdfDI (a);
+  }
+  #endif
+  
+--- 1204,1212 ----
+  DWtype
+  __fixdfdi (DFtype a)
+  {
+!   if (a >= 0)
+!     return __fixunsdfDI (a);
+!   return -__fixunsdfDI (-a);
+  }
+  #endif
+  
+diff -crB gcc-3.4.2-orig/gcc/Makefile.in gcc-3.4.2/gcc/Makefile.in
+*** gcc-3.4.2-orig/gcc/Makefile.in	2004-06-17 22:56:58.000000000 +0100
+--- gcc-3.4.2/gcc/Makefile.in	2011-09-09 09:20:35.049570324 +0100
+***************
+*** 304,310 ****
+      if [ "$(host)" = "$(target)" ] ; then \
+        echo ar; \
+      else \
+!        t='$(program_transform_name)'; echo ar | sed -e $$t ; \
+      fi; \
+    fi`
+  AR_FLAGS_FOR_TARGET =
+--- 304,310 ----
+      if [ "$(host)" = "$(target)" ] ; then \
+        echo ar; \
+      else \
+!        echo ar | sed -e "$(program_transform_name)" ; \
+      fi; \
+    fi`
+  AR_FLAGS_FOR_TARGET =
+***************
+*** 317,323 ****
+      if [ "$(host)" = "$(target)" ] ; then \
+        echo $(RANLIB); \
+      else \
+!        t='$(program_transform_name)'; echo ranlib | sed -e $$t ; \
+      fi; \
+    fi`
+  NM_FOR_TARGET = ` \
+--- 317,323 ----
+      if [ "$(host)" = "$(target)" ] ; then \
+        echo $(RANLIB); \
+      else \
+!        echo ranlib | sed -e "$(program_transform_name)" ; \
+      fi; \
+    fi`
+  NM_FOR_TARGET = ` \
+***************
+*** 329,335 ****
+      if [ "$(host)" = "$(target)" ] ; then \
+        echo nm; \
+      else \
+!        t='$(program_transform_name)'; echo nm | sed -e $$t ; \
+      fi; \
+    fi`
+  
+--- 329,335 ----
+      if [ "$(host)" = "$(target)" ] ; then \
+        echo nm; \
+      else \
+!        echo nm | sed -e "$(program_transform_name)" ; \
+      fi; \
+    fi`
+  
+***************
+*** 489,494 ****
+--- 489,495 ----
+  #
+  LIBGCC2_DEBUG_CFLAGS = -g
+  LIBGCC2_CFLAGS = -O2 $(LIBGCC2_INCLUDES) $(GCC_CFLAGS) $(TARGET_LIBGCC2_CFLAGS) $(LIBGCC2_DEBUG_CFLAGS) $(GTHREAD_FLAGS) -DIN_LIBGCC2 -D__GCC_FLOAT_NOT_NEEDED @inhibit_libc@
++ LIBGCC2_CFLAGS_NOOPT = $(LIBGCC2_INCLUDES) $(GCC_CFLAGS) $(TARGET_LIBGCC2_CFLAGS) $(LIBGCC2_DEBUG_CFLAGS) $(GTHREAD_FLAGS) -DIN_LIBGCC2 -D__GCC_FLOAT_NOT_NEEDED @inhibit_libc@
+  
+  # Additional options to use when compiling libgcc2.a.
+  # Some targets override this to -isystem include
+***************
+*** 775,780 ****
+--- 776,782 ----
+  export INSTALL_DATA
+  export LIB1ASMSRC
+  export LIBGCC2_CFLAGS
++ export LIBGCC2_CFLAGS_NOOPT
+  export MACHMODE_H
+  export NM_FOR_TARGET
+  export RANLIB_FOR_TARGET
+diff -crB gcc-3.4.2-orig/gcc/mklibgcc.in gcc-3.4.2/gcc/mklibgcc.in
+*** gcc-3.4.2-orig/gcc/mklibgcc.in	2004-07-17 22:18:48.000000000 +0100
+--- gcc-3.4.2/gcc/mklibgcc.in	2011-09-09 09:21:27.759570325 +0100
+***************
+*** 123,130 ****
+      out="libgcc/${dir}/${name}${objext}"
+  
+      echo $out: $libgcc2_c_dep
+!     echo "	$gcc_compile" '$(MAYBE_USE_COLLECT2)' $flags -DL$name \
+!       -c '$(srcdir)/libgcc2.c' -o $out
+    done
+    libgcc2_objs="$libgcc2_objs ${name}${objext}"
+  done
+--- 123,136 ----
+      out="libgcc/${dir}/${name}${objext}"
+  
+      echo $out: $libgcc2_c_dep
+! 	if [ $name = "_fixdfdi" ] || [ $name = "_fixsfdi" ] || [ $name = "_fixxfdi" ] || [ $name = "_fixunsxfdi" ]; then
+! 		echo "*** disabling optimiser for $name" >/dev/stderr
+! 	    echo "	$gcc_compile_noopt" '$(MAYBE_USE_COLLECT2)' $flags -DL$name \
+!     	  -c '$(srcdir)/libgcc2.c' -o $out
+! 	else
+! 	    echo "	$gcc_compile" '$(MAYBE_USE_COLLECT2)' $flags -DL$name \
+!     	  -c '$(srcdir)/libgcc2.c' -o $out
+! 	fi
+    done
+    libgcc2_objs="$libgcc2_objs ${name}${objext}"
+  done
+***************
+*** 213,219 ****
+      fi
+  
+      echo $out: stmp-dirs $file
+!     echo "	$gcc_compile" $flags -c $file -o $out
+    done
+    libgcc2_objs="$libgcc2_objs ${oname}${objext}"
+  done
+--- 219,230 ----
+      fi
+  
+      echo $out: stmp-dirs $file
+! 	if [ $file = "xfgnulib.c" ]; then
+! 		echo "**** disabling optimiser for $name" >/dev/stderr
+! 	    echo "	$gcc_compile_noopt" $flags -c $file -o $out
+! 	else
+! 	    echo "	$gcc_compile" $flags -c $file -o $out
+! 	fi
+    done
+    libgcc2_objs="$libgcc2_objs ${oname}${objext}"
+  done

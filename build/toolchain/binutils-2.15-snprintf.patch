@@ -1,0 +1,106 @@
+diff -crB binutils-2.15-orig/bfd/archive.c binutils-2.15/bfd/archive.c
+*** binutils-2.15-orig/bfd/archive.c	2004-05-17 20:35:56.000000000 +0100
+--- binutils-2.15/bfd/archive.c	2011-09-08 23:22:34.724592881 +0100
+***************
+*** 1364,1370 ****
+    strncpy (hdr->ar_fmag, ARFMAG, 2);
+  
+    /* Goddamned sprintf doesn't permit MAXIMUM field lengths.  */
+!   sprintf ((hdr->ar_date), "%-12ld", (long) status.st_mtime);
+  #ifdef HPUX_LARGE_AR_IDS
+    /* HP has a very "special" way to handle UID/GID's with numeric values
+       > 99999.  */
+--- 1363,1369 ----
+    strncpy (hdr->ar_fmag, ARFMAG, 2);
+  
+    /* Goddamned sprintf doesn't permit MAXIMUM field lengths.  */
+!   snprintf (hdr->ar_date, sizeof(hdr->ar_date), "%-12ld", (long) status.st_mtime);
+  #ifdef HPUX_LARGE_AR_IDS
+    /* HP has a very "special" way to handle UID/GID's with numeric values
+       > 99999.  */
+***************
+*** 1381,1387 ****
+    else
+  #endif
+    sprintf ((hdr->ar_gid), "%ld", (long) status.st_gid);
+!   sprintf ((hdr->ar_mode), "%-8o", (unsigned int) status.st_mode);
+    sprintf ((hdr->ar_size), "%-10ld", (long) status.st_size);
+    /* Correct for a lossage in sprintf whereby it null-terminates.  I cannot
+       understand how these C losers could design such a ramshackle bunch of
+--- 1380,1386 ----
+    else
+  #endif
+    sprintf ((hdr->ar_gid), "%ld", (long) status.st_gid);
+!   snprintf ((hdr->ar_mode), sizeof(hdr->ar_mode), "%-8o", (unsigned int) status.st_mode);
+    sprintf ((hdr->ar_size), "%-10ld", (long) status.st_size);
+    /* Correct for a lossage in sprintf whereby it null-terminates.  I cannot
+       understand how these C losers could design such a ramshackle bunch of
+***************
+*** 2091,2097 ****
+  
+    memset (&hdr, 0, sizeof (struct ar_hdr));
+    hdr.ar_name[0] = '/';
+!   sprintf (hdr.ar_size, "%-10d", (int) mapsize);
+    sprintf (hdr.ar_date, "%ld", (long) time (NULL));
+    /* This, at least, is what Intel coff sets the values to.  */
+    sprintf ((hdr.ar_uid), "%d", 0);
+--- 2090,2096 ----
+  
+    memset (&hdr, 0, sizeof (struct ar_hdr));
+    hdr.ar_name[0] = '/';
+!   snprintf (hdr.ar_size, sizeof(hdr.ar_size), "%-10d", (int) mapsize);
+    sprintf (hdr.ar_date, "%ld", (long) time (NULL));
+    /* This, at least, is what Intel coff sets the values to.  */
+    sprintf ((hdr.ar_uid), "%d", 0);
+diff -crB binutils-2.15-orig/gas/config/tc-m68k.h binutils-2.15/gas/config/tc-m68k.h
+*** binutils-2.15-orig/gas/config/tc-m68k.h	2004-01-26 18:09:30.000000000 +0000
+--- binutils-2.15/gas/config/tc-m68k.h	2011-09-08 23:18:19.004595911 +0100
+***************
+*** 209,214 ****
+--- 209,230 ----
+  #define TARGET_WORD_SIZE 32
+  #define TARGET_ARCH bfd_arch_m68k
+  
++ #ifndef HAVE_RELAX_TYPE
++ #define HAVE_RELAX_TYPE
++ struct relax_type
++ {
++   /* Forward reach. Signed number. > 0.  */
++   long rlx_forward;
++   /* Backward reach. Signed number. < 0.  */
++   long rlx_backward;
++ 
++   /* Bytes length of this address.  */
++   unsigned char rlx_length;
++ 
++   /* Next longer relax-state.  0 means there is no 'next' relax-state.  */
++   relax_substateT rlx_more;
++ };
++ #endif
+  extern struct relax_type md_relax_table[];
+  #define TC_GENERIC_RELAX_TABLE md_relax_table
+  
+diff -crB binutils-2.15-orig/gas/tc.h binutils-2.15/gas/tc.h
+*** binutils-2.15-orig/gas/tc.h	2003-12-03 23:39:38.000000000 +0000
+--- binutils-2.15/gas/tc.h	2011-09-08 23:20:02.414594352 +0100
+***************
+*** 27,32 ****
+--- 27,34 ----
+  /* JF moved this here from as.h under the theory that nobody except MACHINE.c
+     and write.c care about it anyway.  */
+  
++ #ifndef HAVE_RELAX_TYPE
++ #define HAVE_RELAX_TYPE
+  struct relax_type
+  {
+    /* Forward reach. Signed number. > 0.  */
+***************
+*** 40,45 ****
+--- 42,48 ----
+    /* Next longer relax-state.  0 means there is no 'next' relax-state.  */
+    relax_substateT rlx_more;
+  };
++ #endif
+  
+  typedef struct relax_type relax_typeS;
+  

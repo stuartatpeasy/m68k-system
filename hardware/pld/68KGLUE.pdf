@@ -1,0 +1,232 @@
+{COMPONENT C:\USERS\SWALLACE\DOCUMENTS\ELECTRONICS\DESIGNS\68K COMPUTER\HARDWARE\PLD\68KGLUE.SYM
+
+ {ENVIRONMENT
+  {PDIFvrev 3.00}
+  {Program "CUPL(WM) Version 5.0a"}
+  {DBtype "Schematic"}
+  {DBvrev 1.01}
+  {DBtime "Sun Feb 16 13:42:33 2014 "}
+  {DBunit "MIL"}
+  {DBgrid 10}
+  {Lyrstr "WIRES" 1 "BUS" 1 "GATE" 2 "IEEE" 2 "PINFUN" 3 "PINNUM" 1 
+          "PINNAM" 6 "PINCON" 4 "REFDES" 2 "ATTR" 6 "SDOT" 1 
+          "DEVICE" 5 "OUTLIN" 5 "ATTR2" 6 "NOTES" 6 "NETNAM" 4 
+          "CMPNAM" 5 "BORDER" 5}
+ }
+
+ {USER
+  {VIEW
+   {Mode SYMB}
+   {Nlst OPEN}
+   {Vw 0 0 2}
+   {Lv 12 2 2 2 0 0 2 2 2 2 0 0 2 1 2 0 0 0 0}
+   {Gs 10 10}
+  }
+ }
+
+ {DISPLAY
+  [Ly "PINNUM"]
+  [Ls "SOLID"][Wd 0]
+  [Ts 15][Tj "LC"][Tr 0][Tm "N"]
+ }
+
+ {SYMBOL
+  {PIN_DEF
+   [Ly "PINCON"]
+   {P AS' {Pt "INPUT"}{Lq 0}{Ploc 100 280}}
+   {P LDS' {Pt "INPUT"}{Lq 0}{Ploc 100 240}}
+   {P UDS' {Pt "INPUT"}{Lq 0}{Ploc 100 220}}
+   {P READ {Pt "INPUT"}{Lq 0}{Ploc 100 200}}
+   {P FC0 {Pt "INPUT"}{Lq 0}{Ploc 100 180}}
+   {P FC1 {Pt "INPUT"}{Lq 0}{Ploc 100 160}}
+   {P FC2 {Pt "INPUT"}{Lq 0}{Ploc 100 140}}
+   {P A20 {Pt "INPUT"}{Lq 0}{Ploc 100 120}}
+   {P A21 {Pt "INPUT"}{Lq 0}{Ploc 100 100}}
+   {P A22 {Pt "INPUT"}{Lq 0}{Ploc 100 80}}
+   {P A23 {Pt "INPUT"}{Lq 0}{Ploc 100 60}}
+   {P BOOT' {Pt "INPUT"}{Lq 0}{Ploc 100 40}}
+   {P WATCHDOG {Pt "INPUT"}{Lq 0}{Ploc 100 20}}
+   {P RAMCS' {Pt "I/O"}{Lq 0}{Ploc 360 20}}
+   {P ROMCS' {Pt "I/O"}{Lq 0}{Ploc 360 40}}
+   {P PERIPHCS' {Pt "I/O"}{Lq 0}{Ploc 360 60}}
+   {P BERR' {Pt "I/O"}{Lq 0}{Ploc 360 80}}
+   {P CPU_CYCL' {Pt "I/O"}{Lq 0}{Ploc 360 100}}
+   {P UW' {Pt "I/O"}{Lq 0}{Ploc 360 120}}
+   {P UR' {Pt "I/O"}{Lq 0}{Ploc 360 140}}
+   {P LW' {Pt "I/O"}{Lq 0}{Ploc 360 160}}
+   {P LR' {Pt "I/O"}{Lq 0}{Ploc 360 180}}
+  }
+
+  {PKG
+   [Ly "REFDES"]
+   [Ts 25][Tj "CB"][Tr 0][Tm "N"]
+   {Rdl 230 310}
+
+   [Ly "PINNUM"]
+   [Ts 15][Tj "RC"]
+   {Pnl 120 290}
+   [Ts 15][Tj "RC"]
+   {Pnl 120 250}
+   {Pnl 120 230}
+   {Pnl 120 210}
+   {Pnl 120 190}
+   {Pnl 120 170}
+   {Pnl 120 150}
+   {Pnl 120 130}
+   {Pnl 120 110}
+   {Pnl 120 90}
+   {Pnl 120 70}
+   {Pnl 120 50}
+   {Pnl 120 30}
+   [Ts 15][Tj "LC"]
+   {Pnl 340 30}
+   {Pnl 340 50}
+   {Pnl 340 70}
+   {Pnl 340 90}
+   {Pnl 340 110}
+   {Pnl 340 130}
+   {Pnl 340 150}
+   {Pnl 340 170}
+   {Pnl 340 190}
+
+   {Sd A 1 2 3 4 5 6 7 8 9 10 11 13 17 14 15 16 18 19 20 21 22 23}
+  }
+
+  {PIC
+   [Ly "GATE"]
+   [Ts 15][Tj "LC"][Tr 0][Tm "N"]
+   {R 130 300 330 0}
+   {L 120 280 100 280}
+   {C 125 280 5}
+   {L 130 290 140 280 130 270}
+   {L 120 240 100 240}
+   {C 125 240 5}
+   {L 120 220 100 220}
+   {C 125 220 5}
+   {L 130 200 100 200}
+   {L 130 180 100 180}
+   {L 130 160 100 160}
+   {L 130 140 100 140}
+   {L 130 120 100 120}
+   {L 130 100 100 100}
+   {L 130 80 100 80}
+   {L 130 60 100 60}
+   {L 120 40 100 40}
+   {C 125 40 5}
+   {L 130 20 100 20}
+   {C 335 20 5}
+   {L 340 20 360 20}
+   {C 335 40 5}
+   {L 340 40 360 40}
+   {C 335 60 5}
+   {L 340 60 360 60}
+   {C 335 80 5}
+   {L 340 80 360 80}
+   {C 335 100 5}
+   {L 340 100 360 100}
+   {C 335 120 5}
+   {L 340 120 360 120}
+   {C 335 140 5}
+   {L 340 140 360 140}
+   {C 335 160 5}
+   {L 340 160 360 160}
+   {C 335 180 5}
+   {L 340 180 360 180}
+   [Ly "PINNAM"]
+   [Tj "LC"]
+   {T "AS'" 140 280}
+   {T "LDS'" 140 240}
+   {T "UDS'" 140 220}
+   {T "READ" 140 200}
+   {T "FC0" 140 180}
+   {T "FC1" 140 160}
+   {T "FC2" 140 140}
+   {T "A20" 140 120}
+   {T "A21" 140 100}
+   {T "A22" 140 80}
+   {T "A23" 140 60}
+   {T "BOOT'" 140 40}
+   {T "WATCHDOG" 140 20}
+   [Tj "RC"]
+   {T "RAMCS'" 320 20}
+   {T "ROMCS'" 320 40}
+   {T "PERIPHCS'" 320 60}
+   {T "BERR'" 320 80}
+   {T "CPU_CYCL'" 320 100}
+   {T "UW'" 320 120}
+   {T "UR'" 320 140}
+   {T "LW'" 320 160}
+   {T "LR'" 320 180}
+   [Ly "DEVICE"]
+   [Tj "CT"]
+   {T "G22V10" 230 -10}
+  }
+
+  {ATR
+   {IN
+    {Org 100 20}
+    {Ty 255}
+   }
+   {EX
+    [Ly "ATTR2"]
+    [Ts 12][Tj "CT"][Tr 0][Tm "N"]
+    {At PLD C:\USERS\SWALLACE\DOCUMENTS\ELECTRONICS\DESIGNS\68K COMPUTER\HARDWARE\PLD\68KGLUE 230 300}
+   }
+  }
+ }
+
+ {DETAIL
+  {ANNOTATE
+  }
+
+  {NET_DEF
+   {N AS'
+   }
+   {N LDS'
+   }
+   {N UDS'
+   }
+   {N READ
+   }
+   {N FC0
+   }
+   {N FC1
+   }
+   {N FC2
+   }
+   {N A20
+   }
+   {N A21
+   }
+   {N A22
+   }
+   {N A23
+   }
+   {N BOOT'
+   }
+   {N WATCHDOG
+   }
+   {N RAMCS'
+   }
+   {N ROMCS'
+   }
+   {N PERIPHCS'
+   }
+   {N BERR'
+   }
+   {N CPU_CYCL'
+   }
+   {N UW'
+   }
+   {N UR'
+   }
+   {N LW'
+   }
+   {N LR'
+   }
+  }
+
+  {SUBCOMP
+  }
+ }
+}

@@ -1,0 +1,13 @@
+[2012-11-25]
+
+Consider making driver read()/write() fns take an additional arg into which the driver will place
+the number of bytes actually read/written.  Otherwise there is no way of detecting short
+reads/writes.
+
+Ensure that block-oriented read()/write() support short reads and writes.  In the case of ATA, a
+complete block must always be read.  In the case of short writes, the write must be implemented as
+a full-block read-modify-write.
+
+[2012-12-12]
+
+Back out all this short reads/writes nonsense.  Block devices should only ever deal in whole blocks.

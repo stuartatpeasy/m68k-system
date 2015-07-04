@@ -1,0 +1,124 @@
+disassembler bugs
+-----------------
+
+ 1. 32-bit hex qtys shown with halfwords reversed		[FIXED]
+
+ 2. remove "#0x" prefix from abs addresses			[FIXED]
+
+ 3. # of bytes to disassemble is displayed incorrectly
+
+ 4. # of bytes to disassemble is counted incorrectly
+
+ 5. negative absolute values are displayed as +ve values	[FIXED]
+
+ 6. negative displacements are displayed as +ve values		[FIXED]
+
+
+ 7.     f0010c: 9082            subl %d2,%d0
+    0x00f0010c: 9082            subx.l, d2, d0			[FIXED]
+
+
+ 8.     f00136: 4cdf 040c       moveml %sp@+,%d2-%d3/%a2
+    0x00f00136: 4cdf 040c       movem.l (a7)+, d2-d3,/a2a2,	[FIXED]
+
+
+ 9.     f00172: b3c8            cmpal %a0,%a1
+    0x00f00172: b3c8            ???				[FIXED]
+
+
+10.     f0023c: b1c0            cmpal %d0,%a0
+    0x00f0023c: b1c0            cmpa.l d0, a			[FIXED]
+
+
+11.     f0021e: 0c91 c91d 58bf  cmpil #-920823617,%a1@
+    0x00f0021e: 0c91            ???				[FIXED]
+
+
+12. 0x00f0000a: 0700            (null).l d3, d0			[FIXED]
+
+
+13.     f00008: 007c 0700       oriw #1792,%sr
+    0x00f00008: 007c 0700       ori #0x00, sr			[FIXED]
+
+
+14.     f00036: 13fc ffcc 00e0  moveb #-52,e00002
+        f0003c: 0002
+    0x00f00036: 13fc ffcc 00e0  move.b #0x02, #0xffcc00e0
+    0x00f0003c: 0002 13fc       ori.b #0xfc, d2			[FIXED]
+
+
+15.     f00096: 0280 0000 00ff  andil #255,%d0
+    0x00f00096: 0280 0000 00ff  andi.l #0x00000000, d0		[FIXED]
+
+
+16.     f000c2: 48e7 3020       moveml %d2-%d3/%a2,%sp@-
+    0x00f000c2: 48e7 3020       movem.l , -(a7)			[FIXED]
+
+
+17.     f0015a: 6100 ff62       bsrw f000be <os_malloc>
+    0x00f0015a: 6100 ff62       bf -158(pc)			[FIXED]
+
+
+18.     f00172: d1c0            addal %d0,%a0
+    0x00f00172: d1c0            ???				[FIXED]
+
+
+19.     f001ca: 0828 0000 0003  btst #0,%a0@(3)
+    0x00f001ca: 0828 0000       btst.b #0x00, d0		[FIXED]
+
+
+20.     f00264: 66f6            bnes f0025c <os_realloc+0x5c>
+    0x00f00264: 66f6            bne -:(pc)			[?FIXED]
+
+
+21.     f00312: 40c5            movew %sr,%d5
+    0x00f00312: 40c5            move.w sr,  d5			[FIXED]
+
+
+23.     f0034a: 23fc 0000 1000  movel #4096,404 <g_Heap>
+        f00350: 0000 0404
+    0x00f0034a: 23fc 0000 1000  move.l #0x00000404, #0x00001000
+    0x00f00350: 0000 0404       ori.b #0x04, d0			[FIXED]
+
+
+24.     f00370: 487a ff5a       pea %pc@(f002cc <.text>)
+    0x00f00370: 487a            pea.l 65370(pc)
+    0x00f00372: ff5a            ???				[FIXED]
+
+
+25. 0x0000019e: e629            (null)r.b d3, d1		[FIXED]
+
+
+--- t.bin ---
+
+26.     f02158: 0170 0120 008e  bchg %d0,%a0@(0000008e,%d0:w)
+    0x00f02158: 0170            ???
+    0x00f0215a: 0120            ???
+    0x00f0215c: 008e 0010 f41a  ori.l #0xf41a0010, a6		[FIXED]
+
+27.     f01cde: 03de            bset %d1,%fp@+
+    0x00f01cde: 03de            ???				[FIXED]
+
+28.     f01ce0: 03c2            bset %d1,%d2
+    0x00f01ce0: 03c2            ???				[FIXED]
+
+29.     f01ce2: 039a            bclr %d1,%a2@+
+    0x00f01ce2: 039a            ???				[FIXED]
+
+
+--- third round ---
+
+30.     f00370: 487a ff5a       pea %pc@(f002cc <.text>)
+    0x00f00370: 487a ff5a 4eb9  movem.l d1-d4,d6/a0-, 20153(pc)	[FIXED]
+
+31.     f0047e: 48e7 3f3c       moveml %d2-%d7/%a2-%a5,%sp@-
+    0x00f0047e: 48e7 3f3c       movem.l d2-d5/a2-, -(a7)	[FIXED]
+
+32.     f00046: 12bc 0005       moveb #5,%a1@
+    0x00f00046: 12bc 0005       move.b #0, (a1)			[FIXED]
+
+33.     f00b26: e482            asrl #2,%d2
+    0x00f00b26: e482            asr.l d2, d2			[FIXED]
+
+
+    

@@ -1,0 +1,39 @@
+0. Configure build environment
+
+0a. install necessary packages
+
+	- flex
+
+0b. create installation root and build directory
+
+	$ sudo mkdir /opt/m68k
+	$ mkdir tools
+	$ cd tools
+
+1. Build and install binutils-2.15a
+
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.15a.tar.bz2
+	$ tar xf binutils-2.15a.tar.bz2
+	$ cd binutils-2.15
+	$ patch -p1 -i ../../binutils-2.15.patch
+	$ ./configure --prefix=/opt/m68k --target=m68k-coff
+	$ make -j4
+	$ sudo make install
+	$ cd ..
+
+2. build and install gcc-core-3.4.2
+
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-3.4.2/gcc-core-3.4.2.tar.bz2
+	$ tar xf gcc-core-3.4.2.tar.bz2
+	$ cd gcc-3.4.2
+	$ patch -p1 -i ../../gcc-3.4.2.patch
+	$ ./configure --prefix=/opt/m68k --target=m68k-coff --enable-languages=c
+	$ make -j4
+	$ sudo make install
+	$ cd ..
+
+3. tidy up
+
+	$ cd ..
+	$ rm -rf tools
+

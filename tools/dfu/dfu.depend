@@ -1,0 +1,84 @@
+# depslib dependency file v1.0
+1435405116 source:/home/swallace/projects/m68k-system/tools/dfu/args.C
+	"args.h"
+
+1435405116 /home/swallace/projects/m68k-system/tools/dfu/args.h
+	<map>
+	<string>
+	<algorithm>
+	<cstring>
+	<cstdlib>
+	"exception.h"
+
+1435405116 /home/swallace/projects/m68k-system/tools/dfu/exception.h
+	<string>
+	<cstring>
+	<cerrno>
+
+1435405116 source:/home/swallace/projects/m68k-system/tools/dfu/args.cpp
+	"args.h"
+
+1435424728 source:/home/swallace/projects/m68k-system/tools/dfu/dfu.cpp
+	"dfu.h"
+
+1435407733 /home/swallace/projects/m68k-system/tools/dfu/dfu.h
+	<iostream>
+	<fstream>
+	<list>
+	<iomanip>
+	<cstdio>
+	<cstring>
+	<cstdint>
+	<sys/types.h>
+	<sys/stat.h>
+	<unistd.h>
+	<dirent.h>
+	"args.h"
+	"target.h"
+	"exception.h"
+
+1435406288 /home/swallace/projects/m68k-system/tools/dfu/programmer.h
+	<string>
+	<cstring>
+	<iostream>
+	<algorithm>
+	<cstdint>
+	<sys/time.h>
+	<unistd.h>
+	"serialport.h"
+	"exception.h"
+
+1435407792 /home/swallace/projects/m68k-system/tools/dfu/serialport.h
+	<fcntl.h>
+	<signal.h>
+	<sys/time.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<termios.h>
+	<unistd.h>
+	<string>
+	<cstring>
+	<cstdint>
+	<cerrno>
+	"exception.h"
+
+1435405116 source:/home/swallace/projects/m68k-system/tools/dfu/programmer.cpp
+	"programmer.h"
+
+1435406484 source:/home/swallace/projects/m68k-system/tools/dfu/serialport.cpp
+	"serialport.h"
+
+1435424245 /home/swallace/projects/m68k-system/tools/dfu/target.h
+	<string>
+	<cstring>
+	<iostream>
+	<algorithm>
+	<cstdint>
+	<sys/time.h>
+	<unistd.h>
+	"serialport.h"
+	"exception.h"
+
+1435425224 source:/home/swallace/projects/m68k-system/tools/dfu/target.cpp
+	"target.h"
+

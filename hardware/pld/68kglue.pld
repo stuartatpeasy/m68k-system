@@ -1,0 +1,103 @@
+Name      68kglue;
+Partno    0;
+Date      2014-02-04;
+Rev       00;
+Designer  swallace;
+Company   ;
+Assembly  None;
+Location  None;
+Device    G22V10;
+
+/*
+
+TODO : maybe swap nLDS/nUDS pins?
+
+                   22V10
+                _____ _____
+  nAS  CLK/IN -| 1   U  24 |- VCC
+  nLDS     IN -| 2      23 |- I/O	nLR
+  nUDS     IN -| 3      22 |- I/O	nLW
+  R/nW  IN/PD -| 4      21 |- I/O	nUR
+  FC0      IN -| 5      20 |- I/O	nUW
+  FC1      IN -| 6      19 |- I/O	nCPU_CYCLE
+  FC2      IN -| 7      18 |- I/O	nBERR
+  A20      IN -| 8      17 |- I/O	WATCHDOG
+  A21      IN -| 9      16 |- I/O	nPERIPHCS 
+  A22      IN -| 10     15 |- I/O	nROMCS
+  A23      IN -| 11     14 |- I/O	nRAMCS
+          GND -| 12     13 |- IN	nBOOT
+               -------------
+*/
+
+/** Inputs **/
+
+Pin 1         = !AS;
+Pin 2         = !LDS;
+Pin 3         = !UDS;
+Pin 4         = READ;
+Pin [5..7]    = [FC0..2];
+Pin [8..11]   = [A20..23];
+Pin 13        = !BOOT;
+Pin 17        = WATCHDOG;
+
+/** Outputs **/
+
+Pin 14        = !RAMCS;
+Pin 15        = !ROMCS;
+Pin 16        = !PERIPHCS;
+
+Pin 18        = !BERR;
+Pin 19        = !CPU_CYCLE;
+Pin 20        = !UW;
+Pin 21        = !UR;
+Pin 22        = !LW;
+Pin 23        = !LR;
+
+
+/*
+	Execution mode, interrupt autovectoring and fault detection
+*/
+
+BUS_SPACE = FC1 $ FC0;		/* matches all defined states except CPU space */
+CPU_SPACE = FC2 & FC1 & FC0;	/* matches only CPU space */
+
+BUS_CYCLE = BUS_SPACE & AS;
+CPU_CYCLE = CPU_SPACE & AS;
+
+MODE_USER = !FC2 & BUS_SPACE;
+MODE_SUPER = FC2 & BUS_SPACE;
+
+ACCESS_DATA = !FC1 & FC0;
+ACCESS_PROGRAM = FC1 & !FC0;
+
+BERR = (AS & MODE_USER & (ROM # PERIPH)) # WATCHDOG;
+
+
+/*
+	Bus selects
+*/
+
+WRITE = !READ;
+
+UW = AS & UDS & WRITE;
+UR = AS & UDS & READ;
+LW = AS & LDS & WRITE;
+LR = AS & LDS & READ;
+
+/*
+	Address decode
+*/
+
+Field Address = [A23..20];
+Field CS = [RAM, PERIPH, ROM];
+
+Table Address => CS
+{
+	[000000..DFFFFF] => 'b'100;	/* RAM */
+	[E00000..EFFFFF] => 'b'010;	/* peripherals */
+	[F00000..FFFFFF] => 'b'001;	/* ROM */
+}
+
+RAMCS = !BERR & (BUS_CYCLE & (RAM & !BOOT));
+ROMCS = !BERR & (BUS_CYCLE & (ROM # BOOT));
+PERIPHCS = !BERR & (BUS_CYCLE & (PERIPH & !BOOT));

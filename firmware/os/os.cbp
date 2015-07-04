@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="os" />
+		<Option pch_mode="2" />
+		<Option compiler="null" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/os" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="null" />
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/os" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="null" />
+			</Target>
+		</Build>
+		<Unit filename="asm/bswap.h" />
+		<Unit filename="asm/reset.h" />
+		<Unit filename="asm/rte.h" />
+		<Unit filename="asm/stop.h" />
+		<Unit filename="asm/tas.h" />
+		<Unit filename="asm/trap.h" />
+		<Unit filename="cpu/exceptions.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cpu/exceptions.h" />
+		<Unit filename="cpu/exceptionstackframes.h" />
+		<Unit filename="cpu/syscall.S" />
+		<Unit filename="cpu/utilities.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cpu/utilities.h" />
+		<Unit filename="device/block/ata/ata-internal.h" />
+		<Unit filename="device/block/ata/ata.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/block/ata/ata.h" />
+		<Unit filename="device/block/partition/mbr.h" />
+		<Unit filename="device/block/partition/partition.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/block/partition/partition.h" />
+		<Unit filename="device/devctl.h" />
+		<Unit filename="device/device.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/device.h" />
+		<Unit filename="dfu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="dfu.h" />
+		<Unit filename="ds17485.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ds17485.h" />
+		<Unit filename="duart.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="duart.h" />
+		<Unit filename="fs/ext2/ext2-defs.h" />
+		<Unit filename="fs/mount.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fs/mount.h" />
+		<Unit filename="fs/vfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fs/vfs.h" />
+		<Unit filename="include/byteorder.h" />
+		<Unit filename="include/debug.h" />
+		<Unit filename="include/defs.h" />
+		<Unit filename="include/errno.h" />
+		<Unit filename="include/limits.h" />
+		<Unit filename="include/syscall.h" />
+		<Unit filename="include/types.h" />
+		<Unit filename="include/version.h" />
+		<Unit filename="kutil/bvec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/bvec.h" />
+		<Unit filename="kutil/kbzero.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kmemcpy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kprintf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kput.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kputchar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kputs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrcat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrcmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrcpy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrdup.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrlen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrncmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrncpy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrstr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kstrtoul.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/ktime.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kutil/kutil.h" />
+		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/buddy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/buddy.h" />
+		<Unit filename="memory/heap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/heap.h" />
+		<Unit filename="memory/kmalloc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/kmalloc.h" />
+		<Unit filename="memory/memorymap.h" />
+		<Unit filename="monitor/commands.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="monitor/disasm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="monitor/disasm.h" />
+		<Unit filename="monitor/env.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="monitor/env.h" />
+		<Unit filename="monitor/history.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="monitor/history.h" />
+		<Unit filename="monitor/monitor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="monitor/monitor.h" />
+		<Unit filename="monitor/readline.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="monitor/readline.h" />
+		<Unit filename="monitor/srec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="monitor/srec.h" />
+		<Unit filename="sched/irq_task.S" />
+		<Unit filename="sched/sched.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="sched/sched.h" />
+		<Unit filename="startup.S" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

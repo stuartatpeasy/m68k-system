@@ -1,0 +1,32 @@
+%SIGNAL
+PIN  10 =  A20 
+PIN   9 =  A21 
+PIN   8 =  A22 
+PIN  19 = !ERROR 
+PIN  20 = !MEMCSA 
+PIN  21 = !MEMCSB 
+PIN   7 =  MODA_SIZ0 
+PIN   6 =  MODA_SIZ1 
+PIN   5 =  MODB_SIZ0 
+PIN   4 =  MODB_SIZ1 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+ERR =>
+    !MEMCSA & !MEMCSB
+
+MEMCSA =>
+    !A21 & MODA_SIZ1
+  # !A20 & !A21 & MODA_SIZ0
+  # !A20 & MODA_SIZ0 & MODA_SIZ1
+
+MEMCSA.oe  =>
+    1 
+
+MEMCSB.oe  =>
+    0 
+
+%END

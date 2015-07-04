@@ -1,0 +1,46 @@
+Name      68kglue2;
+PartNo    1;
+Date      2014-05-02;
+Revision  00;
+Designer  swallace;
+Company   ;
+Assembly  None;
+Location  None;
+Device    G22V10 ;
+
+/*
+   TODO - combine nDTACK inputs from modules, assuming sync clock supplied ?
+                         22V10
+                      _____ _____
+             CLK/IN -| 1   U  24 |- VCC
+                 IN -| 2      23 |- I/O
+                 IN -| 3      22 |- I/O	
+              IN/PD -| 4      21 |- I/O	
+                 IN -| 5      20 |- I/O	
+                 IN -| 6      19 |- I/O	
+                 IN -| 7      18 |- I/O	
+                 IN -| 8      17 |- I/O	
+                 IN -| 9      16 |- I/O	
+                 IN -| 10     15 |- I/O	
+                 IN -| 11     14 |- I/O	
+                GND -| 12     13 |- IN	
+                     -------------
+*/
+
+/** Inputs **/
+Pin 4 = MODB_SIZ1;
+Pin 5 = MODB_SIZ0;
+Pin 6 = MODA_SIZ1;
+Pin 7 = MODA_SIZ0;
+Pin [8..10] = [A22..20];
+
+
+/** Outputs **/
+
+Pin 21 = !MEMCSB;
+Pin 20 = !MEMCSA;
+Pin 19 = !ERROR;
+
+
+ERR = !(MEMCSB # MEMCSA);
+MEMCSA = (!A21 & MODA_SIZ1) # ((!A20 & MODA_SIZ0) & (!A21 # MODA_SIZ1));
