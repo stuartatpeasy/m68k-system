@@ -1,0 +1,12 @@
+[done] 6 pointless vias into U4
+
+
+[done] more decoupling caps
+
+[done] holes for size-selection header are too  small
+[done] reduce overall length of board
+[wontfix] consider pin-swapping U2/U3 pins 1 and 19
+[done] 22nF decoupling caps?
+add logo
+
+rev0: Noise between VCC and GND of U6 is 30mVrms with 10nF caps

@@ -1,0 +1,31 @@
+800 x 600 VGA text-only display
+===============================
+
+Pixel clock is 40MHz
+Target resolution = 800 x 600
+Character size = 8 x 8
+
+
+Character resolution = 100 x 75
+-> 7500 chars per plane
+-> 8192 bytes for character storage
+-> Character clock is 5MHz
+
+
+Colour information
+- each screen location is represented by one 16-bit word:
+
+  15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+  In Fl  R  R  G  G  B  B  |-- character code --|
+
+  In = inverse video
+  Fl = flash
+
+- two 32k x 8 RAM chips provide 4 planes (=banks)
+
+Character ROM
+-------------
+
+256 8x8 characters = 2KB per character set
+- one 8KB ROM provides four character sets
+- 8KB ROMs no longer stocked in DIP by Farnell - use 512KB for 256(!) charsets?

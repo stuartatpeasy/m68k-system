@@ -1,0 +1,294 @@
+Name      memory_controller_16v8;
+PartNo    1;
+Date      2014-03-09;
+Revision  00;
+Designer  swallace;
+Company   ;
+Assembly  None;
+Location  None;
+Device    G16V8AS;  /* god knows why G16V8AS works but G16V8A doesn't */
+
+/*
+Description
+===========
+
+This file contains equations which implement the controller of a two-socket memory system for the
+M68K computer.  The controller generates chip select signals for each socket, validates memory
+configuration, and performs memory address translation for the second slot.
+
+Slots are designated "slot A" and "slot B".  Each memory module may contain 1MB, 2MB
+or 4MB of static RAM.  Modules indicate their capacity to the system through two logic lines: SIZ1
+and SIZ0.  It is possible to fit modules in various combinations to the motherboard.  The rules are:
+
+    - Slot A must always be populated.
+    - If populated, the capacity of the module in slot B must not exceed that in slot A.
+
+The controller supports a maximum of 8MB of RAM.  It is assumed that the nRAMCS input will only be
+asserted when the CPU requests access to the region of the memory map corresponding to RAM, and that
+this region will a) not exceed 8MB in size, and b) be aligned on an 8MB boundary.
+
+
+PLD pin descriptions
+====================
+
+    [MODB_SIZ1..0]    [in]  Slot B [SIZ1..0]
+    [MODA_SIZ1..0]    [in]  Slot A [SIZ1..0]
+    nMODB_DTACK       [in]  Slot B transfer acknowledge
+    nMODA_DTACK       [in]  Slot A transfer acknowledge
+    [A23..20]         [in]  System address bus lines [A23..20]
+    nMEMCS            [in]  System memory (RAM and ROM) chip select
+    nBOOT             [in]  System boot indicator
+    nMODB_CS          [out] Slot B chip select
+    nMODA_CS          [out] Slot A chip select
+    MODB_A21          [out] Address bus line A21 for slot B only
+    MODB_A20          [out] Address bus line A20 for slot B only
+    nROMCS            [out] System ROM chip select
+    nERROR            [out] Out-of-range memory access, or invalid module configuration (not implemented)
+
+
+Module sizes and SIZx values
+============================
+
+    MODx_SIZ1    MODx_SIZ0    Module size
+    --------------------------------------------
+    0            0            4MB (2MW x 16)
+    0            1            2MB (1MW x 16)
+    1            0            1MB (512kW x 16)
+    1            1            (no module fitted)
+
+
+Notes
+=====
+
+Use Quine-McCluskey minimisation or the equations may not compile successfully.
+
+
+Target device pinout
+====================
+
+                         16V8
+                      _____ _____
+  MODB_SIZ1  CLK/IN -| 1   U  20 |- VCC
+  MODB_SIZ0      IN -| 2      19 |- I/O    nBOOT
+  MODA_SIZ1      IN -| 3      18 |- I/O	  nROMCS
+  MODA_SIZ0      IN -| 4      17 |- I/O    nERROR  (not implemented)
+  nMODB_DTACK    IN -| 5      16 |- I/O	  nMODB_CS
+  nMODA_DTACK    IN -| 6      15 |- I/O	  nMODA_CS
+  A22            IN -| 7      14 |- I/O	  MODB_A21
+  A21            IN -| 8      13 |- I/O	  MODB_A20
+  A20            IN -| 9      12 |- I/O	  A23
+                GND -| 10     11 |- I/nOE	  nMEMCS
+                      ----------- 
+*/
+
+/* Inputs */
+Pin  1 = MODB_SIZ1;
+Pin  2 = MODB_SIZ0;
+Pin  3 = MODA_SIZ1;
+Pin  4 = MODA_SIZ0;
+Pin  5 = !MODB_DTACK;
+Pin  6 = !MODA_DTACK;
+Pin  7 = A22;
+Pin  8 = A21;
+Pin  9 = A20;
+Pin 11 = !MEMCS;
+Pin 12 = A23;
+Pin 19 = !BOOT;
+
+/** Outputs **/
+
+Pin 13 = MODB_A20;
+Pin 14 = MODB_A21;
+Pin 15 = !MODA_CS;
+Pin 16 = !MODB_CS;
+Pin 17 = !ERROR;	/* not implemented */
+Pin 18 = !ROMCS;
+
+
+G = MODB_SIZ1;
+F = MODB_SIZ0;
+E = MODA_SIZ1;
+D = MODA_SIZ0;
+C = A22;
+B = A21;
+A = A20;
+Field XXX = [G, F, E, D, C, B, A];
+
+Table XXX => [CSB, CSA]
+{
+        'b'0000000 => 'b'01;	/* A: 4MB   B: 4MB */
+        'b'0000001 => 'b'01;
+        'b'0000010 => 'b'01;
+        'b'0000011 => 'b'01;
+        'b'0000100 => 'b'10;
+        'b'0000101 => 'b'10;
+        'b'0000110 => 'b'10;
+        'b'0000111 => 'b'10;
+
+        'b'0001000 => 'b'00;	/* A: 2MB   B: 4MB */
+        'b'0001001 => 'b'00;	/* === invalid === */
+        'b'0001010 => 'b'00;
+        'b'0001011 => 'b'00;
+        'b'0001100 => 'b'00;
+        'b'0001101 => 'b'00;
+        'b'0001110 => 'b'00;
+        'b'0001111 => 'b'00;
+
+        'b'0010000 => 'b'00;	/* A: 1MB   B: 4MB */
+        'b'0010001 => 'b'00;	/* === invalid === */
+        'b'0010010 => 'b'00;
+        'b'0010011 => 'b'00;
+        'b'0010100 => 'b'00;
+        'b'0010101 => 'b'00;
+        'b'0010110 => 'b'00;
+        'b'0010111 => 'b'00;
+
+        'b'0011000 => 'b'00;	/* A: ---   B: 4MB */
+        'b'0011001 => 'b'00;	/* === invalid === */
+        'b'0011010 => 'b'00;
+        'b'0011011 => 'b'00;
+        'b'0011100 => 'b'00;
+        'b'0011101 => 'b'00;
+        'b'0011110 => 'b'00;
+        'b'0011111 => 'b'00;
+
+        'b'0100000 => 'b'01;	/* A: 4MB   B: 2MB */
+        'b'0100001 => 'b'01;
+        'b'0100010 => 'b'01;
+        'b'0100011 => 'b'01;
+        'b'0100100 => 'b'10;
+        'b'0100101 => 'b'10;
+        'b'0100110 => 'b'00;
+        'b'0100111 => 'b'00;
+
+        'b'0101000 => 'b'01;	/* A: 2MB   B: 2MB */
+        'b'0101001 => 'b'01;
+        'b'0101010 => 'b'10;
+        'b'0101011 => 'b'10;
+        'b'0101100 => 'b'00;
+        'b'0101101 => 'b'00;
+        'b'0101110 => 'b'00;
+        'b'0101111 => 'b'00;
+
+        'b'0110000 => 'b'00;	/* A: 1MB   B: 2MB */
+        'b'0110001 => 'b'00;	/* === invalid === */
+        'b'0110010 => 'b'00;
+        'b'0110011 => 'b'00;
+        'b'0110100 => 'b'00;
+        'b'0110101 => 'b'00;
+        'b'0110110 => 'b'00;
+        'b'0110111 => 'b'00;
+
+        'b'0111000 => 'b'00;	/* A: ---   B: 2MB */
+        'b'0111001 => 'b'00;	/* === invalid === */
+        'b'0111010 => 'b'00;
+        'b'0111011 => 'b'00;
+        'b'0111100 => 'b'00;
+        'b'0111101 => 'b'00;
+        'b'0111110 => 'b'00;
+        'b'0111111 => 'b'00;
+
+        'b'1000000 => 'b'01;	/* A: 4MB   B: 1MB */
+        'b'1000001 => 'b'01;
+        'b'1000010 => 'b'01;
+        'b'1000011 => 'b'01;
+        'b'1000100 => 'b'10;
+        'b'1000101 => 'b'00;
+        'b'1000110 => 'b'00;
+        'b'1000111 => 'b'00;
+
+        'b'1001000 => 'b'01;	/* A: 2MB   B: 1MB */
+        'b'1001001 => 'b'01;
+        'b'1001010 => 'b'10;
+        'b'1001011 => 'b'00;
+        'b'1001100 => 'b'00;
+        'b'1001101 => 'b'00;
+        'b'1001110 => 'b'00;
+        'b'1001111 => 'b'00;
+
+        'b'1010000 => 'b'01;	/* A: 1MB   B: 1MB */
+        'b'1010001 => 'b'10;
+        'b'1010010 => 'b'00;
+        'b'1010011 => 'b'00;
+        'b'1010100 => 'b'00;
+        'b'1010101 => 'b'00;
+        'b'1010110 => 'b'00;
+        'b'1010111 => 'b'00;
+
+        'b'1011000 => 'b'00;	/* A: ---   B: 1MB */
+        'b'1011001 => 'b'00;	/* === invalid === */
+        'b'1011010 => 'b'00;
+        'b'1011011 => 'b'00;
+        'b'1011100 => 'b'00;
+        'b'1011101 => 'b'00;
+        'b'1011110 => 'b'00;
+        'b'1011111 => 'b'00;
+
+        'b'1100000 => 'b'01;	/* A: 4MB   B: --- */
+        'b'1100001 => 'b'01;
+        'b'1100010 => 'b'01;
+        'b'1100011 => 'b'01;
+        'b'1100100 => 'b'00;
+        'b'1100101 => 'b'00;
+        'b'1100110 => 'b'00;
+        'b'1100111 => 'b'00;
+
+        'b'1101000 => 'b'01;	/* A: 2MB   B: --- */
+        'b'1101001 => 'b'01;
+        'b'1101010 => 'b'00;
+        'b'1101011 => 'b'00;
+        'b'1101100 => 'b'00;
+        'b'1101101 => 'b'00;
+        'b'1101110 => 'b'00;
+        'b'1101111 => 'b'00;
+
+        'b'1110000 => 'b'01;	/* A: 1MB   B: --- */
+        'b'1110001 => 'b'00;
+        'b'1110010 => 'b'00;
+        'b'1110011 => 'b'00;
+        'b'1110100 => 'b'00;
+        'b'1110101 => 'b'00;
+        'b'1110110 => 'b'00;
+        'b'1110111 => 'b'00;
+
+        'b'1111000 => 'b'00;	/* A: ---   B: --- */
+        'b'1111001 => 'b'00;	/* === invalid === */
+        'b'1111010 => 'b'00;
+        'b'1111011 => 'b'00;
+        'b'1111100 => 'b'00;
+        'b'1111101 => 'b'00;
+        'b'1111110 => 'b'00;
+        'b'1111111 => 'b'00;
+}
+
+ROM_SPACE =   (!BOOT &  A23 &  A22 &  A21 &  A20)   /* ROM map (normal): 0xF00000..0xFFFFFF */
+            # ( BOOT & !A23 & !A22 & !A21 & !A20);  /* ROM map (boot)  : 0x000000..0x0FFFFF */
+
+ROMCS = MEMCS & ROM_SPACE;
+RAMCS = MEMCS & !A23 & !ROMCS;
+
+MODA_CS = RAMCS & CSA;
+MODB_CS = RAMCS & CSB;
+
+/*
+too many product terms, sadly...
+ERROR = MEMCS & !MODA_CS & !MODB_CS & !ROMCS;
+*/
+
+/*
+    Module B address lines A21 and A20 must be selectively inverted based on the size of module A.
+
+        +----------+------------+------------+--------------+
+        |          |   MODA_    |   MODB_    |     MODB_    |
+        | MODA MODB| SIZ1  SIZ0 | SIZ1  SIZ0 |   A21   A20  |
+        +----------+------------+------------+--------------+
+        | 1MB  1MB |    1     0 |    1     0 |   A21  !A20  |
+        | 2MB  1MB |    0     1 |    1     0 |  !A21   A20  |
+        | 2MB  2MB |    0     1 |    0     1 |  !A21   A20  |
+        | 4MB  1MB |    0     0 |    1     0 |   A21   A20  |
+        | 4MB  2MB |    0     0 |    0     1 |   A21   A20  |
+        | 4MB  4MB |    0     0 |    0     0 |   A21   A20  |
+        +----------+------------+------------+--------------+
+*/
+MODB_A21 = MODA_SIZ0 $ A21;
+MODB_A20 = MODA_SIZ1 $ A20;

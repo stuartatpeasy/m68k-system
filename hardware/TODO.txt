@@ -1,0 +1,70 @@
+Prototype definite:
+- verify (again) that the RS232 pinout is correct
+[done] complete PLD equations and verify
+[done] fix power switch footprint
+[done] delete/reduce resistor in line with beeper
+[done] add more capacitors to main regulator
+[done] fix power-on reset circuit; possible ICs - ADM707
+[done] add nAS, CLK [?], VCC, GND to analyser connector
+[done] change RS232 level-shifting system to use MAX238; delete +10V/-10V PSU
+[done] complete PLD logic design
+[done] update schematic to match PLD logic design, and sync with pin assignments in CUPL source
+[done] sort out IRQs
+[done] add beeper [?]
+[done] change red/green LEDs to single R/G bicolour LED
+[done] more decoupling around CPU
+
+
+PCB definite:
+[done] check footprints
+[done] silk-screen tidy-up
+[done] fix power switch footprint
+[done] check Molex connector hole sizes
+[done] delete/reduce resistor in line with beeper
+[done] check hole sizes for header connectors
+[done] add nAS, CLK [?], VCC, GND to analyser connector
+[done] molex connector for HDD power
+[done] tidy-up + ground-plan optimisation
+[done] drill size review
+[done] route in new MAX238 serial interface
+[done] correct footprint for RS232 connectors
+[done] reroute IRQs
+[done] fix up nROMCS logic
+[done] route VCC in; single source + single ground
+[done] ground plane under +5V switching PSU
+[done] heatsink component - add a component with two pads, so they can be permanently attached to GND
+[done] complete RTC design & route
+[done] add beeper [?]
+[done] more decoupling around CPU
+[done] add header for nDTACK, WDOG, etc
+[done] heatsink footprint
+[done] add mounting holes
+[done] add +10V LDO to design
+[done] change LEDs from 5mm to 3mm
+[done] add reset button
+[done] logo and rev
+[done] ODD/EVEN markers for ROMs
+[done] migrate -10V switching reg to design
+[done] move resistors from outboard of IDE connector; shrink board
+
+
+Verification:
+[done] BUSCTL_C logic
+[done] BUSCTL_A logic (some verification done; basic functionality checked)
+[done] RESET/HALT generation logic - FAIL, redesigned
+[done] power supply noise performance
+[done] power supply switch-on performance
+[done] power input footprint
+[done] heatsink footprint
+[done] HDD power switch
+[done] MEMCTL PLD programmability
+[done] MEMCTL logic
+
+
+Bumped to rev1:
+- [rev1] PS/2 keyboard port?  is it useful without a mouse port?
+- [rev1] RAM/ROM DTACK
+
+
+FILE STATUSES
+74xx365 PDF exists on desktop

@@ -1,0 +1,201 @@
+Name      memory_controller_16v8;
+PartNo    1;
+Date      2014-03-09;
+Revision  00;
+Designer  swallace;
+Company   ;
+Assembly  None;
+Location  None;
+Device    G16V8AS;  /* god knows why G16V8AS works but G16V8A doesn't */
+
+/*
+Description
+===========
+
+This file contains equations which implement the controller of a two-socket memory system for the
+M68K computer.  The controller generates chip select signals for each socket, validates memory
+configuration, and performs memory address translation for the second slot.
+
+Slots are designated "slot A" and "slot B".  Each memory module may contain 1MB, 2MB
+or 4MB of static RAM.  Modules indicate their capacity to the system through two logic lines: SIZ1
+and SIZ0.  It is possible to fit modules in various combinations to the motherboard.  The rules are:
+
+    - Slot A must always be populated.
+    - If populated, the capacity of the module in slot B must not exceed that in slot A.
+
+The controller supports a maximum of 8MB of RAM.  It is assumed that the nRAMCS input will only be
+asserted when the CPU requests access to the region of the memory map corresponding to RAM, and that
+this region will a) not exceed 8MB in size, and b) be aligned on an 8MB boundary.
+
+
+PLD pin descriptions
+====================
+
+    
+    SIZnB             [in]  Slot B [SIZ1..0]
+    SIZnA             [in]  Slot A [SIZ1..0]
+    nMODB_DTACK       [in]  Slot B transfer acknowledge
+    nMODA_DTACK       [in]  Slot A transfer acknowledge
+    [A23..20]         [in]  System address bus lines [A23..20]
+    nMEMCS            [in]  System memory (RAM and ROM) chip select
+    nBOOT             [in]  System boot indicator
+    nMODB_CS          [out] Slot B chip select
+    nMODA_CS          [out] Slot A chip select
+    A21_MODB          [out] Address bus line A21 for slot B only
+    A20_MODB          [out] Address bus line A20 for slot B only
+    nROMCS            [out] System ROM chip select
+    nERROR            [out] Out-of-range memory access, or invalid module configuration (not implemented)
+
+
+Module sizes and SIZ values
+===========================
+
+    SIZ1x    SIZ0x    Module size
+    ------------------------------------
+    0        0        4MB (2MW x 16)
+    0        1        2MB (1MW x 16)
+    1        0        1MB (512kW x 16)
+    1        1        (no module fitted)
+
+
+Notes
+=====
+
+Use Quine-McCluskey minimisation or the equations may not compile successfully.
+
+
+Target device pinout
+====================
+
+                         16V8
+                      _____ _____
+  SIZ1B      CLK/IN -| 1   U  20 |- VCC
+  SIZ0B          IN -| 2      19 |- I/O    nBOOT
+  SIZ1A          IN -| 3      18 |- I/O	  nROMCS
+  SIZ0A          IN -| 4      17 |- I/O    nERROR  (not implemented)
+  nMODB_DTACK    IN -| 5      16 |- I/O	  nMODB_CS
+  nMODA_DTACK    IN -| 6      15 |- I/O	  nMODA_CS
+  A22            IN -| 7      14 |- I/O	  A21_MODB
+  A21            IN -| 8      13 |- I/O	  A20_MODB
+  A20            IN -| 9      12 |- I/O	  A23
+                GND -| 10     11 |- I/nOE	  nMEMCS
+                      ----------- 
+*/
+
+/* Inputs */
+Pin  1 = SIZ1B;
+Pin  2 = SIZ0B;
+Pin  3 = SIZ1A;
+Pin  4 = SIZ0A;
+Pin  5 = !MODB_DTACK;
+Pin  6 = !MODA_DTACK;
+Pin  7 = A22;
+Pin  8 = A21;
+Pin  9 = A20;
+Pin 11 = !MEMCS;
+Pin 12 = A23;
+Pin 19 = !BOOT;
+
+/** Outputs **/
+
+Pin 13 = A20_MODB;
+Pin 14 = A21_MODB;
+Pin 15 = !MODA_CS;
+Pin 16 = !MODB_CS;
+Pin 17 = !ERROR;	/* not implemented */
+Pin 18 = !ROMCS;
+
+A22_ = A22;    /* Silly aliases prevent these vars */
+A21_ = A21;    /* being treated as indexed in the  */
+A20_ = A20;    /* following "Table" statement.     */
+
+Table [SIZ1B, SIZ0B, SIZ1A, SIZ0A, A22_, A21_, A20_] => [CSB, CSA]
+{
+    /*
+        Valid configurations
+    */
+
+    'b'00000XX => 'b'01;	/* A: 4MB   B: 4MB */
+    'b'00001XX => 'b'10;
+
+    'b'01000XX => 'b'01;	/* A: 4MB   B: 2MB */
+    'b'010010X => 'b'10;
+    'b'010011X => 'b'00;
+
+    'b'010100X => 'b'01;	/* A: 2MB   B: 2MB */
+    'b'010101X => 'b'10;
+    'b'01011XX => 'b'00;
+
+    'b'10000XX => 'b'01;	/* A: 4MB   B: 1MB */
+    'b'1000100 => 'b'10;
+    'b'1000101 => 'b'00;
+    'b'100011X => 'b'00;
+
+    'b'100100X => 'b'01;	/* A: 2MB   B: 1MB */
+    'b'1001010 => 'b'10;
+    'b'1001011 => 'b'00;
+    'b'10011XX => 'b'00;
+
+    'b'1010000 => 'b'01;	/* A: 1MB   B: 1MB */
+    'b'1010001 => 'b'10;
+    'b'101001X => 'b'00;
+    'b'10101XX => 'b'00;
+
+    'b'11000XX => 'b'01;	/* A: 4MB   B: --- */
+    'b'11001XX => 'b'00;
+
+    'b'110100X => 'b'01;	/* A: 2MB   B: --- */
+    'b'110101X => 'b'00;
+    'b'11011XX => 'b'00;
+
+    'b'1110000 => 'b'01;	/* A: 1MB   B: --- */
+    'b'1110001 => 'b'00;
+    'b'111001X => 'b'00;
+    'b'11101XX => 'b'00;
+
+    /*
+        Invalid configurations
+
+        Memory configuration is invalid when module B has greater capacity than module A, or when
+        neither module is populated.
+    */
+    'b'0001XXX => 'b'00;	/* A: 2MB   B: 4MB */
+    'b'0010XXX => 'b'00;	/* A: 1MB   B: 4MB */
+    'b'0011XXX => 'b'00;	/* A: ---   B: 4MB */
+    'b'0110XXX => 'b'00;	/* A: 1MB   B: 2MB */
+    'b'0111XXX => 'b'00;	/* A: ---   B: 2MB */
+    'b'1011XXX => 'b'00;	/* A: ---   B: 1MB */
+    'b'1111XXX => 'b'00;	/* A: ---   B: --- */
+}
+
+ROM_SPACE =   (!BOOT &  A23 &  A22 &  A21 &  A20)   /* ROM map (normal): 0xF00000..0xFFFFFF */
+            # ( BOOT & !A23 & !A22 & !A21 & !A20);  /* ROM map (boot)  : 0x000000..0x0FFFFF */
+
+ROMCS = MEMCS & ROM_SPACE;
+RAMCS = MEMCS & !A23 & !ROMCS;
+
+MODA_CS = RAMCS & CSA;
+MODB_CS = RAMCS & CSB;
+
+/*
+    Module B address lines A21 and A20 must be selectively inverted based on the size of module A.
+
+        +------------+-------+-------+------------+
+        |            | SIZnA | SIZnB |   MODB_    |
+        | MODA  MODB | 1   0 | 1   0 | A21    A20 |
+        +------------+-------+-------+------------+
+        | 1MB   1MB  | 1   0 | 1   0 |  A21  !A20 |
+        | 2MB   1MB  | 0   1 | 1   0 | !A21   A20 |
+        | 2MB   2MB  | 0   1 | 0   1 | !A21   A20 |
+        | 4MB   1MB  | 0   0 | 1   0 |  A21   A20 |
+        | 4MB   2MB  | 0   0 | 0   1 |  A21   A20 |
+        | 4MB   4MB  | 0   0 | 0   0 |  A21   A20 |
+        +------------+-------+-------+------------+
+*/
+A21_MODB = SIZ0A $ A21;
+A20_MODB = SIZ1A $ A20;
+
+/*
+too many product terms, sadly...
+ERROR = MEMCS & !MODA_CS & !MODB_CS & !ROMCS;
+*/

@@ -1,0 +1,16 @@
+
+000000-7FFFFF   RAM
+
+A00000-AFFFFF   Expansion slot 0        IRQ4
+B00000-BFFFFF   Expansion slot 1        IRQ5
+C00000-CFFFFF   Expansion slot 2        IRQ6
+D00000-DFFFFF   Expansion slot 3        IRQ7
+E00000-EFFFFF   On-board peripherals
+ 00000- 0FFFF   ... DUART + timer       IRQ2 + IRQ1
+ 10000- 3FFFF   ... Real-time clock
+ 20000- 2FFFF   ... ATA channel 0	IRQ3
+ 30000- 3FFFF   ... ATA channel 1	IRQ3
+ 40000- FFFFF   (unused)
+
+F00000-FFFFFF   ROM
+

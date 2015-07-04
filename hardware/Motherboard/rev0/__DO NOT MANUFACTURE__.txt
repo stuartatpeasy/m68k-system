@@ -1,0 +1,4 @@
+This design has several issues which will prevent a manufactured pcb working
+without modification.  See ERRATA.txt for a list.
+
+See the latest revision for a manufacturable version.
