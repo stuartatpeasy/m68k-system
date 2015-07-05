@@ -14,6 +14,8 @@ volatile task_t *g_current_task = NULL;
 void sched_init(void)
 {
     g_current_task = &(g_tf[0]);
+    printf("&g_current_task = %08x\n"
+           "g_current_task  = %08x\n", &g_current_task, g_current_task);
 }
 
 
@@ -45,19 +47,19 @@ void irq_schedule(void)
         g_current_task->regs.a0 explicitly.
     */
 
-    cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
+//    cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 
     /* Store the outgoing task's state in *g_current_task. */
     asm volatile
     (
         "movew %%sp@(16), %0@               \n"      /*   regs.sr = SR                     */
         "movel %%sp@(18), %0@-              \n"      /*   regs.pc = *(SP + 18)             */
-        "movel %%usp, %%a0                  \n"      /* } regs.a7 = USP                    */
-        "movel %%a0, %0@-                   \n"      /* }                                  */
+        "movel %%usp, %%a1                  \n"      /* } regs.a7 = USP                    */
+        "movel %%a1, %0@-                   \n"      /* }                                  */
         "moveml %%d0-%%d7/%%a0-%%a6, %0@-   \n"      /*   regs.[d0-d7,a0-a6] = d0-d7,a0-a6 */
         "movel %%sp@(8), %0@(28)            \n"      /*   regs.a0 = *(SP + 8)              */
         : /* no output operands */
-        : "p" (g_current_task->regs.sr)
+        : "a" (&(g_current_task->regs.sr))
         : "memory", "cc"
 	);
 
@@ -82,6 +84,7 @@ void irq_schedule(void)
         registers' values on the stack with values from the incoming task's state.  We also
         overwrite the return address on the stack with the incoming task's program counter value.
     */
+
     asm volatile
     (
         "movel %0@+, %%sp@                  \n"      /*   *(SP)      = regs.d0             */
@@ -90,14 +93,14 @@ void irq_schedule(void)
         "movel %0@+, %%sp@(8)               \n"      /*   *(SP + 8)  = regs.a0             */
         "movel %0@+, %%sp@(12)              \n"      /*   *(SP + 12) = regs.a1             */
         "moveml %0@+, %%a2-%%a6             \n"      /*   a2-a6      = regs.a[2-6]         */
-        "movel %0@+, %%a0                   \n"      /*   } USP = regs.a[7]                */
-        "movel %%a0, %%usp                  \n"      /*   }                                */
-        "movew %0@+, %%sp@(16)              \n"      /*   *(SP + 16) = SR                  */
-        "movel %0@+, %%sp@(18)              \n"      /*   *(SP + 18) = PC                  */
+        "movel %0@+, %%a1                   \n"      /*   } USP = regs.a[7]                */
+        "movel %%a1, %%usp                  \n"      /*   }                                */
+//        "movew %0@+, %%sp@(16)              \n"      /*   *(SP + 16) = SR                  */
+//        "movel %0@+, %%sp@(18)              \n"      /*   *(SP + 18) = PC                  */
         : /* no output operands */
-        : "p" (g_current_task->regs.d[0])
+        : "a" (&(g_current_task->regs.d[0]))
         : "memory", "cc"
     );
 
-    cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
+//    cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 }
