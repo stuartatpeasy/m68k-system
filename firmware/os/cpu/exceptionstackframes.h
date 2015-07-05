@@ -18,7 +18,6 @@
 */
 struct __mc68010_address_exc_frame
 {
-    const u32 __dummy;
 	const u16 sr;
 	const u32 pc;
 	const u16 vector_offset;
@@ -40,6 +39,7 @@ struct __mc68010_address_exc_frame
 */
 struct __mc68010_exc_frame
 {
+    const u32 __dummy;
 	const u16 sr;
 	const u32 pc;
 	const u16 vector_offset;

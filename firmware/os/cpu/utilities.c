@@ -11,21 +11,6 @@
 #include "kutil/kutil.h"
 
 
-inline void __cpu_set_irq_mask(u32 u)
-{
-	u = (u & 7) << 16;
-
-	__asm__ volatile("move %%sr, %%d5\n\t"
-				 "andi.w #0xf8ff, %%d5\n\t"
-				 "or.w %0, %%d5\n\t"
-				 "move %%d5, %%sr\n\t"
-				 :
-				 : "r" (u)
-				 : "%d5"
-				);
-}
-
-
 inline void __cpu_halt(void)
 {
 	puts("\nSystem halted.");

@@ -9,74 +9,44 @@
 	(c) Stuart Wallace <stuartw@atom.net>, January 2012.
 */
 
+#include "duart.h"          /* DUART generates the scheduler interrupt */
+#include "cpu/utilities.h"
 #include "include/types.h"
 
-/*
-	SCHED_DISABLE() -	disable scheduler by ensuring that IRQ mask is >= 1.
-						Return original IRQ mask level.
 
-	TODO: instead take this approach:
-		1. read IRQ mask level
-		2. if level == 0, set level to 1
-		3. disable the context-switch timer
-		4. restore the mask level read in the first step
-*/
-#define SCHED_DISABLE()										\
-					(__extension__ ({						\
-						register unsigned short __m = 0;	\
-						__asm__ __volatile__				\
-						(									\
-							"move.w	%%sr, %w0\n"			\
-							"andi.w #0x0700, %w0\n"			\
-							"bne.s .Lsd_fini\n"				\
-							"ori.w	#0x0100, %%sr\n"		\
-							".Lsd_fini:"					\
-							: "=d"(__m)						\
-							: /* no inputs */				\
-							: "cc"							\
-						);									\
-						__m;								\
-					}))
-
+typedef u32 reg32_t;
+typedef u16 reg16_t;
 
 /*
-	SCHED_ENABLE(x) - 	enable scheduler by restoring the IRQ mask level saved by
-						an invocation of SCHED_DISABLE()
+    Task state structure.  Note that the layout of this struct is very sensitive: the order in
+    which the registers appear *must not be changed*.
 
-	TODO: instead take this approach:
-		1. ???
+    A movem.l (move multiple regs) instruction is used to fill the d[] and a[] arrays.  The movem.l
+    instr only permits pre-decrement addressing when writing registers to memory.  Conversely, when
+    transferring memory to registers, only post-increment is allowed.  This means that the "regs"
+    struct can use regular arrays, a[8] and d[8], to store register values.
 */
-#define SCHED_ENABLE(x)	\
-					(__extension__ ({	\
-						register unsigned short __m = (x);	\
-						__asm__ __volatile__				\
-						(									\
-							"move.w %w0, %%sr\n"			\
-							: /* no outputs */				\
-							: "d" (__m)						\
-							: "cc"							\
-						);									\
-					}))
-
-
-
-typedef u32 reg_t;
-
 struct task_struct
 {
-	reg_t d[8];
-	reg_t a[8];
+    struct
+    {
+        reg32_t d[8];
+        reg32_t a[8];
+        reg32_t pc;
+        reg16_t sr;
+    } regs;
 
-	reg_t sr;
-	reg_t pc;
-
+	const struct task_struct *parent;
 	struct task_struct *next;
+	const u8 *name;
 };
 
 typedef struct task_struct task_t;
 
 volatile task_t *g_current_task;
 
+void irq_schedule(void) __attribute__((interrupt_handler));
+void sched_init(void);
 
 #endif
 

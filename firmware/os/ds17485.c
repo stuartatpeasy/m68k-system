@@ -71,15 +71,15 @@ void ds17485_get_time(struct rtc_time * const tm)
     /* Switch back to the standard register set to read the rest of the date/time */
     DS17485_SELECT_STD_REG();
 
-    tm->year += DS17485_REG_READ(DS17485_YEAR);
-
-    tm->month = DS17485_REG_READ(DS17485_MONTH);
-    tm->day = DS17485_REG_READ(DS17485_DAY);
     tm->hour = DS17485_REG_READ(DS17485_HOURS);
     tm->minute = DS17485_REG_READ(DS17485_MINUTES);
     tm->second = DS17485_REG_READ(DS17485_SECONDS);
 
     tm->day_of_week = DS17485_REG_READ(DS17485_DAY_OF_WEEK);
+    tm->day = DS17485_REG_READ(DS17485_DAY);
+    tm->month = DS17485_REG_READ(DS17485_MONTH);
+    tm->year += DS17485_REG_READ(DS17485_YEAR);
+
     tm->dst = DS17485_REG_READ(DS17485_REG_B) & DS17485_DSE;
 
     /* Clear the "SET" bit in register B, as we have finished reading data */

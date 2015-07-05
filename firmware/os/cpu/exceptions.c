@@ -7,9 +7,7 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include "asm/rte.h"
 #include "cpu/exceptions.h"
-#include "kutil/kutil.h"
 
 
 void __cpu_exc_install_default_handlers(void)
@@ -21,10 +19,12 @@ void __cpu_exc_install_default_handlers(void)
 		CPU_EXC_VPTR_SET(u, __cpu_exc_generic);
 
 	/* Now set specific handlers */
-	V_ssp			= CPU_EXC_VPTR(0xca5caded);				/* nonsense number */
-	V_reset			= CPU_EXC_VPTR(0xbed51de5);				/* nonsense number */
-	V_bus_error		= CPU_EXC_VPTR(__cpu_exc_bus_error);
-	V_address_error	= CPU_EXC_VPTR(__cpu_exc_address_error);
+	V_ssp			        = CPU_EXC_VPTR(0xca5caded);				/* nonsense number */
+	V_reset			        = CPU_EXC_VPTR(0xbed51de5);				/* nonsense number */
+	V_bus_error		        = CPU_EXC_VPTR(__cpu_exc_bus_error);
+	V_address_error	        = CPU_EXC_VPTR(__cpu_exc_address_error);
+
+	V_level_1_autovector    = CPU_EXC_VPTR(irq_schedule);           /* scheduler IRQ handler */
 
 	/* TODO install TRAP handlers */
 	V_trap_0  = CPU_EXC_VPTR(__cpu_trap_0);
@@ -46,7 +46,7 @@ void __cpu_exc_install_default_handlers(void)
 }
 
 
-void __cpu_exc_bus_error(const struct __mc68010_address_exc_frame f)
+void __cpu_exc_bus_error(int dummy, const struct __mc68010_address_exc_frame f)
 {
 	puts("\nException: Bus error");
 	__cpu_dump_address_exc_frame(&f);
@@ -54,7 +54,7 @@ void __cpu_exc_bus_error(const struct __mc68010_address_exc_frame f)
 }
 
 
-void __cpu_exc_address_error(const struct __mc68010_address_exc_frame f)
+void __cpu_exc_address_error(int dummy, const struct __mc68010_address_exc_frame f)
 {
 	puts("\nException: Address error");
 	__cpu_dump_address_exc_frame(&f);

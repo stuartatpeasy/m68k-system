@@ -4,7 +4,7 @@
 
 #include "monitor/monitor.h"
 
-#include "cpu/exceptions.h"
+#include "cpu/utilities.h"
 #include "device/device.h"
 #include "kutil/kutil.h"
 #include "memory/kmalloc.h"
@@ -32,8 +32,8 @@ void detect_clock_freq()
 
     printf("Loop counter final value is %u\n", loops);
 
-    // CPU fclk/MHz ~= loops/1330
-    // CPU fclk/Hz ~= 750 * loops
+    // CPU fclk/MHz ~= loops/1420
+    // CPU fclk/Hz ~= 700 * loops
 }
 
 
@@ -79,12 +79,11 @@ void _main()
 	if(vfs_init())
 		puts("VFS failed to initialise");
 
-	/* TODO: set up timer interrupt */
-	/* TODO: enable interrupts */
-
 	led_off(LED_RED);
 	led_on(LED_GREEN);
 
+    sched_init();
+    cpu_enable_interrupts();
 	monitor();
 
 	__cpu_halt();		/* should never be reached */

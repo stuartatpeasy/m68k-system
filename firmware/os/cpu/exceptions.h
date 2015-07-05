@@ -10,9 +10,12 @@
 */
 
 #include <stdio.h>
-#include "include/types.h"
+#include "asm/rte.h"
 #include "cpu/utilities.h"
 #include "cpu/exceptionstackframes.h"
+#include "include/types.h"
+#include "kutil/kutil.h"
+#include "sched/sched.h"
 
 
 /*
@@ -317,8 +320,8 @@ void __cpu_exc_install_default_handlers(void);
 	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
 	this table and descriptions of each exception.
 */
-void __cpu_exc_bus_error(const struct __mc68010_address_exc_frame f);
-void __cpu_exc_address_error(const struct __mc68010_address_exc_frame f);
+void __cpu_exc_bus_error(int dummy, const struct __mc68010_address_exc_frame f);
+void __cpu_exc_address_error(int dummy, const struct __mc68010_address_exc_frame f);
 
 void __cpu_exc_generic(const struct __mc68010_exc_frame f);
 

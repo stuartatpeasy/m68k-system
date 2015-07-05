@@ -24,7 +24,7 @@
 #define NAME_MAX_LEN	(255)
 
 /* "Tick rate" - number of timer interrupts per second */
-#define TICK_RATE       (10)
+#define TICK_RATE       (100)
 
 #ifndef NULL
 #define NULL ((void *) 0)

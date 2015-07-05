@@ -74,7 +74,7 @@ int dfu(ku16 *data, ku32 len)
 	void (*p_write_flash)(ku16 *, ku32);
 	ku32 write_flash_len = (ku32) dfu - (ku32) write_flash;
 
-	/* TODO: disable interrupts */
+    cpu_disable_interrupts();
 
 	if(!len)
 		return DFU_NO_DATA;

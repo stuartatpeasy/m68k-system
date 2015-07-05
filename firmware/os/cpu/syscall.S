@@ -4,9 +4,9 @@
 
 .globl syscall_dispatcher
 syscall_dispatcher:
-		move.l	%usp, %a0	
+		move.l	%usp, %a0
 
-		# overwrite TRAP instr's return address on the supervisor stack with the 
+		# overwrite TRAP instr's return address on the supervisor stack with the
 		# syscall() return address to save an extra branch
 		move.l	%a0@+, %sp@(2)
 
@@ -24,7 +24,7 @@ syscall_dispatcher:
 		# an error status
 		cmpi.l	#MAX_SYSCALL, %d0
 		bgt		syscall_handler_invalid_syscall
-		
+
 		# calculate the address of the syscall handler and dispatch the call
 		movea.l	syscall_table, %a0
 		lsl.l	#2, %d0
