@@ -48,6 +48,7 @@ void __cpu_exc_install_default_handlers(void)
 
 void __cpu_exc_bus_error(int dummy, const struct __mc68010_address_exc_frame f)
 {
+    cpu_disable_interrupts();
 	puts("\nException: Bus error");
 	__cpu_dump_address_exc_frame(&f);
 	__cpu_halt();
@@ -56,6 +57,7 @@ void __cpu_exc_bus_error(int dummy, const struct __mc68010_address_exc_frame f)
 
 void __cpu_exc_address_error(int dummy, const struct __mc68010_address_exc_frame f)
 {
+    cpu_disable_interrupts();
 	puts("\nException: Address error");
 	__cpu_dump_address_exc_frame(&f);
 	__cpu_halt();
@@ -66,6 +68,7 @@ void __cpu_exc_generic(const struct __mc68010_exc_frame f)
 {
 	const unsigned char vec = ((f.vector_offset & 0xfff) >> 2);
 
+    cpu_disable_interrupts();
 	printf("\nUnhandled exception: ");
 	if((vec >= 25) && (vec <= 31))
 		printf("Level %d interrupt autovector\n", vec - 24);

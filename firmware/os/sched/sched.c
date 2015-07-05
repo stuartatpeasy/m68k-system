@@ -47,7 +47,7 @@ void irq_schedule(void)
         g_current_task->regs.a0 explicitly.
     */
 
-//    cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
+    cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 
     /* Store the outgoing task's state in *g_current_task. */
     asm volatile
@@ -57,7 +57,8 @@ void irq_schedule(void)
         "movel %%usp, %%a1                  \n"      /* } regs.a7 = USP                    */
         "movel %%a1, %0@-                   \n"      /* }                                  */
         "moveml %%d0-%%d7/%%a0-%%a6, %0@-   \n"      /*   regs.[d0-d7,a0-a6] = d0-d7,a0-a6 */
-        "movel %%sp@(8), %0@(28)            \n"      /*   regs.a0 = *(SP + 8)              */
+        "movel %%sp@(8), %0@(32)            \n"      /*   regs.a0 = *(SP + 8)              */
+        "movel %%sp@(12), %0@(36)           \n"      /*   regs.a1 = *(SP - 12)             */
         : /* no output operands */
         : "a" (&(g_current_task->regs.sr))
         : "memory", "cc"
@@ -93,14 +94,14 @@ void irq_schedule(void)
         "movel %0@+, %%sp@(8)               \n"      /*   *(SP + 8)  = regs.a0             */
         "movel %0@+, %%sp@(12)              \n"      /*   *(SP + 12) = regs.a1             */
         "moveml %0@+, %%a2-%%a6             \n"      /*   a2-a6      = regs.a[2-6]         */
-        "movel %0@+, %%a1                   \n"      /*   } USP = regs.a[7]                */
-        "movel %%a1, %%usp                  \n"      /*   }                                */
-//        "movew %0@+, %%sp@(16)              \n"      /*   *(SP + 16) = SR                  */
-//        "movel %0@+, %%sp@(18)              \n"      /*   *(SP + 18) = PC                  */
+        "movel %0@+, %%a1                   \n"      /*  } USP = regs.a[7]                 */
+        "movel %%a1, %%usp                  \n"      /*  }                                 */
+        "movel %0@+, %%sp@(18)              \n"      /*   *(SP + 18) = PC                  */
+        "movew %0@, %%ccr                   \n"      /*   *(SP + 16) = SR                  */
         : /* no output operands */
         : "a" (&(g_current_task->regs.d[0]))
         : "memory", "cc"
     );
 
-//    cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
+    cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 }
