@@ -98,7 +98,7 @@ Table [FC2..0] => [USERSPACE, CPUSPACE]
 Table [A23..A18] => [SUPERRAM, RAM, EXP, OBPERIPH, ROM]
 {
 	[000000..03FFFF] => 'b'10000;
-	[080000..7FFFFF] => 'b'01000;
+	[040000..7FFFFF] => 'b'01000;
 	[800000..9FFFFF] => 'b'00000;	/* nothing lives here */
 	[A00000..DFFFFF] => 'b'00100;
 	[E00000..EFFFFF] => 'b'00010;
