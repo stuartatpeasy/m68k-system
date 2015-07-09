@@ -66,6 +66,19 @@ void *memcpy(void *dest, const void *src, ku32 n)
 
 
 /*
+    memset()
+*/
+void *memset(void *src, s32 c, s32 n)
+{
+    u8 *src_ = (u8 *) src;
+    while(n--)
+        *src_++ = c;
+
+    return src;
+}
+
+
+/*
     strcat()
 */
 s8 *strcat(s8 *dest, ks8 *src)

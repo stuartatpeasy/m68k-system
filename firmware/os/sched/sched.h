@@ -11,11 +11,23 @@
 
 #include "duart.h"          /* DUART generates the scheduler interrupt */
 #include "cpu/utilities.h"
+#include "include/defs.h"
 #include "include/types.h"
 
 
 typedef u32 reg32_t;
 typedef u16 reg16_t;
+
+typedef void *(*proc_main_t)(void *);
+
+
+enum task_state
+{
+    ts_unborn = 0,
+    ts_runnable,
+    ts_exited
+};
+
 
 /*
     Task state structure.  Note that the layout of this struct is very sensitive: the order in
@@ -36,10 +48,15 @@ struct task_struct
         reg16_t sr;
     } regs;
 
-	const struct task_struct *parent;
-	struct task_struct *next;
+	const struct task_struct *parent;       /* needed yet? */
+	struct task_struct *next;               /* needed yet? */
+
 	const u8 *name;
-};
+
+    pid_t id;
+    enum task_state state;
+
+} __attribute__((packed));  /* sizeof(struct task_struct) = 85 bytes */
 
 typedef struct task_struct task_t;
 
@@ -47,6 +64,9 @@ volatile task_t *g_current_task;
 
 void irq_schedule(void) __attribute__((interrupt_handler));
 void sched_init(void);
+
+pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg);
+void process_end(void);
 
 #endif
 

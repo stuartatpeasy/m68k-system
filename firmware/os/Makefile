@@ -19,7 +19,7 @@ CSOURCES=dfu.c ds17485.c duart.c main.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c \
 		 sched/sched.c
 
-ASMSOURCES=sched/irq_task.S cpu/syscall.S
+ASMSOURCES=cpu/syscall.S
 
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
@@ -45,9 +45,9 @@ all: $(APPNAME)
 
 $(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
-	$(OBJCOPY) -j .text -O binary $(APPNAME) $(APPNAME).rom
-	$(OBJCOPY) -j .text -O binary -i 2 -b 0 $(APPNAME) $(APPNAME).E.rom
-	$(OBJCOPY) -j .text -O binary -i 2 -b 1 $(APPNAME) $(APPNAME).O.rom
+	$(OBJCOPY) -j .text -j .data -j .bss -O binary $(APPNAME) $(APPNAME).rom
+	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
+	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
 	chmod -f -x $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom || true
 
 evenrom:
@@ -118,6 +118,5 @@ memory/buddy.o: memory/buddy.c memory/buddy.h include/debug.h include/types.h \
 memory/heap.o: memory/heap.c memory/heap.h
 memory/kmalloc.o: memory/kmalloc.c memory/kmalloc.h memory/memorymap.h
 
-sched/irq_task.o: sched/irq_task.S
 sched/sched.o: sched/sched.c sched/sched.h include/types.h
 

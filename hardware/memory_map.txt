@@ -1,5 +1,6 @@
 
 000000-7FFFFF   RAM
+ 00000- 3FFFF	kernel RAM (256KB)
 
 A00000-AFFFFF   Expansion slot 0        IRQ4
 B00000-BFFFFF   Expansion slot 1        IRQ5
@@ -13,4 +14,5 @@ E00000-EFFFFF   On-board peripherals
  40000- FFFFF   (unused)
 
 F00000-FFFFFF   ROM
+
 

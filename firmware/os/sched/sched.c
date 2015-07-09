@@ -8,14 +8,85 @@
 
 task_t g_tf[64];
 
+#define NTASK_STRUCTS (sizeof(g_tf) / sizeof(g_tf[0]))
+#define for_each_task_struct(p) \
+            for(p = g_tf; p < &(g_tf[NTASK_STRUCTS]); ++p)
+
 volatile task_t *g_current_task = NULL;
+pid_t g_next_pid;
 
 
 void sched_init(void)
 {
+    task_t *p;
+
+    for_each_task_struct(p)
+        p->state = ts_unborn;
+
     g_current_task = &(g_tf[0]);
-    printf("&g_current_task = %08x\n"
-           "g_current_task  = %08x\n", &g_current_task, g_current_task);
+    g_next_pid = 1;
+}
+
+
+pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg)
+{
+    task_t *p;
+    pid_t retval = -1;      /* -1 indicates failure */
+
+    cpu_disable_interrupts();
+
+    for_each_task_struct(p)
+    {
+        /* Find a vacant task_struct */
+        if(p->state == ts_unborn)
+        {
+            s8 i;
+
+            /* TODO: work out how best to store name */
+            /* FIXME - allocate this space in user RAM */
+            u8 *process_stack = (u8 *) malloc(PROC_STACK_SIZE);
+
+            u32 *process_stack_top = (u32 *) (process_stack + PROC_STACK_SIZE);
+
+            p->id = g_next_pid++;
+            p->state = ts_runnable;
+            p->parent = NULL;
+            p->next = NULL;
+
+            /* Register arrays might still contain values from a previous process; clear them */
+            for(i = 0; i < 8; ++i)
+            {
+                p->regs.d[i] = 0;
+                p->regs.a[i] = 0;
+            }
+
+            /* Set up the process's initial stack */
+            *(--process_stack_top) = (u32) arg;
+            *(--process_stack_top) = (u32) process_end;
+
+            p->regs.a[7] = (u32) process_stack_top;
+            p->regs.pc = (u32) main_fn;
+
+            retval = p->id;
+            break;
+        }
+    }
+
+    cpu_enable_interrupts();
+
+    return retval;
+}
+
+
+void process_end(void)
+{
+    /*
+        If a process's main_fn returns, this is where we'll end up.  Note that we may be in user
+        mode when this fn is called, so it's not possible to do anything here that requires
+        supervisor privilege
+    */
+
+    /* TODO - probably TRAP here, passing the process's ID to the handler. */
 }
 
 

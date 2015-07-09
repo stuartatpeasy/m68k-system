@@ -26,6 +26,10 @@
 /* "Tick rate" - number of timer interrupts per second */
 #define TICK_RATE       (100)
 
+/* Per-process stack size */
+#define PROC_STACK_SIZE (16 * 1024)
+
+
 #ifndef NULL
 #define NULL ((void *) 0)
 #endif

@@ -50,6 +50,9 @@ struct rtc_time
     u8      dst;
 };
 
+/* Process ID */
+typedef s16 pid_t;
+
 /* This probably isn't the right place to define NULL, but I don't think it warrants its
    own header file. */
 #ifndef NULL

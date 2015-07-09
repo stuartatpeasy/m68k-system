@@ -1,6 +1,7 @@
+#include <stdio.h>
+#include <strings.h>
 #include "ds17485.h"
 #include "duart.h"
-#include "stdio.h"
 
 #include "monitor/monitor.h"
 
@@ -13,6 +14,8 @@
 const char * const g_warmup_message = "\n\n68010 computer system\n"
 									  "(c) Stuart Wallace, 2011-2015\n";
 
+u32 test = 0x12345678;
+u32 zero = 0;
 
 void detect_clock_freq()
 {
@@ -36,6 +39,7 @@ void detect_clock_freq()
     // CPU fclk/Hz ~= 700 * loops
 }
 
+extern u8 _sdata, _edata, _sbss, _ebss, _stext, _etext;
 
 void _main()
 {
@@ -58,7 +62,20 @@ void _main()
 
     puts(g_warmup_message);
 
+    printf("------- Memory map -------\n"
+           ".data: %08x - %08x\n"
+           ".bss : %08x - %08x\n"
+           ".text: %08x - %08x\n"
+           "--------------------------\n\n",
+           &_sdata, &_edata, &_sbss, &_ebss, &_stext, &_etext);
+
     ds17485_get_serial_number(sn);
+
+    /* Copy .data section to RAM */
+    memcpy(&_sdata, &_etext, &_edata - &_sdata);
+
+    /* Initialise .bss section */
+    bzero(&_sbss, &_ebss - &_sbss);
 
     printf("RTC model %02X - serial number %02X%02X%02X%02X%02X%02X\n",
            ds17485_get_model_number(), sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);
