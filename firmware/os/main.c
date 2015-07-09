@@ -1,21 +1,19 @@
 #include <stdio.h>
 #include <strings.h>
-#include "ds17485.h"
-#include "duart.h"
-
-#include "monitor/monitor.h"
 
 #include "cpu/utilities.h"
 #include "device/device.h"
+#include "ds17485.h"
+#include "duart.h"
+#include "fs/vfs.h"
+#include "include/defs.h"
 #include "kutil/kutil.h"
 #include "memory/kmalloc.h"
-#include "fs/vfs.h"
+#include "monitor/monitor.h"
 
 const char * const g_warmup_message = "\n\n68010 computer system\n"
 									  "(c) Stuart Wallace, 2011-2015\n";
 
-u32 test = 0x12345678;
-u32 zero = 0;
 
 void detect_clock_freq()
 {
@@ -39,7 +37,6 @@ void detect_clock_freq()
     // CPU fclk/Hz ~= 700 * loops
 }
 
-extern u8 _sdata, _edata, _sbss, _ebss, _stext, _etext;
 
 void _main()
 {
@@ -62,12 +59,14 @@ void _main()
 
     puts(g_warmup_message);
 
-    printf("------- Memory map -------\n"
-           ".data: %08x - %08x\n"
-           ".bss : %08x - %08x\n"
-           ".text: %08x - %08x\n"
-           "--------------------------\n\n",
-           &_sdata, &_edata, &_sbss, &_ebss, &_stext, &_etext);
+    printf("----------- Memory map -----------\n"
+           ".data: %08x - %08x (%u bytes)\n"
+           ".bss : %08x - %08x (%u bytes)\n"
+           ".text: %08x - %08x (%u bytes)\n"
+           "----------------------------------\n\n",
+           &_sdata, &_edata, &_edata - &_sdata,
+           &_sbss, &_ebss, &_ebss - &_sbss,
+           &_stext, &_etext, &_etext - &_stext);
 
     ds17485_get_serial_number(sn);
 

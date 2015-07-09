@@ -9,6 +9,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
+#include <include/types.h>
+
+
 /* API-like functions try to return zero on success and nonzero on failure */
 #define SUCCESS			(0)
 #define FAIL			(-1)
@@ -28,6 +31,14 @@
 
 /* Per-process stack size */
 #define PROC_STACK_SIZE (16 * 1024)
+
+
+extern u8 _sdata,       /* .data section start */
+          _edata,       /* .data section end   */
+          _sbss,        /* .bss  section start */
+          _ebss,        /* .bss  section end   */
+          _stext,       /* .text section start */
+          _etext;       /* .text section end   */
 
 
 #ifndef NULL
