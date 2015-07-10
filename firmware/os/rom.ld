@@ -11,6 +11,7 @@ MEMORY
 SECTIONS
 {
 	. = 0x00000400;
+
 	.data ALIGN(4):
     AT(ADDR(.text) + SIZEOF(.text))
 	{
@@ -27,6 +28,7 @@ SECTIONS
     }
 
 	. = 0x00f00000;
+
 	.text :
 	AT(ADDR(.text))
 	{

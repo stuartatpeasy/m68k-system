@@ -19,6 +19,7 @@
 				<Option compiler="null" />
 			</Target>
 		</Build>
+		<Unit filename="Makefile" />
 		<Unit filename="asm/bswap.h" />
 		<Unit filename="asm/reset.h" />
 		<Unit filename="asm/rte.h" />
@@ -75,6 +76,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="fs/vfs.h" />
+		<Unit filename="global.mk" />
 		<Unit filename="include/byteorder.h" />
 		<Unit filename="include/ctype.h" />
 		<Unit filename="include/debug.h" />
@@ -127,6 +129,10 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="memory/blockalloc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/blockalloc.h" />
 		<Unit filename="memory/buddy.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -167,6 +173,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="monitor/srec.h" />
+		<Unit filename="rom.ld" />
 		<Unit filename="sched/irq_task.S" />
 		<Unit filename="sched/sched.c">
 			<Option compilerVar="CC" />

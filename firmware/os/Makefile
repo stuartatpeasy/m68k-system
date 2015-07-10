@@ -16,7 +16,7 @@ CSOURCES=dfu.c ds17485.c duart.c main.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/mount.c fs/vfs.c \
-		 memory/buddy.c memory/heap.c memory/kmalloc.c \
+		 memory/slab.c memory/buddy.c memory/heap.c memory/kmalloc.c \
 		 sched/sched.c
 
 ASMSOURCES=cpu/syscall.S
@@ -117,6 +117,7 @@ memory/buddy.o: memory/buddy.c memory/buddy.h include/debug.h include/types.h \
 				kutil/kutil.h libkutil.a
 memory/heap.o: memory/heap.c memory/heap.h
 memory/kmalloc.o: memory/kmalloc.c memory/kmalloc.h memory/memorymap.h
+memory/slab.o: memory/slab.c memory/slab.h include/defs.h include/types.h
 
 sched/sched.o: sched/sched.c sched/sched.h include/types.h
 

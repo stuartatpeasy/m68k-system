@@ -1,3 +1,5 @@
+System memory map
+=================
 
 000000-7FFFFF   RAM
  00000- 3FFFF	kernel RAM (256KB)
@@ -15,4 +17,12 @@ E00000-EFFFFF   On-board peripherals
 
 F00000-FFFFFF   ROM
 
+
+Kernel memory map
+=================
+
+000000-0003FC	Vector table
+000400-000xxx	Kernel data (.data and .bss segments)
+000xxx-037FFF	Kernel heap
+038000-03FFFF	Kernel stack
 

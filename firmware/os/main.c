@@ -8,6 +8,7 @@
 #include "fs/vfs.h"
 #include "include/defs.h"
 #include "kutil/kutil.h"
+#include "memory/slab.h"
 #include "memory/kmalloc.h"
 #include "monitor/monitor.h"
 
@@ -44,6 +45,8 @@ void _main()
 
     struct rtc_time tm;
     char sn[6], timebuf[12], datebuf[32];
+    slab_t s;
+    void *p;
 
 	kmeminit();
 
@@ -59,14 +62,36 @@ void _main()
 
     puts(g_warmup_message);
 
-    printf("----------- Memory map -----------\n"
+    printf("--------------- Memory map ---------------\n"
            ".data: %08x - %08x (%u bytes)\n"
            ".bss : %08x - %08x (%u bytes)\n"
            ".text: %08x - %08x (%u bytes)\n"
-           "----------------------------------\n\n",
+           "------------------------------------------\n\n",
            &_sdata, &_edata, &_edata - &_sdata,
            &_sbss, &_ebss, &_ebss - &_sbss,
            &_stext, &_etext, &_etext - &_stext);
+
+    slab_init((void *) 0x200000, 2, &s);
+
+    p = slab_alloc(&s);
+    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
+    p = slab_alloc(&s);
+    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
+    p = slab_alloc(&s);
+    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
+    p = slab_alloc(&s);
+    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
+
+    p = (void *) 0x200020;
+    slab_free(&s, p);
+    printf("Freed object at %08x\n", p);
+
+    p = (void *) 0x200024;
+    slab_free(&s, p);
+    printf("Freed object at %08x\n", p);
+
+    p = slab_alloc(&s);
+    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
 
     ds17485_get_serial_number(sn);
 
@@ -104,4 +129,3 @@ void _main()
 
 	__cpu_halt();		/* should never be reached */
 }
-

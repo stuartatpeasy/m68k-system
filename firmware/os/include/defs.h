@@ -11,6 +11,13 @@
 
 #include <include/types.h>
 
+#if defined(TARGET_MC68008)
+#define DATA_BUS_WIDTH  (8)
+#elif defined(TARGET_MC68000) || defined(TARGET_MC68010)
+#define DATA_BUS_WIDTH  (16)
+#else
+#define DATA_BUS_WIDTH  (32)
+#endif
 
 /* API-like functions try to return zero on success and nonzero on failure */
 #define SUCCESS			(0)
@@ -46,4 +53,3 @@ extern u8 _sdata,       /* .data section start */
 #endif
 
 #endif
-
