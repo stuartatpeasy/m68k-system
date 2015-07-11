@@ -10,61 +10,61 @@
 #include "cpu/exceptions.h"
 
 
-void __cpu_exc_install_default_handlers(void)
+void cpu_exc_install_default_handlers(void)
 {
 	unsigned short u;
 
 	/* Start by pointing all exception vectors at the generic handler */
 	for(u = 0; u < 256; ++u)
-		CPU_EXC_VPTR_SET(u, __cpu_exc_generic);
+		CPU_EXC_VPTR_SET(u, cpu_exc_generic);
 
 	/* Now set specific handlers */
 	V_ssp			        = CPU_EXC_VPTR(0xca5caded);				/* nonsense number */
 	V_reset			        = CPU_EXC_VPTR(0xbed51de5);				/* nonsense number */
-	V_bus_error		        = CPU_EXC_VPTR(__cpu_exc_bus_error);
-	V_address_error	        = CPU_EXC_VPTR(__cpu_exc_address_error);
+	V_bus_error		        = CPU_EXC_VPTR(cpu_exc_bus_error);
+	V_address_error	        = CPU_EXC_VPTR(cpu_exc_address_error);
 
 	V_level_1_autovector    = CPU_EXC_VPTR(irq_schedule);           /* scheduler IRQ handler */
 
 	/* TODO install TRAP handlers */
-	V_trap_0  = CPU_EXC_VPTR(__cpu_trap_0);
-	V_trap_1  = CPU_EXC_VPTR(__cpu_trap_1);
-	V_trap_2  = CPU_EXC_VPTR(__cpu_trap_2);
-	V_trap_3  = CPU_EXC_VPTR(__cpu_trap_3);
-	V_trap_4  = CPU_EXC_VPTR(__cpu_trap_4);
-	V_trap_5  = CPU_EXC_VPTR(__cpu_trap_5);
-	V_trap_6  = CPU_EXC_VPTR(__cpu_trap_6);
-	V_trap_7  = CPU_EXC_VPTR(__cpu_trap_7);
-	V_trap_8  = CPU_EXC_VPTR(__cpu_trap_8);
-	V_trap_9  = CPU_EXC_VPTR(__cpu_trap_9);
-	V_trap_10 = CPU_EXC_VPTR(__cpu_trap_10);
-	V_trap_11 = CPU_EXC_VPTR(__cpu_trap_11);
-	V_trap_12 = CPU_EXC_VPTR(__cpu_trap_12);
-	V_trap_13 = CPU_EXC_VPTR(__cpu_trap_13);
-	V_trap_14 = CPU_EXC_VPTR(__cpu_trap_14);
+	V_trap_0  = CPU_EXC_VPTR(cpu_trap_0_handler);
+	V_trap_1  = CPU_EXC_VPTR(cpu_trap_1_handler);
+	V_trap_2  = CPU_EXC_VPTR(cpu_trap_2_handler);
+	V_trap_3  = CPU_EXC_VPTR(cpu_trap_3_handler);
+	V_trap_4  = CPU_EXC_VPTR(cpu_trap_4_handler);
+	V_trap_5  = CPU_EXC_VPTR(cpu_trap_5_handler);
+	V_trap_6  = CPU_EXC_VPTR(cpu_trap_6_handler);
+	V_trap_7  = CPU_EXC_VPTR(cpu_trap_7_handler);
+	V_trap_8  = CPU_EXC_VPTR(cpu_trap_8_handler);
+	V_trap_9  = CPU_EXC_VPTR(cpu_trap_9_handler);
+	V_trap_10 = CPU_EXC_VPTR(cpu_trap_10_handler);
+	V_trap_11 = CPU_EXC_VPTR(cpu_trap_11_handler);
+	V_trap_12 = CPU_EXC_VPTR(cpu_trap_12_handler);
+	V_trap_13 = CPU_EXC_VPTR(cpu_trap_13_handler);
+	V_trap_14 = CPU_EXC_VPTR(cpu_trap_15);
 	V_trap_15 = CPU_EXC_VPTR(__cpu_trap_15);
 }
 
 
-void __cpu_exc_bus_error(int dummy, const struct __mc68010_address_exc_frame f)
+void cpu_exc_bus_error(int dummy, const struct mc68010_address_exc_frame f)
 {
     cpu_disable_interrupts();
 	puts("\nException: Bus error");
-	__cpu_dump_address_exc_frame(&f);
-	__cpu_halt();
+	cpu_dump_address_exc_frame(&f);
+	cpu_halt();
 }
 
 
-void __cpu_exc_address_error(int dummy, const struct __mc68010_address_exc_frame f)
+void cpu_exc_address_error(int dummy, const struct mc68010_address_exc_frame f)
 {
     cpu_disable_interrupts();
 	puts("\nException: Address error");
-	__cpu_dump_address_exc_frame(&f);
-	__cpu_halt();
+	cpu_dump_address_exc_frame(&f);
+	cpu_halt();
 }
 
 
-void __cpu_exc_generic(const struct __mc68010_exc_frame f)
+void cpu_exc_generic(const struct mc68010_exc_frame f)
 {
 	const unsigned char vec = ((f.vector_offset & 0xfff) >> 2);
 
@@ -114,96 +114,96 @@ void __cpu_exc_generic(const struct __mc68010_exc_frame f)
 			printf("Unknown #%d\n", vec);
 	}
 
-	__cpu_dump_exc_frame(&f);
-	__cpu_halt();
+	cpu_dump_exc_frame(&f);
+	cpu_halt();
 }
 
 
-void __cpu_trap_0(void)
+void cpu_trap_0_handler(void)
 {
 	puts("TRAP 0");
 }
 
 
-void __cpu_trap_1(void)
+void cpu_trap_1_handler(void)
 {
 	puts("TRAP 1");
 }
 
 
-void __cpu_trap_2(void)
+void cpu_trap_2_handler(void)
 {
 	puts("TRAP 2");
 }
 
 
-void __cpu_trap_3(void)
+void cpu_trap_3_handler(void)
 {
 	puts("TRAP 3");
 }
 
 
-void __cpu_trap_4(void)
+void cpu_trap_4_handler(void)
 {
 	puts("TRAP 4");
 }
 
 
-void __cpu_trap_5(void)
+void cpu_trap_5_handler(void)
 {
 	puts("TRAP 5");
 }
 
 
-void __cpu_trap_6(void)
+void cpu_trap_6_handler(void)
 {
 	puts("TRAP 6");
 }
 
 
-void __cpu_trap_7(void)
+void cpu_trap_7_handler(void)
 {
 	puts("TRAP 7");
 }
 
 
-void __cpu_trap_8(void)
+void cpu_trap_8_handler(void)
 {
 	puts("TRAP 8");
 }
 
 
-void __cpu_trap_9(void)
+void cpu_trap_9_handler(void)
 {
 	puts("TRAP 9");
 }
 
 
-void __cpu_trap_10(void)
+void cpu_trap_10_handler(void)
 {
 	puts("TRAP 10");
 }
 
 
-void __cpu_trap_11(void)
+void cpu_trap_11_handler(void)
 {
 	puts("TRAP 11");
 }
 
 
-void __cpu_trap_12(void)
+void cpu_trap_12_handler(void)
 {
 	puts("TRAP 12");
 }
 
 
-void __cpu_trap_13(void)
+void cpu_trap_13_handler(void)
 {
 	puts("TRAP 13");
 }
 
 
-void __cpu_trap_14(void)
+void cpu_trap_15(void)
 {
 	puts("TRAP 14");
 }

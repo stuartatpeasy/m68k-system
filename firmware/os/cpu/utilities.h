@@ -15,7 +15,7 @@
 
 #include <stdio.h>
 
-#define __cpu_nop()		do { asm volatile("nop" : ); } while(0)
+#define cpu_nop()		do { asm volatile("nop" : ); } while(0)
 
 /* Disable interrupts by setting the IRQ mask to 7 in the SR. */
 #define cpu_disable_interrupts()    \
@@ -35,10 +35,10 @@
         :                           \
     )                               \
 
-inline void __cpu_halt(void) __attribute__ ((noreturn));
+inline void cpu_halt(void) __attribute__ ((noreturn));
 
-const char * const __cpu_dump_status_register(ku16 sr);
-void __cpu_dump_exc_frame(const struct __mc68010_exc_frame * const f);
-void __cpu_dump_address_exc_frame(const struct __mc68010_address_exc_frame * const f);
+const char * const cpu_dump_status_register(ku16 sr);
+void cpu_dump_exc_frame(const struct mc68010_exc_frame * const f);
+void cpu_dump_address_exc_frame(const struct mc68010_address_exc_frame * const f);
 
 #endif

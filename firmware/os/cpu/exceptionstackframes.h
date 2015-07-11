@@ -16,7 +16,7 @@
 /*
 	MC68010 address/bus-error exception stack frame
 */
-struct __mc68010_address_exc_frame
+struct mc68010_address_exc_frame
 {
 	const u16 sr;
 	const u32 pc;
@@ -37,7 +37,7 @@ struct __mc68010_address_exc_frame
 /*
 	MC68010 group 1/2 exception stack frame
 */
-struct __mc68010_exc_frame
+struct mc68010_exc_frame
 {
     const u32 __dummy;
 	const u16 sr;

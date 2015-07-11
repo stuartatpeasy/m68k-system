@@ -41,26 +41,28 @@ void detect_clock_freq()
 
 void _main()
 {
-	/* At boot, interrupts are disabled */
-
     struct rtc_time tm;
     char sn[6], timebuf[12], datebuf[32];
 
-	/* Install default handlers for all CPU exceptions */
-	__cpu_exc_install_default_handlers();
+	/* === Initialise CPU === */
 
-    /* Copy .data section to RAM */
-    memcpy(&_sdata, &_etext, &_edata - &_sdata);
+    cpu_disable_interrupts();   /* Just in case we were called manually */
 
-    /* Initialise .bss section */
-    bzero(&_sbss, &_ebss - &_sbss);
+	/* By default, all exceptions cause a context-dump followed by a halt. */
+	cpu_exc_install_default_handlers();
+
+    /* === Initialise memory === */
+
+    memcpy(&_sdata, &_etext, &_edata - &_sdata);    /* Copy .data section to kernel RAM */
+    bzero(&_sbss, &_ebss - &_sbss);                 /* Initialise .bss section          */
+    slab_init(&_ebss);                              /* Slabs sit after the .bss section */
+	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM); /* Initialise kernel heap           */
+
+    /* === Initialise peripherals === */
 
 	duart_init();
 
-    slab_init(&_ebss);  /* Slabs sit after the .bss section */
-
-	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);
-
+    /* Activate red LED while the boot process continues */
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
@@ -106,12 +108,14 @@ void _main()
 	if(vfs_init())
 		puts("VFS failed to initialise");
 
+    sched_init();
+    cpu_enable_interrupts();
+
+    /* Startup complete - activate green LED */
 	led_off(LED_RED);
 	led_on(LED_GREEN);
 
-    sched_init();
-    cpu_enable_interrupts();
-	monitor();
+	monitor();      /* start interactive "shell" thing */
 
-	__cpu_halt();		/* should never be reached */
+	cpu_halt();		/* should never be reached */
 }

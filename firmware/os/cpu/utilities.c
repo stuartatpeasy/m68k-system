@@ -11,7 +11,7 @@
 #include "kutil/kutil.h"
 
 
-inline void __cpu_halt(void)
+inline void cpu_halt(void)
 {
 	puts("\nSystem halted.");
 
@@ -25,7 +25,7 @@ inline void __cpu_halt(void)
 /*
 	Write a string describing the contents of the status register
 */
-const char * const __cpu_dump_status_register(ku16 sr)
+const char * const cpu_dump_status_register(ku16 sr)
 {
 	static char buf[16];
 
@@ -54,13 +54,13 @@ const char * const __cpu_dump_status_register(ku16 sr)
 
 	TODO: remove the dependency on printf()
 */
-void __cpu_dump_exc_frame(const struct __mc68010_exc_frame * const f)
+void cpu_dump_exc_frame(const struct mc68010_exc_frame * const f)
 {
 	printf("Status register     = %04x [%s]\n"
 		   "Program counter     = 0x%08x\n"
 		/* "Frame format        = %x\n" */
 		   "Vector offset       = %04x\n",
-			f->sr, __cpu_dump_status_register(f->sr), f->pc,
+			f->sr, cpu_dump_status_register(f->sr), f->pc,
 			/*(f->vector_offset >> 12) & 0xf, */ f->vector_offset & 0xfff);
 }
 
@@ -70,7 +70,7 @@ void __cpu_dump_exc_frame(const struct __mc68010_exc_frame * const f)
 
 	TODO: remove the dependency on printf()
 */
-void __cpu_dump_address_exc_frame(const struct __mc68010_address_exc_frame * const f)
+void cpu_dump_address_exc_frame(const struct mc68010_address_exc_frame * const f)
 {
 	printf("Status register     = %04x [%s]\n"
 		   "Program counter     = 0x%08x\n"
@@ -82,7 +82,7 @@ void __cpu_dump_address_exc_frame(const struct __mc68010_address_exc_frame * con
 		   "Data input buffer   = %04x\n"
 		   "Instr output buffer = %04x\n"
 		   "Version number      = %04x\n",
-			f->sr, __cpu_dump_status_register(f->sr), f->pc,
+			f->sr, cpu_dump_status_register(f->sr), f->pc,
 			/* (f->vector_offset >> 12) & 0xf, */ f->vector_offset & 0xfff, f->special_status_word,
 			f->fault_addr, f->data_output_buffer, f->data_input_buffer, f->instr_output_buffer,
 			f->version_number);

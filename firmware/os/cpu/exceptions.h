@@ -313,34 +313,33 @@
 	Install the default handlers for every exception.  Default behaviour for every exception is to
 	report the exception and dump its stack frame, then halt the system.
 */
-void __cpu_exc_install_default_handlers(void);
+void cpu_exc_install_default_handlers(void);
 
 
 /*
 	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
 	this table and descriptions of each exception.
 */
-void __cpu_exc_bus_error(int dummy, const struct __mc68010_address_exc_frame f);
-void __cpu_exc_address_error(int dummy, const struct __mc68010_address_exc_frame f);
+void cpu_exc_bus_error(int dummy, const struct mc68010_address_exc_frame f);
+void cpu_exc_address_error(int dummy, const struct mc68010_address_exc_frame f);
 
-void __cpu_exc_generic(const struct __mc68010_exc_frame f);
+void cpu_exc_generic(const struct mc68010_exc_frame f);
 
-IRQ_HANDLER_DECL(__cpu_trap_0);
-IRQ_HANDLER_DECL(__cpu_trap_1);
-IRQ_HANDLER_DECL(__cpu_trap_2);
-IRQ_HANDLER_DECL(__cpu_trap_3);
-IRQ_HANDLER_DECL(__cpu_trap_4);
-IRQ_HANDLER_DECL(__cpu_trap_5);
-IRQ_HANDLER_DECL(__cpu_trap_6);
-IRQ_HANDLER_DECL(__cpu_trap_7);
-IRQ_HANDLER_DECL(__cpu_trap_8);
-IRQ_HANDLER_DECL(__cpu_trap_9);
-IRQ_HANDLER_DECL(__cpu_trap_10);
-IRQ_HANDLER_DECL(__cpu_trap_11);
-IRQ_HANDLER_DECL(__cpu_trap_12);
-IRQ_HANDLER_DECL(__cpu_trap_13);
-IRQ_HANDLER_DECL(__cpu_trap_14);
+IRQ_HANDLER_DECL(cpu_trap_0_handler);
+IRQ_HANDLER_DECL(cpu_trap_1_handler);
+IRQ_HANDLER_DECL(cpu_trap_2_handler);
+IRQ_HANDLER_DECL(cpu_trap_3_handler);
+IRQ_HANDLER_DECL(cpu_trap_4_handler);
+IRQ_HANDLER_DECL(cpu_trap_5_handler);
+IRQ_HANDLER_DECL(cpu_trap_6_handler);
+IRQ_HANDLER_DECL(cpu_trap_7_handler);
+IRQ_HANDLER_DECL(cpu_trap_8_handler);
+IRQ_HANDLER_DECL(cpu_trap_9_handler);
+IRQ_HANDLER_DECL(cpu_trap_10_handler);
+IRQ_HANDLER_DECL(cpu_trap_11_handler);
+IRQ_HANDLER_DECL(cpu_trap_12_handler);
+IRQ_HANDLER_DECL(cpu_trap_13_handler);
+IRQ_HANDLER_DECL(cpu_trap_15);
 IRQ_HANDLER_DECL(__cpu_trap_15);
 
 #endif
-
