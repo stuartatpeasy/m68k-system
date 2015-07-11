@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, February 2012.
 */
 
-#define __sys_reset()	do									\
+#define sys_reset()	do				    					\
 						{									\
 							__asm__ __volatile__			\
 							(								\

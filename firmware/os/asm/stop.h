@@ -9,15 +9,15 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#define __stop(x)	do											\
-					{											\
-						__asm__ __volatile__					\
-						(										\
-							"stop %w0"							\
-							: 									\
-							: "n" (x)							\
-						);										\
-					} while(0);									\
+#define stop(x)	do											\
+					{										\
+						__asm__ __volatile__				\
+						(									\
+							"stop %w0"						\
+							: 								\
+							: "n" (x)						\
+						);									\
+					} while(0);								\
 
 #endif
 

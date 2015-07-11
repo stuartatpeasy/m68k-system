@@ -12,7 +12,7 @@
 #include "include/types.h"
 
 
-#define __tas(addr)								\
+#define tas(addr)								\
 	(__extension__ ({							\
 		register unsigned int ret;				\
 		register unsigned int __addr = (addr);	\

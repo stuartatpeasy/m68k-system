@@ -33,23 +33,23 @@
 
 #if defined(TARGET_BIGENDIAN)
 
-#define LE2N16(x)	__bswap_16(x)
-#define LE2N32(x)	__bswap_32(x)
+#define LE2N16(x)	bswap_16(x)
+#define LE2N32(x)	bswap_32(x)
 #define BE2N16(x)	(x)
 #define BE2N32(x)	(x)
 
-#define LEHW2N32(x)	__wswap_32(x)
+#define LEHW2N32(x)	wswap_32(x)
 #define BEHW2N32(x)	(x)
 
 #elif defined(TARGET_LITTLEENDIAN)
 
 #define LE2N16(x)	(x)
 #define LE2N32(x)	(x)
-#define BE2N16(x)	__bswap_16(x)
-#define BE2N32(x)	__bswap_32(x)
+#define BE2N16(x)	bswap_16(x)
+#define BE2N32(x)	bswap_32(x)
 
 #define LEHW2N32(x) (x)
-#define BEHW2N32(x)	__wswap_32(x)
+#define BEHW2N32(x)	wswap_32(x)
 
 #else
 #error Target endianness not defined

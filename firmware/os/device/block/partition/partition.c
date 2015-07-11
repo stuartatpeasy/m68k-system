@@ -92,8 +92,8 @@ printf("part: looking for partitions on %s\n", dev->name);
 
 				data->device		= device_id;
 				data->sector_len	= bytes_per_sector;
-				data->offset 		= __wswap_32(p->first_sector_lba);
-				data->len			= __wswap_32(p->num_sectors);
+				data->offset 		= wswap_32(p->first_sector_lba);
+				data->len			= wswap_32(p->num_sectors);
 				data->type			= p->type;
 				data->status		= p->status;
 

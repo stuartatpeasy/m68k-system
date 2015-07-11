@@ -61,7 +61,7 @@ void write_flash(ku16 *data, ku32 len)
 	}
 
 	/* Reset the system */
-	__sys_reset();
+	sys_reset();
 }
 
 

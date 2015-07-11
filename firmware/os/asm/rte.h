@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, July 2013.
 */
 
-#define __rte()	do												\
+#define rte()	do												\
 					{											\
 						__asm__ __volatile__					\
 						(										\
