@@ -448,6 +448,8 @@ MONITOR_CMD_HANDLER(help)
 		  "    Display this text\n\n"
 		  "id\n"
 		  "    Display device identity\n\n"
+		  "map\n"
+		  "    Display memory map\n\n"
 		  "raw\n"
 		  "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
 		  "schedule\n"
@@ -456,6 +458,8 @@ MONITOR_CMD_HANDLER(help)
 		  "    Configure serial line discipline:\n"
 		  "        serial echo off - disable character echo\n"
 		  "        serial echo on  - enable character echo\n\n"
+		  "slabs\n"
+		  "    Display slab allocation status\n\n"
 		  "srec\n"
 		  "    Start the upload of an S-record file\n\n"
 		  "upload <count>\n"
@@ -475,6 +479,34 @@ MONITOR_CMD_HANDLER(help)
 MONITOR_CMD_HANDLER(id)
 {
     puts(OS_NAME " v" OS_VERSION_STR " on " CPU_NAME ", build date " __DATE__ " " __TIME__);
+    return MON_E_OK;
+}
+
+
+/*
+    map
+
+    Display memory map
+*/
+MONITOR_CMD_HANDLER(map)
+{
+    printf("--------------- Memory map ---------------\n"
+           ".data: %08x - %08x (%u bytes)\n"
+           ".bss : %08x - %08x (%u bytes)\n"
+           "slabs: %08x - %08x (%u bytes)\n"
+           "kheap: %08x - %08x (%u bytes)\n"
+           "stack: %08x - %08x (%u bytes)\n"
+           "uram : %08x - %08x (%u bytes)\n"
+           ".text: %08x - %08x (%u bytes)\n"
+           "------------------------------------------\n\n",
+           &_sdata, &_edata, &_edata - &_sdata,
+           &_sbss, &_ebss, &_ebss - &_sbss,
+           g_slab_base, g_slab_end, g_slab_end - g_slab_base,
+           g_slab_end, OS_STACK_BOTTOM, (void *) OS_STACK_BOTTOM - g_slab_end,
+           OS_STACK_BOTTOM, OS_STACK_TOP, OS_STACK_TOP - OS_STACK_BOTTOM,
+           USER_RAM_START, g_ram_top, g_ram_top - USER_RAM_START,
+           &_stext, &_etext, &_etext - &_stext);
+
     return MON_E_OK;
 }
 
@@ -543,6 +575,30 @@ MONITOR_CMD_HANDLER(serial)
 
 
 /*
+    slabs
+
+    Display slab allocation status
+*/
+MONITOR_CMD_HANDLER(slabs)
+{
+    u16 u;
+
+    puts("------------- Slab dump -------------");
+    for(u = 0; u < NSLABS; ++u)
+    {
+        ku8 au = g_slabs[u].alloc_unit;
+        const void * const p = g_slabs[u].p;
+
+        printf("%02u: %08x - %08x au=%u (%ux%ub)\n",
+                u, p, p + SLAB_SIZE - 1, au, SLAB_SIZE >> au, 1 << au);
+    }
+    puts("-------------------------------------");
+
+    return MON_E_OK;
+}
+
+
+/*
 	srec
 
 	Receive data in S-record format and put it in memory somwhere
@@ -567,6 +623,24 @@ MONITOR_CMD_HANDLER(srec)
 }
 
 
+/*
+    test
+
+    Used to trigger a test of some sort
+*/
+MONITOR_CMD_HANDLER(test)
+{
+    u32 ram_mb = ram_detect();
+    printf("Detected %uMB of RAM\n", ram_mb);
+    return MON_E_OK;
+}
+
+
+/*
+    upload
+
+    Allocate memory, receive bytes, store them in the allocated region
+*/
 MONITOR_CMD_HANDLER(upload)
 {
 	u32 len;
@@ -591,6 +665,11 @@ MONITOR_CMD_HANDLER(upload)
 }
 
 
+/*
+    write
+
+    Write a byte to the specified address
+*/
 MONITOR_CMD_HANDLER(write)
 {
 	u32 addr, data;
@@ -613,6 +692,11 @@ MONITOR_CMD_HANDLER(write)
 }
 
 
+/*
+    writeh
+
+    Write a half-word (16 bits) to the specified address
+*/
 MONITOR_CMD_HANDLER(writeh)
 {
 	u32 addr, data;
@@ -635,6 +719,11 @@ MONITOR_CMD_HANDLER(writeh)
 }
 
 
+/*
+    writew
+
+    Write a word (32 bits) to the specified address
+*/
 MONITOR_CMD_HANDLER(writew)
 {
 	u32 addr, data;
@@ -655,4 +744,3 @@ MONITOR_CMD_HANDLER(writew)
 
 	return MON_E_OK;
 }
-

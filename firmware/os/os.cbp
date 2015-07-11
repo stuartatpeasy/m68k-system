@@ -141,6 +141,10 @@
 		</Unit>
 		<Unit filename="memory/kmalloc.h" />
 		<Unit filename="memory/memorymap.h" />
+		<Unit filename="memory/ramdetect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/ramdetect.h" />
 		<Unit filename="memory/slab.c">
 			<Option compilerVar="CC" />
 		</Unit>

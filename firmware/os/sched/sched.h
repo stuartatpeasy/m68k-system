@@ -13,6 +13,7 @@
 #include "cpu/utilities.h"
 #include "include/defs.h"
 #include "include/types.h"
+#include <strings.h>
 
 
 typedef u32 reg32_t;
@@ -20,25 +21,29 @@ typedef u16 reg16_t;
 
 typedef void *(*proc_main_t)(void *);
 
+/*
+    Process type flags
+*/
+#define PROC_TYPE_KERNEL    (0x8000)
 
-enum task_state
+enum proc_state
 {
-    ts_unborn = 0,
-    ts_runnable,
-    ts_exited
+    ps_unborn = 0,
+    ps_runnable,
+    ps_exited
 };
 
 
 /*
-    Task state structure.  Note that the layout of this struct is very sensitive: the order in
-    which the registers appear *must not be changed*.
+    Task state structure.  Note that the layout of this struct is very sensitive: in particular,
+    struct regs must not be modified, and must be the first item in struct task_struct.
 
     A movem.l (move multiple regs) instruction is used to fill the d[] and a[] arrays.  The movem.l
     instr only permits pre-decrement addressing when writing registers to memory.  Conversely, when
     transferring memory to registers, only post-increment is allowed.  This means that the "regs"
     struct can use regular arrays, a[8] and d[8], to store register values.
 */
-struct task_struct
+struct proc_struct
 {
     struct
     {
@@ -48,25 +53,24 @@ struct task_struct
         reg16_t sr;
     } regs;
 
-	const struct task_struct *parent;       /* needed yet? */
-	struct task_struct *next;               /* needed yet? */
-
-	const u8 *name;
+	const struct proc_struct *parent;       /* needed yet? */
+	struct proc_struct *next;               /* needed yet? */
 
     pid_t id;
-    enum task_state state;
+    enum proc_state state;
 
-} __attribute__((packed));  /* sizeof(struct task_struct) = 85 bytes */
+    u8 name[32];
+};  /* sizeof(struct proc_struct) = 116 bytes */
 
-typedef struct task_struct task_t;
+typedef struct proc_struct proc_t;
 
-volatile task_t *g_current_task;
+volatile proc_t *g_current_proc;
+volatile u32 g_ncontext_switches;
 
 void irq_schedule(void) __attribute__((interrupt_handler));
 void sched_init(void);
 
-pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg);
+pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku16 flags);
 void process_end(void);
 
 #endif
-

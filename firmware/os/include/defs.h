@@ -47,6 +47,7 @@ extern u8 _sdata,       /* .data section start */
           _stext,       /* .text section start */
           _etext;       /* .text section end   */
 
+extern u32 g_ram_top;   /* Address of first byte past the end of RAM.  Set by ram_detect() */
 
 #ifndef NULL
 #define NULL ((void *) 0)

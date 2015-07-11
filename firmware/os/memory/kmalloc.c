@@ -11,13 +11,14 @@
 #include "memory/kmalloc.h"
 
 /* mem_ctx is a struct defined by whichever allocator is selected */
-mem_ctx g_heap;
+mem_ctx g_kheap;    /* kernel heap */
+mem_ctx g_uheap;    /* user heap (shared by all userland processes) */
 
 #if defined(KMALLOC_HEAP)
 
 void kmeminit(void * const start, void * const end)
 {
-	heap_init(&g_heap, start, end - start);
+	heap_init(&g_kheap, start, end - start);
 }
 
 #elif defined(KMALLOC_BUDDY)
@@ -30,7 +31,7 @@ s8 g_buddy_map[1 << (OS_HEAP_SIZE_LOG2 - BUDDY_MIN_ALLOC_UNIT)];
 
 void kmeminit(void * const start, void * const end)
 {
-	buddy_init(&g_heap, start, end - start,
+	buddy_init(&g_kheap, start, end - start,
 					BUDDY_MIN_ALLOC_UNIT, g_buddy_map);
 }
 
@@ -39,36 +40,36 @@ void kmeminit(void * const start, void * const end)
 
 void *kmalloc(u32 size)
 {
-	return ALLOCATOR_FN(malloc)(&g_heap, size);
+	return ALLOCATOR_FN(malloc)(&g_kheap, size);
 }
 
 
 void *kcalloc(ku32 nmemb, ku32 size)
 {
-	return ALLOCATOR_FN(calloc)(&g_heap, nmemb, size);
+	return ALLOCATOR_FN(calloc)(&g_kheap, nmemb, size);
 }
 
 
 void *krealloc(void *ptr, u32 size)
 {
-	return ALLOCATOR_FN(realloc)(&g_heap, ptr, size);
+	return ALLOCATOR_FN(realloc)(&g_kheap, ptr, size);
 }
 
 
 void kfree(void *ptr)
 {
-	ALLOCATOR_FN(free)(&g_heap, ptr);
+	ALLOCATOR_FN(free)(&g_kheap, ptr);
 }
 
 
 u32 kfreemem()
 {
-	return ALLOCATOR_FN(freemem)(&g_heap);
+	return ALLOCATOR_FN(freemem)(&g_kheap);
 }
 
 
 u32 kusedmem()
 {
-	return ALLOCATOR_FN(usedmem)(&g_heap);
+	return ALLOCATOR_FN(usedmem)(&g_kheap);
 }
 

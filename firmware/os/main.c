@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <strings.h>
 
-#include "cpu/utilities.h"
-#include "device/device.h"
-#include "ds17485.h"
-#include "duart.h"
-#include "fs/vfs.h"
-#include "include/defs.h"
-#include "kutil/kutil.h"
-#include "memory/slab.h"
-#include "memory/kmalloc.h"
-#include "monitor/monitor.h"
+#include <cpu/utilities.h>
+#include <device/device.h>
+#include <ds17485.h>
+#include <duart.h>
+#include <fs/vfs.h>
+#include <include/defs.h>
+#include <kutil/kutil.h>
+#include <memory/kmalloc.h>
+#include <memory/ramdetect.h>
+#include <memory/slab.h>
+#include <monitor/monitor.h>
+
 
 const char * const g_warmup_message = "\n\n68010 computer system\n"
 									  "(c) Stuart Wallace, 2011-2015\n";
@@ -55,6 +57,7 @@ void _main()
 
     memcpy(&_sdata, &_etext, &_edata - &_sdata);    /* Copy .data section to kernel RAM */
     bzero(&_sbss, &_ebss - &_sbss);                 /* Initialise .bss section          */
+    ram_detect();                                   /* Find out how much RAM we have    */
     slab_init(&_ebss);                              /* Slabs sit after the .bss section */
 	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM); /* Initialise kernel heap           */
 
@@ -66,27 +69,12 @@ void _main()
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
-	ds17485_init();
-
     puts(g_warmup_message);
 
-    printf("--------------- Memory map ---------------\n"
-           ".data: %08x - %08x (%u bytes)\n"
-           ".bss : %08x - %08x (%u bytes)\n"
-           "slabs: %08x - %08x (%u bytes)\n"
-           "kheap: %08x - %08x (%u bytes)\n"
-           "stack: %08x - %08x (%u bytes)\n"
-           ".text: %08x - %08x (%u bytes)\n"
-           "------------------------------------------\n\n",
-           &_sdata, &_edata, &_edata - &_sdata,
-           &_sbss, &_ebss, &_ebss - &_sbss,
-           g_slab_base, g_slab_end, g_slab_end - g_slab_base,
-           g_slab_end, OS_STACK_BOTTOM, (void *) OS_STACK_BOTTOM - g_slab_end,
-           OS_STACK_BOTTOM, OS_STACK_TOP, OS_STACK_TOP - OS_STACK_BOTTOM,
-           &_stext, &_etext, &_etext - &_stext);
+    printf("%uMB RAM detected\n", g_ram_top >> 20);
 
-    slab_dump();
-
+    /* Initialise RTC */
+	ds17485_init();
     ds17485_get_serial_number(sn);
 
     printf("RTC model %02X - serial number %02X%02X%02X%02X%02X%02X\n",

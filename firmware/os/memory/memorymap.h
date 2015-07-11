@@ -42,16 +42,16 @@
 */
 
 
-#define MEMMAP_START			(0)			/* probably redundant 				*/
+#define MEMMAP_START			(0)			/* probably redundant 				        */
 
-#define VECTOR_TABLE_START		(0)			/*    0K: CPU vector table			*/
+#define VECTOR_TABLE_START		(0)			/*    0K: CPU vector table			        */
 #define VECTOR_TABLE_END		(0x000400)
 
-#define OS_STACK_BOTTOM			(0x038000)	/*	224K: OS stack (32K)			*/
+#define OS_STACK_BOTTOM			(0x038000)	/*	224K: OS stack (32K)			        */
 #define OS_STACK_TOP			(0x040000)
 
-#define APP_MEM_START			(0x040000)	/*  256K: Application RAM start	    */
-#define APP_MEM_END				(0x800000)	/* 8192K: Top of RAM				*/
+#define USER_RAM_START			(0x040000)	/*  256K: Application RAM start	            */
+#define USER_RAM_END			(0x800000)	/* 8192K: Maximum possible extent of RAM    */
 
 #endif
 

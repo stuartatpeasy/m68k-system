@@ -1,5 +1,5 @@
-#ifndef __MONITOR_MONITOR_H__
-#define __MONITOR_MONITOR_H__
+#ifndef OS_MONITOR_MONITOR_H
+#define OS_MONITOR_MONITOR_H
 /*
 	Monitor application
 
@@ -9,17 +9,20 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <string.h>
+#include <dfu.h>
+#include <ds17485.h>
+#include <include/defs.h>
+#include <include/version.h>
+#include <memory/kmalloc.h>
+#include <memory/ramdetect.h>
+#include <memory/slab.h>
+#include <monitor/disasm.h>
+#include <monitor/readline.h>
+#include <monitor/srec.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "dfu.h"
-#include "disasm.h"
-#include "ds17485.h"
-#include "readline.h"
-#include "srec.h"
-#include "include/defs.h"
-#include "include/version.h"
-#include "memory/kmalloc.h"
+#include <string.h>
+
 
 #define MON_VERB_MAX_LENGTH		(16)	/* maximum length of the "verb", i.e. the first word in a
 										   command line */
@@ -70,10 +73,13 @@ MONITOR_CMD_HANDLER(free);
 MONITOR_CMD_HANDLER(go);
 MONITOR_CMD_HANDLER(help);
 MONITOR_CMD_HANDLER(id);
+MONITOR_CMD_HANDLER(map);
 MONITOR_CMD_HANDLER(raw);
 MONITOR_CMD_HANDLER(schedule);
 MONITOR_CMD_HANDLER(serial);
+MONITOR_CMD_HANDLER(slabs);
 MONITOR_CMD_HANDLER(srec);
+MONITOR_CMD_HANDLER(test);
 MONITOR_CMD_HANDLER(upload);
 MONITOR_CMD_HANDLER(write);
 MONITOR_CMD_HANDLER(writeh);

@@ -6,39 +6,40 @@
 #include "sched/sched.h"
 
 
-task_t g_tf[64];
+proc_t g_ps[64];
 
-#define NTASK_STRUCTS (sizeof(g_tf) / sizeof(g_tf[0]))
-#define for_each_task_struct(p) \
-            for(p = g_tf; p < &(g_tf[NTASK_STRUCTS]); ++p)
+#define NPROC_STRUCTS (sizeof(g_ps) / sizeof(g_ps[0]))
+#define for_each_proc_struct(p) \
+            for(p = g_ps; p < &(g_ps[NPROC_STRUCTS]); ++p)
 
-volatile task_t *g_current_task = NULL;
+volatile proc_t *g_current_proc = NULL;
 pid_t g_next_pid;
+volatile u32 g_ncontext_switches = 0;
 
 
 void sched_init(void)
 {
-    task_t *p;
+    proc_t *p;
 
-    for_each_task_struct(p)
-        p->state = ts_unborn;
+    for_each_proc_struct(p)
+        p->state = ps_unborn;
 
-    g_current_task = &(g_tf[0]);
+    g_current_proc = &(g_ps[0]);
     g_next_pid = 1;
 }
 
 
-pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg)
+pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku16 flags)
 {
-    task_t *p;
+    proc_t *p;
     pid_t retval = -1;      /* -1 indicates failure */
 
     cpu_disable_interrupts();
 
-    for_each_task_struct(p)
+    for_each_proc_struct(p)
     {
         /* Find a vacant task_struct */
-        if(p->state == ts_unborn)
+        if(p->state == ps_unborn)
         {
             s8 i;
 
@@ -49,16 +50,12 @@ pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg)
             u32 *process_stack_top = (u32 *) (process_stack + PROC_STACK_SIZE);
 
             p->id = g_next_pid++;
-            p->state = ts_runnable;
+            p->state = ps_runnable;
             p->parent = NULL;
             p->next = NULL;
 
             /* Register arrays might still contain values from a previous process; clear them */
-            for(i = 0; i < 8; ++i)
-            {
-                p->regs.d[i] = 0;
-                p->regs.a[i] = 0;
-            }
+            bzero(&(p->regs), sizeof(p->regs));
 
             /* Set up the process's initial stack */
             *(--process_stack_top) = (u32) arg;
@@ -131,7 +128,7 @@ void irq_schedule(void)
         "movel %%sp@(8), %0@(32)            \n"      /*   regs.a0 = *(SP + 8)              */
         "movel %%sp@(12), %0@(36)           \n"      /*   regs.a1 = *(SP - 12)             */
         : /* no output operands */
-        : "a" (&(g_current_task->regs.sr))
+        : "a" (&(g_current_proc->regs.sr))
         : "memory", "cc"
 	);
 
@@ -139,7 +136,7 @@ void irq_schedule(void)
         TODO: Decide which task to run next, and update g_current_task accordingly
     */
 
-    ++*((u32 *) 0x7ffffc);      /* XXX test code - remove this in due course */
+    ++g_ncontext_switches;
 
     /*
         Start the next timeslice.  We need to do this before restoring the incoming tasks's state
@@ -170,7 +167,7 @@ void irq_schedule(void)
         "movel %0@+, %%sp@(18)              \n"      /*   *(SP + 18) = PC                  */
         "movew %0@, %%ccr                   \n"      /*   *(SP + 16) = SR                  */
         : /* no output operands */
-        : "a" (&(g_current_task->regs.d[0]))
+        : "a" (&(g_current_proc->regs.d[0]))
         : "memory", "cc"
     );
 
