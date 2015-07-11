@@ -45,15 +45,21 @@ void _main()
 
     struct rtc_time tm;
     char sn[6], timebuf[12], datebuf[32];
-    slab_t s;
-    void *p;
-
-	kmeminit();
 
 	/* Install default handlers for all CPU exceptions */
 	__cpu_exc_install_default_handlers();
 
+    /* Copy .data section to RAM */
+    memcpy(&_sdata, &_etext, &_edata - &_sdata);
+
+    /* Initialise .bss section */
+    bzero(&_sbss, &_ebss - &_sbss);
+
 	duart_init();
+
+    slab_init(&_ebss);  /* Slabs sit after the .bss section */
+
+	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);
 
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
@@ -65,41 +71,21 @@ void _main()
     printf("--------------- Memory map ---------------\n"
            ".data: %08x - %08x (%u bytes)\n"
            ".bss : %08x - %08x (%u bytes)\n"
+           "slabs: %08x - %08x (%u bytes)\n"
+           "kheap: %08x - %08x (%u bytes)\n"
+           "stack: %08x - %08x (%u bytes)\n"
            ".text: %08x - %08x (%u bytes)\n"
            "------------------------------------------\n\n",
            &_sdata, &_edata, &_edata - &_sdata,
            &_sbss, &_ebss, &_ebss - &_sbss,
+           g_slab_base, g_slab_end, g_slab_end - g_slab_base,
+           g_slab_end, OS_STACK_BOTTOM, (void *) OS_STACK_BOTTOM - g_slab_end,
+           OS_STACK_BOTTOM, OS_STACK_TOP, OS_STACK_TOP - OS_STACK_BOTTOM,
            &_stext, &_etext, &_etext - &_stext);
 
-    slab_init((void *) 0x200000, 2, &s);
-
-    p = slab_alloc(&s);
-    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
-    p = slab_alloc(&s);
-    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
-    p = slab_alloc(&s);
-    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
-    p = slab_alloc(&s);
-    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
-
-    p = (void *) 0x200020;
-    slab_free(&s, p);
-    printf("Freed object at %08x\n", p);
-
-    p = (void *) 0x200024;
-    slab_free(&s, p);
-    printf("Freed object at %08x\n", p);
-
-    p = slab_alloc(&s);
-    printf("Allocating a size-1 in page at 0x200000; result=%08x\n", p);
+    slab_dump();
 
     ds17485_get_serial_number(sn);
-
-    /* Copy .data section to RAM */
-    memcpy(&_sdata, &_etext, &_edata - &_sdata);
-
-    /* Initialise .bss section */
-    bzero(&_sbss, &_ebss - &_sbss);
 
     printf("RTC model %02X - serial number %02X%02X%02X%02X%02X%02X\n",
            ds17485_get_model_number(), sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);

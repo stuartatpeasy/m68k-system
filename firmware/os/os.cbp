@@ -81,7 +81,6 @@
 		<Unit filename="include/ctype.h" />
 		<Unit filename="include/debug.h" />
 		<Unit filename="include/defs.h" />
-		<Unit filename="include/errno.h" />
 		<Unit filename="include/limits.h" />
 		<Unit filename="include/syscall.h" />
 		<Unit filename="include/types.h" />
@@ -129,10 +128,6 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="memory/blockalloc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/blockalloc.h" />
 		<Unit filename="memory/buddy.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -146,6 +141,10 @@
 		</Unit>
 		<Unit filename="memory/kmalloc.h" />
 		<Unit filename="memory/memorymap.h" />
+		<Unit filename="memory/slab.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/slab.h" />
 		<Unit filename="monitor/commands.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -22,7 +22,8 @@ Kernel memory map
 =================
 
 000000-0003FC	Vector table
-000400-000xxx	Kernel data (.data and .bss segments)
-000xxx-037FFF	Kernel heap
+000400-000700	(upper limit approximate) Kernel data (.data and .bss segments)
+000700-004700	(limits approximate) Slabs
+004700-037FFF	Kernel heap
 038000-03FFFF	Kernel stack
 

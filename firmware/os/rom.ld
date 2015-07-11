@@ -17,15 +17,16 @@ SECTIONS
 	{
         _sdata = .;
         *(.data)
-        _edata = .;
     }
+    _edata = .;
 
 	.bss ALIGN(4):
+	AT(ADDR(.data) + SIZEOF(.data))
 	{
         _sbss = .;
         *(.bss)
-        _ebss = .;
     }
+    _ebss = .;
 
 	. = 0x00f00000;
 
@@ -34,8 +35,8 @@ SECTIONS
 	{
         _stext = .;
         *(.text)
-        _etext = .;
 	}
+    _etext = .;
 }
 
 ENTRY(_main)

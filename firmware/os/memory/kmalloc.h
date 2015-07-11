@@ -46,7 +46,7 @@ typedef buddy_ctx mem_ctx;
 
 extern mem_ctx g_Heap;
 
-void kmeminit();
+void kmeminit(void * const start, void * const end);
 void *kmalloc(u32 size);
 void *kcalloc(ku32 nmemb, ku32 size);
 void *krealloc(void *ptr, u32 size);

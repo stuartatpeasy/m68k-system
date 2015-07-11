@@ -48,18 +48,10 @@
 #define VECTOR_TABLE_START		(0)			/*    0K: CPU vector table			*/
 #define VECTOR_TABLE_END		(0x000400)
 
-#define OS_GLOBAL_DATA_START	(0x000400)	/*    1K: OS global space (31K)		*/
-#define OS_GLOBAL_DATA_END		(0x008000)	/*			(.data)					*/
+#define OS_STACK_BOTTOM			(0x038000)	/*	224K: OS stack (32K)			*/
+#define OS_STACK_TOP			(0x040000)
 
-#define OS_HEAP_START			(0x008000)	/*   32K: OS private heap (128K)	*/
-#define OS_HEAP_END				(0x028000)
-
-#define OS_HEAP_SIZE_LOG2		(17)
-
-#define OS_STACK_BOTTOM			(0x028000)	/*	160K: OS stack (32K)			*/
-#define OS_STACK_TOP			(0x030000)
-
-#define APP_MEM_START			(0x030000)	/*  192K: Application RAM start	    */
+#define APP_MEM_START			(0x040000)	/*  256K: Application RAM start	    */
 #define APP_MEM_END				(0x800000)	/* 8192K: Top of RAM				*/
 
 #endif

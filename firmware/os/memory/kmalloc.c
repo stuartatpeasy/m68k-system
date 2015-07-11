@@ -15,9 +15,9 @@ mem_ctx g_heap;
 
 #if defined(KMALLOC_HEAP)
 
-void kmeminit()
+void kmeminit(void * const start, void * const end)
 {
-	heap_init(&g_heap, (void *) OS_HEAP_START, OS_HEAP_END - OS_HEAP_START);
+	heap_init(&g_heap, start, end - start);
 }
 
 #elif defined(KMALLOC_BUDDY)
@@ -28,9 +28,9 @@ void kmeminit()
 
 s8 g_buddy_map[1 << (OS_HEAP_SIZE_LOG2 - BUDDY_MIN_ALLOC_UNIT)];
 
-void kmeminit()
+void kmeminit(void * const start, void * const end)
 {
-	buddy_init(&g_heap, (void *) OS_HEAP_START, OS_HEAP_END - OS_HEAP_START,
+	buddy_init(&g_heap, start, end - start,
 					BUDDY_MIN_ALLOC_UNIT, g_buddy_map);
 }
 
