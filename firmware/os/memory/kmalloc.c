@@ -21,7 +21,14 @@ void kmeminit(void * const start, void * const end)
 	heap_init(&g_kheap, start, end - start);
 }
 
+void umeminit(void * const start, void * const end)
+{
+    heap_init(&g_uheap, start, end - start);
+}
+
 #elif defined(KMALLOC_BUDDY)
+
+/* This allocator really isn't going to work without a lot more work. */
 
 /* The buddy allocator uses a "map" to store the alloc/free state of blocks.  The size of this
  * map is 2^(log2(pool_size) - log2(smallest_allocatable_block)) bytes.  With the current default
@@ -35,41 +42,89 @@ void kmeminit(void * const start, void * const end)
 					BUDDY_MIN_ALLOC_UNIT, g_buddy_map);
 }
 
+void umeminit(void * const start, void * const end)
+{
+    buddy_init(&g_uheap, start, end - start,
+                    BUDDY_MIN_ALLOC_UNIT, g_buddy_map);
+}
+
 #endif
 
+/*
+    Allocation functions for kernel memory space
+*/
 
-void *kmalloc(u32 size)
+inline void *kmalloc(u32 size)
 {
 	return ALLOCATOR_FN(malloc)(&g_kheap, size);
 }
 
 
-void *kcalloc(ku32 nmemb, ku32 size)
+inline void *kcalloc(ku32 nmemb, ku32 size)
 {
 	return ALLOCATOR_FN(calloc)(&g_kheap, nmemb, size);
 }
 
 
-void *krealloc(void *ptr, u32 size)
+inline void *krealloc(void *ptr, u32 size)
 {
 	return ALLOCATOR_FN(realloc)(&g_kheap, ptr, size);
 }
 
 
-void kfree(void *ptr)
+inline void kfree(void *ptr)
 {
 	ALLOCATOR_FN(free)(&g_kheap, ptr);
 }
 
 
-u32 kfreemem()
+inline u32 kfreemem()
 {
 	return ALLOCATOR_FN(freemem)(&g_kheap);
 }
 
 
-u32 kusedmem()
+inline u32 kusedmem()
 {
 	return ALLOCATOR_FN(usedmem)(&g_kheap);
 }
 
+
+/*
+    Allocation functions for user memory space
+*/
+
+inline void *umalloc(u32 size)
+{
+	return ALLOCATOR_FN(malloc)(&g_uheap, size);
+}
+
+
+inline void *ucalloc(ku32 nmemb, ku32 size)
+{
+	return ALLOCATOR_FN(calloc)(&g_uheap, nmemb, size);
+}
+
+
+inline void *urealloc(void *ptr, u32 size)
+{
+	return ALLOCATOR_FN(realloc)(&g_uheap, ptr, size);
+}
+
+
+inline void ufree(void *ptr)
+{
+	ALLOCATOR_FN(free)(&g_uheap, ptr);
+}
+
+
+inline u32 ufreemem()
+{
+	return ALLOCATOR_FN(freemem)(&g_uheap);
+}
+
+
+inline u32 uusedmem()
+{
+	return ALLOCATOR_FN(usedmem)(&g_uheap);
+}

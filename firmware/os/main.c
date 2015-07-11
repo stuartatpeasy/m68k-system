@@ -55,21 +55,27 @@ void _main()
 
     /* === Initialise memory === */
 
-    memcpy(&_sdata, &_etext, &_edata - &_sdata);    /* Copy .data section to kernel RAM */
-    bzero(&_sbss, &_ebss - &_sbss);                 /* Initialise .bss section          */
-    ram_detect();                                   /* Find out how much RAM we have    */
-    slab_init(&_ebss);                              /* Slabs sit after the .bss section */
-	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM); /* Initialise kernel heap           */
+    memcpy(&_sdata, &_etext, &_edata - &_sdata);        /* Copy .data section to kernel RAM */
+    bzero(&_sbss, &_ebss - &_sbss);                     /* Initialise .bss section          */
+    ram_detect();                                       /* Find out how much RAM we have    */
+    slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
+	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
+	umeminit(USER_RAM_START,                            /* Initialise user heap             */
+                (void *) g_ram_top - USER_RAM_START);
 
     /* === Initialise peripherals === */
 
+    /* Initialise DUART.  This has the side-effect of shutting the goddamn beeper up. */
 	duart_init();
 
     /* Activate red LED while the boot process continues */
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
-    puts(g_warmup_message);
+    /* Zero RAM.  This happens after init'ing the DUART, because beeper. */
+    bzero((void *) USER_RAM_START, g_ram_top - USER_RAM_START);
+
+    puts(g_warmup_message);     /*
 
     printf("%uMB RAM detected\n", g_ram_top >> 20);
 

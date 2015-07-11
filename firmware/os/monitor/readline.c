@@ -141,8 +141,29 @@ void readline(char *buffer, ku32 buffer_len, ku32 echo)
 						case 0x5b:				/* [ */
 							switch(READLINE_GETC())
 							{
+                                case 0x31:
+                                    switch(READLINE_GETC())
+                                    {
+                                        case 0x7e:
+                                            for(; pos; --pos)
+                                                READLINE_PUTC(0x08, echo);
+                                            break;
+                                    }
+                                    break;
+
 								case 0x33:
 									break;
+
+                                case 0x34:
+                                    switch(READLINE_GETC())
+                                    {
+                                        case 0x7e:
+                                            for(; pos < line_length; ++pos)
+                                                READLINE_PUTC(buffer[pos], echo);
+                                            break;
+                                    }
+                                    break;
+
 
 								case 0x41:						/* Cursor up */
 									/* TODO Fetch previous entry from history */

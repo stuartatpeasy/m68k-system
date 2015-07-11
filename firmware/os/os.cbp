@@ -79,7 +79,6 @@
 		<Unit filename="global.mk" />
 		<Unit filename="include/byteorder.h" />
 		<Unit filename="include/ctype.h" />
-		<Unit filename="include/debug.h" />
 		<Unit filename="include/defs.h" />
 		<Unit filename="include/limits.h" />
 		<Unit filename="include/syscall.h" />

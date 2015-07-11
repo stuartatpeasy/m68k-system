@@ -48,11 +48,18 @@ extern mem_ctx g_Heap;
 
 void kmeminit(void * const start, void * const end);
 
-void *kmalloc(u32 size);
-void *kcalloc(ku32 nmemb, ku32 size);
-void *krealloc(void *ptr, u32 size);
-void kfree(void *ptr);
-u32 kfreemem();
-u32 kusedmem();
+inline void *kmalloc(u32 size);
+inline void *kcalloc(ku32 nmemb, ku32 size);
+inline void *krealloc(void *ptr, u32 size);
+inline void kfree(void *ptr);
+inline u32 kfreemem();
+inline u32 kusedmem();
+
+inline void *umalloc(u32 size);
+inline void *ucalloc(ku32 nmemb, ku32 size);
+inline void *urealloc(void *ptr, u32 size);
+inline void ufree(void *ptr);
+inline u32 ufreemem();
+inline u32 uusedmem();
 
 #endif

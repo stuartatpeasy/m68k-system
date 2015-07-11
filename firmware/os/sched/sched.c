@@ -1,6 +1,10 @@
 /*
+    Scheduler
+
+    Part of the as-yet-unnamed MC68010 operating system
 
 
+    (c) Stuart Wallace <stuartw@atom.net>, July 2015.
 */
 
 #include "sched/sched.h"
@@ -14,7 +18,7 @@ proc_t g_ps[64];
 
 volatile proc_t *g_current_proc = NULL;
 pid_t g_next_pid;
-volatile u32 g_ncontext_switches = 0;
+u32 g_ncontext_switches = 0;
 
 
 void sched_init(void)
@@ -45,10 +49,12 @@ pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku16 flags)
 
             /* TODO: work out how best to store name */
             /* FIXME - allocate this space in user RAM */
-            u8 *process_stack = (u8 *) malloc(PROC_STACK_SIZE);
+            u8 *process_stack = (u8 *) umalloc(PROC_STACK_SIZE);
 
             u32 *process_stack_top = (u32 *) (process_stack + PROC_STACK_SIZE);
 
+printf("umalloc()ed process stack at %p\n", process_stack);
+printf("stack top = %p\n", process_stack_top);
             p->id = g_next_pid++;
             p->state = ps_runnable;
             p->parent = NULL;
@@ -117,7 +123,7 @@ void irq_schedule(void)
 
     cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 
-    /* Store the outgoing task's state in *g_current_task. */
+    /* Store the outgoing process's state in *g_current_proc. */
     asm volatile
     (
         "movew %%sp@(16), %0@               \n"      /*   regs.sr = SR                     */
@@ -133,7 +139,7 @@ void irq_schedule(void)
 	);
 
 	/*
-        TODO: Decide which task to run next, and update g_current_task accordingly
+        TODO: Decide which process to run next, and update g_current_proc accordingly
     */
 
     ++g_ncontext_switches;

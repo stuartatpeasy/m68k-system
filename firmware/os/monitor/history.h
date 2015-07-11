@@ -1,5 +1,5 @@
-#ifndef __MONITOR_ENV_H__
-#define __MONITOR_ENV_H__
+#ifndef OS_MONITOR_HISTORY_H
+#define OS_MONITOR_HISTORY_H
 /*
 	Command-history support for monitor system
 
@@ -11,18 +11,17 @@
 
 
 #include "include/defs.h"
-#include "memory/kmalloc.h"
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
 #define MONITOR_HISTORY_LEN     (10)
-
-const char **g_history;
 
 void history_init(void);
 void history_clear(void);
 void history_add(const char *cmd);
 inline s32 history_get_len(void);
 const char *history_get_at(const int where);
-void history_remove(const int where);
 
 
 #endif

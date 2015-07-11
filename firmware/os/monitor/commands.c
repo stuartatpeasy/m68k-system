@@ -446,6 +446,8 @@ MONITOR_CMD_HANDLER(help)
 		  "    Begin executing code at <address>, which must be an even number\n\n"
 		  "help\n"
 		  "    Display this text\n\n"
+		  "history\n"
+		  "    Display command history\n\n"
 		  "id\n"
 		  "    Display device identity\n\n"
 		  "map\n"
@@ -468,6 +470,25 @@ MONITOR_CMD_HANDLER(help)
 		  "    Write <data> to to memory at <address>\n\n"
 		);
 	return MON_E_OK;
+}
+
+
+/*
+    history
+
+    Display command history
+*/
+MONITOR_CMD_HANDLER(history)
+{
+    s32 i, len = history_get_len();
+
+    for(i = 0; i < len; ++i)
+    {
+        const char *cmd = history_get_at(i);
+        printf("%3i: %s\n", i, cmd == NULL ? "" : cmd);
+    }
+
+    return MON_E_OK;
 }
 
 

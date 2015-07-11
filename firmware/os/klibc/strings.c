@@ -39,15 +39,17 @@ void bcopy(const void *src, void *dest, u32 n)
 void bzero(void *s, u32 n)
 {
 	s8 *s_ = s;
+	u32 nwords;
 
 	/* Zero individual bytes until *s is word-aligned */
 	for(; n && ((u32) s_ & 3); n--)
 		*s_++ = 0;
 
 	/* Zero words until n < 4 */
-	for(; n & 3; n -= 4, s_ += 4)
+	for(nwords = n >> 2; nwords--; s_ += 4)
 		*((u32 * const) s_) = 0;
 
 	/* Zero trailing bytes */
-	for(; n; n--, *s_++ = 0) ;
+	for(n &= 3; n--;)
+        *s_++ = 0;
 }

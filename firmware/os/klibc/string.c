@@ -32,34 +32,55 @@ s32 memcmp(const void *s1, const void *s2, u32 n)
 /*
     memcpy()
 */
-void *memcpy(void *dest, const void *src, ku32 n)
+void *memcpy(void *dest, const void *src, u32 n)
 {
 	s8 *src_ = (s8 *) src,
 		 *dest_ = (s8 *) dest;
 
-	if(n > 8)
-	{
-		u32 n_ = n - 8;
-		for(; n_--; *dest_++ = *src_++) ;
-	}
+    if(!n)
+        return dest;
 
-	if(n)
-	{
-		switch(n)
-		{
-			case 8:		*dest_++ = *src_++;
-			case 7:		*dest_++ = *src_++;
-			case 6:		*dest_++ = *src_++;
-			case 5:		*dest_++ = *src_++;
-			case 4:		*dest_++ = *src_++;
-			case 3:		*dest_++ = *src_++;
-			case 2:		*dest_++ = *src_++;
-			case 1:		*dest_++ = *src_++;
-			case 0:
-			default:
-				break;
-		}
-	}
+    if(((u32) src_ & 3) == ((u32) dest_ & 3))
+    {
+        /* src and dest can be aligned on a word boundary. */
+        u32 nwords;
+
+        while(n-- & ((u32) src_ & 3))
+            *dest_++ = *src_++;
+
+        for(nwords = n >> 2; nwords--; src_ += 4, dest_ += 4)
+            *((u32 *) dest_) = *((u32 *) src_);
+
+        for(n &= 3; n--;)
+            *dest_++ = *src_++;
+    }
+    else
+    {
+        /* src and dest can't be aligned.  Do this the slow way */
+        if(n > 8)
+        {
+            u32 n_ = n - 8;
+            for(; n_--; *dest_++ = *src_++) ;
+        }
+
+        if(n)
+        {
+            switch(n)
+            {
+                case 8:		*dest_++ = *src_++;
+                case 7:		*dest_++ = *src_++;
+                case 6:		*dest_++ = *src_++;
+                case 5:		*dest_++ = *src_++;
+                case 4:		*dest_++ = *src_++;
+                case 3:		*dest_++ = *src_++;
+                case 2:		*dest_++ = *src_++;
+                case 1:		*dest_++ = *src_++;
+                case 0:
+                default:
+                    break;
+            }
+        }
+    }
 
 	return dest;
 }

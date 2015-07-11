@@ -21,9 +21,9 @@ clean:
 
 commands.o: commands.c monitor.h disasm.o srec.o ../memory/kmalloc.h ../memory/kmalloc.c ../dfu.c ../dfu.h
 disasm.o: disasm.c disasm.h ../kutil/kutil.h ../libkutil.a
+env.o: env.c env.h
+history.o: history.c history.h ../include/defs.h
 monitor.o: monitor.c monitor.h commands.o ../kutil/kutil.h \
 		   ../memory/kmalloc.h ../memory/kmalloc.c
 readline.o: readline.c readline.h ../duart.h
 srec.o: srec.c srec.h readline.o ../kutil/kutil.h ../libkutil.a
-history.o: history.c history.h
-env.o: env.c env.h

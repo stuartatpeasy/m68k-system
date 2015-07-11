@@ -113,7 +113,7 @@ fs/vfs.o: fs/vfs.c fs/vfs.h fs/mount.h include/types.h include/defs.h
 
 include/byteorder.h: asm/bswap.h
 
-memory/buddy.o: memory/buddy.c memory/buddy.h include/debug.h include/types.h \
+memory/buddy.o: memory/buddy.c memory/buddy.h include/types.h \
 				kutil/kutil.h libkutil.a
 memory/heap.o: memory/heap.c memory/heap.h
 memory/kmalloc.o: memory/kmalloc.c memory/kmalloc.h memory/memorymap.h

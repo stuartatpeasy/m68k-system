@@ -33,6 +33,7 @@ const struct command g_commands[] =
 	{"fillw",			cmd_fillw},
 	{"free",			cmd_free},
 	{"help",			cmd_help},
+	{"history",         cmd_history},
 	{"id",              cmd_id},
 	{"go",				cmd_go},
 	{"map",             cmd_map},
@@ -53,6 +54,7 @@ const struct command g_commands[] =
 
 void monitor(void)
 {
+    history_init();
 blah:
 	monitor_main();
 	goto blah;
@@ -98,8 +100,11 @@ void dispatch_command(const char *cmdline)
 	if(!cmd_len)
 		return;
 
+    history_add(command);
+
 	const struct command *p, *pcommand = NULL;
 	for(p = g_commands; p->name; ++p)
+    {
 		if(strstr(p->name, command) == p->name)
 		{
 			if(pcommand)
@@ -114,6 +119,7 @@ void dispatch_command(const char *cmdline)
 					break;	/* exact match */
 			}
 		}
+    }
 
 	if(!pcommand)
 	{

@@ -17,6 +17,7 @@
 #include <memory/ramdetect.h>
 #include <memory/slab.h>
 #include <monitor/disasm.h>
+#include <monitor/history.h>
 #include <monitor/readline.h>
 #include <monitor/srec.h>
 #include <stdio.h>
@@ -72,6 +73,7 @@ MONITOR_CMD_HANDLER(fillw);
 MONITOR_CMD_HANDLER(free);
 MONITOR_CMD_HANDLER(go);
 MONITOR_CMD_HANDLER(help);
+MONITOR_CMD_HANDLER(history);
 MONITOR_CMD_HANDLER(id);
 MONITOR_CMD_HANDLER(map);
 MONITOR_CMD_HANDLER(raw);

@@ -16,7 +16,7 @@
 #include "errno.h"
 
 s32 memcmp(const void *s1, const void *s2, u32 n);
-void *memcpy(void *dest, const void *src, ku32 n);
+void *memcpy(void *dest, const void *src, u32 n);
 void *memset(void *src, s32 c, s32 n);
 s8 *strcat(s8 *dest, ks8 *src);
 s32 strcmp(ks8 *s1, ks8 *s2);

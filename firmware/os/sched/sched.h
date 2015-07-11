@@ -33,9 +33,8 @@ enum proc_state
     ps_exited
 };
 
-
 /*
-    Task state structure.  Note that the layout of this struct is very sensitive: in particular,
+    Process state structure.  Note that the layout of this struct is very sensitive: in particular,
     struct regs must not be modified, and must be the first item in struct task_struct.
 
     A movem.l (move multiple regs) instruction is used to fill the d[] and a[] arrays.  The movem.l
@@ -65,7 +64,7 @@ struct proc_struct
 typedef struct proc_struct proc_t;
 
 volatile proc_t *g_current_proc;
-volatile u32 g_ncontext_switches;
+u32 g_ncontext_switches;
 
 void irq_schedule(void) __attribute__((interrupt_handler));
 void sched_init(void);
