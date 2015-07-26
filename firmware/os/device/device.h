@@ -13,14 +13,12 @@
 #include "include/types.h"
 
 #define DEVICE_NAME_LEN			(6)		/* Max length of device name, including terminating \0 	*/
+#define MAX_DEVICES             (64)    /* Maximum number of devices allowed by the system      */
 
 #define DEVICE_MAX_SUBDEVICES	(61)	/* e.g. ataa1, ataa2, ataa3, ...ataaZ */
 
 #define INVALID_DEVICE_ID		(-1)	/* Device guaranteed not to exist */
 
-const char * const device_sub_names;
-
-typedef u32 device_id;
 
 /* Return type for driver functions */
 typedef enum
@@ -49,6 +47,16 @@ enum device_type
 	DEVICE_TYPE_CHARACTER
 };
 
+typedef enum device_type device_type_t;
+
+enum device_class
+{
+    DEVICE_CLASS_DISC,
+    DEVICE_CLASS_PARTITION
+};
+
+typedef enum device_class device_class_t;
+
 struct device_driver
 {
 	const char *name;
@@ -69,6 +77,7 @@ typedef struct device_driver device_driver_t;
 struct device
 {
 	enum device_type type;
+	enum device_class class;
 	struct device_driver *driver;
 	char name[DEVICE_NAME_LEN];
 	void *data;
@@ -76,21 +85,30 @@ struct device
 
 typedef struct device device_t;
 
+/*
+    Variable declarations
+*/
+const char * const g_device_sub_names;
+device_t * g_devices[MAX_DEVICES];
 
+
+/*
+    Function declarations
+*/
 u32 driver_init();
 void driver_shut_down();
-driver_ret create_device(const enum device_type type, struct device_driver * const driver,
-							const char *name, void * const data);
+driver_ret create_device(const device_type_t type, const device_class_t class,
+                         struct device_driver * const driver, const char *name, void * const data);
 
-u32 driver_num_devices();
+u32 driver_method_not_implemented();
 
-const struct device *get_device_by_devid(const device_id id);
-const struct device *get_device_by_name(const char * const name);
+device_t *get_device_by_name(const char * const name);
 
-driver_ret device_read(const device_id id, ku32 offset, u32 len, u8 *buf);
-driver_ret device_write(const device_id id, ku32 offset, u32 len, ku8 *buf);
+driver_ret device_read(const device_t * const dev, ku32 offset, u32 len, u8 *buf);
+driver_ret device_write(const device_t * const dev, ku32 offset, u32 len, ku8 *buf);
 
-driver_ret device_control(const device_id id, ku32 function, void *in, void *out);
+driver_ret device_control(const device_t * const dev, ku32 function, void *in, void *out);
+
 
 #endif
 

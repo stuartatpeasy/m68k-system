@@ -128,62 +128,20 @@ MONITOR_CMD_HANDLER(disassemble)
 
 s32 dump_mem(ks32 start, ks32 num_bytes, ks8 word_size)
 {
-	ku8 line_length = 16;
-	u8 x, y;
-	s8 *line;
-	u32 offset, data;
+    s32 ret = dump_hex((void *) start, word_size, 0, num_bytes);
 
-	if((word_size != 4) && (word_size != 2) && (word_size != 1))
-		return MON_E_INTERNAL_ERROR;
+    switch(ret)
+    {
+        case EINVAL:
+        default:
+            return MON_E_INTERNAL_ERROR;
 
-	if(!(line = (u8 *) kmalloc(line_length)))
-		return MON_E_OUT_OF_MEMORY;
+        case ENOMEM:
+            return MON_E_OUT_OF_MEMORY;
 
-	for(offset = 0; offset < num_bytes; offset += line_length)
-	{
-		printf("%06x: ", start + offset);
-		for(x = 0; x < line_length; x += word_size)
-		{
-			if((offset + x) < num_bytes)
-				switch(word_size)
-				{
-				case 1:
-					data = *((u8 *) (start + offset + x));
-					printf("%02x ", (u8) data);
-					line[x] = data;
-					break;
-
-				case 2:
-					data = *((u16 *) (start + offset + x));
-					printf("%04x ", (u16) data);
-					((u16 *) line)[x >> 1] = (u16) data;
-					break;
-
-				case 4:
-					data = *((u32 *) (start + offset + x));
-					printf("%08x ", data);
-					((u32 *) line)[x >> 2] = data;
-					break;
-				}
-			else
-				for(y = (word_size << 1) + 1; y--;)
-					putchar(' ');
-		}
-		putchar(' ');
-
-		for(x = 0; x < line_length; ++x)
-		{
-			if((offset + x) < num_bytes)
-				putchar(isprint(line[x]) ? line[x] : '.');
-			else
-				putchar(' ');
-		}
-		puts("");
-	}
-
-	kfree(line);
-
-	return MON_E_OK;
+        case 0:
+            return MON_E_OK;
+    }
 }
 
 
@@ -480,9 +438,9 @@ MONITOR_CMD_HANDLER(help)
 */
 MONITOR_CMD_HANDLER(history)
 {
-    s32 i, len = history_get_len();
+    s32 i;
 
-    for(i = 0; i < len; ++i)
+    for(i = 0; i < MONITOR_HISTORY_LEN; ++i)
     {
         const char *cmd = history_get_at(i);
         printf("%3i: %s\n", i, cmd == NULL ? "" : cmd);
@@ -651,8 +609,8 @@ MONITOR_CMD_HANDLER(srec)
 */
 MONITOR_CMD_HANDLER(test)
 {
-    u32 ram_mb = ram_detect();
-    printf("Detected %uMB of RAM\n", ram_mb);
+	if(vfs_init())
+		puts("VFS failed to initialise");
     return MON_E_OK;
 }
 

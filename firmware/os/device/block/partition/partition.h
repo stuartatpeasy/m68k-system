@@ -35,7 +35,7 @@ typedef enum
 
 struct partition_data
 {
-	device_id device;			/* the block device hosting this partition						*/
+	device_t *device;			/* the block device hosting this partition						*/
 	u32 sector_len;				/* number of bytes per sector									*/
 	u32 offset;					/* offset, in sectors, of partition from the start of device	*/
 	u32 len;					/* the length of this partition in sectors						*/
@@ -43,8 +43,7 @@ struct partition_data
 	partition_status status;	/* status field from partition table							*/
 };
 
-
-struct device_driver *partition_register_driver();
+struct device_driver g_partition_driver;
 
 driver_ret partition_init();
 driver_ret partition_shut_down();
@@ -53,6 +52,9 @@ driver_ret partition_read(void *data, ku32 offset, ku32 len, void* buf);
 driver_ret partition_write(void *data, ku32 offset, ku32 len, const void* buf);
 
 driver_ret partition_control(void *data, ku32 function, void *in, void *out);
+
+s8 *partition_type_name(ku8 type);
+s8 *partition_status_desc(ku8 status);
 
 #endif
 

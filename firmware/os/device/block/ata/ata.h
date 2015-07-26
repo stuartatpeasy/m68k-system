@@ -21,17 +21,21 @@
 	"Driver" functions
 */
 
-struct device_driver *ata_register_driver();
+struct device_driver g_ata_driver;
+
 driver_ret ata_init(void);
 driver_ret ata_shut_down(void);
 
 u32 ata_first_active_device_id(void);
 u32 ata_next_active_device_id(ku32 device_id);
 
-driver_ret ata_read(void *data, ku32 offset, ku32 len, void * buf);
-driver_ret ata_write(void *data, ku32 offset, ku32 len, const void * buf);
+driver_ret ata_read(void *data, ku32 offset, u32 len, void * buf);
+driver_ret ata_write(void *data, ku32 offset, u32 len, const void * buf);
 
 driver_ret ata_control(void *data, ku32 function, void *in, void *out);
+
+s8 *ata_copy_str(s8 *dest, s8 *src, ku32 len);
+
 
 #endif
 

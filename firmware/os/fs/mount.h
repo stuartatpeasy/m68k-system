@@ -19,11 +19,11 @@
 struct mount_ent
 {
 	s8 *mount_point;
-	device_id device;
+	device_t *device;
 };
 
 s32 mount_init();
-s32 mount_add(const char * const mount_point, const device_id dev);
+s32 mount_add(const char * const mount_point, device_t *dev);
 s32 mount_remove(const char * const mount_point);
 s32 mount_find(const char * const path);
 

@@ -13,48 +13,34 @@
 
 #include "stdio.h"			/* FIXME: remove */
 
-static struct device_driver g_partition_driver;
 static struct partition_data g_partitions[MAX_PARTITIONS];
 static u32 g_next_partition;
 
-
-struct device_driver *partition_register_driver()
+struct device_driver g_partition_driver =
 {
-	/* Initialisation needs to be done here (instead of through an initialisation list at
-	 * the g_partition_driver definition) because the ".data" section is discarded from the
-	 * firmware ROM image. */
-	g_partition_driver.name			= "part";
-	g_partition_driver.version		= 0x00000100;	/* v0.0.1-0 */
+    .name       = "part",
+    .version    = 0x00000100,
 
-	g_partition_driver.init			= partition_init;
-	g_partition_driver.shut_down	= partition_shut_down;
+    .init       = partition_init,
+    .shut_down  = partition_shut_down,
+    .read       = partition_read,
+    .write      = partition_write,
+    .control    = partition_control
+};
 
-	g_partition_driver.read			= partition_read;
-	g_partition_driver.write		= partition_write;
-
-	g_partition_driver.control		= partition_control;
-
-	return &g_partition_driver;
-}
-
-
+#include "kutil/kutil.h" // FIXME remove
 driver_ret partition_init()
 {
 	/* Scan all devices, enumerate partitions, create partition devices */
 	u32 device_id;
-	const u32 num_devices = driver_num_devices();
 
 	g_next_partition = 0;
 
-	for(device_id = 0; device_id < num_devices; ++device_id)
+	for(device_id = 0; device_id < MAX_DEVICES; ++device_id)
 	{
-		const struct device * const dev = get_device_by_devid(device_id);
+		device_t * const dev = g_devices[device_id];
 
-printf("part: looking for partitions on %s\n", dev->name);
-		if(!dev)
-			continue;	/* maybe warn here - this shouldn't happen */
-
-		if(dev->type == DEVICE_TYPE_BLOCK)
+		if(dev && (dev->type == DEVICE_TYPE_BLOCK) && (dev->class == DEVICE_CLASS_DISC))
 		{
 			/* Read sector 0.  If it contains a master boot record (MBR), enumerate its partition
 			 * table and create partition devices. */
@@ -62,10 +48,7 @@ printf("part: looking for partitions on %s\n", dev->name);
 			u16 part;
 			char name[DEVICE_NAME_LEN], *pn;
 
-			if(!dev->driver->read)
-				continue;
-
-			if(dev->driver->read(dev->data, 0, MBR_SECTOR_LEN, (u8 *) &m) != DRIVER_OK)
+			if(dev->driver->read(dev->data, 0, 1, (u8 *) &m) != DRIVER_OK)
 				continue;		/* Failed to read sector TODO: report error */
 
 			if(m.mbr_signature != MBR_SIGNATURE)
@@ -84,29 +67,71 @@ printf("part: looking for partitions on %s\n", dev->name);
 				if((g_next_partition >= MAX_PARTITIONS) || (part > DEVICE_MAX_SUBDEVICES))
 					return DRIVER_TOO_MANY_DEVICES;
 
-				if(device_control(device_id, DEVCTL_BLOCK_SIZE, NULL,
+				if(device_control(dev, DEVCTL_BLOCK_SIZE, NULL,
 											&bytes_per_sector) != DRIVER_OK)
 					continue;		/* TODO: report error */
 
-				*pn = device_sub_names[part];
+				*pn = g_device_sub_names[part];
 
-				data->device		= device_id;
+				data->device		= dev;
 				data->sector_len	= bytes_per_sector;
 				data->offset 		= wswap_32(p->first_sector_lba);
 				data->len			= wswap_32(p->num_sectors);
 				data->type			= p->type;
 				data->status		= p->status;
 
-printf("%s: offset=%u len=%u type=%02x status=%02x\n", name, data->offset * bytes_per_sector,
-				data->len * bytes_per_sector, data->type, data->status);
-
-				/* Not checking retval as there's nothing we can do if this fails */
-				create_device(DEVICE_TYPE_BLOCK, &g_partition_driver, name, data);
+				if(data->len)   /* Skip zero-length "partitions" */
+                {
+                    if(create_device(DEVICE_TYPE_BLOCK, DEVICE_CLASS_PARTITION, &g_partition_driver,
+                                  name, data) == SUCCESS)
+                        printf("%s: %uMB [%s, %s]\n", name, data->len >> (20 - LOG_BLOCK_SIZE),
+                               partition_type_name(p->type), partition_status_desc(p->status));
+                    else
+                        printf("%s: failed to create device\n", name);
+                }
 			}
 		}
 	}
 
 	return DRIVER_OK;
+}
+
+
+s8 *partition_type_name(ku8 type)
+{
+    switch(type)
+    {
+        case 0x01:
+        case 0x04:
+        case 0x05:
+        case 0x06:
+            return "DOS";
+
+        case 0x42:
+        case 0x82:
+            return "Linux swap";
+
+        case 0x43:
+        case 0x83:
+            return "Linux";
+    }
+
+    return "unsupported";
+}
+
+
+s8 *partition_status_desc(ku8 status)
+{
+    if(status == 0x00)
+    {
+        return "inactive";
+    }
+    else if(status >= 0x80)
+    {
+        return "active, bootable";
+    }
+
+    return "invalid";
 }
 
 
@@ -121,36 +146,22 @@ driver_ret partition_shut_down()
 driver_ret partition_read(void *data, ku32 offset, ku32 len, void* buf)
 {
 	const struct partition_data * const part = (const struct partition_data * const) data;
-	const struct device * const dev = get_device_by_devid(part->device);
-
-	if(!dev)
-		return DRIVER_INVALID_DEVICE;
-
-	if(!dev->driver->read)
-		return DRIVER_NOT_IMPLEMENTED;
 
 	if((offset + len) > part->len)
 		return DRIVER_INVALID_SEEK;
 
-	return dev->driver->read(dev->data, part->offset + offset, len, buf);
+	return part->device->driver->read(part->device->data, part->offset + offset, len, buf);
 }
 
 
 driver_ret partition_write(void *data, ku32 offset, ku32 len, const void* buf)
 {
 	const struct partition_data * const part = (const struct partition_data * const) data;
-	const struct device * const dev = get_device_by_devid(part->device);
-
-	if(!dev)
-		return DRIVER_INVALID_DEVICE;
-
-	if(!dev->driver->write)
-		return DRIVER_NOT_IMPLEMENTED;
 
 	if((offset + len) > part->len)
 		return DRIVER_INVALID_SEEK;
 
-	return dev->driver->write(dev->data, part->offset + offset, len, buf);
+	return part->device->driver->write(part->device->data, part->offset + offset, len, buf);
 }
 
 

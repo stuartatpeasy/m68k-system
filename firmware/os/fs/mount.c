@@ -60,7 +60,7 @@ s32 mount_init()
 }
 
 
-s32 mount_add(const char * const mount_point, const device_id dev)
+s32 mount_add(const char * const mount_point, device_t *dev)
 {
 	s32 i;
 

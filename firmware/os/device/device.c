@@ -13,79 +13,49 @@
 #include "strings.h"
 
 #include "kutil/kutil.h"
-#include "kutil/bvec.h"
 #include "device/device.h"
 
 /* Characters used to identify "sub-devices", e.g. partitions of devices.  The first sub-device
- * of device xxx will be xxx1, the second xxx2, ..., the 61st xxxa.Z */
-const char * const device_sub_names = "123456789abcdefghijklmnopqrstuv"
-									  "wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+ * of device xxx will be xxx1, the second xxx2, ..., the 61st xxxZ */
+const char * const g_device_sub_names = "123456789abcdefghijklmnopqrstuv"
+                                        "wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-bvec_t g_devices;
-bvec_t g_drivers;
+device_t *g_devices[MAX_DEVICES];
 
-/* #include driver registration function declarations here */
+/*
+    #include driver registration function declarations here
+*/
 #include "device/block/ata/ata.h"
 #include "device/block/partition/partition.h"
 
-/* List all device driver registration functions in this array */
-device_driver_t *(* const g_driver_registerers[])() =
+device_driver_t *g_drivers[] =
 {
-	ata_register_driver,
-
-	/* NB: all drivers of partitionable devices must be registered before the partition driver! */
-	partition_register_driver
+    &g_ata_driver,
+    &g_partition_driver
 };
 
 
 u32 driver_init()
 {
-	const u32 num_drivers = sizeof(g_driver_registerers) / sizeof(device_driver_t *(* const)());
+	const u32 num_drivers = sizeof(g_drivers) / sizeof(g_drivers[0]);
 	u32 x;
 
-	/* TODO: remove hardwired const */
-	x = bvec_init(8 /* block size */, sizeof(device_t), &g_devices);
-	if(x)
-		return x;	/* probably ENOMEM - should not happen */
-
-	/* TODO: remove hardwired const */
-	x = bvec_init(8 /* block size */, sizeof(device_driver_t *), &g_drivers);
-	if(x)
-		return x;	/* probably ENOMEM - should not happen */
-
-
-	/* FIXME: wtf is this? Surely it is broken and can be removed */
-	bzero(&g_driver_registerers, sizeof(g_driver_registerers));
+	/* TODO: is this necessary?  Presumably not if g_devices is in bss seg */
+	bzero(g_devices, sizeof(g_devices));
 
 	for(x = 0; x < num_drivers; ++x)
 	{
-		const device_driver_t *drv = g_driver_registerers[x]();
+	    device_driver_t * const drv = g_drivers[x];
 
-		if(drv)
+		if(drv->init() != DRIVER_OK)	/* init() will create devices */
 		{
-			const device_driver_t ** p;
+			printf("%s: driver initialisation failed\n", drv->name);
 
-			printf("'%s' driver registered\n", drv->name);
-
-			if(drv->init() != DRIVER_OK)	/* init() will create devices */
-			{
-				/* TODO: error */
-				printf("%s: device init failed\n", drv->name);
-				continue;
-			}
-
-			p = bvec_grow(g_drivers);
-			if(p == NULL)
-			{
-				printf("Failed to register driver - ENOMEM\n");		/* TODO: improve this */
-				continue;
-			}
-
-			*p = drv;
-		}
-		else
-		{
-			/* TODO: error */
+			/* Ensure that none of this driver's methods are callable */
+		    drv->read = driver_method_not_implemented;
+		    drv->write = driver_method_not_implemented;
+		    drv->shut_down = driver_method_not_implemented;
+		    drv->control = driver_method_not_implemented;
 		}
 	}
 
@@ -93,45 +63,50 @@ u32 driver_init()
 }
 
 
+/*
+    Generic function which can be used by drivers to indicate that a particular operation isn't
+    supported.  Also, if a driver fails to initialise, all of its operation funcptrs will be
+    replaced with a call to this fn.
+*/
+u32 driver_method_not_implemented()
+{
+    return DRIVER_NOT_IMPLEMENTED;
+}
+
+
 void driver_shut_down()
 {
 	/* TODO: ensure all devices are stopped/flushed/etc */
-	int i;
-	for(i = 0; i < bvec_size(g_drivers); ++i)
+	u32 x;
+
+	const u32 num_drivers = sizeof(g_drivers) / sizeof(g_drivers[0]);
+	for(x = 0; x < num_drivers; ++x)
 	{
-printf("Shutting down driver %i\n", i);
-		if(((const device_driver_t *) g_drivers->elements[i])->shut_down() != DRIVER_OK)
+		if(g_drivers[x]->shut_down() != DRIVER_OK)
 		{
 			/* TODO: error */
-puts("--- shut down failed");
+			printf("Failed to shut down '%s' driver\n", g_drivers[x]->name);
 		}
 	}
 
-	bvec_destroy(&g_drivers);
-	bvec_destroy(&g_devices);
+	for(x = 0; x < (sizeof(g_devices) / sizeof(g_devices[0])); ++x)
+    {
+        if(g_devices[x])
+            kfree(g_devices[x]);
+    }
 }
 
 
-u32 driver_num_devices()
-{
-	return bvec_size(g_devices);
-}
-
-
-const device_t *get_device_by_devid(const device_id id)
-{
-	/* TODO: is this function public? if not, it can be deleted */
-	return bvec_get(g_devices, id);	/* will return NULL if no such device */
-}
-
-
-const device_t *get_device_by_name(const char * const name)
+device_t *get_device_by_name(const char * const name)
 {
 	int i;
-	for(i = 0; i < bvec_size(g_devices); ++i)
+	for(i = 0; i < (sizeof(g_devices) / sizeof(g_devices[0])); ++i)
 	{
-		if(!strcmp(((device_t *) g_devices->elements[i])->name, name))
-			return g_devices->elements[i];
+	    if(g_devices[i] != NULL)
+        {
+            if(!strcmp(g_devices[i]->name, name))
+                return g_devices[i];
+        }
 	}
 
 	return NULL;	/* No such device */
@@ -140,63 +115,54 @@ const device_t *get_device_by_name(const char * const name)
 
 /* Create (i.e. register) a new device.  This function is called by each driver's init() function
  * during device enumeration. */
-driver_ret create_device(const enum device_type type, device_driver_t * const driver,
-							const char *name, void * const data)
+driver_ret create_device(const device_type_t type, const device_class_t class,
+                         device_driver_t * const driver, const char *name, void * const data)
 {
-	device_t * const dev = bvec_grow(g_devices);
+    u32 u;
+    device_t * dev;
 
-	if(dev == NULL)
-		return ENOMEM;
+    /* Find a vacant device ID */
+    for(u = 0; u < MAX_DEVICES; ++u)
+    {
+        if(g_devices[u] == NULL)
+            break;
+    }
+
+    if(u == MAX_DEVICES)
+        return DRIVER_TOO_MANY_DEVICES;
+
+    dev = (device_t *) kmalloc(sizeof(device_t));
+    if(dev == NULL)
+        return ENOMEM;
 
 	dev->type = type;
+	dev->class = class;
 	dev->driver = driver;
 	dev->data = data;
 
 	/* TODO: check that the name is not a duplicate */
 	strncpy(dev->name, name, sizeof(dev->name));
 
+    g_devices[u] = dev;
+
 	return SUCCESS;
 }
 
 
-driver_ret device_read(const device_id id, ku32 offset, u32 len, u8 *buf)
+driver_ret device_read(const device_t * const dev, ku32 offset, u32 len, u8 *buf)
 {
-	device_t * const dev = bvec_get(g_devices, id);
-
-	if(dev == NULL)
-		return ENODEV;	/* no such device */
-
-	if(!dev->driver->read)
-		return ENOSYS;	/* not implemented */
-
 	return dev->driver->read(dev->data, offset, len, buf);
 }
 
 
-driver_ret device_write(const device_id id, ku32 offset, u32 len, ku8 *buf)
+driver_ret device_write(const device_t * const dev, ku32 offset, u32 len, ku8 *buf)
 {
-	device_t * const dev = bvec_get(g_devices, id);
-
-	if(dev == NULL)
-		return ENODEV;	/* no such device */
-
-	if(!dev->driver->write)
-		return ENOSYS;	/* not implemented */
-
 	return dev->driver->write(dev->data, offset, len, buf);
 }
 
 
-driver_ret device_control(const device_id id, ku32 function, void *in, void *out)
+driver_ret device_control(const device_t * const dev, ku32 function, void *in, void *out)
 {
-	device_t * const dev = bvec_get(g_devices, id);
-
-	if(dev == NULL)
-		return ENODEV;	/* no such device */
-
-	if(!dev->driver->control)
-		return ENOSYS;	/* not implemented */
-
 	return dev->driver->control(dev->data, function, in, out);
 }
 

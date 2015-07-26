@@ -39,6 +39,15 @@
 /* Per-process stack size */
 #define PROC_STACK_SIZE (16 * 1024)
 
+/* CHECKED_CALL evaluates expr, which is normally a function call.  If expr (the call's return
+   value) is anything other than SUCCESS, the value is returned. */
+#define CHECKED_CALL(expr)      \
+{                               \
+    ku32 ret = (expr);          \
+    if(ret != SUCCESS)          \
+        return ret;             \
+}
+
 
 extern u8 _sdata,       /* .data section start */
           _edata,       /* .data section end   */

@@ -10,7 +10,6 @@
 #include "monitor/history.h"
 
 char **g_history = NULL;
-int g_history_start = 0;
 int g_history_pos = 0;
 
 
@@ -33,44 +32,36 @@ void history_clear(void)
         }
     }
 
-    g_history_start = 0;
     g_history_pos = 0;
 }
 
 
 void history_add(const char *cmd)
 {
-    if(++g_history_pos == MONITOR_HISTORY_LEN)
-    {
-        g_history_pos = 0;
-
-        if(++g_history_start == MONITOR_HISTORY_LEN)
-            g_history_start = 0;    /* Shouldn't ever happen */
-    }
-
     if(g_history[g_history_pos])
         free(g_history[g_history_pos]);
 
     g_history[g_history_pos] = malloc(strlen(cmd) + 1);
-    strcpy(g_history[g_history_pos], cmd);
+    if(g_history[g_history_pos])
+    {
+        strcpy(g_history[g_history_pos], cmd);
+
+        if(++g_history_pos == MONITOR_HISTORY_LEN)
+        {
+            g_history_pos = 0;
+        }
+    }
 }
 
 
-inline s32 history_get_len(void)
-{
-    return (g_history_pos < g_history_start) ?
-                g_history_pos - (g_history_start - MONITOR_HISTORY_LEN)
-                : g_history_pos - g_history_start;
-}
-
-
-const char *history_get_at(const int where)
+const char *history_get_at(int where)
 {
     if(where >= MONITOR_HISTORY_LEN)
         return NULL;
-
-    if(where < g_history_start)
-        return g_history[where + MONITOR_HISTORY_LEN - g_history_start];
-    else
-        return g_history[where - g_history_start];
+/*
+    where += g_history_pos + 1;
+    if(where >= MONITOR_HISTORY_LEN)
+        where -= MONITOR_HISTORY_LEN;
+*/
+    return g_history[where];
 }

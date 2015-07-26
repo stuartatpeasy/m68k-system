@@ -45,8 +45,6 @@ pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku16 flags)
         /* Find a vacant task_struct */
         if(p->state == ps_unborn)
         {
-            s8 i;
-
             /* TODO: work out how best to store name */
             /* FIXME - allocate this space in user RAM */
             u8 *process_stack = (u8 *) umalloc(PROC_STACK_SIZE);

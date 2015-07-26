@@ -13,39 +13,45 @@
 #include "device/devctl.h"
 
 
-device_id find_boot_device()
+device_t *find_boot_device()
 {
 	u32 i;
-	const struct device *dev;
 
-	for(i = 0; (dev = get_device_by_devid(i)); ++i)
+puts("Starting find_boot_device()");
+	for(i = 0; i < MAX_DEVICES; ++i)
 	{
-		if(dev->type == DEVICE_TYPE_BLOCK)
-		{
-			u32 bootable = 0;
+	    printf("i=%2u g_devices[i]=%08x\n", i, g_devices[i]);
+        if(g_devices[i] != NULL)
+        {
+            device_t * const dev = g_devices[i];
+            if(dev->type == DEVICE_TYPE_BLOCK)
+            {
+                u32 bootable = 0;
 
-			if(device_control(i, DEVCTL_BOOTABLE, NULL, &bootable) == DRIVER_OK)
-			{
-				if(bootable)
-					return i;
-			}
-		}
+                if(device_control(dev, DEVCTL_BOOTABLE, NULL, &bootable) == DRIVER_OK)
+                {
+                    if(bootable)
+                        return dev;
+                }
+            }
+        }
 	}
 
-	return INVALID_DEVICE_ID;
+	return NULL;
 }
 
 
 u32 vfs_init()
 {
 	/* Find boot device */
-	device_id boot_device;
+	device_t *boot_device;
 
 	if(mount_init())
 		return FAIL;
 
 	boot_device = find_boot_device();
-	if(boot_device == INVALID_DEVICE_ID)
+
+	if(!boot_device)
 	{
 		/* FIXME: once kprintf() is working, report no boot dev and drop to monitor */
 		printf("No bootable partitions found\n");
@@ -53,7 +59,7 @@ u32 vfs_init()
 		return FAIL;
 	}
 
-	printf("Boot device: %s\n", get_device_by_devid(boot_device)->name);
+	printf("Boot device: %s\n", boot_device->name);
 
 	/* Mount the boot device at / */
 	mount_add("/", boot_device);

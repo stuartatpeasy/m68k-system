@@ -120,6 +120,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kutil/bvec.h" />
+		<Unit filename="kutil/dump.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kutil/ktime.c">
 			<Option compilerVar="CC" />
 		</Unit>

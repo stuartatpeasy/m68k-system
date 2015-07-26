@@ -2,6 +2,7 @@
 #include <strings.h>
 
 #include <cpu/utilities.h>
+#include <device/devctl.h>
 #include <device/device.h>
 #include <ds17485.h>
 #include <duart.h>
@@ -14,8 +15,8 @@
 #include <monitor/monitor.h>
 
 
-const char * const g_warmup_message = "\n\n68010 computer system\n"
-									  "(c) Stuart Wallace, 2011-2015\n";
+const char * const g_warmup_message = "\n68010 computer system\n"
+									  "Stuart Wallace, 2011-2015\n";
 
 
 void detect_clock_freq()
@@ -60,7 +61,7 @@ void _main()
     ram_detect();                                       /* Find out how much RAM we have    */
     slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
 	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
-	umeminit(USER_RAM_START,                            /* Initialise user heap             */
+	umeminit((void *) USER_RAM_START,                   /* Initialise user heap             */
                 (void *) g_ram_top - USER_RAM_START);
 
     /* === Initialise peripherals === */
@@ -75,7 +76,7 @@ void _main()
     /* Zero RAM.  This happens after init'ing the DUART, because beeper. */
     bzero((void *) USER_RAM_START, g_ram_top - USER_RAM_START);
 
-    puts(g_warmup_message);     /*
+    puts(g_warmup_message);
 
     printf("%uMB RAM detected\n", g_ram_top >> 20);
 
@@ -97,10 +98,18 @@ void _main()
 	puts("Initialising devices and drivers");
 	driver_init();
 
-	printf("%u bytes of heap memory available\n", kfreemem());
+	printf("%u bytes of kernel heap memory available\n", kfreemem());
 
-	if(vfs_init())
-		puts("VFS failed to initialise");
+//	if(vfs_init())
+//		puts("VFS failed to initialise");
+/*
+    char *p = NULL;
+	device_t *blockdev = get_device_by_name("ata1");
+	if(blockdev)
+    {
+        device_control(blockdev, DEVCTL_MODEL, NULL, p);
+    }
+*/
 
     sched_init();
     cpu_enable_interrupts();

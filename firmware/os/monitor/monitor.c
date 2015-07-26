@@ -100,7 +100,7 @@ void dispatch_command(const char *cmdline)
 	if(!cmd_len)
 		return;
 
-    history_add(command);
+    history_add(cmdline);
 
 	const struct command *p, *pcommand = NULL;
 	for(p = g_commands; p->name; ++p)

@@ -20,8 +20,7 @@
 void history_init(void);
 void history_clear(void);
 void history_add(const char *cmd);
-inline s32 history_get_len(void);
-const char *history_get_at(const int where);
+const char *history_get_at(int where);
 
 
 #endif
