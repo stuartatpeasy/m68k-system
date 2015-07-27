@@ -127,6 +127,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kutil/kutil.h" />
+		<Unit filename="kutil/string.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

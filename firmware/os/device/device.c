@@ -37,13 +37,8 @@ device_driver_t *g_drivers[] =
 
 u32 driver_init()
 {
-	const u32 num_drivers = sizeof(g_drivers) / sizeof(g_drivers[0]);
-	u32 x;
-
-	/* TODO: is this necessary?  Presumably not if g_devices is in bss seg */
-	bzero(g_devices, sizeof(g_devices));
-
-	for(x = 0; x < num_drivers; ++x)
+    u32 x;
+	for(x = 0; x < (sizeof(g_drivers) / sizeof(g_drivers[0])); ++x)
 	{
 	    device_driver_t * const drv = g_drivers[x];
 

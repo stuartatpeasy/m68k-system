@@ -27,9 +27,11 @@ puts("Starting find_boot_device()");
             if(dev->type == DEVICE_TYPE_BLOCK)
             {
                 u32 bootable = 0;
+                puts("-- this is a block device");
 
                 if(device_control(dev, DEVCTL_BOOTABLE, NULL, &bootable) == DRIVER_OK)
                 {
+                    puts("---- device_control() done");
                     if(bootable)
                         return dev;
                 }

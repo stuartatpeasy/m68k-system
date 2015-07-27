@@ -23,7 +23,7 @@ void detect_clock_freq()
 {
     /* Ensure that interrupts are disabled before entering this section */
     struct rtc_time tm;
-    u32 loops;
+    u32 loops, freq;
     u8 curr_second;
 
     /* Wait for the next second to start */
@@ -35,10 +35,11 @@ void detect_clock_freq()
     for(loops = 0; curr_second == tm.second; ++loops)
         ds17485_get_time(&tm);
 
-    printf("Loop counter final value is %u\n", loops);
+    freq = loops / 142;     /* freq in hundreds of kHz */
+    printf("CPU fclk ~%2u.%uMHz (tc=%u)\n", freq / 10, freq - ((freq / 10) * 10), loops);
 
-    // CPU fclk/MHz ~= loops/1420
-    // CPU fclk/Hz ~= 700 * loops
+    // CPU fclk/MHz ~= loops/1451
+    // CPU fclk/Hz ~= 687 * loops
 }
 
 
@@ -84,7 +85,7 @@ void _main()
 	ds17485_init();
     ds17485_get_serial_number(sn);
 
-    printf("RTC model %02X - serial number %02X%02X%02X%02X%02X%02X\n",
+    printf("DS17485 RTC [model %02X, serial %02X%02X%02X%02X%02X%02X]\n",
            ds17485_get_model_number(), sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);
 
     ds17485_get_time(&tm);
@@ -98,7 +99,8 @@ void _main()
 	puts("Initialising devices and drivers");
 	driver_init();
 
-	printf("%u bytes of kernel heap memory available\n", kfreemem());
+	printf("%u bytes of kernel heap memory available\n"
+           "%u bytes of user memory available\n", kfreemem(), g_ram_top - USER_RAM_START);
 
 //	if(vfs_init())
 //		puts("VFS failed to initialise");

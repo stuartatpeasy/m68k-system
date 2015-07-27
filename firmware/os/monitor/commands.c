@@ -470,13 +470,13 @@ MONITOR_CMD_HANDLER(id)
 MONITOR_CMD_HANDLER(map)
 {
     printf("--------------- Memory map ---------------\n"
-           ".data: %08x - %08x (%u bytes)\n"
-           ".bss : %08x - %08x (%u bytes)\n"
-           "slabs: %08x - %08x (%u bytes)\n"
-           "kheap: %08x - %08x (%u bytes)\n"
-           "stack: %08x - %08x (%u bytes)\n"
-           "uram : %08x - %08x (%u bytes)\n"
-           ".text: %08x - %08x (%u bytes)\n"
+           ".data : %08x - %08x (%u bytes)\n"
+           ".bss  : %08x - %08x (%u bytes)\n"
+           "slabs : %08x - %08x (%u bytes)\n"
+           "kheap : %08x - %08x (%u bytes)\n"
+           "kstack: %08x - %08x (%u bytes)\n"
+           "uram  : %08x - %08x (%u bytes)\n"
+           ".text : %08x - %08x (%u bytes)\n"
            "------------------------------------------\n\n",
            &_sdata, &_edata, &_edata - &_sdata,
            &_sbss, &_ebss, &_ebss - &_sbss,

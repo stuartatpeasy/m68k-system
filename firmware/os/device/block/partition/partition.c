@@ -84,7 +84,7 @@ driver_ret partition_init()
                 {
                     if(create_device(DEVICE_TYPE_BLOCK, DEVICE_CLASS_PARTITION, &g_partition_driver,
                                   name, data) == SUCCESS)
-                        printf("%s: %uMB [%s, %s]\n", name, data->len >> (20 - LOG_BLOCK_SIZE),
+                        printf("%s: %4uMB [%s, %s]\n", name, data->len >> (20 - LOG_BLOCK_SIZE),
                                partition_type_name(p->type), partition_status_desc(p->status));
                     else
                         printf("%s: failed to create device\n", name);
@@ -105,7 +105,7 @@ s8 *partition_type_name(ku8 type)
         case 0x04:
         case 0x05:
         case 0x06:
-            return "DOS";
+            return "MS-DOS";
 
         case 0x42:
         case 0x82:
@@ -167,6 +167,7 @@ driver_ret partition_write(void *data, ku32 offset, ku32 len, const void* buf)
 
 driver_ret partition_control(void *data, ku32 function, void *in, void *out)
 {
+    puts("== in partition_control()");
 	const struct partition_data * const part = (const struct partition_data * const) data;
 
 	switch(function)

@@ -121,8 +121,8 @@ driver_ret ata_init()
 
 			if(create_device(DEVICE_TYPE_BLOCK, DEVICE_CLASS_DISC, &g_ata_driver, device_name,
                              devp) == SUCCESS)
-                printf("%s: %s serial %s firmware %s (%uMB)\n", device_name, devp->model,
-                       devp->serial, devp->firmware, devp->num_sectors >> 11);
+                printf("%s: %s, %uMB [serial %s firmware %s]\n", device_name, devp->model,
+                       devp->num_sectors >> 11, devp->serial, devp->firmware);
             else
                 printf("%s: failed to create device\n", device_name);
 		}
