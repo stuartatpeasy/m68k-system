@@ -68,6 +68,11 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="fs/ext2/ext2.h" />
+		<Unit filename="fs/fat/fat-defs.h" />
+		<Unit filename="fs/fat/fat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fs/fat/fat.h" />
 		<Unit filename="fs/mount.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -182,7 +187,6 @@
 		</Unit>
 		<Unit filename="monitor/srec.h" />
 		<Unit filename="rom.ld" />
-		<Unit filename="sched/irq_task.S" />
 		<Unit filename="sched/sched.c">
 			<Option compilerVar="CC" />
 		</Unit>

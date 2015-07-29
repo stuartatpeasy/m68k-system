@@ -1,9 +1,7 @@
 # Makefile for the m68k firmware
 #
-# Stuart Wallace <stuartw@atom.net>, 2011-2012.
+# Stuart Wallace <stuartw@atom.net>, 2011-2015.
 #
-# TODO: remove dependency on libc-sw.  This would permit the removal of the
-#       "--start-group ... --end-group" ugliness in the firmware link step.
 #
 include global.mk
 
@@ -15,7 +13,7 @@ CSOURCES=dfu.c ds17485.c duart.c main.c \
 		 device/device.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
-		 fs/mount.c fs/vfs.c \
+		 fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
 		 sched/sched.c
 
@@ -108,6 +106,7 @@ device/block/partition/partition.o: device/block/partition/partition.c \
 
 fs/ext2/ext2.o: fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h kutil/kutil.h \
                 memory/kmalloc.h
+fs/fat/fat.o: fs/fat/fat.c fs/fat/fat.h fs/fat/fat-defs.h include/defs.h include/types.h
 fs/mount.o: fs/mount.c fs/mount.h include/types.h device/device.h include/defs.h
 fs/vfs.o: fs/vfs.c fs/vfs.h fs/mount.h include/types.h include/defs.h
 
