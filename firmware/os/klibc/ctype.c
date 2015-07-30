@@ -8,7 +8,6 @@
 */
 
 #include "ctype.h"
-#include "../include/types.h"
 
 /*
 	This is a 384-byte lookup table used by the "int is<x>(int c)" functions, e.g. isupper().  Each entry consists of
@@ -69,9 +68,4 @@ static ku16 _g_typetable[] =
 
 static ku16 * const _g_typetable_base = _g_typetable + 128;
 
-
-inline s32 _ctypeisname(int c, ku16 type)
-{
-	return _g_typetable_base[c & 0xff] & type;
-}
-
+extern s32 _ctypeisname(int c, ku16 type);

@@ -9,6 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-07-01.
 */
 
+#include "include/types.h"
+
 #define _ISUPPER	(0x0001)
 #define _ISLOWER	(0x0002)
 #define _ISALPHA	(0x0004)
@@ -39,9 +41,15 @@
 #define isascii(c)	(((c) & ~0x7f) == 0)
 #define toascii(c)	((c) & 0x7f)
 
+static ku16 _g_typetable[];
+static ku16 * const _g_typetable_base;
+
 int tolower(int c);
 int toupper(int c);
 
-inline int _ctypeisname(int c, const unsigned short int type);
+static inline int _ctypeisname(int c, const unsigned short int type)
+{
+	return _g_typetable_base[c & 0xff] & type;
+}
 
 #endif
