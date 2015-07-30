@@ -14,7 +14,7 @@
 	zero or more flags bitwise-ORed together.  All the is<x>() functions are then #define'd as calls to _ctypeisname(),
 	which performs the appropriate lookup.
 */
-static ku16 _g_typetable[] =
+ku16 _g_typetable[384] =
 {
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -66,6 +66,10 @@ static ku16 _g_typetable[] =
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-static ku16 * const _g_typetable_base = _g_typetable + 128;
+ku16 * const _g_typetable_base = _g_typetable + 128;
 
-extern s32 _ctypeisname(int c, ku16 type);
+s32 _ctypeisname(int c, ku16 type)
+{
+	return _g_typetable_base[c & 0xff] & type;
+}
+

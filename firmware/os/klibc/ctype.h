@@ -41,15 +41,12 @@
 #define isascii(c)	(((c) & ~0x7f) == 0)
 #define toascii(c)	((c) & 0x7f)
 
-static ku16 _g_typetable[];
-static ku16 * const _g_typetable_base;
+ku16 _g_typetable[384];
+ku16 * const _g_typetable_base;
 
 int tolower(int c);
 int toupper(int c);
 
-static inline int _ctypeisname(int c, const unsigned short int type)
-{
-	return _g_typetable_base[c & 0xff] & type;
-}
+s32 _ctypeisname(int c, const unsigned short int type);
 
 #endif
