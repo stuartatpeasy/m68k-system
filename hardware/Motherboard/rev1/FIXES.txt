@@ -1,21 +1,16 @@
 Major (prevents design working as manufactured)
 -----------------------------------------------
-16	nUW/nUR/nLW/nLR uses incorrect outputs on 74HC139
-17	MAX238 - pins 9 & 11 should not be shorted; should instead be 1uF between pin 11 (+) and pin 9 (-).
-27	Incorrect sense on nATAIRQ - should be ATAIRQ
 
 
 Moderate (makes assembly fiddly, or affects usability)
 ------------------------------------------------------
-1	LED footprint hole size is too small
 2	470n capacitors have 0.1" pitch holes; 0.2" pitch needed
 3	Reset switch footprint - spacing incorrect, and holes are too small
-8	Heatsink holes are too small
 12	R701, R704 too close together
 14	L902 footprint - hole spacing is too great
 19	Battery footprint is entirely wrong
-21	Buzzer is a very tight fit.  Move U801 left?
-24	J601, J602 (serial) signal pin spacing is incorrect; signal pin hole size is too small
+check sense of power switch.  maybe fixed this twice (i.e. unfixed it) in the schematic design?
+some expansion slot connectors are too close together, maybe
 
 
 Minor (cosmetic)
@@ -23,10 +18,7 @@ Minor (cosmetic)
 5	LED silkscreen outline is too small
 6	R106, R401 - footprint is wrong?  Appears as if common pin is not connected to VCC
 9	LED silkscreen - orientation mark is obscured by holes
-11	C911 designator obscured by R705 pad
-15	Power switch operates with incorrect sense
 18	Significant switching noise (250mV spikes, 30mV sq wave @~250kHz on +12V supply)
-21	(deleted - not an issue)
 22	D601 (bi-col) very bright - increase current-limit R
 23	D701 (HDD) is quite dim
 

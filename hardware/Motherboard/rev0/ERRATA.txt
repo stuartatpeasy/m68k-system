@@ -3,6 +3,7 @@ Major (prevents design working as manufactured)
 16	nUW/nUR/nLW/nLR uses incorrect outputs on 74HC139
 17	MAX238 - pins 9 & 11 should not be shorted; should instead be 1uF between pin 11 (+) and pin 9 (-).
 27	Incorrect sense on nATAIRQ - should be ATAIRQ
+28	No pulldown (10k) on ATAIRQ
 
 
 Moderate (makes assembly fiddly, or affects usability)
