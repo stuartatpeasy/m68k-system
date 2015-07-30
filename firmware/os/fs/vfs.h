@@ -10,41 +10,21 @@
 */
 
 #include <stdio.h>
+#include "device/device.h"
 #include "include/types.h"
 #include "include/defs.h"
 
 u32 vfs_init();
 
-enum fsnode_type
+#if 0
+
+typedef enum fsnode_type
 {
     FSNODE_TYPE_DIR,
     FSNODE_TYPE_FILE
-};
+} fsnode_type_t;
 
-typedef enum fsnode_type fsnode_type_t;
-
-struct vfs_ops
-{
-    int (*mount)(vfs_t *vfs);
-    int (*umount)(vfs_t *vfs);
-    int (*fsnode_get)(vfs_t *vfs, u32 node, fsnode_t * const fsn);
-    int (*fsnode_put)(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
-    u32 (*locate)(vfs_t *vfs, u32 node, const char * const path);
-    int (*stat)();
-};
-
-typedef struct vfs_ops vfs_ops_t;
-
-struct vfs
-{
-    vfs_ops_t *ops;
-    device_t *dev;
-    void *superblock;
-};
-
-typedef struct vfs vfs_t;
-
-struct fsnode   /* like a dirent?  call it dirent instead? */
+typedef struct fsnode   /* like a dirent?  call it dirent instead? */
 {
     enum fsnode_type type;      /* dir, file, etc. */
     const char *name;
@@ -58,7 +38,29 @@ struct fsnode   /* like a dirent?  call it dirent instead? */
     u32 atime;
     u32 first_node;
     /* how to link to clusters? */
+} fsnode_t;
+
+struct vfs;
+typedef struct vfs vfs_t;
+
+typedef struct vfs_ops
+{
+    int (*mount)(vfs_t *vfs);
+    int (*umount)(vfs_t *vfs);
+    int (*fsnode_get)(vfs_t *vfs, u32 node, fsnode_t * const fsn);
+    int (*fsnode_put)(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
+    u32 (*locate)(vfs_t *vfs, u32 node, const char * const path);
+    int (*stat)();
+} vfs_ops_t;
+
+struct vfs
+{
+    vfs_ops_t *ops;
+    device_t *dev;
+    void *superblock;
 };
+
+#endif
 
 /*
     mounts: [{"mountpoint" -> vfs_t}, ...]
