@@ -16,7 +16,12 @@
 
 u32 vfs_init();
 
-#if 0
+typedef struct fs_stat
+{
+    u32 total_blocks;
+    u32 free_blocks;
+    ks8 *label;
+} fs_stat_t;
 
 typedef enum fsnode_type
 {
@@ -50,7 +55,7 @@ typedef struct vfs_ops
     int (*fsnode_get)(vfs_t *vfs, u32 node, fsnode_t * const fsn);
     int (*fsnode_put)(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
     u32 (*locate)(vfs_t *vfs, u32 node, const char * const path);
-    int (*stat)();
+    int (*stat)(fs_stat_t *st);
 } vfs_ops_t;
 
 struct vfs
@@ -60,7 +65,6 @@ struct vfs
     void *superblock;
 };
 
-#endif
 
 /*
     mounts: [{"mountpoint" -> vfs_t}, ...]

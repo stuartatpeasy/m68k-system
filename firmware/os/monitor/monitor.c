@@ -15,8 +15,6 @@
 #define HISTORY_LEN (32)
 
 ks8 * const g_prompt = "$ ";
-ks8 * g_history[HISTORY_LEN];
-u32 g_history_ptr;
 u32 g_echo;
 
 const struct command g_commands[] =
@@ -55,9 +53,9 @@ const struct command g_commands[] =
 void monitor(void)
 {
     history_init();
-blah:
-	monitor_main();
-	goto blah;
+
+    for(;;)
+        monitor_main();
 }
 
 
@@ -66,7 +64,6 @@ void monitor_main(void)
 	char buffer[CMD_MAX_LEN + 1];
 
     g_echo = 1;
-	g_history_ptr = 0;
 	putchar('\n');
 
 	for(buffer[CMD_MAX_LEN] = '\0'; ;)

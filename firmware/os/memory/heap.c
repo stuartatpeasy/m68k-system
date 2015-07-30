@@ -191,8 +191,7 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 */
 void heap_free(const heap_ctx * const heap, const void *ptr)
 {
-	heap_memblock *p = (heap_memblock *) 
-							(((u32) ptr + MEMBLOCK_ALIGN_MASK) & ~MEMBLOCK_ALIGN_MASK) - 1,
+	heap_memblock *p = (heap_memblock *) ((u32) ptr - sizeof(heap_memblock)),
 				  *p_;
 
 	if(!ptr)
@@ -201,9 +200,9 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 	if(p->magic == (MEMBLOCK_HDR_MAGIC | 1))
 	{
 		p->magic &= ~1;		/* Mark block free */
-		
-		/* Merge any subseqent free blocks into this block */
-		for(p_ = (heap_memblock *) ((u8 *) (p + 1) + p->size); 
+
+		/* Merge any subsequent free blocks into this block */
+		for(p_ = (heap_memblock *) ((u8 *) (p + 1) + p->size);
 			(p_ < (heap_memblock *) (heap->start + heap->size)) && !(p_->magic & 0x1);
 			p_ = (heap_memblock *) (p_->size + (u8 *) (p_ + 1)))
 		{
