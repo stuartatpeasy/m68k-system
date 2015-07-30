@@ -35,9 +35,9 @@ struct fat_bpb_block
     s8  system_identifier[8];
     u8  boot_code[448];
     u16 partition_signature;
-} __attribute__((packed));
+} __attribute__((packed));  /* 512 bytes */
 
-struct fat_dir
+struct fat_dirent
 {
     s8  file_name[11];
     u8  attribs;
@@ -51,7 +51,7 @@ struct fat_dir
     u16 mdate;
     u16 first_cluster_low;
     u32 size;
-} __attribute__((packed));
+} __attribute__((packed));  /* 32 bytes */
 
 #define FAT_FILEATTRIB_READ_ONLY    (0x01)
 #define FAT_FILEATTRIB_HIDDEN       (0x02)
