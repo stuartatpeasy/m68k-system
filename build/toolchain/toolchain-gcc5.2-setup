@@ -1,0 +1,54 @@
+Note: the "old" (gcc-2.9x) toolchain was built for the targets "m68k-coff" / "m68k-elf", i.e. no
+platform was specified.  Gcc now appears to require a named platform at build-time, hence this
+more recent toolchain builds for the target "m68k-linux-elf".  This means that global.mk must be
+edited to specify the correct tool names, e.g.
+
+	old toolchain: CC=m68k-elf-gcc
+                   (...etc for other tools)
+
+	new toolchain: CC=m68k-linux-elf-gcc
+                   (...etc for other tools)
+
+
+0. Configure build environment
+
+0a. install necessary packages
+
+	- flex
+	- libgmp-dev
+	- libmpfr-dev
+	- libmpc-dev
+
+0b. create installation root and build directory
+
+	$ sudo mkdir /opt/m68k
+	$ mkdir tools
+	$ cd tools
+
+1. Build and install binutils-2.23.1.tar.bz2
+
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.23.1.tar.bz2
+	$ tar xf binutils-2.23.1.tar.bz2
+	$ cd binutils-2.23.1
+	$ ./configure --prefix=/opt/m68k --target=m68k-linux-elf
+	$ make -j4
+	$ sudo make install
+	$ cd ..
+
+2. build and install gcc-5.2.0
+
+	$ wget https://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-5.2.0/gcc-5.2.0.tar.bz2
+	$ tar xf gcc-5.2.0.tar.bz2
+	$ mkdir gcc-build
+	$ cd gcc-build
+	$ ../gcc-5.2.0/configure --prefix=/opt/m68k --target=m68k-linux-elf --enable-languages=c
+	$ make -j4 all-gcc all-target-libgcc
+	$ sudo make install-gcc install-target-libgcc
+	$ cd ..
+
+3. tidy up
+
+	$ cd ..
+	$ rm -rf tools
+
+
