@@ -112,10 +112,11 @@
 #define LED_GREEN					(0x80)
 #define LED_RED						(0x40)
 
-
 void duart_init(void);
-inline int duarta_putc(const char c);
-inline int duarta_getc(void);
+
+int duarta_putc(const char c);
+int duarta_getc(void);
+
 void duart_start_counter(void);
 
 void led_on(const unsigned char leds);
