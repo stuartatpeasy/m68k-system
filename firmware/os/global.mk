@@ -1,6 +1,6 @@
 ARCH=m68k
 PLATFORM=linux
-FORMAT=coff
+FORMAT=elf
 
 # for old toolchain
 #

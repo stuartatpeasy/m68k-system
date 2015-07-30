@@ -10,10 +10,28 @@ MEMORY
 
 SECTIONS
 {
+	/* .text and .rodata* sections first - these live at the start of ROM. */
+	. = 0x00f00000;
+
+	.text :
+	AT(ADDR(.text))
+	{
+        _stext = .;
+        *(.text)
+	} > rom
+
+	.rodata ALIGN(4):
+	AT(ADDR(.text) + SIZEOF(.text))
+	{
+		*(.rodata*)
+	} > rom
+
+    _etext = .;
+
 	. = 0x00000400;
 
 	.data ALIGN(4):
-    AT(ADDR(.text) + SIZEOF(.text))
+    AT(ADDR(.rodata) + SIZEOF(.rodata))
 	{
         _sdata = .;
         *(.data)
@@ -28,20 +46,11 @@ SECTIONS
     }
     _ebss = .;
 
-	. = 0x00f00000;
-
-	.text :
-	AT(ADDR(.text))
-	{
-        _stext = .;
-        *(.text)
-	}
-    _etext = .;
 }
 
 ENTRY(_main)
 
 STARTUP(startup.o)
 
-OUTPUT_FORMAT(coff-m68k)
+/* OUTPUT_FORMAT(coff-m68k) */
 
