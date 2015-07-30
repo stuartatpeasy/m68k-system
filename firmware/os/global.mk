@@ -1,5 +1,10 @@
 ARCH=m68k
+PLATFORM=linux
 FORMAT=coff
+
+# for old toolchain
+#
+TRIPLET=$(ARCH)-$(FORMAT)
 
 CC=$(ARCH)-$(FORMAT)-gcc
 AS=$(ARCH)-$(FORMAT)-as
@@ -8,7 +13,22 @@ CPP=$(ARCH)-$(FORMAT)-cpp
 OBJCOPY=$(ARCH)-$(FORMAT)-objcopy
 AR=$(ARCH)-$(FORMAT)-ar
 
-BASEDIR=/opt/m68k/lib/gcc/$(ARCH)-$(FORMAT)/3.4.2
+
+# for gcc-5.2 toolchain
+#
+#TRIPLET=$(ARCH)-$(PLATFORM)-$(FORMAT)
+#
+#CC=$(TRIPLET)-gcc
+#AS=$(TRIPLET)-as
+#LD=$(TRIPLET)-ld
+#CPP=$(TRIPLET)-cpp
+#OBJCOPY=$(TRIPLET)-objcopy
+#AR=$(TRIPLET)-ar
+
+GCC_VERSION=$(shell $(CC) -v 2>&1 | grep "gcc version" | cut -d' ' -f3)
+
+
+BASEDIR=/opt/m68k/lib/gcc/$(TRIPLET)/$(GCC_VERSION)
 
 PROJECTDIR=/home/swallace/projects/m68k-system/firmware
 SRCDIR=$(PROJECTDIR)/os
