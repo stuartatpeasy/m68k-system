@@ -13,7 +13,7 @@ CSOURCES=dfu.c ds17485.c duart.c main.c \
 		 device/device.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
-		 fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
+		 fs/mount.c fs/vfs.c fs/fat/fat.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
 		 sched/sched.c
 
@@ -43,6 +43,7 @@ all: $(APPNAME)
 
 $(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
+	#$(OBJCOPY) -j .text -j .rodata -j .data -j .bss -O binary $(APPNAME) $(APPNAME).rom
 	$(OBJCOPY) -j .text -j .data -j .bss -O binary $(APPNAME) $(APPNAME).rom
 	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
 	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
