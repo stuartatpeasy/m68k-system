@@ -54,37 +54,32 @@ void umeminit(void * const start, void * const end)
     Allocation functions for kernel memory space
 */
 
-inline void *kmalloc(u32 size)
+void *kmalloc(u32 size)
 {
 	return ALLOCATOR_FN(malloc)(&g_kheap, size);
 }
 
-
-inline void *kcalloc(ku32 nmemb, ku32 size)
+void *kcalloc(ku32 nmemb, ku32 size)
 {
 	return ALLOCATOR_FN(calloc)(&g_kheap, nmemb, size);
 }
 
-
-inline void *krealloc(void *ptr, u32 size)
+void *krealloc(void *ptr, u32 size)
 {
 	return ALLOCATOR_FN(realloc)(&g_kheap, ptr, size);
 }
 
-
-inline void kfree(void *ptr)
+void kfree(void *ptr)
 {
 	ALLOCATOR_FN(free)(&g_kheap, ptr);
 }
 
-
-inline u32 kfreemem()
+u32 kfreemem()
 {
 	return ALLOCATOR_FN(freemem)(&g_kheap);
 }
 
-
-inline u32 kusedmem()
+u32 kusedmem()
 {
 	return ALLOCATOR_FN(usedmem)(&g_kheap);
 }
@@ -94,37 +89,32 @@ inline u32 kusedmem()
     Allocation functions for user memory space
 */
 
-inline void *umalloc(u32 size)
+void *umalloc(u32 size)
 {
 	return ALLOCATOR_FN(malloc)(&g_uheap, size);
 }
 
-
-inline void *ucalloc(ku32 nmemb, ku32 size)
+void *ucalloc(ku32 nmemb, ku32 size)
 {
 	return ALLOCATOR_FN(calloc)(&g_uheap, nmemb, size);
 }
 
-
-inline void *urealloc(void *ptr, u32 size)
+void *urealloc(void *ptr, u32 size)
 {
 	return ALLOCATOR_FN(realloc)(&g_uheap, ptr, size);
 }
 
-
-inline void ufree(void *ptr)
+void ufree(void *ptr)
 {
 	ALLOCATOR_FN(free)(&g_uheap, ptr);
 }
 
-
-inline u32 ufreemem()
+u32 ufreemem()
 {
 	return ALLOCATOR_FN(freemem)(&g_uheap);
 }
 
-
-inline u32 uusedmem()
+u32 uusedmem()
 {
 	return ALLOCATOR_FN(usedmem)(&g_uheap);
 }

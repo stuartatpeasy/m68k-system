@@ -44,23 +44,30 @@ typedef buddy_ctx mem_ctx;
 #error "No memory allocator specified (try -DKMALLOC_HEAP or -DKMALLOC_BUDDY)"
 #endif
 
-extern mem_ctx g_Heap;
+/* mem_ctx is a struct defined by whichever allocator is selected */
+mem_ctx g_kheap;    /* kernel heap */
+mem_ctx g_uheap;    /* user heap (shared by all userland processes) */
 
 void kmeminit(void * const start, void * const end);
 void umeminit(void * const start, void * const end);
 
-inline void *kmalloc(u32 size);
-inline void *kcalloc(ku32 nmemb, ku32 size);
-inline void *krealloc(void *ptr, u32 size);
-inline void kfree(void *ptr);
-inline u32 kfreemem();
-inline u32 kusedmem();
+/*
+    Allocator functions
+*/
 
-inline void *umalloc(u32 size);
-inline void *ucalloc(ku32 nmemb, ku32 size);
-inline void *urealloc(void *ptr, u32 size);
-inline void ufree(void *ptr);
-inline u32 ufreemem();
-inline u32 uusedmem();
+void *kmalloc(u32 size);
+void *kcalloc(ku32 nmemb, ku32 size);
+void *krealloc(void *ptr, u32 size);
+void kfree(void *ptr);
+u32 kfreemem();
+u32 kusedmem();
+
+void *umalloc(u32 size);
+void *ucalloc(ku32 nmemb, ku32 size);
+void *urealloc(void *ptr, u32 size);
+void ufree(void *ptr);
+u32 ufreemem();
+u32 uusedmem();
+
 
 #endif
