@@ -35,7 +35,7 @@
         :                           \
     )                               \
 
-inline void cpu_halt(void) __attribute__ ((noreturn));
+void cpu_halt(void) __attribute__ ((noreturn));
 
 const char * const cpu_dump_status_register(ku16 sr);
 void cpu_dump_exc_frame(const struct mc68010_exc_frame * const f);

@@ -11,7 +11,7 @@
 #include "kutil/kutil.h"
 
 
-inline void cpu_halt(void)
+void cpu_halt(void)
 {
 	puts("\nSystem halted.");
 
