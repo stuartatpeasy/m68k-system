@@ -19,6 +19,25 @@
 
 #define INVALID_DEVICE_ID		(-1)	/* Device guaranteed not to exist */
 
+/*
+    Retiring the driver_ret enum:
+
+    DRIVER_OK = 0               => 0
+    DRIVER_NOT_IMPLEMENTED      => ENOSYS
+    DRIVER_INVALID_DEVICE	    => ENODEV
+    DRIVER_TOO_MANY_DEVICES     => ENFILE       [? maybe EMFILE]
+    DRIVER_INVALID_SEEK	        => EINVAL
+    DRIVER_MEDIA_ERROR          => EIO
+    DRIVER_NO_MEDIA		        => ENOMEDIUM
+    DRIVER_ABORT			    => ECANCELED
+    DRIVER_MEDIA_CHANGED	    =>
+    DRIVER_WRITE_PROTECT        => EROFS
+    DRIVER_DATA_ERROR           => EIO
+    DRIVER_CRC_ERROR		    => EIO
+    DRIVER_TIMEOUT			    => ETIME
+
+    DRIVER_UNKNOWN_ERROR	    =>
+*/
 
 /* Return type for driver functions */
 typedef enum

@@ -23,6 +23,36 @@ vfs_ops_t fat_ops =
 
 int fat_mount(vfs_t *vfs)
 {
+    struct fat_bpb_block bpb;
+    driver_ret ret;
+
+    /*
+        validate "superblock"
+        allocate useful data structure in vfs->data
+        store stuff in useful data structure
+        maybe cache # of first data block, etc?
+    */
+
+    /* Read first sector */
+    ret = device_read(vfs->dev, 0, 1, &bpb);
+    if(ret != DRIVER_SUCCESS)
+        return ret;
+
+    /* Validate jump entry */
+    if((bpb.boot_code[0] != 0xeb) || (bpb.boot_code[2] != 0x90))
+    {
+        printf("%s: bad FAT superblock: incorrect jump bytes: expected 0xeb 0xxx 0x90, "
+               "read 0x%02x 0xxx 0x%02x", vfs->dev->name, bpb.boot_code[0], bpb.boot_code[2]);
+        return 1;   /* FIXME - return code */
+    }
+
+    /* Validate partition signature */
+    if(bpb.partition_signature != 0xaa55)
+    {
+        printf("%s: bad FAT superblock: incorrect partition signature: expected 0xaa55, "
+               "read 0x%04x", vfs->dev->name, bpb.partition_signature);
+        return 1;   /* FIXME - return code */
+    }
 
     return 0;
 }
@@ -51,7 +81,9 @@ int fat_fsnode_put(vfs_t *vfs, u32 node, const fsnode_t * const fsn)
 
 u32 fat_locate(vfs_t *vfs, u32 node, const char * const path)
 {
+    /*
 
+    */
 }
 
 
