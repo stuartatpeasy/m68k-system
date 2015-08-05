@@ -42,7 +42,7 @@ u32 driver_init()
 	{
 	    device_driver_t * const drv = g_drivers[x];
 
-		if(drv->init() != DRIVER_OK)	/* init() will create devices */
+		if(drv->init() != SUCCESS)	/* init() will create devices */
 		{
 			printf("%s: driver initialisation failed\n", drv->name);
 
@@ -63,9 +63,9 @@ u32 driver_init()
     supported.  Also, if a driver fails to initialise, all of its operation funcptrs will be
     replaced with a call to this fn.
 */
-u32 driver_method_not_implemented()
+s32 driver_method_not_implemented()
 {
-    return DRIVER_NOT_IMPLEMENTED;
+    return ENOSYS;
 }
 
 
@@ -77,7 +77,7 @@ void driver_shut_down()
 	const u32 num_drivers = sizeof(g_drivers) / sizeof(g_drivers[0]);
 	for(x = 0; x < num_drivers; ++x)
 	{
-		if(g_drivers[x]->shut_down() != DRIVER_OK)
+		if(g_drivers[x]->shut_down() != SUCCESS)
 		{
 			/* TODO: error */
 			printf("Failed to shut down '%s' driver\n", g_drivers[x]->name);
@@ -110,7 +110,7 @@ device_t *get_device_by_name(const char * const name)
 
 /* Create (i.e. register) a new device.  This function is called by each driver's init() function
  * during device enumeration. */
-driver_ret create_device(const device_type_t type, const device_class_t class,
+s32 create_device(const device_type_t type, const device_class_t class,
                          device_driver_t * const driver, const char *name, void * const data)
 {
     u32 u;
@@ -124,7 +124,7 @@ driver_ret create_device(const device_type_t type, const device_class_t class,
     }
 
     if(u == MAX_DEVICES)
-        return DRIVER_TOO_MANY_DEVICES;
+        return ENFILE;      /* Too many devices */
 
     dev = (device_t *) kmalloc(sizeof(device_t));
     if(dev == NULL)
@@ -144,19 +144,19 @@ driver_ret create_device(const device_type_t type, const device_class_t class,
 }
 
 
-driver_ret device_read(const device_t * const dev, ku32 offset, u32 len, u8 *buf)
+s32 device_read(const device_t * const dev, ku32 offset, u32 len, void *buf)
 {
 	return dev->driver->read(dev->data, offset, len, buf);
 }
 
 
-driver_ret device_write(const device_t * const dev, ku32 offset, u32 len, ku8 *buf)
+s32 device_write(const device_t * const dev, ku32 offset, u32 len, const void *buf)
 {
 	return dev->driver->write(dev->data, offset, len, buf);
 }
 
 
-driver_ret device_control(const device_t * const dev, ku32 function, void *in, void *out)
+s32 device_control(const device_t * const dev, ku32 function, void *in, void *out)
 {
 	return dev->driver->control(dev->data, function, in, out);
 }

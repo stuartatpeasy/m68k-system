@@ -346,7 +346,8 @@ MONITOR_CMD_HANDLER(fillw)
 
 MONITOR_CMD_HANDLER(free)
 {
-	printf("%d bytes free\n", kfreemem());
+	printf("kernel: %9d bytes free\n"
+           "  user: %9d bytes free\n", kfreemem(), ufreemem());
 	return MON_E_OK;
 }
 
@@ -607,10 +608,24 @@ MONITOR_CMD_HANDLER(srec)
 
     Used to trigger a test of some sort
 */
+#include "device/device.h"
 MONITOR_CMD_HANDLER(test)
 {
-	if(vfs_init())
-		puts("VFS failed to initialise");
+    char *p = NULL;
+    device_t *blockdev;
+
+	if(num_args != 1)
+		return MON_E_SYNTAX;
+
+	blockdev = get_device_by_name(args[0]);
+	if(blockdev)
+    {
+        device_control(blockdev, DEVCTL_MODEL, NULL, &p);
+        printf("%s is a %s\n", args[0], p);
+    }
+    else
+        puts("get_device_by_name() failed");
+
     return MON_E_OK;
 }
 

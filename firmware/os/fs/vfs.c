@@ -17,21 +17,17 @@ device_t *find_boot_device()
 {
 	u32 i;
 
-puts("Starting find_boot_device()");
 	for(i = 0; i < MAX_DEVICES; ++i)
 	{
-	    printf("i=%2u g_devices[i]=%08x\n", i, g_devices[i]);
         if(g_devices[i] != NULL)
         {
             device_t * const dev = g_devices[i];
             if(dev->type == DEVICE_TYPE_BLOCK)
             {
                 u32 bootable = 0;
-                puts("-- this is a block device");
 
-                if(device_control(dev, DEVCTL_BOOTABLE, NULL, &bootable) == DRIVER_OK)
+                if(device_control(dev, DEVCTL_BOOTABLE, NULL, &bootable) == SUCCESS)
                 {
-                    puts("---- device_control() done");
                     if(bootable)
                         return dev;
                 }

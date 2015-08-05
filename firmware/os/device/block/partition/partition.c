@@ -29,7 +29,7 @@ struct device_driver g_partition_driver =
 };
 
 #include "kutil/kutil.h" // FIXME remove
-driver_ret partition_init()
+s32 partition_init()
 {
 	/* Scan all devices, enumerate partitions, create partition devices */
 	u32 device_id;
@@ -48,7 +48,7 @@ driver_ret partition_init()
 			u16 part;
 			char name[DEVICE_NAME_LEN], *pn;
 
-			if(dev->driver->read(dev->data, 0, 1, (u8 *) &m) != DRIVER_OK)
+			if(dev->driver->read(dev->data, 0, 1, (u8 *) &m) != SUCCESS)
 				continue;		/* Failed to read sector TODO: report error */
 
 			if(m.mbr_signature != MBR_SIGNATURE)
@@ -65,10 +65,10 @@ driver_ret partition_init()
 				u32 bytes_per_sector = 0;
 
 				if((g_next_partition >= MAX_PARTITIONS) || (part > DEVICE_MAX_SUBDEVICES))
-					return DRIVER_TOO_MANY_DEVICES;
+					return ENFILE;
 
 				if(device_control(dev, DEVCTL_BLOCK_SIZE, NULL,
-											&bytes_per_sector) != DRIVER_OK)
+											&bytes_per_sector) != SUCCESS)
 					continue;		/* TODO: report error */
 
 				*pn = g_device_sub_names[part];
@@ -93,7 +93,7 @@ driver_ret partition_init()
 		}
 	}
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 
 
@@ -135,39 +135,38 @@ s8 *partition_status_desc(ku8 status)
 }
 
 
-driver_ret partition_shut_down()
+s32 partition_shut_down()
 {
 	/* TODO: remove partition devices */
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 
 
-driver_ret partition_read(void *data, ku32 offset, ku32 len, void* buf)
+s32 partition_read(void *data, ku32 offset, ku32 len, void* buf)
 {
 	const struct partition_data * const part = (const struct partition_data * const) data;
 
 	if((offset + len) > part->len)
-		return DRIVER_INVALID_SEEK;
+		return EINVAL;
 
 	return part->device->driver->read(part->device->data, part->offset + offset, len, buf);
 }
 
 
-driver_ret partition_write(void *data, ku32 offset, ku32 len, const void* buf)
+s32 partition_write(void *data, ku32 offset, ku32 len, const void* buf)
 {
 	const struct partition_data * const part = (const struct partition_data * const) data;
 
 	if((offset + len) > part->len)
-		return DRIVER_INVALID_SEEK;
+		return EINVAL;
 
 	return part->device->driver->write(part->device->data, part->offset + offset, len, buf);
 }
 
 
-driver_ret partition_control(void *data, ku32 function, void *in, void *out)
+s32 partition_control(void *data, ku32 function, void *in, void *out)
 {
-    puts("== in partition_control()");
 	const struct partition_data * const part = (const struct partition_data * const) data;
 
 	switch(function)
@@ -184,10 +183,13 @@ driver_ret partition_control(void *data, ku32 function, void *in, void *out)
 			*((u32 *) out) = (part->status == PARTITION_STATUS_BOOTABLE);
 			break;
 
+        case DEVCTL_MODEL:
+            *((s8 **) out) = "partition";
+
 		default:
-			return DRIVER_NOT_IMPLEMENTED;
+			return ENOSYS;
 	}
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 

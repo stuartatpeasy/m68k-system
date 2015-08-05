@@ -85,6 +85,7 @@
 		<Unit filename="include/byteorder.h" />
 		<Unit filename="include/ctype.h" />
 		<Unit filename="include/defs.h" />
+		<Unit filename="include/error.h" />
 		<Unit filename="include/limits.h" />
 		<Unit filename="include/syscall.h" />
 		<Unit filename="include/types.h" />

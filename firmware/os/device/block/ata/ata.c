@@ -11,6 +11,7 @@
 
 #include "ata-internal.h"
 #include "ata.h"
+#include "include/error.h"
 
 
 static ata_device_t g_ata_devices[ATA_MAX_DEVICES];
@@ -31,7 +32,7 @@ struct device_driver g_ata_driver =
 /*
 	Initialise ATA interface
 */
-driver_ret ata_init()
+s32 ata_init()
 {
 	int bus;
 	char device_name[DEVICE_NAME_LEN], *dn;
@@ -128,7 +129,7 @@ driver_ret ata_init()
 		}
 	}
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 
 
@@ -148,11 +149,11 @@ s8 *ata_copy_str(s8 *dest, s8 *src, ku32 len)
 }
 
 
-driver_ret ata_shut_down(void)
+s32 ata_shut_down(void)
 {
 	bzero(g_ata_devices, sizeof(g_ata_devices));
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 
 
@@ -162,7 +163,7 @@ driver_ret ata_shut_down(void)
 ata_ret_t ata_send_command(const u32 devid, const ata_command_t cmd)
 {
 	if((devid > ATA_MAX_DEVICES) || g_ata_devices[devid].status != online)
-		return DRIVER_INVALID_DEVICE;
+		return ENODEV;
 
 	const ata_device_t *devp = &g_ata_devices[devid];
 
@@ -172,35 +173,35 @@ ata_ret_t ata_send_command(const u32 devid, const ata_command_t cmd)
 	else if(devp->addr.device == 1)
 		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
 	else
-		return DRIVER_INVALID_DEVICE;
+		return ENODEV;
 
 	/* Wait for the device to become ready */
 	if(!ATA_WAIT_NBSY(devp->addr.bus))
-		return DRIVER_TIMEOUT;
+		return ETIME;
 
 	ATA_REG(devp->addr.bus, ATA_R_COMMAND) = cmd;
 
 	/* Wait for the command to complete */
 	if(!ATA_WAIT_NBSY(devp->addr.bus))
-		return DRIVER_TIMEOUT;
+		return ETIME;
 
 	/* Did an error occur? */
 	if(ATA_REG(devp->addr.bus, ATA_R_STATUS) & ATA_STATUS_ERR)
 	{
 		/* FIXME: correctly report the error */
-		return DRIVER_UNKNOWN_ERROR;
+		return EUNKNOWN;
 	}
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 
 
-driver_ret ata_read(void *data, ku32 offset, u32 len, void * buf)
+s32 ata_read(void *data, ku32 offset, u32 len, void * buf)
 {
 	const ata_device_t * const devp = (const ata_device_t * const) data;
 
 	if(devp->status != online)
-		return DRIVER_INVALID_DEVICE;
+		return ENODEV;
 
 	/* Select bus master / slave device */
 	if(devp->addr.device == 0)
@@ -208,14 +209,14 @@ driver_ret ata_read(void *data, ku32 offset, u32 len, void * buf)
 	else if(devp->addr.device == 1)
 		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
 	else
-		return DRIVER_INVALID_DEVICE;
+		return ENODEV;
 
 	if(!ATA_WAIT_NBSY(devp->addr.bus))
-		return DRIVER_TIMEOUT;
+		return ETIME;
 
 	if((offset + len < offset)
 	   || (offset + len > devp->num_sectors))
-	   return DRIVER_INVALID_SEEK;
+	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
@@ -230,12 +231,12 @@ driver_ret ata_read(void *data, ku32 offset, u32 len, void * buf)
 	ATA_REG(devp->addr.bus, ATA_R_COMMAND) = ATA_CMD_READ_SECTORS;
 
 	if(!ATA_WAIT_NBSY(devp->addr.bus))
-		return DRIVER_TIMEOUT;
+		return ETIME;
 
 	if(ATA_REG(devp->addr.bus, ATA_R_STATUS) & ATA_STATUS_ERR)
 	{
 		/* FIXME: correctly report the error */
-		return DRIVER_UNKNOWN_ERROR;
+		return EUNKNOWN;
 	}
 
 	while(len--)
@@ -244,16 +245,16 @@ driver_ret ata_read(void *data, ku32 offset, u32 len, void * buf)
 		buf += ATA_SECTOR_SIZE;
 	}
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 
 
-driver_ret ata_write(void *data, ku32 offset, u32 len, const void * buf)
+s32 ata_write(void *data, ku32 offset, u32 len, const void * buf)
 {
 	const ata_device_t * const devp = (const ata_device_t * const) data;
 
 	if(devp->status != online)
-		return DRIVER_INVALID_DEVICE;
+		return ENODEV;
 
 	/* Select bus master / slave device */
 	if(devp->addr.device == 0)
@@ -261,14 +262,14 @@ driver_ret ata_write(void *data, ku32 offset, u32 len, const void * buf)
 	else if(devp->addr.device == 1)
 		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
 	else
-		return DRIVER_INVALID_DEVICE;
+		return ENODEV;
 
 	if(!ATA_WAIT_NBSY(devp->addr.bus))
-		return DRIVER_TIMEOUT;
+		return ETIME;
 
 	if((offset + len < offset)
 	   || (offset + len > devp->num_sectors))
-	   return DRIVER_INVALID_SEEK;
+	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
@@ -289,16 +290,16 @@ driver_ret ata_write(void *data, ku32 offset, u32 len, const void * buf)
 	}
 
 	if(!ATA_WAIT_NBSY(devp->addr.bus))
-		return DRIVER_TIMEOUT;
+		return ETIME;
 
 	/* Did an error occur? */
 	if(ATA_REG(devp->addr.bus, ATA_R_STATUS) & ATA_STATUS_ERR)
 	{
 		/* FIXME: correctly report the error */
-		return DRIVER_UNKNOWN_ERROR;
+		return EUNKNOWN;
 	}
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 
 
@@ -331,7 +332,7 @@ void ata_write_data(ku32 bus, const void *buf)
 /*
 	Device control
 */
-driver_ret ata_control(void *data, ku32 function, void *in, void *out)
+s32 ata_control(void *data, ku32 function, void *in, void *out)
 {
 	ata_device_t * const devp = (ata_device_t * const) data;
 
@@ -350,21 +351,21 @@ driver_ret ata_control(void *data, ku32 function, void *in, void *out)
 			break;
 
         case DEVCTL_MODEL:
-            out = devp->model;
+            *((s8 **) out) = devp->model;
             break;
 
         case DEVCTL_SERIAL:
-            out = devp->serial;
+            *((s8 **) out) = devp->serial;
             break;
 
         case DEVCTL_FIRMWARE_VER:
-            out = devp->firmware;
+            *((s8 **) out) = devp->firmware;
             break;
 
 		default:
-			return DRIVER_NOT_IMPLEMENTED;
+			return ENOSYS;
 	}
 
-	return DRIVER_OK;
+	return SUCCESS;
 }
 

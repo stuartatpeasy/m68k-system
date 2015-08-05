@@ -50,12 +50,12 @@ typedef struct vfs vfs_t;
 
 typedef struct vfs_ops
 {
-    int (*mount)(vfs_t *vfs);
-    int (*umount)(vfs_t *vfs);
-    int (*fsnode_get)(vfs_t *vfs, u32 node, fsnode_t * const fsn);
-    int (*fsnode_put)(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
+    s32 (*mount)(vfs_t *vfs);
+    s32 (*umount)(vfs_t *vfs);
+    s32 (*fsnode_get)(vfs_t *vfs, u32 node, fsnode_t * const fsn);
+    s32 (*fsnode_put)(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
     u32 (*locate)(vfs_t *vfs, u32 node, const char * const path);
-    int (*stat)(vfs_t *vfs, fs_stat_t *st);
+    s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_ops_t;
 
 struct vfs

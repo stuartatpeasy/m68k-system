@@ -45,12 +45,9 @@ SECTIONS
         *(.bss)
     }
     _ebss = .;
-
 }
 
 ENTRY(_main)
 
 STARTUP(startup.o)
-
-/* OUTPUT_FORMAT(coff-m68k) */
 

@@ -37,6 +37,7 @@ struct fat_bpb_block
     u16 partition_signature;
 } __attribute__((packed));  /* 512 bytes */
 
+
 struct fat_dirent
 {
     s8  file_name[11];
@@ -52,6 +53,7 @@ struct fat_dirent
     u16 first_cluster_low;
     u32 size;
 } __attribute__((packed));  /* 32 bytes */
+
 
 #define FAT_FILEATTRIB_READ_ONLY    (0x01)
 #define FAT_FILEATTRIB_HIDDEN       (0x02)

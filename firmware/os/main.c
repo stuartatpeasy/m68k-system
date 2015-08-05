@@ -62,12 +62,10 @@ void _main()
     ram_detect();                                       /* Find out how much RAM we have    */
     slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
 	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
-	umeminit((void *) USER_RAM_START,                   /* Initialise user heap             */
-                (void *) g_ram_top - USER_RAM_START);
 
     /* === Initialise peripherals === */
 
-    /* Initialise DUART.  This has the side-effect of shutting the goddamn beeper up. */
+    /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
 	duart_init();
 
     /* Activate red LED while the boot process continues */
@@ -76,6 +74,14 @@ void _main()
 
     /* Zero RAM.  This happens after init'ing the DUART, because beeper. */
     bzero((void *) USER_RAM_START, g_ram_top - USER_RAM_START);
+
+    /* Initialise user heap - can't do this before zero'ing user RAM */
+	umeminit((void *) USER_RAM_START, (void *) g_ram_top);
+
+    /*
+        At this point, minimal configuration has been done.  The scheduler is not yet running,
+        but we can now initialise non-critical peripherals and start greeting the user.
+    */
 
     puts(g_warmup_message);
 
@@ -102,16 +108,8 @@ void _main()
 	printf("%u bytes of kernel heap memory available\n"
            "%u bytes of user memory available\n", kfreemem(), g_ram_top - USER_RAM_START);
 
-//	if(vfs_init())
-//		puts("VFS failed to initialise");
-/*
-    char *p = NULL;
-	device_t *blockdev = get_device_by_name("ata1");
-	if(blockdev)
-    {
-        device_control(blockdev, DEVCTL_MODEL, NULL, p);
-    }
-*/
+	if(vfs_init())
+		puts("VFS failed to initialise");
 
     sched_init();
     cpu_enable_interrupts();

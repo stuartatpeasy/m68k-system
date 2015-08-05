@@ -10,10 +10,12 @@
 */
 
 #include <stdarg.h>
+#include "include/error.h"
 #include "include/types.h"
 #include "klibc/string.h"
 
 
+/* Date/time-related functions */
 s32 date_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len);
 s32 date_short(const struct rtc_time * const tm, char * const buffer, ku32 len);
 s32 date_long(const struct rtc_time * const tm, char * const buffer, ku32 len);
@@ -23,7 +25,9 @@ ks8 * const day_number_suffix(ku8 daynum);
 s32 day_of_week(ks32 year, ks32 month, ks32 day);
 s32 is_leap_year(ks32 year);
 s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt);
+
 s32 dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
+ks8 *kstrerror(ks32 errnum);
 s8 *str_trim(s8 *dest, ks8 *src);
 
 #define VALID_RTC_DATE(d)                                   \
