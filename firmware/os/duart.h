@@ -119,8 +119,8 @@
 #define EXP_FIRST_PD_BIT            (2)
 #define EXP_PD_BIT(x)               (EXP_FIRST_PD_BIT + (x))
 #define EXP_PD_MASK(x)              (1 << EXP_PD_BIT(x))
-#define EXP_PD_ALL_MASK             (EXP_PD_BIT(3) | EXP_PD_BIT(2) | EXP_PD_BIT(1) | EXP_PD_BIT(0))
-
+#define EXP_PD_ALL_MASK             (EXP_PD_MASK(3) | EXP_PD_MASK(2) | \
+                                     EXP_PD_MASK(1) | EXP_PD_MASK(0))
 
 
 void duart_init(void);
