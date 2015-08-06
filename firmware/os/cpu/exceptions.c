@@ -41,8 +41,8 @@ void cpu_exc_install_default_handlers(void)
 	V_trap_11 = CPU_EXC_VPTR(cpu_trap_11_handler);
 	V_trap_12 = CPU_EXC_VPTR(cpu_trap_12_handler);
 	V_trap_13 = CPU_EXC_VPTR(cpu_trap_13_handler);
-	V_trap_14 = CPU_EXC_VPTR(cpu_trap_15);
-	V_trap_15 = CPU_EXC_VPTR(__cpu_trap_15);
+	V_trap_14 = CPU_EXC_VPTR(cpu_trap_14_handler);
+	V_trap_15 = CPU_EXC_VPTR(cpu_trap_15_handler);
 }
 
 
@@ -203,13 +203,13 @@ void cpu_trap_13_handler(void)
 }
 
 
-void cpu_trap_15(void)
+void cpu_trap_14_handler(void)
 {
 	puts("TRAP 14");
 }
 
 
-void __cpu_trap_15(void)
+void cpu_trap_15_handler(void)
 {
 	puts("TRAP 15");
 }

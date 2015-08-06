@@ -1,5 +1,5 @@
-#ifndef __CPU_UTILITIES_H__
-#define __CPU_UTILITIES_H__
+#ifndef CPU_UTILITIES_H_INC
+#define CPU_UTILITIES_H_INC
 /*
 	MC68010 CPU utility functions
 

@@ -22,7 +22,7 @@ void expansion_init()
 	for(i = 0; i < 4; ++i)
     {
         printf("slot %d: ", i);
-        if(EXP_PRESENT(exp_pd, i))
+        if(EXP_PRESENT(i))
         {
             /* A card is present; read its identity from the first byte of its address space */
             u8 id;

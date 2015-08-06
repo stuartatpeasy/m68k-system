@@ -44,4 +44,4 @@ int toupper(int c);
 
 inline int _ctypeisname(int c, const unsigned short int type);
 
-#endif // __INCLUDE_CTYPE_H__
+#endif

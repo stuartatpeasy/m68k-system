@@ -15,7 +15,7 @@
 #define tas(addr)								\
 	(__extension__ ({							\
 		register unsigned int ret;				\
-		register unsigned int __addr = (addr);	\
+		register unsigned int addr_ = (addr);	\
 		__asm__ __volatile__					\
 		(										\
 					"clr.l %[output]\n"			\
@@ -24,7 +24,7 @@
 					"moveq.l #1, %[output]\n"	\
 			"L_%=:\n"							\
 			: [output] "=&r" (ret)				\
-			: [address] "d" (__addr)			\
+			: [address] "d" (addr_) 			\
 			: "cc"								\
 		);										\
 		ret;									\

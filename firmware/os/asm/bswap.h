@@ -14,45 +14,45 @@
 
 #define bswap_16(x)											\
 					(__extension__ ({						\
-						register unsigned short __x = (x);	\
+						register unsigned short x_ = (x);	\
 						__asm__ __volatile__				\
 						(									\
 							"rol.w #8, %w0"					\
 							: 								\
-							: "d" (__x)						\
+							: "d" (x_)						\
 							: "d0", "cc"					\
 						);									\
-						__x;								\
+						x_; 								\
 					}))
 
 
 #define bswap_32(x)											\
 					(__extension__ ({					    \
-						register unsigned int __x = (x);	\
+						register unsigned int x_ = (x);	    \
 						__asm__ __volatile__				\
 						(									\
 							"rol.w #8, %0\n"				\
 							"swap %0\n"						\
 							"rol.w #8, %0"					\
 							: 								\
-							: "d" (__x)						\
+							: "d" (x_)						\
 							: "cc"							\
 						);									\
-						__x;								\
+						x_; 								\
 					}))
 
 
 #define wswap_32(x)											\
 					(__extension__ ({						\
-						register unsigned int __x = (x);	\
+						register unsigned int x_ = (x);	    \
 						__asm__ __volatile__				\
 						(									\
 							"swap %0\n"						\
 							: 								\
-							: "d" (__x)						\
+							: "d" (x_)						\
 							: "cc"							\
 						);									\
-						__x;								\
+						x_; 								\
 					}))
 
 #endif

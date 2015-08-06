@@ -339,7 +339,7 @@ IRQ_HANDLER_DECL(cpu_trap_10_handler);
 IRQ_HANDLER_DECL(cpu_trap_11_handler);
 IRQ_HANDLER_DECL(cpu_trap_12_handler);
 IRQ_HANDLER_DECL(cpu_trap_13_handler);
-IRQ_HANDLER_DECL(cpu_trap_15);
-IRQ_HANDLER_DECL(__cpu_trap_15);
+IRQ_HANDLER_DECL(cpu_trap_14_handler);
+IRQ_HANDLER_DECL(cpu_trap_15_handler);
 
 #endif

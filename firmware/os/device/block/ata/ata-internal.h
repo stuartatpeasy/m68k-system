@@ -35,16 +35,16 @@
 */
 #define ATA_WAIT_BSY(bus)																	\
 					(__extension__ ({														\
-						u32 __t = ATA_TIMEOUT_VAL;											\
-						for(; !(ATA_REG(bus, ATA_R_STATUS) & ATA_STATUS_BSY) && --__t;) ;	\
-						__t;																\
+						u32 t_ = ATA_TIMEOUT_VAL;											\
+						for(; !(ATA_REG(bus, ATA_R_STATUS) & ATA_STATUS_BSY) && --t_;) ;	\
+						t_;																\
 					}))
 
 #define ATA_WAIT_NBSY(bus)																	\
 					(__extension__ ({														\
-						u32 __t = ATA_TIMEOUT_VAL;											\
-						for(; (ATA_REG(bus, ATA_R_STATUS) & ATA_STATUS_BSY) && --__t;) ;	\
-						__t;																\
+						u32 t_ = ATA_TIMEOUT_VAL;											\
+						for(; (ATA_REG(bus, ATA_R_STATUS) & ATA_STATUS_BSY) && --t_;) ;	    \
+						t_;																\
 					}))
 
 
@@ -115,7 +115,7 @@
 	ATA command codes
 */
 
-enum __ata_command
+enum ata_command
 {
 	ATA_CMD_CFA_ERASE_SECTORS					= 0xc0,
 	ATA_CMD_CFA_REQUEST_EXTENDED_ERROR			= 0x03,
@@ -175,7 +175,7 @@ enum __ata_command
 };
 
 
-typedef enum __ata_command ata_command_t;
+typedef enum ata_command ata_command_t;
 
 typedef u32 ata_ret_t;
 
@@ -211,7 +211,7 @@ typedef u32 ata_ret_t;
 
 
 /*
-	struct __ata_identify_device: 512-byte struct which may be mapped over the response to an
+	struct ata_identify_device: 512-byte struct which may be mapped over the response to an
 	IDENTIFY DEVICE command.
 */
 struct ata_identify_device_ret

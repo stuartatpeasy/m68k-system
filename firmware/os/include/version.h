@@ -16,4 +16,4 @@
 #define CPU_NAME            "m68k-010"
 
 
-#endif // __INCLUDE_VERSION_H__
+#endif
