@@ -4,6 +4,7 @@
 #include <cpu/utilities.h>
 #include <device/devctl.h>
 #include <device/device.h>
+#include <device/expansion.h>
 #include <ds17485.h>
 #include <duart.h>
 #include <fs/vfs.h>
@@ -46,9 +47,7 @@ void detect_clock_freq()
 void _main()
 {
     struct rtc_time tm;
-    u32 i;
     char sn[6], timebuf[12], datebuf[32];
-    u8 exp_pd;
 
 	/* === Initialise CPU === */
 
@@ -65,7 +64,7 @@ void _main()
     slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
 	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
 
-    /* === Initialise peripherals === */
+    /* === Initialise peripherals - phase 1 === */
 
     /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
 	duart_init();
@@ -89,6 +88,8 @@ void _main()
 
     printf("%uMB RAM detected\n", g_ram_top >> 20);
 
+    /* === Initialise peripherals - phase 2 === */
+
     /* Initialise RTC */
 	ds17485_init();
     ds17485_get_serial_number(sn);
@@ -108,24 +109,13 @@ void _main()
 	driver_init();
 
 	/* Enumerate expansion cards */
-	puts("Scanning expansion slots");
-	exp_pd = read_expansion_card_presence_detect();
-
-	for(i = 0; i < 4; ++i)
-    {
-        printf("slot %d: ", i);
-        if(exp_pd & EXP_PD_MASK(i))
-            puts("vacant");
-        else
-            puts("unknown peripheral");
-    }
+	expansion_init();
 
 	printf("%u bytes of kernel heap memory available\n"
            "%u bytes of user memory available\n", kfreemem(), g_ram_top - USER_RAM_START);
 
 	if(vfs_init() != SUCCESS)
 		puts("VFS failed to initialise");
-
 
     sched_init();
     cpu_enable_interrupts();

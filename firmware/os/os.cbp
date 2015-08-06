@@ -51,6 +51,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/device.h" />
+		<Unit filename="device/expansion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/expansion.h" />
 		<Unit filename="dfu.c">
 			<Option compilerVar="CC" />
 		</Unit>

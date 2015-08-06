@@ -10,7 +10,7 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=dfu.c ds17485.c duart.c main.c \
-		 device/device.c \
+		 device/device.c device/expansion.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/mount.c fs/vfs.c fs/fat/fat.c \
@@ -94,6 +94,9 @@ cpu/utilities.o: cpu/utilities.c cpu/utilities.h cpu/exceptionstackframes.h incl
 				 kutil/kutil.h
 
 device/device.o: device/device.c device/device.h kutil/kutil.h device/block/ata/ata.h
+
+device/expansion.o: device/expansion.c device/expansion.h include/defs.h include/types.h \
+					klibc/stdio.h
 
 device/block/ata/ata.o: device/block/ata/ata.c device/block/ata/ata.h \
                         device/block/ata/ata-internal.h \

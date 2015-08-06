@@ -1,5 +1,5 @@
-#ifndef FS_FAT_FAT_INC
-#define FS_FAT_FAT_INC
+#ifndef FS_FAT_FAT_H_INC
+#define FS_FAT_FAT_H_INC
 /*
     FAT16 file system support
 

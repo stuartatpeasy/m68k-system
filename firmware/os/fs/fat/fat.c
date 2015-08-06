@@ -84,6 +84,8 @@ u32 fat_locate(vfs_t *vfs, u32 node, const char * const path)
     /*
 
     */
+
+    return 0;
 }
 
 
