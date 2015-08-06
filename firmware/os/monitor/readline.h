@@ -1,5 +1,5 @@
-#ifndef __MONITOR_READLINE_H__
-#define __MONITOR_READLINE_H__
+#ifndef MONITOR_READLINE_H_INC
+#define MONITOR_READLINE_H_INC
 /*
 	Implementation of the readline() function: reads a line from the serial port
 

@@ -1,5 +1,5 @@
-#ifndef __MONITOR_SREC_H__
-#define __MONITOR_SREC_H__
+#ifndef MONITOR_SREC_H_INC
+#define MONITOR_SREC_H_INC
 /*
 	S-Record interpreter
 

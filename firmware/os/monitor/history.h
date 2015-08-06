@@ -1,5 +1,5 @@
-#ifndef OS_MONITOR_HISTORY_H
-#define OS_MONITOR_HISTORY_H
+#ifndef MONITOR_HISTORY_H_INC
+#define MONITOR_HISTORY_H_INC
 /*
 	Command-history support for monitor system
 

@@ -1,5 +1,5 @@
-#ifndef __BUDDY_H__
-#define __BUDDY_H__
+#ifndef MEMORY_BUDDY_H_INC
+#define MEMORY_BUDDY_H_INC
 /*
 	buddy.h: declarations for buddy memory allocator
 

@@ -1,5 +1,5 @@
-#ifndef __KUTIL_BVEC_H__
-#define __KUTIL_BVEC_H__
+#ifndef KUTIL_BVEC_H_INC
+#define KUTIL_BVEC_H_INC
 /*
 	bvec.h - block-allocating dynamic array (vector) implementation
 

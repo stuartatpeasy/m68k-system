@@ -1,4 +1,4 @@
-# Makefile for the m68k firmware
+# Makefile for the as-yet-unnamed MC68010 operating system
 #
 # Stuart Wallace <stuartw@atom.net>, 2011-2015.
 #
@@ -10,7 +10,7 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=dfu.c ds17485.c duart.c main.c \
-		 device/device.c device/expansion.c \
+		 device/device.c device/expansion.c device/led.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/mount.c fs/vfs.c fs/fat/fat.c \
@@ -82,46 +82,90 @@ libmonitor.a:
 # Dependencies below this point
 #
 
-main.o: main.c ds17485.o duart.o device/device.o sched/sched.o
-dfu.o: dfu.c dfu.h
-ds17485.o: ds17485.c ds17485.h
-duart.o: duart.c duart.h
-startup.o: startup.S
+asm/syscall.o: \
+	asm/syscall.S include/syscall.h
 
-cpu/exceptions.o: cpu/exceptions.c cpu/exceptions.h cpu/utilities.o cpu/exceptionstackframes.h \
-				  include/types.h kutil/kutil.h
-cpu/utilities.o: cpu/utilities.c cpu/utilities.h cpu/exceptionstackframes.h include/types.h \
-				 kutil/kutil.h
+main.o: \
+	main.c cpu/utilities.h device/devctl.h device/device.h device/expansion.h device/led.h \
+	ds17485.h duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h \
+	memory/kmalloc.h memory/ramdetect.h memory/slab.h monitor/monitor.h duart.o device/device.o \
+	sched/sched.h
 
-device/device.o: device/device.c device/device.h kutil/kutil.h device/block/ata/ata.h
+dfu.o: \
+	dfu.c dfu.h asm/reset.h cpu/exceptions.h duart.h include/types.h kutil/kutil.h \
+	memory/kmalloc.h klibc/string.h
 
-device/expansion.o: device/expansion.c device/expansion.h include/defs.h include/types.h \
-					klibc/stdio.h
+ds17485.o: \
+	ds17485.c ds17485.h include/types.h kutil/kutil.h
 
-device/block/ata/ata.o: device/block/ata/ata.c device/block/ata/ata.h \
-                        device/block/ata/ata-internal.h \
-						include/byteorder.h include/types.h device/device.h \
-						device/devctl.h
-device/block/partition/partition.o: device/block/partition/partition.c \
-									device/block/partition/partition.h \
-									device/block/partition/mbr.h include/defs.h include/types.h \
-									device/device.h kutil/kutil.h asm/bswap.h device/devctl.h
+duart.o: \
+	duart.c duart.h include/defs.h include/types.h
 
-fs/ext2/ext2.o: fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h kutil/kutil.h \
-                memory/kmalloc.h
-fs/fat/fat.o: fs/fat/fat.c fs/fat/fat.h fs/fat/fat-defs.h include/defs.h include/types.h
-fs/mount.o: fs/mount.c fs/mount.h include/types.h device/device.h include/defs.h
-fs/vfs.o: fs/vfs.c fs/vfs.h fs/mount.h include/types.h include/defs.h
+startup.o: \
+	startup.S memory/memorymap.h
 
-include/byteorder.h: asm/bswap.h
+cpu/exceptions.o: \
+    asm/rte.h cpu/exceptions.c cpu/exceptions.h cpu/utilities.o cpu/exceptionstackframes.h \
+	include/types.h kutil/kutil.h klibc/stdio.h sched/sched.h
 
-memory/buddy.o: memory/buddy.c memory/buddy.h include/types.h \
-				kutil/kutil.h libkutil.a
-memory/heap.o: memory/heap.c memory/heap.h
-memory/kmalloc.o: memory/kmalloc.c memory/kmalloc.h memory/memorymap.h
-memory/ramdetect.o: memory/memorymap.h memory/ramdetect.c memory/ramdetect.h include/defs.h \
-					include/types.h
-memory/slab.o: memory/slab.c memory/slab.h include/defs.h include/types.h
+cpu/utilities.o: \
+    cpu/utilities.c cpu/utilities.h cpu/exceptionstackframes.h include/types.h \
+	klibc/stdio.h kutil/kutil.h
 
-sched/sched.o: sched/sched.c sched/sched.h include/types.h
+device/device.o: \
+	device/device.c device/devctl.h device/device.h kutil/kutil.h device/block/ata/ata.h \
+	device/block/partition/partition.h include/types.h klibc/errno.h
 
+device/expansion.o: \
+	device/expansion.c device/expansion.h include/defs.h include/types.h klibc/stdio.h
+
+device/led.o: \
+	device/led.c device/led.h duart.h include/defs.h include/types.h
+
+device/block/ata/ata.o: \
+	device/block/ata/ata.c device/block/ata/ata.h device/block/ata/ata-internal.h device\devctl.h \
+	device/device.h include/byteorder.h include/defs.h include/types.h klibc/stdio.h \
+	klibc/string.h klibc/strings.h mbr.h
+
+device/block/partition/partition.o: \
+	device/block/partition/partition.c device/block/partition/partition.h \
+	device/block/partition/mbr.h device/device.h include/byteorder.h include/defs.h \
+	include/types.h klibc/stdio.h kutil/kutil.h asm/bswap.h device/devctl.h
+
+fs/ext2/ext2.o: \
+	fs/ext2/ext2.c fs/ext2/ext2.h fs/ext2/ext2-defs.h include/defs.h klibc/errno.h klibc/stdio.h \
+	klibc/string.h kutil/kutil.h memory/kmalloc.h
+
+fs/fat/fat.o: \
+	fs/fat/fat.c fs/fat/fat.h fs/fat/fat-defs.h fs/vfs.h include/defs.h include/byteorder.h \
+	include/types.h
+
+fs/mount.o: \
+	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h include/defs.h \
+	klibc/errno.h kutil/kutil.h memory/kmalloc.h
+
+fs/vfs.o: \
+	fs/vfs.c fs/vfs.h fs/mount.h device/devctl.h device/device.h include/defs.h include/types.h \
+	klibc/stdio.h
+
+include/byteorder.h: \
+	asm/bswap.h
+
+memory/buddy.o: \
+	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a
+
+memory/heap.o: \
+	memory/heap.c memory/heap.h include/types.h
+
+memory/kmalloc.o: \
+	memory/kmalloc.c memory/kmalloc.h include/types.h memory/memorymap.h
+
+memory/ramdetect.o: \
+	memory/memorymap.h memory/ramdetect.c memory/ramdetect.h include/defs.h include/types.h
+
+memory/slab.o: \
+	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
+
+sched/sched.o: \
+	sched/sched.c sched/sched.h cpu/utilities.h duart.h include/defs.h include/types.h \
+	klibc/strings.h

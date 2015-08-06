@@ -1,5 +1,5 @@
-#ifndef __ASM_STOP_H__
-#define __ASM_STOP_H__
+#ifndef ASM_STOP_H_INC
+#define ASM_STOP_H_INC
 /*
 	STOP machine instruction "intrinsic"
 

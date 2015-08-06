@@ -1,5 +1,5 @@
-#ifndef __ASM_TAS_H__
-#define __ASM_TAS_H__
+#ifndef ASM_TAS_H_INC
+#define ASM_TAS_H_INC
 /*
 	Test-and-set "intrinsic"
 

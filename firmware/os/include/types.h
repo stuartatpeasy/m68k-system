@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_TYPES_H__
-#define __INCLUDE_TYPES_H__
+#ifndef INCLUDE_TYPES_H_INC
+#define INCLUDE_TYPES_H_INC
 /*
 	Type definitions
 

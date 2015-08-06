@@ -1,5 +1,5 @@
-#ifndef __ASM_BSWAP_H__
-#define __ASM_BSWAP_H__
+#ifndef ASM_BSWAP_H_INC
+#define ASM_BSWAP_H_INC
 /*
 	Byte-order conversion "intrinsics"
 

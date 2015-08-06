@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_SYSCALL_H__
-#define __INCLUDE_SYSCALL_H__
+#ifndef INCLUDE_SYSCALL_H_INC
+#define INCLUDE_SYSCALL_H_INC
 /*
 	System call declarations
 
@@ -12,7 +12,7 @@
 #define MAX_SYSCALL		3			/* the highest-numbered system call, counting from zero */
 
 /*
-	System call numbers.  Numbers must start from zero and there must not be any gaps!	
+	System call numbers.  Numbers must start from zero and there must not be any gaps!
 */
 #define SYSCALL_null	0
 #define SYSCALL_blah	1

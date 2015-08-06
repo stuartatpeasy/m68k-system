@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_VERSION_H__
-#define __INCLUDE_VERSION_H__
+#ifndef INCLUDE_VERSION_H_INC
+#define INCLUDE_VERSION_H_INC
 /*
     Software version constants
 

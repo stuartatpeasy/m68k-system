@@ -1,5 +1,5 @@
-#ifndef __MONITOR_ENV_H__
-#define __MONITOR_ENV_H__
+#ifndef MONITOR_ENV_H_INC
+#define MONITOR_ENV_H_INC
 /*
 	Environment-variable support for monitor system
 

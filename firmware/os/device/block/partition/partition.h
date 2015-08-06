@@ -1,5 +1,5 @@
-#ifndef __OS_DEVICE_BLOCK_PARTITION_H__
-#define __OS_DEVICE_BLOCK_PARTITION_H__
+#ifndef DEVICE_BLOCK_PARTITION_H_INC
+#define DEVICE_BLOCK_PARTITION_H_INC
 /*
 	partition.h: declarations of functions and types relating to the hard disc partition model
 

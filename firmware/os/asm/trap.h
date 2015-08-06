@@ -1,5 +1,5 @@
-#ifndef __ASM_TRAP_H__
-#define __ASM_TRAP_H__
+#ifndef ASM_TRAP_H_INC
+#define ASM_TRAP_H_INC
 /*
 	TRAP machine instruction "intrinsic"
 

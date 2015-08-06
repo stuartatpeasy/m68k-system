@@ -1,5 +1,5 @@
-#ifndef __OS_DEVICE_BLOCK_PARTITION_MBR_H__
-#define __OS_DEVICE_BLOCK_PARTITION_MBR_H__
+#ifndef DEVICE_BLOCK_PARTITION_MBR_H_INC
+#define DEVICE_BLOCK_PARTITION_MBR_H_INC
 /*
 	Master boot record (MBR) handling functions and type definitions
 

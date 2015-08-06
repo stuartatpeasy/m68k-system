@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_LIMITS_H__
-#define __INCLUDE_LIMITS_H__
+#ifndef INCLUDE_LIMITS_H_INC
+#define INCLUDE_LIMITS_H_INC
 /*
 	Integer type limits
 

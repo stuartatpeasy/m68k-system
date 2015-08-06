@@ -1,5 +1,5 @@
-#ifndef OS_DEVICE_DEVCTL_H_INC
-#define OS_DEVICE_DEVCTL_H_INC
+#ifndef DEVICE_DEVCTL_H_INC
+#define DEVICE_DEVCTL_H_INC
 /*
 	devctl.h: device-manipulation functions, constants, etc.
 
@@ -21,4 +21,3 @@
 #define DEVCTL_FIRMWARE_VER (0x0006)    /* Get device firmware version                          */
 
 #endif
-

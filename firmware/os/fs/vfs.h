@@ -1,5 +1,5 @@
-#ifndef __FS_VFS_H__
-#define __FS_VFS_H__
+#ifndef FS_VFS_H_INC
+#define FS_VFS_H_INC
 /*
 	Virtual file system abstraction
 

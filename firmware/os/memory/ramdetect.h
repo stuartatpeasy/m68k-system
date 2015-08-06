@@ -1,5 +1,5 @@
-#ifndef OS_MEMORY_RAMDETECT_H
-#define OS_MEMORY_RAMDETECT_H
+#ifndef MEMORY_RAMDETECT_H_INC
+#define MEMORY_RAMDETECT_H_INC
 /*
     RAM detection algorithm
 

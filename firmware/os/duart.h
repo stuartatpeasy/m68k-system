@@ -1,5 +1,5 @@
-#ifndef __DUART_H__
-#define __DUART_H__
+#ifndef DUART_H_INC
+#define DUART_H_INC
 /*
 	MC68681 DUART driver function and macro declarations
 

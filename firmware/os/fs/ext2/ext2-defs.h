@@ -1,5 +1,5 @@
-#ifndef __FS_EXT2_DEFS_H__
-#define __FS_EXT2_DEFS_H__
+#ifndef FS_EXT2_DEFS_H_INC
+#define FS_EXT2_DEFS_H_INC
 /*
 	Definitions and declarations relating to the ext2 file system driver
 
@@ -97,7 +97,7 @@ struct ext2_superblock
 
 	/* Performance hints */
 	u8 s_prealloc_blocks;
-	u8 s_prealloc_dir_blocks;	
+	u8 s_prealloc_dir_blocks;
 	u16 _align_1;					/* Padding */
 
 	/* Journalling support */
@@ -112,7 +112,7 @@ struct ext2_superblock
 	u8 _align_2[3];					/* Padding */
 
 	/* Other options */
-	u32 s_default_mount_options;	
+	u32 s_default_mount_options;
 	u32 s_first_meta_bg;
 } __attribute__((packed));
 

@@ -1,5 +1,5 @@
-#ifndef _EXT2_H_
-#define _EXT2_H_
+#ifndef FS_EXT2_EXT2_H_INC
+#define FS_EXT2_EXT2_H_INC
 /*
 	ext2 file system driver
 

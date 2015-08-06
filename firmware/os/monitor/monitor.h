@@ -1,5 +1,5 @@
-#ifndef OS_MONITOR_MONITOR_H
-#define OS_MONITOR_MONITOR_H
+#ifndef MONITOR_MONITOR_H_INC
+#define MONITOR_MONITOR_H_INC
 /*
 	Monitor application
 

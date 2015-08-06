@@ -1,5 +1,5 @@
-#ifndef __SCHED_SCHED_H__
-#define __SCHED_SCHED_H__
+#ifndef SCHED_SCHED_H_INC
+#define SCHED_SCHED_H_INC
 /*
 	Scheduler
 

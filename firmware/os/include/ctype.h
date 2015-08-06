@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_CTYPE_H__
-#define __INCLUDE_CTYPE_H__
+#ifndef INCLUDE_CTYPE_H_INC
+#define INCLUDE_CTYPE_H_INC
 /*
     ctype.h - same deal as the one in libc
 

@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_MEMORYMAP_H__
-#define __INCLUDE_MEMORYMAP_H__
+#ifndef MEMORY_MEMORYMAP_H_INC
+#define MEMORY_MEMORYMAP_H_INC
 /*
 	Memory map declarations
 

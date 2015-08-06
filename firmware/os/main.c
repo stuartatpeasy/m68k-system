@@ -15,7 +15,7 @@
 #include <memory/ramdetect.h>
 #include <memory/slab.h>
 #include <monitor/monitor.h>
-
+#include <sched/sched.h>
 
 const char * const g_warmup_message = "\n68010 computer system\n"
 									  "Stuart Wallace, 2011-2015\n";

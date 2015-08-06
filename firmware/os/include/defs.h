@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_DEFS_H__
-#define __INCLUDE_DEFS_H__
+#ifndef INCLUDE_DEFS_H_INC
+#define INCLUDE_DEFS_H_INC
 /*
 	Miscellaneous definitions
 

@@ -1,5 +1,5 @@
-#ifndef __DISASM_H__
-#define __DISASM_H__
+#ifndef MONITOR_DISASM_H_INC
+#define MONITOR_DISASM_H_INC
 /*
 	MC68000/68010 disassembler
 

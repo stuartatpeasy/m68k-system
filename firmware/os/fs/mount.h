@@ -1,5 +1,5 @@
-#ifndef __MOUNT_H__
-#define __MOUNT_H__
+#ifndef FS_MOUNT_H_INC
+#define FS_MOUNT_H_INC
 /*
 	Mount point functions
 

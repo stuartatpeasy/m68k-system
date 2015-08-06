@@ -1,5 +1,5 @@
-#ifndef __ASM_RESET_H__
-#define __ASM_RESET_H__
+#ifndef ASM_RESET_H_INC
+#define ASM_RESET_H_INC
 /*
 	"intrinsic" which hard-resets the hardware and the CPU
 

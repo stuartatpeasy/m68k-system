@@ -1,5 +1,5 @@
-#ifndef __MEMORY_HEAP_H__
-#define __MEMORY_HEAP_H__
+#ifndef MEMORY_HEAP_H_INC
+#define MEMORY_HEAP_H_INC
 /*
 	heap.h: declarations of functions and types for the simple and rubbish heap memory allocator
 

@@ -1,5 +1,5 @@
-#ifndef __OS_DEVICE_BLOCK_ATA_ATAINTERNAL_H__
-#define __OS_DEVICE_BLOCK_ATA_ATAINTERNAL_H__
+#ifndef DEVICE_BLOCK_ATA_ATAINTERNAL_H_INC
+#define DEVICE_BLOCK_ATA_ATAINTERNAL_H_INC
 /*
 	AT Attachment (ATA) interface driver function and macro declarations
 
@@ -65,7 +65,7 @@
 				1		0		1		1		1		[1]
 				-----------   -------------------------------
 				     2                       f
-	
+
 	...i.e. the status register (for reads) / the command register (for writes)
 
 	MAIN REGISTERS (nCS1 negated, nCS0 asserted)

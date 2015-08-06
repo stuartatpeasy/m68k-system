@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_BYTEORDER_H__
-#define __INCLUDE_BYTEORDER_H__
+#ifndef INCLUDE_BYTEORDER_H_INC
+#define INCLUDE_BYTEORDER_H_INC
 /*
 	Byte-order conversion macros
 

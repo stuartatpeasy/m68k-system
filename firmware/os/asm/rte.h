@@ -1,5 +1,5 @@
-#ifndef __ASM_RTE_H__
-#define __ASM_RTE_H__
+#ifndef ASM_RTE_H_INC
+#define ASM_RTE_H_INC
 /*
 	RTE machine instruction "intrinsic"
 

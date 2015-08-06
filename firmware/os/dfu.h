@@ -1,5 +1,5 @@
-#ifndef __DFU_H__
-#define __DFU_H__
+#ifndef DFU_H_INC
+#define DFU_H_INC
 /*
 	Device firmware update functions
 

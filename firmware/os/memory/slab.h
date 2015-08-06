@@ -1,5 +1,5 @@
-#ifndef MEMORY_BLOCKALLOC_H_INC
-#define MEMORY_BLOCKALLOC_H_INC
+#ifndef MEMORY_SLAB_H_INC
+#define MEMORY_SLAB_H_INC
 /*
     Slab allocator
 

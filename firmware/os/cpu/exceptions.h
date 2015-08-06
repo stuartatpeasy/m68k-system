@@ -1,5 +1,5 @@
-#ifndef __CPU_EXCEPTIONS_H__
-#define __CPU_EXCEPTIONS_H__
+#ifndef CPU_EXCEPTIONS_H_INC
+#define CPU_EXCEPTIONS_H_INC
 /*
 	MC68010 exception-management function and macro declarations
 
@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 #include "asm/rte.h"
-#include "cpu/utilities.h"
 #include "cpu/exceptionstackframes.h"
+#include "cpu/utilities.h"
 #include "include/types.h"
 #include "kutil/kutil.h"
 #include "sched/sched.h"
