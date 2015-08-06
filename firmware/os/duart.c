@@ -141,6 +141,15 @@ void led_off(const unsigned char leds)
 
 
 /*
+    read_expansion_card_presence_detect() - read the ExPD lines
+*/
+u8 read_expansion_card_presence_detect()
+{
+    return DUART_IP & EXP_PD_ALL_MASK;
+}
+
+
+/*
     duart_start_counter() - start the DUART counter
 */
 void duart_start_counter(void)

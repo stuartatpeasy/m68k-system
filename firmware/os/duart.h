@@ -112,6 +112,17 @@
 #define LED_GREEN					(0x80)
 #define LED_RED						(0x40)
 
+
+/*
+    Expansion slot "presence detect" bits
+*/
+#define EXP_FIRST_PD_BIT            (2)
+#define EXP_PD_BIT(x)               (EXP_FIRST_PD_BIT + (x))
+#define EXP_PD_MASK(x)              (1 << EXP_PD_BIT(x))
+#define EXP_PD_ALL_MASK             (EXP_PD_BIT(3) | EXP_PD_BIT(2) | EXP_PD_BIT(1) | EXP_PD_BIT(0))
+
+
+
 void duart_init(void);
 
 int duarta_putc(const char c);
@@ -121,5 +132,7 @@ void duart_start_counter(void);
 
 void led_on(const unsigned char leds);
 void led_off(const unsigned char leds);
+
+u8 read_expansion_card_presence_detect();
 
 #endif

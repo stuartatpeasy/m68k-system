@@ -46,7 +46,9 @@ void detect_clock_freq()
 void _main()
 {
     struct rtc_time tm;
+    u32 i;
     char sn[6], timebuf[12], datebuf[32];
+    u8 exp_pd;
 
 	/* === Initialise CPU === */
 
@@ -105,11 +107,25 @@ void _main()
 	puts("Initialising devices and drivers");
 	driver_init();
 
+	/* Enumerate expansion cards */
+	puts("Scanning expansion slots");
+	exp_pd = read_expansion_card_presence_detect();
+
+	for(i = 0; i < 4; ++i)
+    {
+        printf("slot %d: ", i);
+        if(exp_pd & EXP_PD_MASK(i))
+            puts("vacant");
+        else
+            puts("unknown peripheral");
+    }
+
 	printf("%u bytes of kernel heap memory available\n"
            "%u bytes of user memory available\n", kfreemem(), g_ram_top - USER_RAM_START);
 
-	if(vfs_init())
+	if(vfs_init() != SUCCESS)
 		puts("VFS failed to initialise");
+
 
     sched_init();
     cpu_enable_interrupts();

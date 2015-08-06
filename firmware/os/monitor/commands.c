@@ -611,20 +611,14 @@ MONITOR_CMD_HANDLER(srec)
 #include "device/device.h"
 MONITOR_CMD_HANDLER(test)
 {
-    char *p = NULL;
-    device_t *blockdev;
+    if(num_args != 2)
+        return MON_E_SYNTAX;
 
-	if(num_args != 1)
-		return MON_E_SYNTAX;
+    printf("Calling mount_init()");
+    mount_init();
 
-	blockdev = get_device_by_name(args[0]);
-	if(blockdev)
-    {
-        device_control(blockdev, DEVCTL_MODEL, NULL, &p);
-        printf("%s is a %s\n", args[0], p);
-    }
-    else
-        puts("get_device_by_name() failed");
+    /* mount <dev> <mountpoint> */
+
 
     return MON_E_OK;
 }

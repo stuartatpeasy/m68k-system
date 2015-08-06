@@ -13,9 +13,9 @@
 #include "kutil/kutil.h"
 #include "memory/kmalloc.h"
 
-struct mount_ent *g_mount_table;
-u32 g_max_mounts;
-u32 g_mount_end;
+struct mount_ent *g_mount_table = NULL;
+u32 g_max_mounts = 0;
+u32 g_mount_end = 0;
 
 
 /* Allocate how_many new entries in the mount table.  This is done carefully to avoid the
@@ -48,9 +48,7 @@ s32 mount_init()
 {
 	s32 ret;
 
-	g_mount_table = 0;
 	g_max_mounts = 0;
-	g_mount_end = 0;
 
 	ret = expand_mount_table(MOUNT_INITIAL_NUM_MOUNT_POINTS);
 	if(ret)
