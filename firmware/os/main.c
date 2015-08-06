@@ -5,6 +5,7 @@
 #include <device/devctl.h>
 #include <device/device.h>
 #include <device/expansion.h>
+#include <device/led.h>
 #include <ds17485.h>
 #include <duart.h>
 #include <fs/vfs.h>

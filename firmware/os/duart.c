@@ -123,33 +123,6 @@ int duarta_getc(void)
 
 
 /*
-	led_on() - switch on the red and/or green LEDs
-*/
-void led_on(const unsigned char leds)
-{
-	DUART_ROPR = leds & (LED_RED | LED_GREEN);
-}
-
-
-/*
-	led_off() - switch off the red and/or green LEDs
-*/
-void led_off(const unsigned char leds)
-{
-	DUART_SOPR = leds & (LED_RED | LED_GREEN);
-}
-
-
-/*
-    read_expansion_card_presence_detect() - read the ExPD lines
-*/
-u8 read_expansion_card_presence_detect()
-{
-    return DUART_IP & EXP_PD_ALL_MASK;
-}
-
-
-/*
     duart_start_counter() - start the DUART counter
 */
 void duart_start_counter(void)

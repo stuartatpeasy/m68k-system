@@ -16,17 +16,28 @@
 void expansion_init()
 {
     u32 i;
-    u8 exp_pd;
 
 	puts("Scanning expansion slots");
-	exp_pd = read_expansion_card_presence_detect();
 
 	for(i = 0; i < 4; ++i)
     {
         printf("slot %d: ", i);
-        if(exp_pd & EXP_PD_MASK(i))
-            puts("vacant");
+        if(EXP_PRESENT(exp_pd, i))
+        {
+            /* A card is present; read its identity from the first byte of its address space */
+            u8 id;
+
+            EXP_ID_ASSERT();        /* Assert EID line to ask peripherals to identify themselves */
+            id = *((u8 *) EXP_BASE(i));
+            EXP_ID_NEGATE();
+
+            switch(id)
+            {
+                default:
+                    puts("unknown peripheral");
+            }
+        }
         else
-            puts("unknown peripheral");
+            puts("vacant");
     }
 }
