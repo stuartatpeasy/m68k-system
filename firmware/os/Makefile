@@ -9,8 +9,8 @@ FLASHTOOL=/usr/local/bin/flashtool
 DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
-CSOURCES=dfu.c ds17485.c duart.c main.c \
-		 device/device.c device/expansion.c device/led.c \
+CSOURCES=dfu.c main.c \
+		 device/device.c device/ds17485.c device/duart.c device/expansion.c device/led.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/mount.c fs/vfs.c fs/fat/fat.c \
@@ -87,19 +87,13 @@ asm/syscall.o: \
 
 main.o: \
 	main.c cpu/utilities.h device/devctl.h device/device.h device/expansion.h device/led.h \
-	ds17485.h duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h \
-	memory/kmalloc.h memory/ramdetect.h memory/slab.h monitor/monitor.h duart.o device/device.o \
-	sched/sched.h
+	device/ds17485.h device/duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
+	kutil/kutil.h memory/kmalloc.h memory/ramdetect.h memory/slab.h monitor/monitor.h \
+	device/duart.o device/device.o sched/sched.h
 
 dfu.o: \
-	dfu.c dfu.h asm/reset.h cpu/exceptions.h duart.h include/types.h kutil/kutil.h \
+	dfu.c dfu.h asm/reset.h cpu/exceptions.h device/duart.h include/types.h kutil/kutil.h \
 	memory/kmalloc.h klibc/string.h
-
-ds17485.o: \
-	ds17485.c ds17485.h include/types.h kutil/kutil.h
-
-duart.o: \
-	duart.c duart.h include/defs.h include/types.h
 
 startup.o: \
 	startup.S memory/memorymap.h
@@ -116,11 +110,17 @@ device/device.o: \
 	device/device.c device/devctl.h device/device.h kutil/kutil.h device/block/ata/ata.h \
 	device/block/partition/partition.h include/types.h klibc/errno.h
 
+device/ds17485.o: \
+	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
+
+device/duart.o: \
+	device/duart.c device/duart.h include/defs.h include/types.h
+
 device/expansion.o: \
 	device/expansion.c device/expansion.h include/defs.h include/types.h klibc/stdio.h
 
 device/led.o: \
-	device/led.c device/led.h duart.h include/defs.h include/types.h
+	device/led.c device/led.h device/duart.h include/defs.h include/types.h
 
 device/block/ata/ata.o: \
 	device/block/ata/ata.c device/block/ata/ata.h device/block/ata/ata-internal.h \
@@ -167,5 +167,5 @@ memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
 
 sched/sched.o: \
-	sched/sched.c sched/sched.h cpu/utilities.h duart.h include/defs.h include/types.h \
+	sched/sched.c sched/sched.h cpu/utilities.h device/duart.h include/defs.h include/types.h \
 	klibc/strings.h

@@ -11,12 +11,12 @@
 
 #include <string.h>
 
-#include "cpu/exceptions.h"
-#include "include/types.h"
-#include "memory/kmalloc.h"
-#include "kutil/kutil.h"
 #include "asm/reset.h"
-#include "duart.h"			/* for led_on() */
+#include "cpu/exceptions.h"
+#include "device/duart.h"			/* for led_on() */
+#include "include/types.h"
+#include "kutil/kutil.h"
+#include "memory/kmalloc.h"
 
 
 #define FLASH_BASE			(0xf00000)

@@ -9,9 +9,8 @@
 	(c) Stuart Wallace, 2011.
 */
 
+#include "device/duart.h"
 #include "include/types.h"
-
-#include "duart.h"
 
 
 void readline(char *buffer, ku32 buf_len, ku32 echo);

@@ -4,10 +4,10 @@
 #include <cpu/utilities.h>
 #include <device/devctl.h>
 #include <device/device.h>
+#include <device/ds17485.h>
+#include <device/duart.h>
 #include <device/expansion.h>
 #include <device/led.h>
-#include <ds17485.h>
-#include <duart.h>
 #include <fs/vfs.h>
 #include <include/defs.h>
 #include <kutil/kutil.h>

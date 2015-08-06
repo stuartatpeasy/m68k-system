@@ -12,7 +12,7 @@
 
 #include <stdarg.h>
 
-#include "duart.h"
+#include "device/duart.h"
 #include "include/limits.h"
 #include "include/types.h"
 #include "stdlib.h"

@@ -9,8 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, January 2012.
 */
 
-#include "duart.h"          /* DUART generates the scheduler interrupt */
 #include "cpu/utilities.h"
+#include "device/duart.h"          /* DUART generates the scheduler interrupt */
 #include "include/defs.h"
 #include "include/types.h"
 #include <strings.h>

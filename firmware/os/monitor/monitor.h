@@ -10,7 +10,7 @@
 */
 
 #include <dfu.h>
-#include <ds17485.h>
+#include <device/ds17485.h>
 #include <include/defs.h>
 #include <include/version.h>
 #include <memory/kmalloc.h>

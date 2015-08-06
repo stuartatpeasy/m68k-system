@@ -51,6 +51,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/device.h" />
+		<Unit filename="device/ds17485.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/ds17485.h" />
+		<Unit filename="device/duart.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/duart.h" />
 		<Unit filename="device/expansion.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -63,14 +71,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="dfu.h" />
-		<Unit filename="ds17485.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="ds17485.h" />
-		<Unit filename="duart.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="duart.h" />
 		<Unit filename="fs/ext2/ext2-defs.h" />
 		<Unit filename="fs/ext2/ext2.c">
 			<Option compilerVar="CC" />
@@ -98,6 +98,7 @@
 		<Unit filename="include/syscall.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
+		<Unit filename="klibc/Makefile" />
 		<Unit filename="klibc/assert.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -168,6 +169,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="memory/slab.h" />
+		<Unit filename="monitor/Makefile" />
 		<Unit filename="monitor/commands.c">
 			<Option compilerVar="CC" />
 		</Unit>

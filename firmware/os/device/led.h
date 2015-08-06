@@ -9,7 +9,7 @@
     (c) Stuart Wallace, July 2015
 */
 
-#include "duart.h"
+#include "device/duart.h"
 #include "include/defs.h"
 #include "include/types.h"
 

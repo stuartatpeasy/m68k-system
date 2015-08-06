@@ -6,7 +6,7 @@
 
 	(c) Stuart Wallace, December 2011.
 */
-#include "duart.h"
+#include "device/duart.h"
 
 
 void duart_init(void)

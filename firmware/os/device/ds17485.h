@@ -1,5 +1,5 @@
-#ifndef DS17485_H_INC
-#define DS17485_H_INC
+#ifndef DEVICE_DS17485_H_INC
+#define DEVICE_DS17485_H_INC
 /*
     Dallas DS17485 driver function and macro declarations
 
