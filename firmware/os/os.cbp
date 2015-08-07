@@ -36,6 +36,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="cpu/utilities.h" />
+		<Unit filename="device/bbram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/bbram.h" />
 		<Unit filename="device/block/ata/ata-internal.h" />
 		<Unit filename="device/block/ata/ata.c">
 			<Option compilerVar="CC" />
@@ -131,10 +135,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="klibc/strings.h" />
+		<Unit filename="kutil/Makefile" />
 		<Unit filename="kutil/bvec.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kutil/bvec.h" />
+		<Unit filename="kutil/checksum.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kutil/dump.c">
 			<Option compilerVar="CC" />
 		</Unit>

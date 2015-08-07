@@ -413,6 +413,8 @@ MONITOR_CMD_HANDLER(help)
 		  "    Display memory map\n\n"
 		  "raw\n"
 		  "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
+		  "rootfs [<partition>]\n"
+		  "    Set/read root partition in BIOS data area.\n\n"
 		  "schedule\n"
 		  "    Start task scheduler\n\n"
 		  "serial\n"
@@ -510,6 +512,18 @@ MONITOR_CMD_HANDLER(raw)
 
 	puts("\n");
 	return MON_E_OK;
+}
+
+
+/*
+    rootfs
+
+    Set/read root partition name in BIOS data area
+*/
+MONITOR_CMD_HANDLER(rootfs)
+{
+    /* TODO */
+    return MON_E_NOT_IMPLEMENTED;
 }
 
 
@@ -617,7 +631,7 @@ MONITOR_CMD_HANDLER(test)
     printf("Calling mount_init()");
     mount_init();
 
-    /* mount <dev> <mountpoint> */
+    /* mount <fstype> <dev> <mountpoint> */
 
 
     return MON_E_OK;

@@ -14,8 +14,18 @@
 #include "include/types.h"
 #include "klibc/string.h"
 
+/*
+    Checksum functions
+*/
 
-/* Date/time-related functions */
+u16 fletcher16(ku8 *buf, u32 len);
+
+#define CHECKSUM16(buf, len)    fletcher16((buf), (len))
+
+
+/*
+    Date/time-related functions
+*/
 s32 date_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len);
 s32 date_short(const struct rtc_time * const tm, char * const buffer, ku32 len);
 s32 date_long(const struct rtc_time * const tm, char * const buffer, ku32 len);
@@ -25,10 +35,8 @@ ks8 * const day_number_suffix(ku8 daynum);
 s32 day_of_week(ks32 year, ks32 month, ks32 day);
 s32 is_leap_year(ks32 year);
 s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt);
+s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp);
 
-s32 dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
-ks8 *kstrerror(ks32 errnum);
-s8 *str_trim(s8 *dest, ks8 *src);
 
 #define VALID_RTC_DATE(d)                                   \
     (((d)->year < 2200) && ((d)->year >= 1900)              \
@@ -38,6 +46,13 @@ s8 *str_trim(s8 *dest, ks8 *src);
        && ((d)->minute < 60)                                \
        && ((d)->second < 60)                                \
        && ((d)->day_of_week > 0) && ((d)->day_of_week < 8))
+
+/*
+    String-related functions
+*/
+s32 dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
+ks8 *kstrerror(ks32 errnum);
+s8 *str_trim(s8 *dest, ks8 *src);
 
 #endif
 

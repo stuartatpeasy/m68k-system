@@ -1,3 +1,12 @@
+/*
+    TODO - BOOT PROCESS
+    - verify read/write from DS17485 battery-backed RAM
+    - store boot root fs partition name in bbRAM
+        - add "rootfs" cmd in monitor to set/get this data
+    - at boot, read root fs partition name and mount fs at /
+    - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
+*/
+
 #include <stdio.h>
 #include <strings.h>
 
@@ -20,7 +29,7 @@
 const char * const g_warmup_message = "\n68010 computer system\n"
 									  "Stuart Wallace, 2011-2015\n";
 
-
+/* TODO - put this elsewhere */
 void detect_clock_freq()
 {
     /* Ensure that interrupts are disabled before entering this section */

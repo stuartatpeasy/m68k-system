@@ -297,8 +297,8 @@ s32 is_leap_year(ks32 year)
 }
 
 
-/* Convert a Unix timestamp to a struct datetime */
-s32 timestamp_to_datetime(ks32 timestamp, struct rtc_time *dt)
+/* Convert a Unix timestamp to a struct rtc_time */
+s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt)
 {
     s32 year_index, step, t_;
     ks32 *month_offset;
@@ -382,5 +382,43 @@ s32 timestamp_to_datetime(ks32 timestamp, struct rtc_time *dt)
     /* Second */
     dt->second = t_;
 
-    return 0;
+    return SUCCESS;
+}
+
+
+/* Convert a struct rtc_time to a Unix timestamp */
+s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp)
+{
+    s32 ts;
+
+    /*
+        Earliest date representable as a timestamp: 1901-12-13 20:45:52
+        (i.e. year=1901, month=12, day=13, hour=20, minute=45, second=52)
+    */
+    if((dt->year <= 1901) && (dt->month <= 12) && (dt->day <= 13) &&
+       (dt->hour <= 20) && (dt->minute <= 45) && (dt->second <= 52))
+        return -1;      /* TODO: better error code here */
+
+    /*
+        Latest date representable as a timestamp: 2038-01-19 03:14:07
+        (i.e. year=2038, month=1, day=19, hour=3, minute=14, second=7)
+    */
+    if((dt->year >= 2038) && (dt->month >= 1) && (dt->day >= 19) &&
+       (dt->hour >= 3) && (dt->minute >= 14) && (dt->second >= 7))
+        return -1;      /* TODO: better error code here */
+
+    /* TODO: convert timestamp here... */
+    ts = g_ts_year_offset[dt->year - 1901];
+
+    ts += (is_leap_year(dt->year)) ?
+        g_ts_month_offset_leap[dt->month - 1] : g_ts_month_offset_common[dt->month - 1];
+
+    ts += (86400 * (dt->day - 1))
+            + (3600 * dt->hour)
+            + (60 * dt->minute)
+            + dt->second;
+
+    *timestamp = ts;
+
+    return SUCCESS;
 }

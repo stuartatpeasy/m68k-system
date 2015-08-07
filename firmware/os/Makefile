@@ -10,8 +10,8 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=dfu.c main.c \
-		 device/device.c device/ds17485.c device/duart.c device/expansion.c device/led.c \
-		 device/block/ata/ata.c device/block/partition/partition.c \
+		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/expansion.c \
+		 device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/mount.c fs/vfs.c fs/fat/fat.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
@@ -105,6 +105,10 @@ cpu/exceptions.o: \
 cpu/utilities.o: \
     cpu/utilities.c cpu/utilities.h cpu/exceptionstackframes.h include/types.h \
 	klibc/stdio.h kutil/kutil.h
+
+device/bbram.o: \
+	device/bbram.c device/bbram.h device/ds17485.h include/defs.h include/error.h include/types.h \
+	kutil/kutil.h
 
 device/device.o: \
 	device/device.c device/devctl.h device/device.h kutil/kutil.h device/block/ata/ata.h \

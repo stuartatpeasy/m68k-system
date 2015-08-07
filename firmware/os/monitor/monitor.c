@@ -36,6 +36,7 @@ const struct command g_commands[] =
 	{"go",				cmd_go},
 	{"map",             cmd_map},
 	{"raw",				cmd_raw},
+	{"rootfs",          cmd_rootfs},
 	{"schedule",        cmd_schedule},
 	{"serial",          cmd_serial},
 	{"slabs",           cmd_slabs},

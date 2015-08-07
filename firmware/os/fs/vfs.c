@@ -44,9 +44,6 @@ u32 vfs_init()
 	/* Find boot device */
 	device_t *boot_device;
 
-	if(mount_init())
-		return FAIL;
-
 	boot_device = find_boot_device();
 
 	if(!boot_device)

@@ -41,7 +41,7 @@ typedef volatile signed long long	vs64;
 struct rtc_time
 {
     u16     year;
-    u8      month;
+    u8      month;          /* 1=Jan, ..., 12=Dec */
     u8      day;
     u8      hour;
     u8      minute;
