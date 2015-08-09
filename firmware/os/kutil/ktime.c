@@ -407,11 +407,14 @@ s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp)
        (dt->hour >= 3) && (dt->minute >= 14) && (dt->second >= 7))
         return -1;      /* TODO: better error code here */
 
-    /* TODO: convert timestamp here... */
     ts = g_ts_year_offset[dt->year - 1901];
 
-    ts += (is_leap_year(dt->year)) ?
-        g_ts_month_offset_leap[dt->month - 1] : g_ts_month_offset_common[dt->month - 1];
+    /* If the month in *dt is not January, add an offset representing the start of the month */
+    if(dt->month > 1)
+    {
+        ts += (is_leap_year(dt->year)) ?
+            g_ts_month_offset_leap[dt->month - 2] : g_ts_month_offset_common[dt->month - 2];
+    }
 
     ts += (86400 * (dt->day - 1))
             + (3600 * dt->hour)

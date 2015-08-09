@@ -531,7 +531,6 @@ MONITOR_CMD_HANDLER(raw)
 MONITOR_CMD_HANDLER(rootfs)
 {
     struct bbram_param_block bpb;
-    s32 ret;
 
     if(num_args == 0)
     {
