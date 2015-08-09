@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 		}
 
 		if(device.empty())
-			throw AppException("Programmer not found");
+			throw AppException("Target not found");
 
         if(args.verb() != "program")
             throw AppException("No operation specified");
@@ -137,16 +137,16 @@ int main(int argc, char **argv)
         struct stat stat_buf;
 
         if(::stat(fn.c_str(), &stat_buf) == -1)
-            throw new AppException("Cannot stat() input file");
+            throw AppException("Cannot stat() input file");
 
         uint8_t *buf = new uint8_t[stat_buf.st_size];
 
         FILE *fp = ::fopen(fn.c_str(), "r");
         if(!fp)
-            throw new AppException("Cannot open input file");
+            throw AppException("Cannot open input file");
 
         if(::fread(buf, stat_buf.st_size, 1, fp) <= 0)
-            throw new AppException("Failed to read input file");
+            throw AppException("Failed to read input file");
 
         Target t(device);
 
@@ -154,8 +154,6 @@ int main(int argc, char **argv)
 
         ::fclose(fp);
         delete[] buf;
-
-		return 0;
 	}
 	catch(ArgException e)
 	{
@@ -172,5 +170,12 @@ int main(int argc, char **argv)
 		cerr << progname << ": " << e.what() << endl;
 		return 3;
 	}
+	catch(ProgrammerException e)
+	{
+	    cerr << progname << ": " << e.what() << endl;
+	    return 4;
+	}
+
+	return 0;
 }
 

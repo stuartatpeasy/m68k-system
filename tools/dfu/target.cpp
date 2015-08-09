@@ -114,12 +114,12 @@ const bool Target::program(const uint8_t *buffer, const size_t len)
     char cmd[128], response[128];
 
     if(!command("serial echo off\n", "serial echo off\n$ "))
-        throw new ProgrammerException("Unable to set serial line discipline on target");
+        throw ProgrammerException("Unable to set serial line discipline on target");
 
     sprintf(cmd, "dfu %u\n", (unsigned int) len);
     sprintf(response, "Send %u bytes", (unsigned int) len);
     if(!command(cmd, response))
-        throw new ProgrammerException("Failed to initiate DFU process on target");
+        throw ProgrammerException("Failed to initiate DFU process on target");
 
     cout << "Sending " << len << " bytes: ";
     int blocksize = 1024;
@@ -129,7 +129,7 @@ const bool Target::program(const uint8_t *buffer, const size_t len)
             blocksize = len - offset;
 
         if(m_port.write(buffer + offset, blocksize) != blocksize)
-            throw new ProgrammerException("Failed to send data to target - write() failed");
+            throw ProgrammerException("Failed to send data to target - write() failed");
 
         cout << "." << flush;
     }
