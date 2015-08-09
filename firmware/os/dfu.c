@@ -64,8 +64,13 @@ void write_flash(ku16 *data, ku32 len)
 	sys_reset();
 }
 
+/*
+    dfu() - initiate an in-system firmware update.
 
-int dfu(ku16 *data, ku32 len)
+    Note: len must be even.  If the firmware size is not even, a padding byte (probably a 0x00) must
+    be added to the end of *data, and len must be incremented, before this function is called.
+*/
+s32 dfu(ku16 *data, ku32 len)
 {
 	/*
 		On entry, data will point to the new firmware (in RAM); len will specify the number of
@@ -76,15 +81,12 @@ int dfu(ku16 *data, ku32 len)
 
     cpu_disable_interrupts();
 
-	if(!len)
-		return DFU_NO_DATA;
-
-	if((len > 0x100000) || (len & 1))
-		return DFU_BAD_DATA_LEN;
+	if(!len || (len > ROM_LENGTH) || (len & 1))
+		return EINVAL;
 
 	p_write_flash = (void (*)(ku16 *, ku32)) kmalloc(write_flash_len);
 	if(p_write_flash == NULL)
-		return DFU_OUT_OF_MEMORY;
+		return ENOMEM;
 
 	/* Copy the Flash-update routine into RAM */
 	memcpy(p_write_flash, write_flash, write_flash_len);
@@ -92,6 +94,6 @@ int dfu(ku16 *data, ku32 len)
 	/* This shouldn't return */
 	p_write_flash(data, len);
 
-	return DFU_UNKNOWN_ERROR; /* Should not be reached */
+	return EUNKNOWN; /* Should not be reached */
 }
 

@@ -10,9 +10,11 @@
 */
 
 #include <dfu.h>
+#include <device/bbram.h>
 #include <device/ds17485.h>
 #include <include/defs.h>
 #include <include/version.h>
+#include <kutil/kutil.h>
 #include <memory/kmalloc.h>
 #include <memory/ramdetect.h>
 #include <memory/slab.h>

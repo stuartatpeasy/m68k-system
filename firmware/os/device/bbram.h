@@ -16,8 +16,11 @@
 #include "kutil/kutil.h"
 
 
+#define BBRAM_PARAM_BLOCK_MAGIC     (0xfea51b1e)
+
 struct bbram_param_block
 {
+    u32 magic;
     s8 boot_partition[8];
     u32 mdate;
     u16 checksum;

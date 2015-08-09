@@ -46,27 +46,35 @@ MONITOR_CMD_HANDLER(date)
 
 MONITOR_CMD_HANDLER(dfu)
 {
-	u32 len, i, ret;
+	u32 len, buffer_len, i, ret;
 	s8 *data, *endptr;
 
 	if(num_args != 1)
 		return MON_E_SYNTAX;
 
 	len = strtoul(args[0], &endptr, 0);
-	if(*endptr || !len || (len & 1))
+	if(*endptr || !len)
 		return MON_E_INVALID_ARG;
 
-	if((data = kmalloc(len)) == NULL)
+    /*
+        The dfu() function requires an even number of bytes, so - if the new firmware image is an
+        odd number of bytes in length, we allocate an extra byte to the data buffer and add a
+        padding byte (0x00).
+    */
+    buffer_len = (len & 1) ? len + 1 : len;
+
+	if((data = kmalloc(buffer_len)) == NULL)
 		return MON_E_OUT_OF_MEMORY;
 
     printf("Send %u bytes\n", len);
 	for(i = 0; i < len; i++)
 		data[i] = duarta_getc();
 
-	if((ret = dfu((ku16 *) data, len)))
-	{
-		printf("dfu() returned %i\n", ret);
-	}
+    if(len & 1)
+        data[i] = 0x00;     /* Add padding byte - see above */
+
+	if((ret = dfu((ku16 *) data, buffer_len)))
+		printf("Firmware update failed: %s\n", kstrerror(ret));
 
 	return MON_E_OK;
 }
@@ -522,8 +530,39 @@ MONITOR_CMD_HANDLER(raw)
 */
 MONITOR_CMD_HANDLER(rootfs)
 {
-    /* TODO */
-    return MON_E_NOT_IMPLEMENTED;
+    struct bbram_param_block bpb;
+    s32 ret;
+
+    if(num_args == 0)
+    {
+        /* Read and display current root filesystem setting from BPB */
+        if(bbram_param_block_read(&bpb) == SUCCESS)
+        {
+            s32 i;
+            for(i = 0; bpb.boot_partition[i] && (i < sizeof(bpb.boot_partition)); ++i)
+                putchar(bpb.boot_partition[i]);
+
+            putchar('\n');
+        }
+        else
+            puts("Incorrect checksum in BIOS parameter block");
+    }
+    else if(num_args == 1)
+    {
+        /* Set root filesystem in BPB */
+
+        if(strlen(args[0]) > sizeof(bpb.boot_partition))
+            return MON_E_INVALID_ARG;
+
+        bbram_param_block_read(&bpb);
+        strncpy(bpb.boot_partition, args[0], sizeof(bpb.boot_partition));
+
+        bbram_param_block_write(&bpb);
+    }
+    else
+        return MON_E_SYNTAX;
+
+    return MON_E_OK;
 }
 
 
@@ -625,14 +664,14 @@ MONITOR_CMD_HANDLER(srec)
 #include "device/device.h"
 MONITOR_CMD_HANDLER(test)
 {
+/*
     if(num_args != 2)
         return MON_E_SYNTAX;
 
     printf("Calling mount_init()");
     mount_init();
-
+*/
     /* mount <fstype> <dev> <mountpoint> */
-
 
     return MON_E_OK;
 }

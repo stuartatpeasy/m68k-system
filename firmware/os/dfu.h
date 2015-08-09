@@ -14,26 +14,19 @@
 #include "asm/reset.h"
 #include "cpu/exceptions.h"
 #include "device/duart.h"			/* for led_on() */
+#include "include/error.h"
 #include "include/types.h"
 #include "kutil/kutil.h"
 #include "memory/kmalloc.h"
+#include "memory/memorymap.h"
 
 
-#define FLASH_BASE			(0xf00000)
-
-#define FLASH_OFFSET(x)		*((vu16 *) (FLASH_BASE + (x << 1)))
-#define FLASH_REG1			*((vu16 *) (FLASH_BASE + (0x555 << 1)))
-#define FLASH_REG2			*((vu16 *) (FLASH_BASE + (0x2aa << 1)))
+#define FLASH_OFFSET(x)		*((vu16 *) (ROM_START + (x << 1)))
+#define FLASH_REG1			*((vu16 *) (ROM_START + (0x555 << 1)))
+#define FLASH_REG2			*((vu16 *) (ROM_START + (0x2aa << 1)))
 
 
-#define DFU_OK				(0)
-#define DFU_NO_DATA			(1)
-#define DFU_BAD_DATA_LEN	(2)
-#define DFU_OUT_OF_MEMORY	(3)
-#define DFU_UNKNOWN_ERROR	(4)
-
-
-int dfu(ku16 *data, ku32 len);
+s32 dfu(ku16 *data, ku32 len);
 
 #endif
 

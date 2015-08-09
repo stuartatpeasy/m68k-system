@@ -140,19 +140,19 @@ void ds17485_force_valid_time()
 }
 
 
-void ds17485_user_ram_read(u32 addr, u32 len, u8* buffer)
+void ds17485_user_ram_read(u32 addr, u32 len, void* buffer)
 {
     DS17485_SELECT_STD_REG();
     for(addr += 14; len && (addr < 128); --len, ++addr)
-        *(buffer++) = DS17485_REG_READ(addr);
+        *((u8 *) buffer++) = DS17485_REG_READ(addr);
 }
 
 
-void ds17485_user_ram_write(u32 addr, u32 len, const u8* buffer)
+void ds17485_user_ram_write(u32 addr, u32 len, const void* buffer)
 {
     DS17485_SELECT_STD_REG();
     for(addr += 14; len && (addr < 128); --len, ++addr)
-        DS17485_REG_WRITE(addr, *(buffer++));
+        DS17485_REG_WRITE(addr, *((u8 *) buffer++));
 }
 
 

@@ -1,9 +1,6 @@
 /*
     TODO - BOOT PROCESS
-    - verify read/write from DS17485 battery-backed RAM
-    - store boot root fs partition name in bbRAM
-        - add "rootfs" cmd in monitor to set/get this data
-    - at boot, read root fs partition name and mount fs at /
+    - at boot, read root fs partition name from BPB and mount fs at /
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 */
 

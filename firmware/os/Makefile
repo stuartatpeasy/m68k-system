@@ -92,8 +92,8 @@ main.o: \
 	device/duart.o device/device.o sched/sched.h
 
 dfu.o: \
-	dfu.c dfu.h asm/reset.h cpu/exceptions.h device/duart.h include/types.h kutil/kutil.h \
-	memory/kmalloc.h klibc/string.h
+	dfu.c dfu.h asm/reset.h cpu/exceptions.h device/duart.h include/types.h include/error.h \
+	kutil/kutil.h memory/kmalloc.h memory/memorymap.h klibc/string.h
 
 startup.o: \
 	startup.S memory/memorymap.h

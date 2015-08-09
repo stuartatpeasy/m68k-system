@@ -42,16 +42,17 @@
 */
 
 
-#define MEMMAP_START			(0)			/* probably redundant 				        */
-
-#define VECTOR_TABLE_START		(0)			/*    0K: CPU vector table			        */
+#define VECTOR_TABLE_START		(0)			/*     0K: CPU vector table			        */
 #define VECTOR_TABLE_END		(0x000400)
 
-#define OS_STACK_BOTTOM			(0x038000)	/*	224K: OS stack (32K)			        */
+#define OS_STACK_BOTTOM			(0x038000)	/*	 224K: OS stack (32K)			        */
 #define OS_STACK_TOP			(0x040000)
 
-#define USER_RAM_START			(0x040000)	/*  256K: Application RAM start	            */
-#define USER_RAM_END			(0x800000)	/* 8192K: Maximum possible extent of RAM    */
+#define USER_RAM_START			(0x040000)	/*   256K: Application RAM start	        */
+#define USER_RAM_END			(0x800000)	/*  8192K: Maximum possible extent of RAM   */
+
+#define ROM_START               (0xf00000)  /* 15360K: Start of OS ROM                  */
+#define ROM_LENGTH              (0x100000)  /*         OS ROM size is 1MB               */
 
 #endif
 

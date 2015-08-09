@@ -18,7 +18,7 @@
     Checksum functions
 */
 
-u16 fletcher16(ku8 *buf, u32 len);
+u16 fletcher16(const void *buf, u32 len);
 
 #define CHECKSUM16(buf, len)    fletcher16((buf), (len))
 

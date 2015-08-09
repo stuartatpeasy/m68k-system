@@ -25,7 +25,7 @@ bvec.o: bvec.c bvec.h kutil.h ../include/defs.h ../include/types.h ../klibc/errn
         ../klibc/string.h ../memory/kmalloc.h
 
 checksum.o: \
-	checksum.c checksum.h ../include/defs.h ../include/types.h
+	checksum.c ../include/defs.h ../include/types.h
 
 dump.o: dump.c kutil.h ../include/defs.h ../include/types.h ../klibc/ctype.h ../memory/kmalloc.h
 ktime.o: ktime.c kutil.h ../include/defs.h ../include/types.h
