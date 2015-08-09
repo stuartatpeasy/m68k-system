@@ -60,7 +60,8 @@ s32 mount_init()
 
 s32 mount_add(const char * const mount_point, vfs_driver_t *driver, device_t *dev)
 {
-	s32 i;
+	s32 i, ret;
+	mount_ent_t *ent;
 
 	if(g_mount_end == g_max_mounts)
 	{
@@ -76,12 +77,34 @@ s32 mount_add(const char * const mount_point, vfs_driver_t *driver, device_t *de
 			return EBUSY;	/* Something else is already mounted here */
 	}
 
-	g_mount_table[g_mount_end].mount_point = strdup(mount_point);
-	if(!g_mount_table[g_mount_end].mount_point)
+	ent = &(g_mount_table[g_mount_end]);
+
+	ent->mount_point = strdup(mount_point);
+	if(!ent->mount_point)
 		return ENOMEM;		/* strdup() failed - OOM */
 
-	g_mount_table[g_mount_end].device = dev;
-	g_mount_table[g_mount_end].driver = driver;
+    ent->vfs = kmalloc(sizeof(vfs_t));
+    if(!ent->vfs)
+    {
+        kfree(ent->mount_point);
+        ent->mount_point = NULL;
+        return ENOMEM;
+    }
+
+    ent->vfs->dev = dev;
+    ent->vfs->driver = driver;
+
+    /* Attempt to mount the filesystem */
+    ret = ent->vfs->driver->mount(ent->vfs);
+    if(ret != SUCCESS)
+    {
+        kfree(ent->mount_point);
+        kfree(ent->vfs);
+        ent->mount_point = NULL;
+        ent->vfs = NULL;
+
+        return ret;
+    }
 
 	++g_mount_end;
 

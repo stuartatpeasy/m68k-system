@@ -47,11 +47,13 @@ s32 fat_mount(vfs_t *vfs)
     if(ret != SUCCESS)
         return ret;
 
+    dump_hex(&bpb, 1, 0, 512);
+
     /* Validate jump entry */
     if((bpb.boot_code[0] != 0xeb) || (bpb.boot_code[2] != 0x90))
     {
         printf("%s: bad FAT superblock: incorrect jump bytes: expected 0xeb 0xxx 0x90, "
-               "read 0x%02x 0xxx 0x%02x", vfs->dev->name, bpb.boot_code[0], bpb.boot_code[2]);
+               "read 0x%02x 0xxx 0x%02x\n", vfs->dev->name, bpb.boot_code[0], bpb.boot_code[2]);
         return 1;   /* FIXME - return code */
     }
 
@@ -59,7 +61,7 @@ s32 fat_mount(vfs_t *vfs)
     if(bpb.partition_signature != 0xaa55)
     {
         printf("%s: bad FAT superblock: incorrect partition signature: expected 0xaa55, "
-               "read 0x%04x", vfs->dev->name, bpb.partition_signature);
+               "read 0x%04x\n", vfs->dev->name, bpb.partition_signature);
         return 1;   /* FIXME - return code */
     }
 

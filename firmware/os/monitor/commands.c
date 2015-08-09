@@ -518,9 +518,9 @@ MONITOR_CMD_HANDLER(mount)
         s32 i;
         for(i = 0; i < g_max_mounts; ++i)
         {
-            if(g_mount_table[i].device)
-                printf("%-10s %-10s %s\n", g_mount_table[i].device->name,
-                       g_mount_table[i].driver->name, g_mount_table[i].mount_point);
+            if(g_mount_table[i].vfs)
+                printf("%-10s %-10s %s\n", g_mount_table[i].vfs->dev->name,
+                       g_mount_table[i].vfs->driver->name, g_mount_table[i].mount_point);
         }
 
     }

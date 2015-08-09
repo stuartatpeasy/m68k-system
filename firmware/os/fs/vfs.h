@@ -64,7 +64,7 @@ typedef struct vfs_driver
 
 struct vfs
 {
-    vfs_driver_t *ops;
+    vfs_driver_t *driver;
     device_t *dev;
     void *superblock;
     void *data;         /* fs-specific stuff */

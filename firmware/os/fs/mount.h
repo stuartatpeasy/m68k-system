@@ -20,11 +20,12 @@
 struct mount_ent
 {
 	s8 *mount_point;
-	vfs_driver_t *driver;
-	device_t *device;
+	vfs_t *vfs;
 };
 
-struct mount_ent *g_mount_table;
+typedef struct mount_ent mount_ent_t;
+
+mount_ent_t *g_mount_table;
 u32 g_max_mounts;
 u32 g_mount_end;
 
