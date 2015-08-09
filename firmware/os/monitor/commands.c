@@ -419,9 +419,12 @@ MONITOR_CMD_HANDLER(help)
 		  "    Display device identity\n\n"
 		  "map\n"
 		  "    Display memory map\n\n"
+		  "mount [<dev> <fstype> <mountpoint>]\n"
+		  "    With no arguments, list current mounts.  With arguments, mount block device <dev>\n"
+		  "    containing a file system of type <fstype> at <mountpoint>\n\n"
 		  "raw\n"
 		  "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
-		  "rootfs [<partition>]\n"
+		  "rootfs [<partition> <type>]\n"
 		  "    Set/read root partition in BIOS data area.\n\n"
 		  "schedule\n"
 		  "    Start task scheduler\n\n"
@@ -502,6 +505,38 @@ MONITOR_CMD_HANDLER(map)
 
 
 /*
+    mount
+
+    Display mount table, or mount a filesystem at the specified location.
+    Syntax: mount [<dev> <fstype> <mountpoint>]
+*/
+MONITOR_CMD_HANDLER(mount)
+{
+    if(num_args == 0)
+    {
+        /* Display mount table */
+        s32 i;
+        for(i = 0; i < g_max_mounts; ++i)
+        {
+            if(g_mount_table[i].device)
+                printf("%-10s %-10s %s\n", g_mount_table[i].device->name,
+                       g_mount_table[i].driver->name, g_mount_table[i].mount_point);
+        }
+
+    }
+    else if(num_args == 3)
+    {
+        /* Mount filesystem */
+        return MON_E_NOT_IMPLEMENTED;
+    }
+    else
+        return MON_E_SYNTAX;
+
+    return MON_E_OK;
+}
+
+
+/*
 	raw
 
 	Hex-dump received characters until ctrl-A (0x01) is received.
@@ -538,23 +573,30 @@ MONITOR_CMD_HANDLER(rootfs)
         if(bbram_param_block_read(&bpb) == SUCCESS)
         {
             s32 i;
-            for(i = 0; bpb.boot_partition[i] && (i < sizeof(bpb.boot_partition)); ++i)
-                putchar(bpb.boot_partition[i]);
+            for(i = 0; bpb.rootfs[i] && (i < sizeof(bpb.rootfs)); ++i)
+                putchar(bpb.rootfs[i]);
+
+            putchar(' ');
+
+            for(i = 0; bpb.fstype[i] && (i < sizeof(bpb.fstype)); ++i)
+                putchar(bpb.fstype[i]);
 
             putchar('\n');
         }
         else
             puts("Incorrect checksum in BIOS parameter block");
     }
-    else if(num_args == 1)
+    else if(num_args == 2)
     {
         /* Set root filesystem in BPB */
 
-        if(strlen(args[0]) > sizeof(bpb.boot_partition))
+        if((strlen(args[0]) > sizeof(bpb.rootfs)) || (strlen(args[1]) > sizeof(bpb.fstype))
+           || !vfs_get_driver_by_name(args[1]))
             return MON_E_INVALID_ARG;
 
         bbram_param_block_read(&bpb);
-        strncpy(bpb.boot_partition, args[0], sizeof(bpb.boot_partition));
+        strncpy(bpb.rootfs, args[0], sizeof(bpb.rootfs));
+        strncpy(bpb.fstype, args[1], sizeof(bpb.fstype));
 
         bbram_param_block_write(&bpb);
     }

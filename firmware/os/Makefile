@@ -141,16 +141,15 @@ fs/ext2/ext2.o: \
 	klibc/string.h kutil/kutil.h memory/kmalloc.h
 
 fs/fat/fat.o: \
-	fs/fat/fat.c fs/fat/fat.h fs/fat/fat-defs.h fs/vfs.h include/defs.h include/byteorder.h \
-	include/types.h
+	fs/fat/fat.c fs/fat/fat.h fs/vfs.h include/defs.h include/byteorder.h include/types.h
 
 fs/mount.o: \
-	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h include/defs.h \
+	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h fs/vfs.h include/defs.h \
 	klibc/errno.h kutil/kutil.h memory/kmalloc.h
 
 fs/vfs.o: \
-	fs/vfs.c fs/vfs.h fs/mount.h device/devctl.h device/device.h include/defs.h include/types.h \
-	klibc/stdio.h
+	fs/vfs.c fs/vfs.h fs/mount.h device/bbram.h device/devctl.h device/device.h include/defs.h \
+	include/types.h klibc/stdio.h
 
 include/byteorder.h: \
 	asm/bswap.h

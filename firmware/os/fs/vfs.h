@@ -14,7 +14,8 @@
 #include "include/types.h"
 #include "include/defs.h"
 
-u32 vfs_init();
+#define MAX_FILESYSTEMS         (16)
+
 
 typedef struct fs_stat
 {
@@ -48,23 +49,30 @@ typedef struct fsnode   /* like a dirent?  call it dirent instead? */
 struct vfs;
 typedef struct vfs vfs_t;
 
-typedef struct vfs_ops
+typedef struct vfs_driver
 {
+    ks8 *name;
+    s32 (*init)();
     s32 (*mount)(vfs_t *vfs);
     s32 (*umount)(vfs_t *vfs);
     s32 (*fsnode_get)(vfs_t *vfs, u32 node, fsnode_t * const fsn);
     s32 (*fsnode_put)(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
     u32 (*locate)(vfs_t *vfs, u32 node, const char * const path);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
-} vfs_ops_t;
+} vfs_driver_t;
+
 
 struct vfs
 {
-    vfs_ops_t *ops;
+    vfs_driver_t *ops;
     device_t *dev;
     void *superblock;
     void *data;         /* fs-specific stuff */
 };
+
+
+s32 vfs_init();
+vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
 
 
 /*

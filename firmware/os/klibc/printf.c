@@ -8,6 +8,7 @@
 */
 
 #include "stdio.h"
+#include "string.h"
 
 
 /*
@@ -22,6 +23,7 @@
 #define PF_HAVE_FIELD_WIDTH		(0x08)
 #define PF_FIELD_DOT_SEEN		(0x10)
 #define PF_NUM_OUTPUT_STARTED	(0x20)
+#define PF_NEG_FIELD_WIDTH      (0x40)
 
 static ku32 powers_of_ten[] = {1, 10, 100, 1000, 10000, 100000, 1000000,
                                 10000000, 100000000, 1000000000};
@@ -122,7 +124,7 @@ s32 vsprintf(char *str, const char *format, va_list ap)
 
 s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 {
-	s32 n = 0, flags, ndigits, ndecimals;
+	s32 n = 0, flags, field_width, precision;
 	u32 u;
 	const char *pc;
 	const u32 size_ = size - 1;		/* number of bytes available in buffer, reserving one byte for the trailing \0 */
@@ -142,9 +144,14 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 				++n;
 				break;
 			}
+			else if(ch == '-')
+            {
+                flags |= PF_NEG_FIELD_WIDTH;
+                ch = *++format;
+            }
 
 			/* look for field-width specifier */
-			flags = ndigits = ndecimals = 0;
+			flags = field_width = precision = 0;
 			while(((ch >= '0') && (ch <= '9')) || (ch == '.'))
 			{
 				if(ch == '.')
@@ -159,15 +166,9 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 					flags |= PF_HAVE_FIELD_WIDTH;
 
 					if(flags & PF_FIELD_DOT_SEEN)
-					{
-						ndecimals = (ndecimals << 3) + (ndecimals << 1);
-						ndecimals += (ch - '0');
-					}
+						precision = (precision * 10) + (ch - '0');
 					else
-					{
-						ndigits = (ndecimals << 3) + (ndecimals << 1);
-						ndigits += (ch - '0');
-					}
+						field_width = (field_width * 10) + (ch - '0');
 				}
 				ch = *++format;
 			}
@@ -186,9 +187,45 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 			if(ch == 's')
 			{
 				/* put string */
-				for(pc = va_arg(ap, const char *); *pc; ++pc)
-					if(n < size_)
-						str[n++] = *pc;
+				s32 pad_len = 0;
+				pc = va_arg(ap, const char *);
+
+				if(field_width)
+                {
+                    pad_len = field_width - strlen(pc);
+
+                    if(pad_len < 0)
+                        pad_len = 0;
+
+                    if(flags & PF_NEG_FIELD_WIDTH)
+                    {
+                        /* Left-pad to field_width with spaces */
+                        for(; pad_len; --pad_len)
+                            if(n < size_)
+                                str[n++] = ' ';
+                    }
+                }
+
+                if(precision)
+                {
+                    for(; *pc && precision--; ++pc)
+                        if(n < size_)
+                            str[n++] = *pc;
+                }
+                else
+                {
+                    for(; *pc; ++pc)
+                        if(n < size_)
+                            str[n++] = *pc;
+                }
+
+                if(field_width && !(flags & PF_NEG_FIELD_WIDTH))
+                {
+                    /* Right-pad to field_width with spaces */
+                    for(; pad_len; --pad_len)
+                        if(n < size_)
+                            str[n++] = ' ';
+                }
 			}
 			else if(ch == 'c')
 			{
@@ -203,7 +240,7 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 				/* put decimal */
 				u = va_arg(ap, u32);
 
-				if((flags & PF_HAVE_FIELD_WIDTH) && !ndigits && !u)
+				if((flags & PF_HAVE_FIELD_WIDTH) && !field_width && !u)
 				{
 					/* Explicit zero-size field and zero-value arg; silently skip. */
 				}
@@ -226,25 +263,25 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 					if(!required_digits)
 						required_digits = 1;
 
-					if(required_digits > ndigits)
-						ndigits = required_digits;
+					if(required_digits > field_width)
+						field_width = required_digits;
 
-					/* if leading zeroes or padding is enabled, and ndigits > required_digits, output leading zeroes */
-					if(ndigits > required_digits)
-						for(ch = (flags & PF_LEADING_ZERO) ? '0' : ' '; ndigits > required_digits; --ndigits)
+					/* if leading zeroes or padding is enabled, and field_width > required_digits, output leading zeroes */
+					if(field_width > required_digits)
+						for(ch = (flags & PF_LEADING_ZERO) ? '0' : ' '; field_width > required_digits; --field_width)
 						{
 							if(n < size_)
 								str[n] = ch;
 							++n;
 						}
 
-					for(--ndigits; ndigits >= 0; --ndigits)
+					for(--field_width; field_width >= 0; --field_width)
 					{
 						numeral = 0;
-						while(u >= powers_of_ten[ndigits])
+						while(u >= powers_of_ten[field_width])
 						{
 							++numeral;
-							u -= powers_of_ten[ndigits];
+							u -= powers_of_ten[field_width];
 						}
 
 						if(n < size_)
@@ -264,8 +301,8 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 
 				if((ch == 'p') && ((n + 1) < size_))
 				{
-					if(!ndigits)
-						ndigits = 8;
+					if(!field_width)
+						field_width = 8;
 
 					str[n++] = '0';
 					str[n++] = 'x';
@@ -277,14 +314,14 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 				else
 					hex = "0123456789abcdef";
 
-				if(!ndigits)
-					ndigits = 1;
+				if(!field_width)
+					field_width = 1;
 				else
 				{
-					if(ndigits > 8)
-						ndigits = 8;
+					if(field_width > 8)
+						field_width = 8;
 
-					nybble = --ndigits;
+					nybble = --field_width;
 					flags |= PF_NUM_OUTPUT_STARTED;
 				}
 

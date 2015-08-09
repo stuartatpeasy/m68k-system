@@ -10,8 +10,10 @@
 #include "fat.h"
 #include "fs/vfs.h"
 
-vfs_ops_t fat_ops =
+vfs_driver_t g_fat_ops =
 {
+    .name = "fat",
+    .init = fat_init,
     .mount = fat_mount,
     .umount = fat_umount,
     .fsnode_get = fat_fsnode_get,
@@ -19,6 +21,13 @@ vfs_ops_t fat_ops =
     .locate = fat_locate,
     .stat = fat_stat
 };
+
+
+s32 fat_init()
+{
+    /* Nothing to do here */
+    return SUCCESS;
+}
 
 
 s32 fat_mount(vfs_t *vfs)

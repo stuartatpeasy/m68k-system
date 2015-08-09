@@ -21,7 +21,8 @@
 struct bbram_param_block
 {
     u32 magic;
-    s8 boot_partition[8];
+    s8 rootfs[8];
+    s8 fstype[8];
     u32 mdate;
     u16 checksum;
 } __attribute__((packed));

@@ -58,7 +58,7 @@ s32 mount_init()
 }
 
 
-s32 mount_add(const char * const mount_point, device_t *dev)
+s32 mount_add(const char * const mount_point, vfs_driver_t *driver, device_t *dev)
 {
 	s32 i;
 
@@ -81,6 +81,7 @@ s32 mount_add(const char * const mount_point, device_t *dev)
 		return ENOMEM;		/* strdup() failed - OOM */
 
 	g_mount_table[g_mount_end].device = dev;
+	g_mount_table[g_mount_end].driver = driver;
 
 	++g_mount_end;
 

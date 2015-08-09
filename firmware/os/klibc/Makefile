@@ -31,7 +31,8 @@ errno.o: \
 	errno.c errno.h ../include/types.h
 
 printf.o: \
-	printf.c stdio.h ../memory/kmalloc.h ../include/limits.h ../include/types.h ../device/duart.h
+	printf.c stdio.h string.h ../memory/kmalloc.h ../include/limits.h ../include/types.h \
+	../device/duart.h
 
 stdio.o: \
 	stdio.c ../include/limits.h ../include/types.h ../device/duart.h

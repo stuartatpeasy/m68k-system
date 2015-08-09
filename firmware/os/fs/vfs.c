@@ -9,8 +9,23 @@
 
 #include "fs/vfs.h"
 #include "fs/mount.h"
+#include "device/bbram.h"
 #include "device/device.h"
 #include "device/devctl.h"
+
+
+vfs_t *g_filesystems[MAX_FILESYSTEMS];
+
+/*
+    #include driver registration function declarations here
+*/
+#include "fs/fat/fat.h"
+#include "fs/ext2/ext2.h"
+
+vfs_driver_t *g_fs_drivers[] =
+{
+    &g_fat_ops
+};
 
 
 device_t *find_boot_device()
@@ -39,25 +54,71 @@ device_t *find_boot_device()
 }
 
 
-u32 vfs_init()
+s32 vfs_init()
 {
-	/* Find boot device */
-	device_t *boot_device;
+	bbram_param_block_t bpb;
+	s32 ret, i;
 
-	boot_device = find_boot_device();
+	/* Init file system drivers */
+	for(i = 0; i < (sizeof(g_fs_drivers) / sizeof(g_fs_drivers[0])); ++i)
+    {
+        printf("vfs: initialising '%s' fs driver: ", g_fs_drivers[i]->name);
+        if(g_fs_drivers[i]->init() == SUCCESS)
+            puts("OK");
+        else
+            puts("failed");     /* TODO handle this - make the fs driver unavailable */
+    }
 
-	if(!boot_device)
-	{
-		/* FIXME: once kprintf() is working, report no boot dev and drop to monitor */
-		printf("No bootable partitions found\n");
+    ret = mount_init();
+    if(ret != SUCCESS)
+        return ret;
 
-		return FAIL;
-	}
+	/* Find rootfs device */
+	ret = bbram_param_block_read(&bpb);
+	if(ret == SUCCESS)
+    {
+        /* Iterate over partition devices, looking for one whose name matches the BPB rootfs */
+        for(i = 0; i < MAX_DEVICES; ++i)
+        {
+            if(g_devices[i] != NULL)
+            {
+                device_t * const dev = g_devices[i];
+                if((dev->type == DEVICE_TYPE_BLOCK) && (dev->class == DEVICE_CLASS_PARTITION) &&
+                   !strcmp(dev->name, bpb.rootfs))
+                {
+                    /* Find FS driver corresponding to bpb.fstype */
+                    vfs_driver_t *driver = vfs_get_driver_by_name(bpb.fstype);
+                    if(driver)
+                    {
+                        /* Found fs driver */
+                        printf("vfs: rootfs: %s (%s)\n", bpb.rootfs, bpb.fstype);
+                        return mount_add("/", driver, dev);
+                    }
 
-	printf("Boot device: %s\n", boot_device->name);
+                    printf("vfs: no driver for rootfs (%s) filesystem '%s'\n",
+                           bpb.rootfs, bpb.fstype);
+                }
+            }
+        }
 
-	/* Mount the boot device at / */
-	mount_add("/", boot_device);
+        printf("vfs: rootfs partition '%s' not found\n", bpb.rootfs);
+    }
+    else
+        puts("vfs: rootfs not set in BPB");
 
 	return SUCCESS;
+}
+
+
+vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
+{
+    s32 i;
+
+    for(i = 0; i < (sizeof(g_fs_drivers) / sizeof(g_fs_drivers[0])); ++i)
+    {
+        if(!strcmp(g_fs_drivers[i]->name, name))
+            return g_fs_drivers[i];
+    }
+
+    return NULL;
 }
