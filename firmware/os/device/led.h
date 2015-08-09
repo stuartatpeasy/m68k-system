@@ -13,7 +13,8 @@
 #include "include/defs.h"
 #include "include/types.h"
 
-#define LED_PORT                    (DUART_ROPR)
+#define LED_ON_PORT                 (DUART_ROPR)
+#define LED_OFF_PORT                (DUART_SOPR)
 
 /* LED port bits */
 #define LED_GREEN					(0x80)

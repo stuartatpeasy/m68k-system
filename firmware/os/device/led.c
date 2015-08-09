@@ -15,7 +15,7 @@
 */
 void led_on(const unsigned char leds)
 {
-	LED_PORT = leds & (LED_RED | LED_GREEN);
+	LED_ON_PORT = leds & (LED_RED | LED_GREEN);
 }
 
 
@@ -24,5 +24,5 @@ void led_on(const unsigned char leds)
 */
 void led_off(const unsigned char leds)
 {
-	LED_PORT = leds & (LED_RED | LED_GREEN);
+	LED_OFF_PORT = leds & (LED_RED | LED_GREEN);
 }
