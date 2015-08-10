@@ -292,7 +292,6 @@ s32 day_of_week(ks32 year, ks32 month, ks32 day)
    and zero for a common year.  Considers (the nonexistent) year 0 to be a leap year. */
 s32 is_leap_year(ks32 year)
 {
-    /* FIXME: improve this; avoid the division if possible */
     return !((year & 3) || (!(year % 100) && (year % 400)));
 }
 
@@ -397,7 +396,7 @@ s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp)
     */
     if((dt->year <= 1901) && (dt->month <= 12) && (dt->day <= 13) &&
        (dt->hour <= 20) && (dt->minute <= 45) && (dt->second <= 52))
-        return -1;      /* TODO: better error code here */
+        return EINVAL;
 
     /*
         Latest date representable as a timestamp: 2038-01-19 03:14:07
@@ -405,7 +404,7 @@ s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp)
     */
     if((dt->year >= 2038) && (dt->month >= 1) && (dt->day >= 19) &&
        (dt->hour >= 3) && (dt->minute >= 14) && (dt->second >= 7))
-        return -1;      /* TODO: better error code here */
+        return EINVAL;
 
     ts = g_ts_year_offset[dt->year - 1901];
 

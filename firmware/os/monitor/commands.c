@@ -30,8 +30,10 @@ MONITOR_CMD_HANDLER(date)
     }
     else if(num_args == 1)
     {
-        // Set the date and time.  Acceptable format:
-        //      date YYYYMMDDHHMMSS
+        /*
+            Set the date and time.  Acceptable format:
+                date YYYYMMDDHHMMSS
+        */
         if(rtc_time_from_str(args[0], &tm) == FAIL)
             return MON_E_SYNTAX;
 
