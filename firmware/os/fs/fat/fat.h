@@ -11,6 +11,7 @@
 
 #include "include/byteorder.h"
 #include "include/defs.h"
+#include "include/error.h"
 #include "include/types.h"
 #include "fs/vfs.h"
 
@@ -23,7 +24,7 @@ struct fat_bpb_block
     u8  sectors_per_cluster;
     u16 reserved_sectors;
     u8  fats;
-    u16 dir_entries;
+    u16 root_entry_count;
     u16 sectors_in_volume;
     u8  media_descriptor_type;
     u16 sectors_per_fat;
@@ -58,7 +59,31 @@ struct fat_dirent
     u32 size;
 } __attribute__((packed));  /* 32 bytes */
 
+/*
+    This struct contains various useful numbers, computed at mount time.  A struct fat_fs will be
+    allocated and filled in fat_mount(), and stored in vfs->data.  It is then deallocated in
+    fat_umount().
+*/
+struct fat_fs
+{
+    u32 first_data_sector;
+    u32 first_fat_sector;
+    u32 root_dir_sectors;
+    u32 nsectors;
+    u16 sectors_per_cluster;
+    u16 bytes_per_cluster;
+};
 
+typedef struct fat_fs fat_fs_t;
+typedef u16 fat16_cluster_id;
+
+
+/* Constants used during superblock validation */
+#define FAT_PARTITION_SIG           (0xaa55)
+#define FAT_JMP_BYTE0               (0xeb)
+#define FAT_JMP_BYTE2               (0x90)
+
+/* File attribute constants */
 #define FAT_FILEATTRIB_READ_ONLY    (0x01)
 #define FAT_FILEATTRIB_HIDDEN       (0x02)
 #define FAT_FILEATTRIB_SYSTEM       (0x04)
@@ -72,12 +97,16 @@ struct fat_dirent
                                      FAT_FILEATTRIB_SYSTEM | \
                                      FAT_FILEATTRIB_VOLUME_ID)
 
+#define FAT_NO_MORE_CLUSTERS(x)     ((x) >= 0xfff7)
+
 
 vfs_driver_t g_fat_ops;
 
 s32 fat_init();
 s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
+s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
+s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_fsnode_get(vfs_t *vfs, u32 node, fsnode_t * const fsn);
 s32 fat_fsnode_put(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
 u32 fat_locate(vfs_t *vfs, u32 node, const char * const path);

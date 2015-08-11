@@ -49,6 +49,7 @@ ks8 *kstrerror(ks32 errnum)
         case EMEDIACHANGED:     return "Media changed";
         case EDATA:             return "Data error";
         case ECKSUM:            return "Checksum error";
+        case EBADSBLK:          return "Bad superblock";
 
         default:                return "Unrecognised error code";
     }

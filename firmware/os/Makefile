@@ -141,7 +141,8 @@ fs/ext2/ext2.o: \
 	klibc/string.h kutil/kutil.h memory/kmalloc.h
 
 fs/fat/fat.o: \
-	fs/fat/fat.c fs/fat/fat.h fs/vfs.h include/defs.h include/byteorder.h include/types.h
+	fs/fat/fat.c fs/fat/fat.h fs/vfs.h include/byteorder.h include/defs.h include/error.h \
+	include/types.h
 
 fs/mount.o: \
 	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h fs/vfs.h include/defs.h \

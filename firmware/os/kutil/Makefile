@@ -28,6 +28,6 @@ checksum.o: \
 	checksum.c ../include/defs.h ../include/types.h
 
 dump.o: dump.c kutil.h ../include/defs.h ../include/types.h ../klibc/ctype.h ../memory/kmalloc.h
-ktime.o: ktime.c kutil.h ../include/defs.h ../include/types.h
+ktime.o: ktime.c kutil.h ../include/defs.h ../include/limits.h ../include/types.h
 string.o: string.c kutil.h ../klibc/ctype.h ../klibc/string.h
 

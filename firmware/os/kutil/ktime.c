@@ -8,11 +8,12 @@
 */
 
 #include "include/defs.h"
+#include "include/limits.h"
 #include "include/types.h"
 #include "klibc/stdio.h"
 #include "kutil.h"
 
-#define DATETIME_TS_MAX (2147483647)
+#define DATETIME_TS_MAX (S32_MAX)
 
 const char * const g_day_names_long[] =
 {

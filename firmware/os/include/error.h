@@ -24,5 +24,6 @@
 #define EMEDIACHANGED       (502)   /* Media changed                                    */
 #define EDATA               (503)   /* Data error                                       */
 #define ECKSUM              (504)   /* Checksum error                                   */
+#define EBADSBLK            (505)   /* Bad superblock                                   */
 
 #endif
