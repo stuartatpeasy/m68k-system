@@ -47,6 +47,13 @@ s32 fat_mount(vfs_t *vfs)
     if(ret != SUCCESS)
         return ret;
 
+    { /* HACK - swap bytes in the sector we just read */
+        s32 i;
+        u16 *p = (u16 *) &bpb;
+        for(i = sizeof(bpb) >> 1; i--; ++p)
+            *p = ((*p >> 8) | (*p << 8));
+    }
+
     dump_hex(&bpb, 1, 0, 512);
 
     /* Validate jump entry */
@@ -58,10 +65,10 @@ s32 fat_mount(vfs_t *vfs)
     }
 
     /* Validate partition signature */
-    if(bpb.partition_signature != 0xaa55)
+    if(LE2N16(bpb.partition_signature) != 0xaa55)
     {
         printf("%s: bad FAT superblock: incorrect partition signature: expected 0xaa55, "
-               "read 0x%04x\n", vfs->dev->name, bpb.partition_signature);
+               "read 0x%04x\n", vfs->dev->name, LE2N16(bpb.partition_signature));
         return 1;   /* FIXME - return code */
     }
 
