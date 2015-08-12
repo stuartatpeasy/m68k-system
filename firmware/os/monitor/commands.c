@@ -17,7 +17,7 @@
 */
 MONITOR_CMD_HANDLER(date)
 {
-    struct rtc_time tm;
+    rtc_time_t tm;
 
     if(num_args == 0)
     {

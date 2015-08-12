@@ -30,7 +30,7 @@ const char * const g_warmup_message = "\n68010 computer system\n"
 void detect_clock_freq()
 {
     /* Ensure that interrupts are disabled before entering this section */
-    struct rtc_time tm;
+    rtc_time_t tm;
     u32 loops, freq;
     u8 curr_second;
 
@@ -53,7 +53,7 @@ void detect_clock_freq()
 
 void _main()
 {
-    struct rtc_time tm;
+    rtc_time_t tm;
     char sn[6], timebuf[12], datebuf[32];
 
 	/* === Initialise CPU === */

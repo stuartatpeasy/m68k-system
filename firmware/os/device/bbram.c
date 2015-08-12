@@ -33,7 +33,7 @@ s32 bbram_param_block_read(bbram_param_block_t *pparam_block)
 
 s32 bbram_param_block_write(bbram_param_block_t *pparam_block)
 {
-    struct rtc_time tm;
+    rtc_time_t tm;
 
     ds17485_get_time(&tm);
     rtc_time_to_timestamp(&tm, &pparam_block->mdate);

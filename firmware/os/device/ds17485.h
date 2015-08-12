@@ -63,8 +63,8 @@
     Function declarations
 */
 void ds17485_init();
-void ds17485_get_time(struct rtc_time * const tm);
-void ds17485_set_time(const struct rtc_time * const tm);
+void ds17485_get_time(rtc_time_t * const tm);
+void ds17485_set_time(const rtc_time_t * const tm);
 void ds17485_force_valid_time();
 void ds17485_user_ram_read(u32 addr, u32 len, void * buffer);
 void ds17485_user_ram_write(u32 addr, u32 len, const void * buffer);

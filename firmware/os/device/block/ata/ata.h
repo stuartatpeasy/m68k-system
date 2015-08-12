@@ -34,8 +34,6 @@ s32 ata_write(void *data, ku32 offset, u32 len, const void * buf);
 
 s32 ata_control(void *data, ku32 function, void *in, void *out);
 
-s8 *ata_copy_str(s8 *dest, s8 *src, ku32 len);
-
 
 #endif
 

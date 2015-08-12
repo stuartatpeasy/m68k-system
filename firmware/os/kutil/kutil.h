@@ -26,16 +26,16 @@ u16 fletcher16(const void *buf, u32 len);
 /*
     Date/time-related functions
 */
-s32 date_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len);
-s32 date_short(const struct rtc_time * const tm, char * const buffer, ku32 len);
-s32 date_long(const struct rtc_time * const tm, char * const buffer, ku32 len);
-s32 time_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len);
-s32 rtc_time_from_str(const char * const str, struct rtc_time * const tm);
+s32 date_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len);
+s32 date_short(const rtc_time_t * const tm, char * const buffer, ku32 len);
+s32 date_long(const rtc_time_t * const tm, char * const buffer, ku32 len);
+s32 time_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len);
+s32 rtc_time_from_str(const char * const str, rtc_time_t * const tm);
 ks8 * const day_number_suffix(ku8 daynum);
 s32 day_of_week(ks32 year, ks32 month, ks32 day);
 s32 is_leap_year(ks32 year);
-s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt);
-s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp);
+s32 timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt);
+s32 rtc_time_to_timestamp(const rtc_time_t *dt, s32 *timestamp);
 
 
 #define VALID_RTC_DATE(d)                                   \
@@ -53,6 +53,7 @@ s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp);
 s32 dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
 ks8 *kstrerror(ks32 errnum);
 s8 *str_trim(s8 *dest, ks8 *src);
+s8 *strn_trim_cpy(s8 *dest, s8 *src, ku32 len);
 
 #endif
 

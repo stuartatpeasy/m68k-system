@@ -58,7 +58,7 @@ void ds17485_init()
 }
 
 
-void ds17485_get_time(struct rtc_time * const tm)
+void ds17485_get_time(rtc_time_t * const tm)
 {
     /* Set the "SET" bit in register B, to prevent updates while we read */
     DS17485_REG_SET_BITS(DS17485_REG_B, DS17485_SET);
@@ -87,7 +87,7 @@ void ds17485_get_time(struct rtc_time * const tm)
 }
 
 
-void ds17485_set_time(const struct rtc_time * const tm)
+void ds17485_set_time(const rtc_time_t * const tm)
 {
     /* Set the "SET" bit in register B, to prevent updates while we write */
     DS17485_REG_SET_BITS(DS17485_REG_B, DS17485_SET);
@@ -119,7 +119,7 @@ void ds17485_set_time(const struct rtc_time * const tm)
 
 void ds17485_force_valid_time()
 {
-    struct rtc_time ts;
+    rtc_time_t ts;
 
     ds17485_get_time(&ts);
 

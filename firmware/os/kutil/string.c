@@ -17,14 +17,14 @@
 */
 s8 *str_trim(s8 *dest, ks8 *src)
 {
-    u32 x;
+    s32 x;
 
     /* Trim leading whitespace */
-    for(; *src && isspace(*src); ++src)
+    for(; isspace(*src); ++src)
         ;
 
     /* Find end of source string */
-    for(x = strlen(src); x && (!src[x] || isspace(src[x])); --x)
+    for(x = strlen(src); x && isspace(src[x - 1]); --x)
         ;
 
     strncpy(dest, src, x);
@@ -53,4 +53,27 @@ ks8 *kstrerror(ks32 errnum)
 
         default:                return "Unrecognised error code";
     }
+}
+
+
+/*
+    strn_trim_cpy()- copy a string from src, a buffer of length len, into dest.  Trim whitespace
+    from both ends of src (which might not be zero-terminated) and zero-terminate the copy in dest.
+    Note: dest must point to at least len+1 bytes of memory.
+*/
+s8 *strn_trim_cpy(s8 *dest, s8 *src, ku32 len)
+{
+    s8 *buffer;
+
+    buffer = (s8 *) kmalloc(len + 1);
+    if(!buffer)
+        return NULL;    /* out of memory */
+
+    buffer[len] = '\0';
+
+    strncpy(buffer, src, len);
+    str_trim(dest, buffer);
+    kfree(buffer);
+
+    return dest;
 }

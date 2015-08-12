@@ -14,6 +14,7 @@
 #include "include/error.h"
 #include "include/types.h"
 #include "fs/vfs.h"
+#include "kutil/kutil.h"
 
 
 struct fat_bpb_block
@@ -46,6 +47,9 @@ struct fat_bpb_block
 /*
     FAT directory entry
 */
+#define FAT_FILENAME_LEN        (8)     /* Note: long filenames are dealt with separately */
+#define FAT_FILEEXT_LEN         (3)     /* Note: long filenames are dealt with separately */
+
 struct fat_dirent
 {
     s8  file_name[11];
@@ -108,6 +112,19 @@ struct fat_fs
 };
 
 typedef struct fat_fs fat_fs_t;
+
+
+struct fat_dir_ctx
+{
+    fat_dirent_t *buffer;
+    fat_dirent_t *buffer_end;
+    u32 node;
+    fat_dirent_t *de;
+};
+
+typedef struct fat_dir_ctx fat_dir_ctx_t;
+
+
 typedef u16 fat16_cluster_id;
 
 
@@ -124,7 +141,7 @@ typedef u16 fat16_cluster_id;
 #define FAT_FILEATTRIB_DIRECTORY    (0x10)
 #define FAT_FILEATTRIB_ARCHIVE      (0x20)
 
-/* Long filename indicator.  Not supported by this code, but included here anyway... */
+/* Long filename indicator */
 #define FAT_FILEATTRIB_LFN          (FAT_FILEATTRIB_READ_ONLY | \
                                      FAT_FILEATTRIB_HIDDEN | \
                                      FAT_FILEATTRIB_SYSTEM | \
@@ -132,9 +149,48 @@ typedef u16 fat16_cluster_id;
 
 #define FAT_LFN_MAX_LEN             (255)
 
-#define FAT_NO_MORE_CLUSTERS(x)     ((x) >= 0xfff7)
+#define FAT_CHAIN_END(x)            ((x) >= 0xfff7)
 
 #define FAT_DIRENT_UNUSED           (0xe5)
+
+/* FAT-format date/time extraction/conversion macros */
+#define FAT_YEAR_FROM_DATE(d)       (((d) & 0xFE00) >> 9)
+#define FAT_MONTH_FROM_DATE(d)      (((d) & 0x01E0) >> 5)
+#define FAT_DAY_FROM_DATE(d)        ((d) & 0x001F)
+
+#define FAT_HOUR_FROM_TIME(t)       (((t) & 0xF800) >> 11)
+#define FAT_MINUTE_FROM_TIME(t)     (((t) & 0x07E0) >> 5)
+#define FAT_SECOND_FROM_TIME(t)     ((t) & 0x001F)
+
+#define FAT_DATE_TO_RTC_DATE(fdate, rdate)                  \
+{                                                           \
+    (rdate).year = FAT_YEAR_FROM_DATE(fdate) + 1900;        \
+    (rdate).month = FAT_MONTH_FROM_DATE(fdate);             \
+    (rdate).day = FAT_DAY_FROM_DATE(fdate);                 \
+}
+
+#define FAT_TIME_TO_RTC_DATE(ftime, rdate)                  \
+{                                                           \
+    (rdate).hour = FAT_HOUR_FROM_TIME(ftime);               \
+    (rdate).minute = FAT_MINUTE_FROM_TIME(ftime);           \
+    (rdate).second = FAT_SECOND_FROM_TIME(ftime);           \
+}
+
+#define FAT_DATETIME_TO_RTC_DATETIME(fdate, ftime, rdate)   \
+{                                                           \
+    FAT_DATE_TO_RTC_DATE(fdate, rdate);                     \
+    FAT_TIME_TO_RTC_DATE(ftime, rdate);                     \
+}
+
+#define FAT_DATETIME_TO_TIMESTAMP(fdate, ftime)             \
+({                                                          \
+    struct rtc_time tm;                                     \
+    u32 ts;                                                 \
+    FAT_DATE_TO_RTC_DATE(fdate, tm);                        \
+    FAT_TIME_TO_RTC_DATE(ftime, tm);                        \
+    rtc_time_to_timestamp(&tm, &ts);                        \
+    ts;                                                     \
+})
 
 vfs_driver_t g_fat_ops;
 
@@ -143,9 +199,9 @@ s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
 s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
 s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
-s32 fat_fsnode_get(vfs_t *vfs, u32 node, fsnode_t * const fsn);
-s32 fat_fsnode_put(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
-u32 fat_locate(vfs_t *vfs, u32 node, const char * const path);
+s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent);
+s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 void fat_debug_dump_superblock(vfs_t *vfs);
 

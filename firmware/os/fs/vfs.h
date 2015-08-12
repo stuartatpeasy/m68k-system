@@ -30,10 +30,10 @@ typedef enum fsnode_type
     FSNODE_TYPE_FILE
 } fsnode_type_t;
 
-typedef struct fsnode   /* like a dirent?  call it dirent instead? */
+typedef struct vfs_dirent
 {
     enum fsnode_type type;      /* dir, file, etc. */
-    const char *name;
+    s8 name[NAME_MAX_LEN + 1];
     u16 uid;
     u16 gid;
     u16 permissions;            /* e.g. rwxsrwxsrwxt */
@@ -44,7 +44,7 @@ typedef struct fsnode   /* like a dirent?  call it dirent instead? */
     u32 atime;
     u32 first_node;
     /* how to link to clusters? */
-} fsnode_t;
+} vfs_dirent_t;
 
 struct vfs;
 typedef struct vfs vfs_t;
@@ -55,9 +55,9 @@ typedef struct vfs_driver
     s32 (*init)();
     s32 (*mount)(vfs_t *vfs);
     s32 (*umount)(vfs_t *vfs);
-    s32 (*fsnode_get)(vfs_t *vfs, u32 node, fsnode_t * const fsn);
-    s32 (*fsnode_put)(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
-    u32 (*locate)(vfs_t *vfs, u32 node, const char * const path);
+    s32 (*open_dir)(vfs_t *vfs, u32 node, void **ctx);
+    s32 (*read_dir)(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent);
+    s32 (*close_dir)(vfs_t *vfs, void *ctx);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
 
@@ -70,40 +70,30 @@ struct vfs
     void *data;         /* fs-specific stuff */
 };
 
+/* Permissions bits */
+#define VFS_PERM_UR         (0x0800)        /* User (owner) read        */
+#define VFS_PERM_UW         (0x0400)        /* User (owner) write       */
+#define VFS_PERM_UX         (0x0200)        /* User (owner) execute     */
+#define VFS_PERM_UT         (0x0100)        /* User (owner) sticky      */
+#define VFS_PERM_GR         (0x0080)        /* Group read               */
+#define VFS_PERM_GW         (0x0040)        /* Group write              */
+#define VFS_PERM_GX         (0x0020)        /* Group execute            */
+#define VFS_PERM_GT         (0x0010)        /* Group sticky             */
+#define VFS_PERM_OR         (0x0008)        /* Other (world) read       */
+#define VFS_PERM_OW         (0x0004)        /* Other (world) write      */
+#define VFS_PERM_OX         (0x0002)        /* Other (world) execute    */
+#define VFS_PERM_OT         (0x0001)        /* Other (world) sticky     */
+
+/* Common combinations of perms */
+#define VFS_PERM_URWX       (VFS_PERM_UR | VFS_PERM_UW | VFS_PERM_UX)
+#define VFS_PERM_GRWX       (VFS_PERM_GR | VFS_PERM_GW | VFS_PERM_GX)
+#define VFS_PERM_ORWX       (VFS_PERM_OR | VFS_PERM_OW | VFS_PERM_OX)
+
+#define VFS_PERM_UGORWX     (VFS_PERM_URWX | VFS_PERM_GRWX | VFS_PERM_ORWX)
+
 
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
-
-
-/*
-    mounts: [{"mountpoint" -> vfs_t}, ...]
-
-    what is an fsnode?
-    - must be some sort of standardised struct
-    - not file data
-    - represents a directory or a file (ie. filesystem tree node)
-    - enables enumeration of directory contents
-
-
-    gives:
-
-        vfs_t vfs;
-
-
-        vfs.ops->mount(&vfs);
-
-        // Look up node for <mountpoint>/home/swallace
-        u32 home_node = vfs.ops->locate(&vfs, 0, "home");
-        u32 my_node = vfs.ops->locate(&vfs, home_node, "swallace");
-
-        vfs.ops->fsnode_get(&vfs, my_node);
-
-
-
-    would be nice:
-
-    vfs->ops->mount()
-*/
 
 #endif
 

@@ -50,6 +50,8 @@ struct rtc_time
     u8      dst;
 };
 
+typedef struct rtc_time rtc_time_t;
+
 /* Process ID */
 typedef s16 pid_t;
 

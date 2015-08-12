@@ -127,7 +127,7 @@ static ks8 g_days_in_month_leap[] =
     date_iso8601() - write the date and time, in ISO-8601, to buffer.  E.g.
     "2017-01-12 14:25:36"
 */
-s32 date_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len)
+s32 date_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
         return FAIL;
@@ -142,7 +142,7 @@ s32 date_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len
     date_short() - write the date, specified in tm, to buffer in "short" format,
     e.g. "Mon 12 Jan 2017".
 */
-s32 date_short(const struct rtc_time * const tm, char * const buffer, ku32 len)
+s32 date_short(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
         return FAIL;
@@ -157,7 +157,7 @@ s32 date_short(const struct rtc_time * const tm, char * const buffer, ku32 len)
     date_long() - write the date, specified in tm, to buffer in "long" format,
     e.g. "Monday 12th January 2017".
 */
-s32 date_long(const struct rtc_time * const tm, char * const buffer, ku32 len)
+s32 date_long(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
         return FAIL;
@@ -173,7 +173,7 @@ s32 date_long(const struct rtc_time * const tm, char * const buffer, ku32 len)
     time_iso8601() - write the time, specified in tm, to buffer in ISO-8601 format,
     e.g. "14:25:36".
 */
-s32 time_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len)
+s32 time_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
         return FAIL;
@@ -187,7 +187,7 @@ s32 time_iso8601(const struct rtc_time * const tm, char * const buffer, ku32 len
     rtc_time_from_str() - take a string, in the format "YYYYMMDDHHMMSS", and populate
     tm with the values.
 */
-s32 rtc_time_from_str(const char * const str, struct rtc_time * const tm)
+s32 rtc_time_from_str(const char * const str, rtc_time_t * const tm)
 {
     s32 i;
     s8 s[14];
@@ -297,8 +297,8 @@ s32 is_leap_year(ks32 year)
 }
 
 
-/* Convert a Unix timestamp to a struct rtc_time */
-s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt)
+/* Convert a Unix timestamp to a rtc_time_t */
+s32 timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt)
 {
     s32 year_index, step, t_;
     ks32 *month_offset;
@@ -386,8 +386,8 @@ s32 timestamp_to_rtc_time(ks32 timestamp, struct rtc_time *dt)
 }
 
 
-/* Convert a struct rtc_time to a Unix timestamp */
-s32 rtc_time_to_timestamp(const struct rtc_time *dt, s32 *timestamp)
+/* Convert a rtc_time_t to a Unix timestamp */
+s32 rtc_time_to_timestamp(const rtc_time_t *dt, s32 *timestamp)
 {
     s32 ts;
 

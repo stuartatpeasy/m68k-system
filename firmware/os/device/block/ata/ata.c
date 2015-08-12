@@ -111,9 +111,9 @@ s32 ata_init()
 			devp->addr.bus = bus;
 			devp->addr.device = device;
 
-            ata_copy_str(devp->model, id.model_number, sizeof(id.model_number));
-            ata_copy_str(devp->serial, id.serial_number, sizeof(id.serial_number));
-            ata_copy_str(devp->firmware, id.firmware_revision, sizeof(id.firmware_revision));
+            strn_trim_cpy(devp->model, id.model_number, sizeof(id.model_number));
+            strn_trim_cpy(devp->serial, id.serial_number, sizeof(id.serial_number));
+            strn_trim_cpy(devp->firmware, id.firmware_revision, sizeof(id.firmware_revision));
 
 			devp->num_sectors = id.log_cyls * id.log_heads * id.log_sects_per_log_track;
 
@@ -130,22 +130,6 @@ s32 ata_init()
 	}
 
 	return SUCCESS;
-}
-
-
-/*
-    Copy a string from src, a fixed-length buffer, into dest.  Trim whitespace from both ends of src
-    and zero-terminate the copy in dest.
-*/
-s8 *ata_copy_str(s8 *dest, s8 *src, ku32 len)
-{
-    char buffer[64];
-
-    bzero(buffer, sizeof(buffer));
-    strncpy(buffer, src, len);
-    str_trim(dest, buffer);
-
-    return dest;
 }
 
 

@@ -16,9 +16,9 @@ vfs_driver_t g_fat_ops =
     .init = fat_init,
     .mount = fat_mount,
     .umount = fat_umount,
-    .fsnode_get = fat_fsnode_get,
-    .fsnode_put = fat_fsnode_put,
-    .locate = fat_locate,
+    .open_dir = fat_open_dir,
+    .read_dir = fat_read_dir,
+    .close_dir = fat_close_dir,
     .stat = fat_stat
 };
 
@@ -111,7 +111,28 @@ s32 fat_mount(vfs_t *vfs)
 
     vfs->data = fs;
 
-    fat_locate(vfs, 0, "blah");
+    puts("\n$ ls /");
+
+    void *ctx;
+    vfs_dirent_t dirent;
+
+    ret = fat_open_dir(vfs, 15, &ctx);
+    if(ret != SUCCESS)
+    {
+        printf("fat_open_dir() failed: %s\n", kstrerror(ret));
+        return ret;
+    }
+
+    while((ret = fat_read_dir(vfs, ctx, &dirent)) == SUCCESS)
+    {
+        printf("%c %9d %9d %s\n", (dirent.type == FSNODE_TYPE_DIR) ? 'd' : 'f', dirent.first_node,
+               dirent.size, dirent.name);
+    }
+
+    if(ret != ENOENT)
+        printf("fat_read_dir() failed with %s\n", kstrerror(ret));
+
+    fat_close_dir(vfs, ctx);
 
     return 0;
 }
@@ -177,63 +198,69 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
 }
 
 
-s32 fat_fsnode_get(vfs_t *vfs, u32 node, fsnode_t * const fsn)
+/*
+    fat_open_dir() - prepare to iterate over the directory at node
+*/
+s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
 {
+    fat_dir_ctx_t *dir_ctx;
+    u32 bytes_per_cluster;
+    s32 ret;
 
-    return 0;
-}
-
-
-s32 fat_fsnode_put(vfs_t *vfs, u32 node, const fsnode_t * const fsn)
-{
-
-    return 0;
-}
-
-
-u32 fat_locate(vfs_t *vfs, u32 node, const char * const path)
-{
-    /* given a node and a path component, return the node containing that component */
-
-    s32 ret, dir_end, lfn_len;
-    s8 lfn[FAT_LFN_MAX_LEN + 1];
-    void *buffer;
-
-    /* Allocate a buffer to hold a cluster */
-    ku32 bytes_per_cluster = ((fat_fs_t *) vfs->data)->bytes_per_cluster;
-    buffer = kmalloc(bytes_per_cluster);
-    if(!buffer)
+    /* Allocate space to hold a directory context */
+    *ctx = kmalloc(sizeof(fat_dir_ctx_t));
+    if(!*ctx)
         return ENOMEM;
 
-    /* Iterate over the clusters in the chain */
-    dir_end = 0;
-    lfn_len = 0;
-    while(!FAT_NO_MORE_CLUSTERS(node))
+    dir_ctx = (fat_dir_ctx_t *) *ctx;
+
+    /* Allocate space within the directory context to hold a node */
+    bytes_per_cluster = ((fat_fs_t *) vfs->data)->bytes_per_cluster;
+    dir_ctx->buffer = (fat_dirent_t *) kmalloc(bytes_per_cluster);
+    if(!dir_ctx->buffer)
     {
-        fat_dirent_t *de;
+        kfree(*ctx);
+        return ENOMEM;
+    }
 
-        /* Read the node */
-        ret = fat_read_node(vfs, node, buffer);
-        if(ret != SUCCESS)
-        {
-            kfree(buffer);
-            return ret;
-        }
+    ret = fat_read_node(vfs, node, dir_ctx->buffer);
+    if(ret != SUCCESS)
+    {
+        kfree(dir_ctx->buffer);
+        kfree(*ctx);
+        return ret;
+    }
 
-        /* Scan the node to see whether it contains "path" */
-        for(de = (fat_dirent_t *) buffer; (void *) de < (buffer + bytes_per_cluster); ++de)
+    dir_ctx->buffer_end = ((void *) dir_ctx->buffer) + bytes_per_cluster;
+    dir_ctx->node = node;
+    dir_ctx->de = dir_ctx->buffer;   /* Point de (addr of current dirent) at start of node buffer */
+
+    return SUCCESS;
+}
+
+
+/*
+    fat_read_dir() - read the next entry from a directory and populate a vfs_dirent_t
+*/
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent)
+{
+    fat_dir_ctx_t *dir_ctx = (fat_dir_ctx_t *) ctx;
+    s8 lfn[FAT_LFN_MAX_LEN + 1];
+    s32 lfn_len, ret;
+
+    while(!FAT_CHAIN_END(dir_ctx->node))
+    {
+        /* Read the next entry from the node */
+        for(lfn_len = 0; dir_ctx->de < dir_ctx->buffer_end; ++dir_ctx->de)
         {
-            if(de->file_name[0] == 0x00)
-            {
-                dir_end = 1;    /* No more entries in this directory */
-                break;
-            }
-            else if((u8) de->file_name[0] == FAT_DIRENT_UNUSED)
+            if(dir_ctx->de->file_name[0] == 0x00)
+                return ENOENT;  /* No more entries in this directory */
+            else if((u8) dir_ctx->de->file_name[0] == FAT_DIRENT_UNUSED)
                 continue;
-            else if(de->attribs == FAT_FILEATTRIB_LFN)
+            else if(dir_ctx->de->attribs == FAT_FILEATTRIB_LFN)
             {
                 /* This is a long filename component */
-                const fat_lfn_dirent_t * const lde = (const fat_lfn_dirent_t *) de;
+                const fat_lfn_dirent_t * const lde = (const fat_lfn_dirent_t *) dir_ctx->de;
                 u16 chars[FAT_LFN_PART_TOTAL_LEN];
                 s32 i, j, offset;
 
@@ -249,52 +276,96 @@ u32 fat_locate(vfs_t *vfs, u32 node, const char * const path)
                 for(i = 0; i < FAT_LFN_PART3_LEN;)
                     chars[j++] = LE2N16(lde->name_part3[i++]);
 
+                /* Copy any representable ASCII-representable chars into lfn[] */
                 for(i = 0; (i < FAT_LFN_PART_TOTAL_LEN) && chars[i]; ++i)
-                    lfn[offset + i] = (chars[i] < 0x100) ? (s8) (chars[i] & 0xff) : '?';
+                    lfn[offset + i] = (chars[i] < 0x80) ? (s8) (chars[i] & 0xff) : '?';
 
                 if((offset + i) > lfn_len)
                     lfn_len = offset + i;
             }
+            else if(dir_ctx->de->attribs & FAT_FILEATTRIB_VOLUME_ID)
+                continue;       /* Ignore the volume ID */
             else
             {
                 /*
                     Regular directory entry.  If we have already read a long filename, we will use
                     that instead of the short filename in this entry.
                 */
-                if(lfn_len)
+                if(!lfn_len)
                 {
-                    /* Long filename has been read */
-                    lfn[lfn_len] = '\0';
-                    puts(lfn);
+                    /*
+                        We didn't encounter a long filename, so write the regular (short) filename
+                        into the long filename buffer.
+                    */
+                    s32 len;
 
-                    lfn_len = 0;     /* Reset long filename buffer */
+                    strn_trim_cpy(lfn, dir_ctx->de->file_name, FAT_FILENAME_LEN);
+                    len = strlen(lfn);
+
+                    lfn[len++] = '.';
+                    strn_trim_cpy(lfn + len, dir_ctx->de->file_name + FAT_FILENAME_LEN, FAT_FILEEXT_LEN);
+
+                    /* If no file extension is present, trim the trailing '.' char */
+                    if(strlen(lfn + len - 1) == 1)
+                        lfn[len - 1] = '\0';
                 }
                 else
                 {
-                    /* No long filename has been read - use the short filename from this entry */
-                    int i;
-                    for(i = 0; i < 11; ++i)
-                        putchar(de->file_name[i]);
-                    putchar('\n');
+                    /* Long filename has been read */
+                    lfn[lfn_len] = '\0';
+                    lfn_len = 0;     /* Reset long filename buffer */
                 }
+
+                /* At this point we have a complete directory entry, with a filename in lfn */
+
+                u32 first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 8)
+                                 | LE2N16(dir_ctx->de->first_cluster_low);
+
+                dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
+                dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
+                                                            LE2N16(dir_ctx->de->ctime));
+                dirent->mtime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->mdate),
+                                                            LE2N16(dir_ctx->de->mtime));
+
+                dirent->first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
+                                        | LE2N16(dir_ctx->de->first_cluster_low);
+
+                dirent->type = (dir_ctx->de->attribs & FAT_FILEATTRIB_DIRECTORY) ?
+                                    FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
+
+                dirent->flags = 0;      /* TODO */
+
+                strcpy(dirent->name, lfn);
+                dirent->size = LE2N32(dir_ctx->de->size);
+
+                dirent->permissions = VFS_PERM_UGORWX;  /* Not supported by FAT file systems */
+                dirent->gid = 0;                        /* Not supported by FAT file systems */
+                dirent->uid = 0;                        /* Not supported by FAT file systems */
+
+                ++dir_ctx->de;
+                return SUCCESS;
             }
         }
 
-        if(dir_end)
-            break;
-
+        /* Reached the end of the node without finding a complete entry. */
         /* Find the next node in the chain */
-        ret = fat_get_next_node(vfs, node, &node);
+        ret = fat_get_next_node(vfs, dir_ctx->node, &dir_ctx->node);
         if(ret != SUCCESS)
-        {
-            kfree(buffer);
             return ret;
-        }
     }
 
-    kfree(buffer);
+    return ENOENT;  /* Reached the end of the chain */
+}
 
-    return ENOENT;
+
+/*
+    fat_close_dir() - clean up after iterating over a directory
+*/
+s32 fat_close_dir(vfs_t *vfs, void *ctx)
+{
+    kfree(((fat_dir_ctx_t *) ctx)->buffer);
+    kfree(ctx);
+    return SUCCESS;
 }
 
 
