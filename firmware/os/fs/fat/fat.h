@@ -43,6 +43,9 @@ struct fat_bpb_block
 } __attribute__((packed));  /* 512 bytes */
 
 
+/*
+    FAT directory entry
+*/
 struct fat_dirent
 {
     s8  file_name[11];
@@ -59,6 +62,32 @@ struct fat_dirent
     u32 size;
 } __attribute__((packed));  /* 32 bytes */
 
+typedef struct fat_dirent fat_dirent_t;
+
+
+/*
+    FAT long filename directory entry
+*/
+#define FAT_LFN_PART1_LEN       (5)
+#define FAT_LFN_PART2_LEN       (6)
+#define FAT_LFN_PART3_LEN       (2)
+#define FAT_LFN_PART_TOTAL_LEN  (FAT_LFN_PART1_LEN + FAT_LFN_PART2_LEN + FAT_LFN_PART3_LEN)
+
+struct fat_lfn_dirent
+{
+    u8 order;
+    u16 name_part1[FAT_LFN_PART1_LEN];      /* UTF-16 */
+    u8 attribs;
+    u8 type;
+    u8 checksum;
+    u16 name_part2[FAT_LFN_PART2_LEN];      /* UTF-16 */
+    u16 reserved;
+    u16 name_part3[FAT_LFN_PART3_LEN];      /* UTF-16 */
+} __attribute__((packed));
+
+typedef struct fat_lfn_dirent fat_lfn_dirent_t;
+
+
 /*
     This struct contains various useful numbers, computed at mount time.  A struct fat_fs will be
     allocated and filled in fat_mount(), and stored in vfs->data.  It is then deallocated in
@@ -66,10 +95,14 @@ struct fat_dirent
 */
 struct fat_fs
 {
+    u32 total_sectors;
+    u32 total_data_sectors;
     u32 first_data_sector;
     u32 first_fat_sector;
-    u32 root_dir_sectors;
-    u32 nsectors;
+    u32 root_dir_first_sector;
+    u16 total_clusters;
+    u16 root_dir_sectors;
+    u16 sectors_per_fat;
     u16 sectors_per_cluster;
     u16 bytes_per_cluster;
 };
@@ -97,8 +130,11 @@ typedef u16 fat16_cluster_id;
                                      FAT_FILEATTRIB_SYSTEM | \
                                      FAT_FILEATTRIB_VOLUME_ID)
 
+#define FAT_LFN_MAX_LEN             (255)
+
 #define FAT_NO_MORE_CLUSTERS(x)     ((x) >= 0xfff7)
 
+#define FAT_DIRENT_UNUSED           (0xe5)
 
 vfs_driver_t g_fat_ops;
 
@@ -111,5 +147,6 @@ s32 fat_fsnode_get(vfs_t *vfs, u32 node, fsnode_t * const fsn);
 s32 fat_fsnode_put(vfs_t *vfs, u32 node, const fsnode_t * const fsn);
 u32 fat_locate(vfs_t *vfs, u32 node, const char * const path);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
+void fat_debug_dump_superblock(vfs_t *vfs);
 
 #endif
