@@ -160,7 +160,8 @@ s32 vfs_open_dir(ks8 * path, void **ctx)
 
 s32 vfs_close_dir(void *ctx)
 {
-
+    /* TODO */
+    return SUCCESS;
 }
 
 

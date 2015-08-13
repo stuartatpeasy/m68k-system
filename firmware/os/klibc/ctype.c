@@ -68,8 +68,20 @@ ku16 _g_typetable[384] =
 
 ku16 * const _g_typetable_base = _g_typetable + 128;
 
+
 s32 _ctypeisname(int c, ku16 type)
 {
 	return _g_typetable_base[c & 0xff] & type;
 }
 
+
+s32 tolower(s32 c)
+{
+    return ((c >= 'A') && (c <= 'Z')) ? c + ('a' - 'A') : c;
+}
+
+
+s32 toupper(s32 c)
+{
+    return ((c >= 'a') && (c <= 'z')) ? c - ('a' - 'A') : c;
+}

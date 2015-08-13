@@ -1,6 +1,5 @@
 #ifndef KLIBC_STRINGS_H_INC
 #define KLIBC_STRINGS_H_INC
-
 /*
     strings.h - declaration of various libc string-related functions
 
@@ -11,10 +10,12 @@
 */
 
 #include "include/types.h"
+#include "klibc/ctype.h"
 
 
 void bcopy(const void *src, void *dest, u32 n);
 void bzero(void *s, u32 n);
+s32 strcasecmp(ks8 *s1, ks8 *s2);
 
 
 #endif

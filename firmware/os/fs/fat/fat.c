@@ -123,7 +123,7 @@ s32 fat_mount(vfs_t *vfs)
         return ret;
     }
 
-    while((ret = fat_read_dir(vfs, ctx, &dirent)) == SUCCESS)
+    while((ret = fat_read_dir(vfs, ctx, &dirent, NULL)) == SUCCESS)
     {
         printf("%c %9d %9d %s\n", (dirent.type == FSNODE_TYPE_DIR) ? 'd' : 'f', dirent.first_node,
                dirent.size, dirent.name);
@@ -241,9 +241,10 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
 
 
 /*
-    fat_read_dir() - read the next entry from a directory and populate a vfs_dirent_t
+    fat_read_dir() - if name is NULL, read the next entry from a directory and populate dirent with
+    its details.  If name is non-NULL, search for an entry matching name and populate the dirent.
 */
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent)
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8 * const name)
 {
     fat_dir_ctx_t *dir_ctx = (fat_dir_ctx_t *) ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];
@@ -318,31 +319,38 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent)
                     lfn_len = 0;     /* Reset long filename buffer */
                 }
 
-                /* At this point we have a complete directory entry, with a filename in lfn */
+                /*
+                    At this point we have a complete directory entry, with a filename in lfn.  If
+                    the "name" arg is NULL, populate a dirent and return it; otherwise, compare the
+                    entry's name with "name" (case-insensitive, because FAT) and return a dirent if
+                    there is a match.  If there is no match, continue searching the directory.
+                */
+                if((name == NULL) || !strcasecmp(name, lfn))
+                {
+                    dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
+                    dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
+                                                                LE2N16(dir_ctx->de->ctime));
+                    dirent->mtime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->mdate),
+                                                                LE2N16(dir_ctx->de->mtime));
 
-                dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
-                dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
-                                                            LE2N16(dir_ctx->de->ctime));
-                dirent->mtime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->mdate),
-                                                            LE2N16(dir_ctx->de->mtime));
+                    dirent->first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
+                                            | LE2N16(dir_ctx->de->first_cluster_low);
 
-                dirent->first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
-                                        | LE2N16(dir_ctx->de->first_cluster_low);
+                    dirent->type = (dir_ctx->de->attribs & FAT_FILEATTRIB_DIRECTORY) ?
+                                        FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
 
-                dirent->type = (dir_ctx->de->attribs & FAT_FILEATTRIB_DIRECTORY) ?
-                                    FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
+                    dirent->flags = 0;      /* TODO */
 
-                dirent->flags = 0;      /* TODO */
+                    strcpy(dirent->name, lfn);
+                    dirent->size = LE2N32(dir_ctx->de->size);
 
-                strcpy(dirent->name, lfn);
-                dirent->size = LE2N32(dir_ctx->de->size);
+                    dirent->permissions = VFS_PERM_UGORWX;  /* Not supported by FAT file systems */
+                    dirent->gid = 0;                        /* Not supported by FAT file systems */
+                    dirent->uid = 0;                        /* Not supported by FAT file systems */
 
-                dirent->permissions = VFS_PERM_UGORWX;  /* Not supported by FAT file systems */
-                dirent->gid = 0;                        /* Not supported by FAT file systems */
-                dirent->uid = 0;                        /* Not supported by FAT file systems */
-
-                ++dir_ctx->de;
-                return SUCCESS;
+                    ++dir_ctx->de;
+                    return SUCCESS;
+                }
             }
         }
 

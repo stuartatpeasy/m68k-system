@@ -53,3 +53,16 @@ void bzero(void *s, u32 n)
 	for(n &= 3; n--;)
         *s_++ = 0;
 }
+
+
+/*
+    strcasecmp() - case-insensitive strcmp()
+*/
+s32 strcasecmp(ks8 *s1, ks8 *s2)
+{
+	for(; tolower(*s1) == tolower(*s2); ++s1, ++s2)
+		if(*s1 == 0)
+			return 0;
+
+	return tolower(*s1) - tolower(*s2);
+}

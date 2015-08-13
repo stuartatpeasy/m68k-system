@@ -44,8 +44,8 @@
 ku16 _g_typetable[384];
 ku16 * const _g_typetable_base;
 
-int tolower(int c);
-int toupper(int c);
+s32 tolower(s32 c);
+s32 toupper(s32 c);
 
 s32 _ctypeisname(int c, const unsigned short int type);
 

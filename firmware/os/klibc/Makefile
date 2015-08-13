@@ -44,4 +44,4 @@ string.o: \
 	string.c string.h ../include/limits.h ../include/types.h ../memory/kmalloc.h
 
 strings.o: \
-	strings.c ../include/types.h
+	strings.c ctype.h ../include/types.h

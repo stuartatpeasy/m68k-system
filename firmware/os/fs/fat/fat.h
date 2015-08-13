@@ -14,6 +14,7 @@
 #include "include/error.h"
 #include "include/types.h"
 #include "fs/vfs.h"
+#include "klibc/strings.h"
 #include "kutil/kutil.h"
 
 
@@ -200,7 +201,7 @@ s32 fat_umount(vfs_t *vfs);
 s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
 s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent);
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8* const name);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 s32 fat_find_free_node(vfs_t *vfs, u32 *node);

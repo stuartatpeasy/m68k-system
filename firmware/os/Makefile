@@ -142,7 +142,7 @@ fs/ext2/ext2.o: \
 
 fs/fat/fat.o: \
 	fs/fat/fat.c fs/fat/fat.h fs/vfs.h include/byteorder.h include/defs.h include/error.h \
-	include/types.h kutil/kutil.h
+	include/types.h klibc/strings.h kutil/kutil.h
 
 fs/mount.o: \
 	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h fs/vfs.h include/defs.h \
