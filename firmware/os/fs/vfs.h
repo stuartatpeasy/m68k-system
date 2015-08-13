@@ -17,6 +17,9 @@
 #define MAX_FILESYSTEMS         (16)
 
 
+struct vfs;
+typedef struct vfs vfs_t;
+
 typedef struct fs_stat
 {
     u32 total_blocks;
@@ -32,6 +35,7 @@ typedef enum fsnode_type
 
 typedef struct vfs_dirent
 {
+    vfs_t *vfs;
     enum fsnode_type type;      /* dir, file, etc. */
     s8 name[NAME_MAX_LEN + 1];
     u16 uid;
@@ -45,9 +49,6 @@ typedef struct vfs_dirent
     u32 first_node;
     /* how to link to clusters? */
 } vfs_dirent_t;
-
-struct vfs;
-typedef struct vfs vfs_t;
 
 typedef struct vfs_driver
 {
@@ -70,6 +71,8 @@ struct vfs
     void *data;         /* fs-specific stuff */
 };
 
+
+
 /* Permissions bits */
 #define VFS_PERM_UR         (0x0800)        /* User (owner) read        */
 #define VFS_PERM_UW         (0x0400)        /* User (owner) write       */
@@ -85,12 +88,20 @@ struct vfs
 #define VFS_PERM_OT         (0x0001)        /* Other (world) sticky     */
 
 /* Common combinations of perms */
-#define VFS_PERM_URWX       (VFS_PERM_UR | VFS_PERM_UW | VFS_PERM_UX)
-#define VFS_PERM_GRWX       (VFS_PERM_GR | VFS_PERM_GW | VFS_PERM_GX)
-#define VFS_PERM_ORWX       (VFS_PERM_OR | VFS_PERM_OW | VFS_PERM_OX)
+#define VFS_PERM_URWX       (VFS_PERM_UR | VFS_PERM_UW | VFS_PERM_UX)       /* rwx------ */
+#define VFS_PERM_GRWX       (VFS_PERM_GR | VFS_PERM_GW | VFS_PERM_GX)       /* ---rwx--- */
+#define VFS_PERM_ORWX       (VFS_PERM_OR | VFS_PERM_OW | VFS_PERM_OX)       /* ------rwx */
+#define VFS_PERM_URX        (VFS_PERM_UR | VFS_PERM_UX)                     /* r-x------ */
+#define VFS_PERM_GRX        (VFS_PERM_GR | VFS_PERM_GX)                     /* ---r-x--- */
+#define VFS_PERM_ORX        (VFS_PERM_OR | VFS_PERM_OX)                     /* ------r-x */
 
-#define VFS_PERM_UGORWX     (VFS_PERM_URWX | VFS_PERM_GRWX | VFS_PERM_ORWX)
+#define VFS_PERM_UGORWX     (VFS_PERM_URWX | VFS_PERM_GRWX | VFS_PERM_ORWX) /* rwxrwxrwx */
+#define VFS_PERM_UGORX      (VFS_PERM_URX | VFS_PERM_GRX | VFS_PERM_ORX)    /* r-xr-xr-x */
 
+/* Flags */
+#define VFS_FLAG_HIDDEN     (0x0001)        /* Not sure this will be respected  */
+#define VFS_FLAG_SYSTEM     (0x0002)        /* Not sure this will be respected  */
+#define VFS_FLAG_ARCHIVE    (0x0004)        /* I have no idea what this means   */
 
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);

@@ -133,7 +133,12 @@ s32 mount_remove(const char * const mount_point)
 }
 
 
-vfs_t *mount_find(const char * const path)
+/*
+    mount_find() - given an absolute (but not necessarily complete) path, find and return the VFS
+    under which the path is mounted.  If rel is non-NULL, point it at the first character past the
+    mountpoint.
+*/
+vfs_t *mount_find(const char * const path, const char **rel)
 {
 	s32 i, best_match_len = 0;
 	vfs_t *fs = NULL;
@@ -149,6 +154,9 @@ vfs_t *mount_find(const char * const path)
 			best_match_len = len;
 		}
 	}
+
+    if(rel != NULL)
+        *rel = path + best_match_len;
 
 	return fs;  /* Should never return NULL, unless no root fs is mounted */
 }

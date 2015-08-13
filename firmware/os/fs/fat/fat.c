@@ -110,7 +110,7 @@ s32 fat_mount(vfs_t *vfs)
     fs->total_clusters        = fs->total_data_sectors / fs->sectors_per_cluster;
 
     vfs->data = fs;
-
+/*
     puts("\n$ ls /");
 
     void *ctx;
@@ -133,7 +133,7 @@ s32 fat_mount(vfs_t *vfs)
         printf("fat_read_dir() failed with %s\n", kstrerror(ret));
 
     fat_close_dir(vfs, ctx);
-
+*/
     return SUCCESS;
 }
 
@@ -327,6 +327,11 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8 * const n
                 */
                 if((name == NULL) || !strcasecmp(name, lfn))
                 {
+                    ku16 attribs = dir_ctx->de->attribs;
+                    u16 flags = 0;
+
+                    dirent->vfs = vfs;
+
                     dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
                     dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
                                                                 LE2N16(dir_ctx->de->ctime));
@@ -336,17 +341,29 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8 * const n
                     dirent->first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
                                             | LE2N16(dir_ctx->de->first_cluster_low);
 
-                    dirent->type = (dir_ctx->de->attribs & FAT_FILEATTRIB_DIRECTORY) ?
+                    dirent->type = (attribs & FAT_FILEATTRIB_DIRECTORY) ?
                                         FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
 
-                    dirent->flags = 0;      /* TODO */
+                    if(attribs & FAT_FILEATTRIB_HIDDEN)
+                        flags |= VFS_FLAG_HIDDEN;
+                    if(attribs & FAT_FILEATTRIB_SYSTEM)
+                        flags |= VFS_FLAG_SYSTEM;
+                    if(attribs & FAT_FILEATTRIB_ARCHIVE)
+                        flags |= VFS_FLAG_ARCHIVE;
+
+                    dirent->flags = flags;
 
                     strcpy(dirent->name, lfn);
                     dirent->size = LE2N32(dir_ctx->de->size);
 
-                    dirent->permissions = VFS_PERM_UGORWX;  /* Not supported by FAT file systems */
-                    dirent->gid = 0;                        /* Not supported by FAT file systems */
-                    dirent->uid = 0;                        /* Not supported by FAT file systems */
+                    /*
+                        None of the following three items (permissions, uid, gid) have any meaning
+                        in the FAT filesystem.
+                    */
+                    dirent->permissions = (attribs & FAT_FILEATTRIB_READ_ONLY) ?
+                                            VFS_PERM_UGORX : VFS_PERM_UGORWX;
+                    dirent->gid = 0;
+                    dirent->uid = 0;
 
                     ++dir_ctx->de;
                     return SUCCESS;

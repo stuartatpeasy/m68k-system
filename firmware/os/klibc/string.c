@@ -322,11 +322,11 @@ s32 strncmp(ks8 *s1, ks8 *s2, u32 n)
 	if(!n)
 		return 0;
 
-	for(; n-- && (*s1 == *s2); ++s1, ++s2)
+	for(; n && (*s1 == *s2); ++s1, ++s2, --n)
 		if(*s1 == 0)
 			return 0;
 
-	return *(u8 *) s1 - *(u8 *) s2;
+	return n ? *s1 - *s2 : 0;
 }
 
 

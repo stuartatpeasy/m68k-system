@@ -704,17 +704,13 @@ MONITOR_CMD_HANDLER(srec)
 
     Used to trigger a test of some sort
 */
-#include "device/device.h"
+#include "fs/vfs.h"
 MONITOR_CMD_HANDLER(test)
 {
-/*
-    if(num_args != 2)
-        return MON_E_SYNTAX;
+    vfs_dirent_t dirent;
 
-    printf("Calling mount_init()");
-    mount_init();
-*/
-    /* mount <fstype> <dev> <mountpoint> */
+    if(vfs_lookup("/glibc/sys/unistd.h", &dirent) == SUCCESS)
+        puts("vfs_dirent() succeeded");
 
     return MON_E_OK;
 }

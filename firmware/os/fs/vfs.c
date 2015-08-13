@@ -124,17 +124,20 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 }
 
 
-s32 vfs_open_dir(ks8 * path, void **ctx)
+s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 {
     vfs_t *vfs;
+    const char *rel;
 
-    vfs = mount_find(path);
+    vfs = mount_find(path, &rel);
     if(vfs == NULL)
         return ENOENT;      /* Should only happen if no root fs is mounted */
 
+    printf("Path relative to mountpoint is: %s\n", rel);
+
     /*
-        TODO
-            given a path, prepare to iterate the dir at that path ...?
+        /glibc/sys/unistd.h
+
 
         Task: "locate the VFS and nodenum of the file /etc/mnttab"
         - locate VFS containing "/etc/mnttab" (mount_find)
@@ -152,7 +155,6 @@ s32 vfs_open_dir(ks8 * path, void **ctx)
     */
 
 
-    vfs->driver->open_dir(vfs, 0, ctx);
 
     return SUCCESS;
 }
