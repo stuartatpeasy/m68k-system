@@ -134,7 +134,7 @@ s32 fat_mount(vfs_t *vfs)
 
     fat_close_dir(vfs, ctx);
 
-    return 0;
+    return SUCCESS;
 }
 
 
@@ -303,7 +303,8 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent)
                     len = strlen(lfn);
 
                     lfn[len++] = '.';
-                    strn_trim_cpy(lfn + len, dir_ctx->de->file_name + FAT_FILENAME_LEN, FAT_FILEEXT_LEN);
+                    strn_trim_cpy(lfn + len, dir_ctx->de->file_name + FAT_FILENAME_LEN,
+                                  FAT_FILEEXT_LEN);
 
                     /* If no file extension is present, trim the trailing '.' char */
                     if(strlen(lfn + len - 1) == 1)
@@ -317,9 +318,6 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent)
                 }
 
                 /* At this point we have a complete directory entry, with a filename in lfn */
-
-                u32 first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 8)
-                                 | LE2N16(dir_ctx->de->first_cluster_low);
 
                 dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
                 dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),

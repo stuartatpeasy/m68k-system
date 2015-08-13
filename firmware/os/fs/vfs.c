@@ -122,3 +122,45 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 
     return NULL;
 }
+
+
+s32 vfs_open_dir(ks8 * path, void **ctx)
+{
+    vfs_t *vfs;
+
+    vfs = mount_find(path);
+    if(vfs == NULL)
+        return ENOENT;      /* Should only happen if no root fs is mounted */
+
+    /*
+        TODO
+            given a path, prepare to iterate the dir at that path ...?
+
+        Task: "locate the VFS and nodenum of the file /etc/mnttab"
+        - locate VFS containing "/etc/mnttab" (mount_find)
+            - yields root partition, mounted at "/"
+        - delete mountpoint "/" from front of path -> "etc/mnttab"
+        - split path into components
+        - foreach(component):
+            - open directory
+            - search for next component name
+                - found?
+                    - yes: if not last component: is entity a directory?
+                        - no: error
+                    - no: error
+        - return dirent referring to the final component
+    */
+
+
+    vfs->driver->open_dir(vfs, 0, ctx);
+
+    return SUCCESS;
+}
+
+
+s32 vfs_close_dir(void *ctx)
+{
+
+}
+
+

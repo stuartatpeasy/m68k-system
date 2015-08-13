@@ -36,7 +36,7 @@ typedef struct vfs_dirent
     s8 name[NAME_MAX_LEN + 1];
     u16 uid;
     u16 gid;
-    u16 permissions;            /* e.g. rwxsrwxsrwxt */
+    u16 permissions;            /* e.g. rwxsrwxsrwx */
     u16 flags;                  /* read-only, hidden, system, ... */
     u32 size;
     u32 ctime;

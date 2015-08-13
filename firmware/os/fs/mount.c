@@ -13,7 +13,7 @@
 #include "kutil/kutil.h"
 #include "memory/kmalloc.h"
 
-struct mount_ent *g_mount_table = NULL;
+mount_ent_t *g_mount_table = NULL;
 u32 g_max_mounts = 0;
 u32 g_mount_end = 0;
 
@@ -22,17 +22,17 @@ u32 g_mount_end = 0;
    possibility that a failed realloc() might cause the loss of the entire table. */
 s32 expand_mount_table(ku32 how_many)
 {
-	struct mount_ent *new_table;
+	mount_ent_t *new_table;
 
-	new_table = kmalloc(sizeof(struct mount_ent) * (g_max_mounts + how_many));
+	new_table = kmalloc(sizeof(mount_ent_t) * (g_max_mounts + how_many));
 	if(!new_table)
 		return ENOMEM;
 
 	/* Copy the contents of the old table into the new table */
-	memcpy(new_table, g_mount_table, sizeof(struct mount_ent) * g_max_mounts);
+	memcpy(new_table, g_mount_table, sizeof(mount_ent_t) * g_max_mounts);
 
 	/* Zero the extra space created in the new table */
-	bzero(&new_table[g_max_mounts], sizeof(struct mount_ent) * how_many);
+	bzero(&new_table[g_max_mounts], sizeof(mount_ent_t) * how_many);
 
 	/* Release the old table and point g_mount_table at the new table */
 	kfree(g_mount_table);
@@ -80,6 +80,7 @@ s32 mount_add(const char * const mount_point, vfs_driver_t *driver, device_t *de
 	ent = &(g_mount_table[g_mount_end]);
 
 	ent->mount_point = strdup(mount_point);
+	ent->mount_point_len = strlen(mount_point);
 	if(!ent->mount_point)
 		return ENOMEM;		/* strdup() failed - OOM */
 
@@ -121,7 +122,7 @@ s32 mount_remove(const char * const mount_point)
 		{
 			/* TODO: signal the device that it is being unmounted; flush changed pages, etc */
 			memcpy(&g_mount_table[i], &g_mount_table[i + 1],
-						(g_mount_end - i - 1) * sizeof(struct mount_ent));
+						(g_mount_end - i - 1) * sizeof(mount_ent_t));
 
 			--g_mount_end;
 			return SUCCESS;
@@ -132,20 +133,23 @@ s32 mount_remove(const char * const mount_point)
 }
 
 
-s32 mount_find(const char * const path)
+vfs_t *mount_find(const char * const path)
 {
-	s32 i, best_match = -1, best_match_len = 0;
+	s32 i, best_match_len = 0;
+	vfs_t *fs = NULL;
 
 	for(i = 0; i < g_mount_end; ++i)
 	{
-		const s32 n = strlen(g_mount_table[i].mount_point);
-		if(!strncmp(path, g_mount_table[i].mount_point, n) && (n > best_match_len))
+        const mount_ent_t * const ent = &(g_mount_table[i]);
+        const u32 len = ent->mount_point_len;
+
+		if(!strncmp(path, ent->mount_point, len) && (len > best_match_len))
 		{
-			best_match = i;
-			best_match_len = n;
+			fs = ent->vfs;
+			best_match_len = len;
 		}
 	}
 
-	return best_match;		// -1 if no matching mount point found
+	return fs;  /* Should never return NULL, unless no root fs is mounted */
 }
 
