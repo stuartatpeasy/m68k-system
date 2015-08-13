@@ -143,6 +143,7 @@ s32 fat_umount(vfs_t *vfs)
     /* TODO: (both of these tasks may not be this module's responsibility):
         - flush all dirty sectors
         - ensure no open file handles exist on this fs
+        - (maybe) duplicate the main FAT into the secondary FAT, if present
     */
     kfree(vfs->data);
 
@@ -371,6 +372,41 @@ s32 fat_stat(vfs_t *vfs, fs_stat_t *st)
 {
 
     return 0;
+}
+
+
+/*
+    fat_find_free_node() - find the first free node in the FAT.
+*/
+s32 fat_find_free_node(vfs_t *vfs, u32 *node)
+{
+    u32 u;
+    u16 sector[BLOCK_SIZE >> 1];
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+
+    for(u = 0; u < fs->sectors_per_fat; ++u)
+    {
+        u32 v;
+
+        /* Read sector */
+        u32 ret = device_read(vfs->dev, fs->first_fat_sector + u, 1, &sector);
+        if(ret != SUCCESS)
+            return ret;
+
+        /* HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK */
+        fat_hack_sector_swap_bytes(&sector, 1);
+
+        for(v = 0; v < ARRAY_COUNT(sector); ++v)
+        {
+            if(!sector[v])
+            {
+                *node = v + (u * ARRAY_COUNT(sector));
+                return SUCCESS;
+            }
+        }
+    }
+
+    return ENOENT;   /* No free nodes found */
 }
 
 

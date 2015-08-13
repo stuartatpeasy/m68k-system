@@ -154,17 +154,17 @@ typedef u16 fat16_cluster_id;
 #define FAT_DIRENT_UNUSED           (0xe5)
 
 /* FAT-format date/time extraction/conversion macros */
-#define FAT_YEAR_FROM_DATE(d)       (((d) & 0xFE00) >> 9)
+#define FAT_YEAR_FROM_DATE(d)       ((((d) & 0xFE00) >> 9) + 1980)
 #define FAT_MONTH_FROM_DATE(d)      (((d) & 0x01E0) >> 5)
 #define FAT_DAY_FROM_DATE(d)        ((d) & 0x001F)
 
 #define FAT_HOUR_FROM_TIME(t)       (((t) & 0xF800) >> 11)
 #define FAT_MINUTE_FROM_TIME(t)     (((t) & 0x07E0) >> 5)
-#define FAT_SECOND_FROM_TIME(t)     ((t) & 0x001F)
+#define FAT_SECOND_FROM_TIME(t)     (((t) & 0x001F) << 1)
 
 #define FAT_DATE_TO_RTC_DATE(fdate, rdate)                  \
 {                                                           \
-    (rdate).year = FAT_YEAR_FROM_DATE(fdate) + 1900;        \
+    (rdate).year = FAT_YEAR_FROM_DATE(fdate);               \
     (rdate).month = FAT_MONTH_FROM_DATE(fdate);             \
     (rdate).day = FAT_DAY_FROM_DATE(fdate);                 \
 }
@@ -203,6 +203,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
+s32 fat_find_free_node(vfs_t *vfs, u32 *node);
 void fat_debug_dump_superblock(vfs_t *vfs);
 
 #endif

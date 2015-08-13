@@ -48,6 +48,8 @@
         return ret;             \
 }
 
+#define ARRAY_COUNT(a)  (sizeof(a) / sizeof((a)[0]))
+
 
 extern u8 _sdata,       /* .data section start */
           _edata,       /* .data section end   */
