@@ -128,33 +128,70 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 {
     vfs_t *vfs;
     const char *rel;
+    s8 *path_component;
+    void *ctx;
+    u32 i, node;
+    s32 ret;
 
     vfs = mount_find(path, &rel);
     if(vfs == NULL)
         return ENOENT;      /* Should only happen if no root fs is mounted */
 
-    printf("Path relative to mountpoint is: %s\n", rel);
+    path_component = (s8 *) kmalloc(NAME_MAX_LEN) + 1;
+    if(!path_component)
+        return ENOMEM;
 
-    /*
-        /glibc/sys/unistd.h
+    node = vfs->root_node;
+    do
+    {
+        for(i = 0; (*rel != DIR_SEPARATOR) && (*rel != '\0'); ++i)
+            path_component[i] = *rel++;
+
+        if(!i)
+            continue;               /* Skip over empty path components */
+
+        path_component[i] = '\0';
+
+        ret = vfs->driver->open_dir(vfs, node, &ctx);
+        if(ret != SUCCESS)
+        {
+            kfree(path_component);
+            return ret;
+        }
+
+        if(*rel == DIR_SEPARATOR)
+            printf("component: %s (dir)\n", path_component);
+        else
+            printf("component: %s (file)\n", path_component);
+
+        ret = vfs->driver->read_dir(vfs, ctx, ent, path_component);
+        if(ret != SUCCESS)
+        {
+            vfs->driver->close_dir(vfs, ctx);
+            kfree(path_component);
+            return ret;
+        }
+
+        vfs->driver->close_dir(vfs, ctx);
+
+        node = ent->first_node;
+
+        /* Check that the located component is a directory or a file, as appropriate */
+        if((*rel == DIR_SEPARATOR) && (ent->type == FSNODE_TYPE_FILE))
+        {
+            kfree(path_component);
+            return ENOTDIR;         /* Looking for a directory but found a file */
+        }
+
+        if((*rel == '\0') && (ent->type == FSNODE_TYPE_DIR))
+        {
+            kfree(path_component);
+            return EISDIR;          /* Looking for a file but found a directory */
+        }
+    } while(*rel++ != '\0');
 
 
-        Task: "locate the VFS and nodenum of the file /etc/mnttab"
-        - locate VFS containing "/etc/mnttab" (mount_find)
-            - yields root partition, mounted at "/"
-        - delete mountpoint "/" from front of path -> "etc/mnttab"
-        - split path into components
-        - foreach(component):
-            - open directory
-            - search for next component name
-                - found?
-                    - yes: if not last component: is entity a directory?
-                        - no: error
-                    - no: error
-        - return dirent referring to the final component
-    */
-
-
+    kfree(path_component);
 
     return SUCCESS;
 }

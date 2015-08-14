@@ -57,7 +57,7 @@ typedef struct vfs_driver
     s32 (*mount)(vfs_t *vfs);
     s32 (*umount)(vfs_t *vfs);
     s32 (*open_dir)(vfs_t *vfs, u32 node, void **ctx);
-    s32 (*read_dir)(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const);
+    s32 (*read_dir)(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name);
     s32 (*close_dir)(vfs_t *vfs, void *ctx);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
@@ -67,7 +67,7 @@ struct vfs
 {
     vfs_driver_t *driver;
     device_t *dev;
-    void *superblock;
+    u32 root_node;
     void *data;         /* fs-specific stuff */
 };
 

@@ -110,6 +110,7 @@ s32 fat_mount(vfs_t *vfs)
     fs->total_clusters        = fs->total_data_sectors / fs->sectors_per_cluster;
 
     vfs->data = fs;
+    vfs->root_node = FAT_ROOT_NODE;
 /*
     puts("\n$ ls /");
 
@@ -244,7 +245,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     fat_read_dir() - if name is NULL, read the next entry from a directory and populate dirent with
     its details.  If name is non-NULL, search for an entry matching name and populate the dirent.
 */
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8 * const name)
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
 {
     fat_dir_ctx_t *dir_ctx = (fat_dir_ctx_t *) ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];
