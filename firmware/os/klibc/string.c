@@ -61,6 +61,8 @@ void *memcpy(void *dest, const void *src, u32 n)
         {
             u32 n_ = n - 8;
             for(; n_--; *dest_++ = *src_++) ;
+
+            n = 8;
         }
 
         if(n)
