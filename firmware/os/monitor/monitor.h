@@ -13,6 +13,7 @@
 #include <device/bbram.h>
 #include <device/ds17485.h>
 #include <fs/mount.h>
+#include <fs/vfs.h>
 #include <include/defs.h>
 #include <include/version.h>
 #include <kutil/kutil.h>
@@ -78,6 +79,7 @@ MONITOR_CMD_HANDLER(go);
 MONITOR_CMD_HANDLER(help);
 MONITOR_CMD_HANDLER(history);
 MONITOR_CMD_HANDLER(id);
+MONITOR_CMD_HANDLER(ls);
 MONITOR_CMD_HANDLER(map);
 MONITOR_CMD_HANDLER(mount);
 MONITOR_CMD_HANDLER(raw);

@@ -62,6 +62,13 @@ typedef struct vfs_driver
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
 
+typedef struct vfs_dir_ctx
+{
+    vfs_t *vfs;
+    void *ctx;
+
+} vfs_dir_ctx_t;
+
 
 struct vfs
 {
@@ -105,6 +112,10 @@ struct vfs
 
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
-
+s32 vfs_open_dir(ks8 *path, vfs_dir_ctx_t *ctx);
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_dirent_t *dirent, ks8 *const name);
+s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
+s32 vfs_lookup(ks8 *path, vfs_dirent_t *ent);
+s8 *vfs_dirent_perm_str(const vfs_dirent_t * const dirent, s8 *str);
 #endif
 

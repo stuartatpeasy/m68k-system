@@ -126,6 +126,55 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 }
 
 
+/*
+    vfs_open_dir() - "open" a directory, i.e. find the device containing the path, verify the path,
+    ensure that the path represents a directory, and prepare to iterate over directory entries.
+*/
+s32 vfs_open_dir(ks8 *path, vfs_dir_ctx_t *ctx)
+{
+    vfs_dirent_t dirent;
+    vfs_t *vfs;
+    s32 ret;
+
+    ret = vfs_lookup(path, &dirent);
+    if(ret != SUCCESS)
+        return ret;
+
+    if(dirent.type != FSNODE_TYPE_DIR)
+        return ENOTDIR;
+
+    vfs = dirent.vfs;
+    ret = vfs->driver->open_dir(vfs, dirent.first_node, &(ctx->ctx));
+    if(ret != SUCCESS)
+        return ret;
+
+    ctx->vfs = vfs;
+
+    return SUCCESS;
+}
+
+
+/*
+    vfs_read_dir() - read the next item from a directory "opened" by vfs_open_dir().
+*/
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_dirent_t *dirent, ks8 * const name)
+{
+    return ctx->vfs->driver->read_dir(ctx->vfs, ctx->ctx, dirent, name);
+}
+
+
+/*
+    vfs_close_dir() - clean up after iterating over a directory using vfs_open_dir()/vfs_read_dir().
+*/
+s32 vfs_close_dir(vfs_dir_ctx_t *ctx)
+{
+    return ctx->vfs->driver->close_dir(ctx->vfs, ctx->ctx);
+}
+
+
+/*
+    vfs_lookup() - look up a path and populate a vfs_dirent_t with the contents.
+*/
 s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 {
     vfs_t *vfs;
@@ -186,17 +235,25 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
         }
     } while(*rel++ != '\0');
 
-
     kfree(path_component);
 
     return SUCCESS;
 }
 
 
-s32 vfs_close_dir(void *ctx)
+s8 *vfs_dirent_perm_str(const vfs_dirent_t * const dirent, s8 *str)
 {
-    /* TODO */
-    return SUCCESS;
+    /* TODO: handle sticky bits */
+    str[0] = (dirent->type == FSNODE_TYPE_DIR) ? 'd' : '-';
+    str[1] = (dirent->permissions & VFS_PERM_UR) ? 'r' : '-';
+    str[2] = (dirent->permissions & VFS_PERM_UW) ? 'w' : '-';
+    str[3] = (dirent->permissions & VFS_PERM_UX) ? 'x' : '-';
+    str[4] = (dirent->permissions & VFS_PERM_GR) ? 'r' : '-';
+    str[5] = (dirent->permissions & VFS_PERM_GW) ? 'w' : '-';
+    str[6] = (dirent->permissions & VFS_PERM_GX) ? 'x' : '-';
+    str[7] = (dirent->permissions & VFS_PERM_OR) ? 'r' : '-';
+    str[8] = (dirent->permissions & VFS_PERM_OW) ? 'w' : '-';
+    str[9] = (dirent->permissions & VFS_PERM_OX) ? 'x' : '-';
+
+    return str;
 }
-
-

@@ -419,6 +419,8 @@ MONITOR_CMD_HANDLER(help)
 		  "    Display command history\n\n"
 		  "id\n"
 		  "    Display device identity\n\n"
+		  "ls [<path>]\n"
+		  "    List directory contents\n\n"
 		  "map\n"
 		  "    Display memory map\n\n"
 		  "mount [<dev> <fstype> <mountpoint>]\n"
@@ -474,6 +476,67 @@ MONITOR_CMD_HANDLER(history)
 MONITOR_CMD_HANDLER(id)
 {
     puts(OS_NAME " v" OS_VERSION_STR " on " CPU_NAME ", build date " __DATE__ " " __TIME__);
+    return MON_E_OK;
+}
+
+
+/*
+    ls
+
+    List directory contents
+*/
+MONITOR_CMD_HANDLER(ls)
+{
+    vfs_dirent_t dirent;
+    char perms[11];
+
+    perms[10] = '\0';
+
+    /* For now we require a path arg */
+    if(num_args == 1)
+    {
+        s32 ret;
+
+        ret = vfs_lookup(args[0], &dirent);
+        if(ret != SUCCESS)
+        {
+            puts(kstrerror(ret));
+            return MON_E_OK;
+        }
+
+        if(dirent.type == FSNODE_TYPE_DIR)
+        {
+            /* Iterate directory */
+            vfs_dir_ctx_t ctx;
+
+            ret = vfs_open_dir(args[0], &ctx);
+            if(ret != SUCCESS)
+            {
+                puts(kstrerror(ret));
+                return MON_E_OK;
+            }
+
+            while((ret = vfs_read_dir(&ctx, &dirent, NULL)) != ENOENT)
+            {
+                printf("%9d %s %9d %s\n", dirent.first_node, vfs_dirent_perm_str(&dirent, perms),
+                       dirent.size, dirent.name);
+            }
+
+            if(ret != ENOENT)
+                puts(kstrerror(ret));
+
+            vfs_close_dir(&ctx);
+        }
+        else
+        {
+            /* Print single file */
+            printf("%9d %s %9d %s\n", dirent.first_node, vfs_dirent_perm_str(&dirent, perms),
+                   dirent.size, dirent.name);
+        }
+    }
+    else
+        return MON_E_SYNTAX;
+
     return MON_E_OK;
 }
 
@@ -704,16 +767,8 @@ MONITOR_CMD_HANDLER(srec)
 
     Used to trigger a test of some sort
 */
-#include "fs/vfs.h"
 MONITOR_CMD_HANDLER(test)
 {
-    vfs_dirent_t dirent;
-
-    if(vfs_lookup("/glibc/include/sys/unistd.h", &dirent) == SUCCESS)
-        puts("vfs_lookup() succeeded");
-    else
-        puts("vfs_lookup() failed");
-
     return MON_E_OK;
 }
 
