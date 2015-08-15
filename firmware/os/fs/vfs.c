@@ -241,19 +241,28 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 }
 
 
+/*
+    vfs_dirent_perm_str() build in str a ten-character "permission string", e.g. "drwxr-x---" from
+    the supplied dirent.  str must point to a buffer of at least 10 characters.
+*/
 s8 *vfs_dirent_perm_str(const vfs_dirent_t * const dirent, s8 *str)
 {
-    /* TODO: handle sticky bits */
     str[0] = (dirent->type == FSNODE_TYPE_DIR) ? 'd' : '-';
     str[1] = (dirent->permissions & VFS_PERM_UR) ? 'r' : '-';
     str[2] = (dirent->permissions & VFS_PERM_UW) ? 'w' : '-';
-    str[3] = (dirent->permissions & VFS_PERM_UX) ? 'x' : '-';
+    str[3] = (dirent->permissions & VFS_PERM_UX) ?
+                ((dirent->permissions & VFS_PERM_UT) ? 's' : 'x') :
+                ((dirent->permissions & VFS_PERM_UT) ? 'S' : '-');
     str[4] = (dirent->permissions & VFS_PERM_GR) ? 'r' : '-';
     str[5] = (dirent->permissions & VFS_PERM_GW) ? 'w' : '-';
-    str[6] = (dirent->permissions & VFS_PERM_GX) ? 'x' : '-';
+    str[6] = (dirent->permissions & VFS_PERM_GW) ?
+                ((dirent->permissions & VFS_PERM_GT) ? 's' : 'x') :
+                ((dirent->permissions & VFS_PERM_GT) ? 'S' : '-');
     str[7] = (dirent->permissions & VFS_PERM_OR) ? 'r' : '-';
     str[8] = (dirent->permissions & VFS_PERM_OW) ? 'w' : '-';
-    str[9] = (dirent->permissions & VFS_PERM_OX) ? 'x' : '-';
+    str[9] = (dirent->permissions & VFS_PERM_OX) ?
+                ((dirent->permissions & VFS_PERM_OT) ? 's' : 'x') :
+                ((dirent->permissions & VFS_PERM_OT) ? 'S' : '-');
 
     return str;
 }
