@@ -709,8 +709,10 @@ MONITOR_CMD_HANDLER(test)
 {
     vfs_dirent_t dirent;
 
-    if(vfs_lookup("/glibc/sys/unistd.h", &dirent) == SUCCESS)
-        puts("vfs_dirent() succeeded");
+    if(vfs_lookup("/glibc/include/sys/unistd.h", &dirent) == SUCCESS)
+        puts("vfs_lookup() succeeded");
+    else
+        puts("vfs_lookup() failed");
 
     return MON_E_OK;
 }

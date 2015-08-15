@@ -60,10 +60,12 @@ s32 vfs_init()
 	s32 ret, i;
 
 	/* Init file system drivers */
-	for(i = 0; i < (sizeof(g_fs_drivers) / sizeof(g_fs_drivers[0])); ++i)
+	for(i = 0; i < ARRAY_COUNT(g_fs_drivers); ++i)
     {
-        printf("vfs: initialising '%s' fs driver: ", g_fs_drivers[i]->name);
-        if(g_fs_drivers[i]->init() == SUCCESS)
+        vfs_driver_t * const drv = g_fs_drivers[i];
+
+        printf("vfs: initialising '%s' fs driver: ", drv->name);
+        if(drv->init() == SUCCESS)
             puts("OK");
         else
             puts("failed");     /* TODO handle this - make the fs driver unavailable */
@@ -128,7 +130,7 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 {
     vfs_t *vfs;
     const char *rel;
-    s8 *path_component;
+    s8 * path_component;
     void *ctx;
     u32 i, node;
     s32 ret;
@@ -137,7 +139,7 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
     if(vfs == NULL)
         return ENOENT;      /* Should only happen if no root fs is mounted */
 
-    path_component = (s8 *) kmalloc(NAME_MAX_LEN) + 1;
+    path_component = (s8 *) kmalloc(NAME_MAX_LEN + 1);
     if(!path_component)
         return ENOMEM;
 
@@ -159,20 +161,14 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
             return ret;
         }
 
-        if(*rel == DIR_SEPARATOR)
-            printf("component: %s (dir)\n", path_component);
-        else
-            printf("component: %s (file)\n", path_component);
-
         ret = vfs->driver->read_dir(vfs, ctx, ent, path_component);
+
+        vfs->driver->close_dir(vfs, ctx);
         if(ret != SUCCESS)
         {
-            vfs->driver->close_dir(vfs, ctx);
             kfree(path_component);
             return ret;
         }
-
-        vfs->driver->close_dir(vfs, ctx);
 
         node = ent->first_node;
 

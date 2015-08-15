@@ -128,7 +128,7 @@ typedef struct fat_dir_ctx fat_dir_ctx_t;
 
 typedef u16 fat16_cluster_id;
 
-#define FAT_ROOT_NODE               (2)         /* Only valid in FAT12/FAT16 */
+#define FAT_ROOT_NODE               (0)             /* Only valid in FAT12/FAT16 */
 
 /* Constants used during superblock validation */
 #define FAT_PARTITION_SIG           (0xaa55)

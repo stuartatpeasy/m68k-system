@@ -111,30 +111,7 @@ s32 fat_mount(vfs_t *vfs)
 
     vfs->data = fs;
     vfs->root_node = FAT_ROOT_NODE;
-/*
-    puts("\n$ ls /");
 
-    void *ctx;
-    vfs_dirent_t dirent;
-
-    ret = fat_open_dir(vfs, 15, &ctx);
-    if(ret != SUCCESS)
-    {
-        printf("fat_open_dir() failed: %s\n", kstrerror(ret));
-        return ret;
-    }
-
-    while((ret = fat_read_dir(vfs, ctx, &dirent, NULL)) == SUCCESS)
-    {
-        printf("%c %9d %9d %s\n", (dirent.type == FSNODE_TYPE_DIR) ? 'd' : 'f', dirent.first_node,
-               dirent.size, dirent.name);
-    }
-
-    if(ret != ENOENT)
-        printf("fat_read_dir() failed with %s\n", kstrerror(ret));
-
-    fat_close_dir(vfs, ctx);
-*/
     return SUCCESS;
 }
 
