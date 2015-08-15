@@ -43,7 +43,7 @@ all: $(APPNAME)
 
 $(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
-	$(OBJCOPY) -j .text -j .rodata -j .data -j .bss -O binary $(APPNAME) $(APPNAME).rom
+	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
 	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
 	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
 	chmod -f -x $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom || true
