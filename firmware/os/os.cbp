@@ -84,6 +84,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="fs/fat/fat.h" />
+		<Unit filename="fs/file.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fs/file.h" />
 		<Unit filename="fs/mount.c">
 			<Option compilerVar="CC" />
 		</Unit>

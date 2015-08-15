@@ -13,7 +13,7 @@ CSOURCES=dfu.c main.c \
 		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/expansion.c \
 		 device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
-		 fs/mount.c fs/vfs.c fs/fat/fat.c \
+		 fs/file.c fs/mount.c fs/vfs.c fs/fat/fat.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
 		 sched/sched.c
 
@@ -143,6 +143,9 @@ fs/ext2/ext2.o: \
 fs/fat/fat.o: \
 	fs/fat/fat.c fs/fat/fat.h fs/vfs.h include/byteorder.h include/defs.h include/error.h \
 	include/types.h klibc/strings.h kutil/kutil.h
+
+fs/file.o: \
+	fs/file.c fs/file.h
 
 fs/mount.o: \
 	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h fs/vfs.h include/defs.h \
