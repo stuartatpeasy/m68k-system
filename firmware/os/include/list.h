@@ -24,7 +24,7 @@ typedef struct llitem list_t;
 #define LIST_INIT(name) { &(name), &(name) }
 
 #define LINKED_LIST(name) \
-    list_t name = LIST_INIT(name);
+    list_t name = LIST_INIT(name)
 
 /**
  * list_entry - get the containing struct for the current entry
@@ -44,6 +44,16 @@ typedef struct llitem list_t;
  */
 #define list_first_entry(ptr, type, member) \
     list_entry((ptr)->next, type, member)
+
+
+/**
+ * list_last_entry - get the last element in the list
+ * @ptr: ptr to a list_t referring to the item
+ * @type: the type of the containing struct
+ * @member: name of the member containing the list_t within the struct
+ */
+#define list_last_entry(ptr, type, member) \
+    list_entry((ptr)->prev, type, member)
 
 
 /**
@@ -118,9 +128,9 @@ typedef struct llitem list_t;
  * @member: name of the member containing the list_t within the struct
  */
 #define list_for_each_entry(pos, head, member)                                              \
-    for(pos = list_entry((head)->next, typeof(*pos), member);                               \
+    for(pos = list_first_entry(head, typeof(*pos), member);                               \
         &pos->member != (head);                                                             \
-        pos = list_entry(pos->member.next, typeof(*pos), member))
+        pos = list_next_entry(pos, member))
 
 
 /**
@@ -144,9 +154,9 @@ typedef struct llitem list_t;
  * @member: name of the member containing the list_t within the struct
  */
 #define list_for_each_entry_reverse(pos, head, member)                                      \
-    for(pos = list_entry((head)->prev, typeof(*pos), member);                               \
+    for(pos = list_last_entry(head, typeof(*pos), member);                               \
         &pos->member != (head);                                                             \
-        pos = list_entry(pos->member.prev, typeof(*pos), member))
+        pos = list_prev_entry(posm, member))
 
 
 /**
