@@ -50,6 +50,14 @@
 
 #define ARRAY_COUNT(a)  (sizeof(a) / sizeof((a)[0]))
 
+#define offsetof(st, m) ((size_t) (&((st *) 0)->m))
+
+#define containerof(ptr, type, member)                  \
+({                                                      \
+    const typeof(((type *) 0)->member) *mptr = (ptr);   \
+    (type *) ((char *) mptr - offsetof(type, member));  \
+})
+
 
 extern u8 _sdata,       /* .data section start */
           _edata,       /* .data section end   */
