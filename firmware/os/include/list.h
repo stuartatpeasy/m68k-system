@@ -11,15 +11,15 @@
 
 #include "include/defs.h"
 
-#define LIST_INVALID_ITEM      (0xc01dc0de)
-
 struct llitem
 {
-    struct list_head *next;
-    struct list_head *prev;
+    struct llitem *next;
+    struct llitem *prev;
 };
 
 typedef struct llitem list_t;
+
+#define LIST_INVALID_ITEM      ((list_t *) (0xc01dc0de))
 
 #define LIST_INIT(name) { &(name), &(name) }
 
@@ -267,7 +267,7 @@ static inline void list_replace(list_t *old, list_t *new)
  */
 static inline void list_move_append(list_t *item, list_t *dest)
 {
-    do_list_del(item->prev, item->next);
+    do_list_delete(item->prev, item->next);
     list_append(item, dest);
 }
 
@@ -277,9 +277,9 @@ static inline void list_move_append(list_t *item, list_t *dest)
  * @item: item to remove
  * @dest: item after which the removed item should be appended
  */
-static inline void list_move_append(list_t *item, list_t *dest)
+static inline void list_move_insert(list_t *item, list_t *dest)
 {
-    do_list_del(item->prev, item->next);
+    do_list_delete(item->prev, item->next);
     list_insert(item, dest);
 }
 
@@ -289,7 +289,7 @@ static inline void list_move_append(list_t *item, list_t *dest)
  * @item: item to test
  * @first: first item in the list
  */
-static inline void list_is_last(const list_t *item, const list_t *first)
+static inline s32 list_is_last(const list_t *item, const list_t *first)
 {
     return item->next == first;
 }
@@ -299,7 +299,7 @@ static inline void list_is_last(const list_t *item, const list_t *first)
  * list_is_empty - find whether item refers to an empty list
  * @item: item to test
  */
-static inline void list_is_empty(const list_t *item)
+static inline s32 list_is_empty(const list_t *item)
 {
     return item->next == item;
 }
