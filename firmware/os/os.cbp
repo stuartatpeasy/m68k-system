@@ -75,7 +75,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="dfu.h" />
-		<Unit filename="fs/ext2/ext2-defs.h" />
 		<Unit filename="fs/ext2/ext2.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -102,6 +101,7 @@
 		<Unit filename="include/defs.h" />
 		<Unit filename="include/error.h" />
 		<Unit filename="include/limits.h" />
+		<Unit filename="include/list.h" />
 		<Unit filename="include/syscall.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
