@@ -767,8 +767,49 @@ MONITOR_CMD_HANDLER(srec)
 
     Used to trigger a test of some sort
 */
+#include "include/list.h"
+struct mydata
+{
+    int meh;
+    int foo;
+    int bar;
+    list_t ll;
+};
+
 MONITOR_CMD_HANDLER(test)
 {
+    struct mydata
+    x = {
+        .meh = 1,
+        .foo = 2,
+        .bar = 3,
+        .ll = LIST_INIT(x.ll)
+    },
+    y = {
+        .meh = 10,
+        .foo = 20,
+        .bar = 30,
+        .ll = LIST_INIT(y.ll)
+    },
+    z = {
+        .meh = 100,
+        .foo = 200,
+        .bar = 300,
+        .ll = LIST_INIT(z.ll)
+    },
+    *p;
+
+    LINKED_LIST(mylist);
+
+    list_append(&x.ll, &mylist);
+    list_append(&y.ll, &mylist);
+    list_append(&z.ll, &mylist);
+
+    list_for_each_entry(p, &mylist, ll)
+    {
+        printf("foo is %d\n", p->foo);
+    }
+
     return MON_E_OK;
 }
 
