@@ -37,10 +37,114 @@
 
 #include "ext2.h"
 
-#define EXT2_MAX_FILESYSTEMS	(16)
+vfs_driver_t g_ext2_ops =
+{
+    .name = "ext2",
+    .init = ext2_init,
+    .mount = ext2_mount,
+    .umount = ext2_umount,
+    .open_dir = ext2_open_dir,
+    .read_dir = ext2_read_dir,
+    .close_dir = ext2_close_dir,
+    .stat = ext2_stat
+};
 
-static ext2_filesystem_t g_ext2_filesystem[EXT2_MAX_FILESYSTEMS];
-static u32 g_ext2_next_fs = 0;
+
+/**
+ * ext2_init - initialise ext2 file system driver
+ */
+s32 ext2_init()
+{
+    /* Nothing to do here */
+    return SUCCESS;
+}
+
+
+/**
+ * ext2_mount - attempt to mount an ext2 file system
+ * @vfs: partially-populated vfs_t data structure
+ */
+s32 ext2_mount(vfs_t *vfs)
+{
+	ext2_filesystem_t *fs;
+	u32 ret, buf_size, num_block_groups;
+	u8 *buf;
+
+    vfs->data = kmalloc(sizeof(ext2_filesystem_t));
+    if(!vfs->data)
+        return ENOMEM;
+
+	fs = (ext2_filesystem_t *) vfs->data;
+
+	/*
+		Read the superblock
+	*/
+
+	fs->sblk = kmalloc(sizeof(ext2_superblock_t));
+	if(!fs->sblk)
+    {
+        kfree(vfs->data);
+		return ENOMEM;
+    }
+
+    printf("ext2: superblock size is %d\n", sizeof(ext2_superblock_t));
+
+    ret = device_read(vfs->dev, 1024 / BLOCK_SIZE, sizeof(ext2_superblock_t) / BLOCK_SIZE,
+                        fs->sblk);
+	if(ret != SUCCESS)
+	{
+	    kfree(vfs->data);
+		kfree(fs->sblk);
+		return ret;
+	}
+
+	if(fs->sblk->s_magic != EXT2_SUPER_MAGIC)
+	{
+		kfree(fs->sblk);
+		printf("%s: bad ext2 superblock magic: expected 0x%04x, read 0x%04x\n", vfs->dev->name,
+                EXT2_SUPER_MAGIC, fs->sblk->s_magic);
+
+		return EBADSBLK;	/* bad superblock (invalid magic number) */
+	}
+
+	/* TODO: more superblock validation */
+	/* TODO: check compat/incompat flags */
+
+	/*
+		Read the block group descriptor table
+	*/
+
+	num_block_groups = fs->sblk->s_inodes_count / fs->sblk->s_inodes_per_group;
+
+	/* Calculate the size of a buffer to hold the BGD table, rounding up to the nearest block */
+	buf_size = num_block_groups * EXT2_BGD_SIZE;
+
+	if(!(buf = kmalloc(buf_size)))
+	{
+		kfree(fs->sblk);
+		return ENOMEM;
+	}
+
+	ret = unaligned_read((fs->sblk->s_log_block_size ? 1 : 2) << (10 + fs->sblk->s_log_block_size),
+					buf_size, buf);
+	if(ret)
+	{
+		kfree(fs->sblk);
+		kfree(buf);
+		return ret;
+	}
+
+	fs->bgd = (struct ext2_bgd *) buf;
+	fs->bgd_table_clean = 1;
+
+	return SUCCESS;
+}
+
+
+s32 ext2_umount(vfs_t *vfs)
+{
+    /* TODO */
+}
 
 
 /*
@@ -170,79 +274,6 @@ u32 ext2_read_inode(const ext2_filesystem_t *fs, u32 inum, ext2_inode_t *inode)
 	}
 
 	return EINVAL; /* inum is out of bounds */
-}
-
-
-/*
-	Initialise a file system structure
-*/
-u32 ext2_init_filesystem(ext2_filesystem_t **ppfs)
-{
-	ext2_filesystem_t *fs;
-	u32 ret, buf_size, num_block_groups;
-	u8 *buf;
-
-	if(g_ext2_next_fs >= EXT2_MAX_FILESYSTEMS)
-		return EMFILE;	/* No more file system blocks available */
-
-	/*
-		Read the superblock
-	*/
-
-	buf = kmalloc(sizeof(ext2_superblock_t));
-	if(!buf)
-		return ENOMEM;
-
-	ret = unaligned_read(1024, sizeof(ext2_superblock_t), buf);
-	if(ret)
-	{
-		kfree(buf);
-		return ret;
-	}
-
-	fs = &g_ext2_filesystem[g_ext2_next_fs];
-	fs->sblk = (ext2_superblock_t *) buf;
-
-	if(fs->sblk->s_magic != EXT2_SUPER_MAGIC)
-	{
-		kfree(fs->sblk);
-		return EINVAL;	/* bad superblock (invalid magic number) */
-	}
-
-	/* TODO: more superblock validation */
-	/* TODO: check compat/incompat flags */
-
-	/*
-		Read the block group descriptor table
-	*/
-
-	num_block_groups = fs->sblk->s_inodes_count / fs->sblk->s_inodes_per_group;
-
-	/* Calculate the size of a buffer to hold the BGD table, rounding up to the nearest block */
-	buf_size = num_block_groups * EXT2_BGD_SIZE;
-
-	if(!(buf = kmalloc(buf_size)))
-	{
-		kfree(fs->sblk);
-		return ENOMEM;
-	}
-
-	ret = unaligned_read((fs->sblk->s_log_block_size ? 1 : 2) << (10 + fs->sblk->s_log_block_size),
-					buf_size, buf);
-	if(ret)
-	{
-		kfree(fs->sblk);
-		kfree(buf);
-		return ret;
-	}
-
-	fs->bgd = (struct ext2_bgd *) buf;
-	fs->bgd_table_clean = 1;
-
-	++g_ext2_next_fs;
-	*ppfs = fs;
-
-	return SUCCESS;
 }
 
 
@@ -484,13 +515,7 @@ u32 ext2_parse_path(ext2_filesystem_t *fs, ks8 *path, inum_t *inum)
 	return SUCCESS;
 }
 
-u32 ext2_mount()
-{
-    /* FIXME */
-	return SUCCESS;
-}
-
-
+#if 0
 /* TODO: express read offsets (args to block_read()) in terms of blocks/sectors, not as magic numbers */
 void ext2()
 {
@@ -538,4 +563,4 @@ void ext2()
 		}
 	}
 }
-
+#endif
