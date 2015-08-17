@@ -37,6 +37,10 @@ typedef signed long long			s64;
 typedef const signed long long		ks64;
 typedef volatile signed long long	vs64;
 
+#ifndef size_t
+typedef u32 size_t;
+#endif
+
 /* Wall-clock time */
 struct rtc_time
 {
