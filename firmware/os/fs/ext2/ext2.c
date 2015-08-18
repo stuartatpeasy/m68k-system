@@ -125,8 +125,9 @@ s32 ext2_mount(vfs_t *vfs)
 		return ENOMEM;
 	}
 
-	ret = unaligned_read((fs->sblk->s_log_block_size ? 1 : 2) << (10 + fs->sblk->s_log_block_size),
-					buf_size, buf);
+    ret = device_read(vfs->dev, (fs->sblk->s_log_block_size ? 1 : 2) <<
+                                    (10 + fs->sblk->s_log_block_size - LOG_BLOCK_SIZE),
+                      buf_size >> LOG_BLOCK_SIZE, buf);
 	if(ret)
 	{
 		kfree(fs->sblk);
@@ -141,9 +142,42 @@ s32 ext2_mount(vfs_t *vfs)
 }
 
 
+/**
+ * ext2_umount - attempt to unmount an ext2 file system
+ * @vfs: vfs_t data structure specifying the file system
+ */
 s32 ext2_umount(vfs_t *vfs)
 {
     /* TODO */
+    return SUCCESS;
+}
+
+
+s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx)
+{
+    /* TODO */
+    return SUCCESS;
+}
+
+
+s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8* const name)
+{
+    /* TODO */
+    return SUCCESS;
+}
+
+
+s32 ext2_close_dir(vfs_t *vfs, void *ctx)
+{
+    /* TODO */
+    return SUCCESS;
+}
+
+
+s32 ext2_stat(vfs_t *vfs, fs_stat_t *st)
+{
+    /* TODO */
+    return SUCCESS;
 }
 
 
@@ -199,11 +233,15 @@ u32 block_group_contains_superblock(const ext2_filesystem_t *fs, ku32 block_grou
 /*
 	Read a block into the buffer at *ppbuf.  If *ppbuf is NULL, allocate a new buffer and store
 	a pointer to it in *ppbuf.
+
+	************************ TODO - deprecate this function ******************************
 */
-u32 ext2_read_block(const ext2_filesystem_t *fs, ku32 block, u8 **ppbuf)
+u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf)
 {
 	u32 ret;
 	u8 *buf;
+
+    const ext2_filesystem_t *fs = (const ext2_filesystem_t *) vfs->data;
 
 	/* allocate a new buffer if needed */
 	if(*ppbuf == NULL)
@@ -220,7 +258,7 @@ u32 ext2_read_block(const ext2_filesystem_t *fs, ku32 block, u8 **ppbuf)
 	}
 
 printf("[read block %u]\n", block);
-	ret = block_read_multi((block << (10 + fs->sblk->s_log_block_size)) >> LOG_BLOCK_SIZE,
+	ret = device_read(vfs->dev, (block << (10 + fs->sblk->s_log_block_size)) >> LOG_BLOCK_SIZE,
 							(1024 << fs->sblk->s_log_block_size) >> LOG_BLOCK_SIZE, buf);
 	if(ret)
 	{
@@ -239,8 +277,10 @@ printf("[read block %u]\n", block);
 /*
 	Read the specified inode
 */
-u32 ext2_read_inode(const ext2_filesystem_t *fs, u32 inum, ext2_inode_t *inode)
+u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode)
 {
+    const ext2_filesystem_t *fs = (const ext2_filesystem_t *) vfs->data;
+
 	if(inum < fs->sblk->s_inodes_count)
 	{
 		u32 block, offset, ret;
@@ -263,7 +303,7 @@ u32 ext2_read_inode(const ext2_filesystem_t *fs, u32 inum, ext2_inode_t *inode)
 		/* inum_ = offset of this inode from the start of the block */
 		offset &= BLOCK_SIZE - 1;
 
-		ret = block_read(block, buf);
+		ret = device_read(vfs->dev, block, 1, buf);
 		if(ret)
 			return ret;
 
@@ -281,10 +321,12 @@ u32 ext2_read_inode(const ext2_filesystem_t *fs, u32 inum, ext2_inode_t *inode)
 	Return the block ID of the num'th block of an inode
 	XXX UNTESTED
 */
-u32 ext2_inode_get_block(ext2_filesystem_t *fs, const ext2_inode_t *inode, u32 num, u32 *block)
+u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *block)
 {
 	u32 ret, block_id = 0;
 	u32 *buf = NULL;
+
+    ext2_filesystem_t *fs = (ext2_filesystem_t *) vfs->data;
 
 	/* Each indirect block stores some number of block IDs.  The size of a block ID is fixed (4
 	   bytes) so the number stored per block is proportional to the size of the block.  In order
@@ -333,7 +375,7 @@ u32 ext2_inode_get_block(ext2_filesystem_t *fs, const ext2_inode_t *inode, u32 n
 		if(!block_id)
 			return EINVAL;	/* past EOF */
 
-		ret = ext2_read_block(fs, block_id, (u8 **) &buf);
+		ret = ext2_read_block(vfs, block_id, (void **) &buf);
 		if(ret)
 		{
 			kfree(buf);
@@ -368,7 +410,7 @@ u32 ext2_inode_get_block(ext2_filesystem_t *fs, const ext2_inode_t *inode, u32 n
 			return EINVAL;	/* past EOF */
 		}
 
-		ret = ext2_read_block(fs, block_id, (u8 **) &buf);
+		ret = ext2_read_block(vfs, block_id, (void **) &buf);
 		if(ret)
 		{
 			kfree(buf);
@@ -396,7 +438,7 @@ u32 ext2_inode_get_block(ext2_filesystem_t *fs, const ext2_inode_t *inode, u32 n
 	if(!block_id)
 		block_id = inode->i_block[12];
 
-	ret = ext2_read_block(fs, block_id, (u8 **) &buf);
+	ret = ext2_read_block(vfs, block_id, (u8 **) &buf);
 	if(ret)
 	{
 		kfree(buf);
@@ -413,13 +455,15 @@ u32 ext2_inode_get_block(ext2_filesystem_t *fs, const ext2_inode_t *inode, u32 n
 /*
 	Find the inode containing the file at the specified (absolute) path and return its number.
 */
-u32 ext2_parse_path(ext2_filesystem_t *fs, ks8 *path, inum_t *inum)
+u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 {
 	ks8 *end;
 	u8 *buf = NULL;
 	ext2_inode_t inode;
 	inum_t in = EXT2_ROOT_INO;
 	u8 name[NAME_MAX_LEN + 1];
+
+	ext2_filesystem_t *fs = (ext2_filesystem_t *) vfs->data;
 
 	/* Fail if the first character of the path is anything other than a directory separator (/).
 	   e.g. the path is non-absolute, or is empty */
@@ -450,7 +494,7 @@ u32 ext2_parse_path(ext2_filesystem_t *fs, ks8 *path, inum_t *inum)
 			memcpy(name, path, len);
 			name[end - path] = '\0';
 
-			ret = ext2_read_inode(fs, in, &inode);
+			ret = ext2_read_inode(vfs, in, &inode);
 			if(ret)
 			{
 				kfree(buf);
@@ -462,7 +506,7 @@ u32 ext2_parse_path(ext2_filesystem_t *fs, ks8 *path, inum_t *inum)
 			{
 				const ext2_dirent_t *d_ent;
 
-				ret = ext2_inode_get_block(fs, &inode, block_index++, &data_block);
+				ret = ext2_inode_get_block(vfs, &inode, block_index++, &data_block);
 				if(ret)
 				{
 					kfree(buf);
@@ -474,7 +518,7 @@ u32 ext2_parse_path(ext2_filesystem_t *fs, ks8 *path, inum_t *inum)
 					break;
 				}
 
-				ret = ext2_read_block(fs, data_block, &buf);
+				ret = ext2_read_block(vfs, data_block, &buf);
 				if(ret)
 				{
 					kfree(buf);
