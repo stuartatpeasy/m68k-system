@@ -30,7 +30,8 @@
 */
 #ifdef HOST_LITTLEENDIAN
 #define HTOP_SHORT(x)			((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
-#define HTOP_INT(x)				(((x) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | ((x) >> 24))
+#define HTOP_INT(x)				(((x) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | \
+                                    ((x) >> 24))
 #else
 #define HTOP_SHORT(x)			(x)
 #define HTOP_INT(x)				(x)
