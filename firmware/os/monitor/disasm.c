@@ -10,10 +10,59 @@
 #include "disasm.h"
 
 
+ks8 * const g_disasm_branches[] =
+{
+    "bra", "bsr", "bhi", "bls", "bcc", "bcs", "bne", "beq",
+    "bvc", "bvs", "bpl", "bmi", "bge", "blt", "bgt", "ble"
+};
+
+ks8 * const g_disasm_dbranches[] =
+{
+    "dbt",  "dbf",  "dbhi", "dbls", "dbcc", "dbcs", "dbne", "dbeq",
+    "dbvc", "dbvs", "dbpl", "dbmi", "dbge", "dblt", "dbgt", "dble"
+};
+
+ks8 * const g_disasm_sets[] =
+{
+    "st",  "sf",  "shi", "sls", "scc", "scs", "sne", "seq",
+    "svc", "svs", "spl", "smi", "sge", "slt", "sgt", "sle"
+};
+
+ks8 * const g_disasm_bits[] =
+{
+    "btst", "bchg", "bclr", "bset"
+};
+
+ks8 * const g_disasm_lshifts[] =
+{
+    "asl", "lsl", "roxl", "rol"
+};
+
+ks8 * const g_disasm_rshifts[] =
+{
+    "asr", "lsr", "roxr", "ror"
+};
+
+ks8 * const g_disasm_misc1[] =
+{
+    "reset", "nop", "stop", "rte", "rtd", "rts", "trapv", "rtr"
+};
+
+ks8 * const g_disasm_misc2[] =
+{
+    "ori", "andi", "subi", "addi", "???", "eori", "cmpi", "moves"
+};
+
+const ea_size_t g_disasm_sizemap[] =
+{
+    ea_byte, ea_word, ea_long, ea_unsized
+};
+
+
 int disassemble(unsigned short **p, char *str)
 {
 	char a1[32], a2[32];
-	char *pf = NULL;
+	const char *pf = NULL;
 
 	const unsigned short instr = HTOP_SHORT(*(*p)++);
 	const unsigned char bit7_6 = (instr >> 6) & 3,
@@ -59,13 +108,7 @@ int disassemble(unsigned short **p, char *str)
 			}
 			else				/* static/dynamic bit */
 			{
-				switch(bit7_6)
-				{
-					case 0:	pf = "btst";	break;
-					case 1:	pf = "bchg";	break;
-					case 2:	pf = "bclr";	break;
-					case 3:	pf = "bset";	break;
-				}
+			    pf = g_disasm_bits[bit7_6];
 
 				if(BIT(instr, 8))	/* dynamic bit */
 				{
@@ -83,17 +126,8 @@ int disassemble(unsigned short **p, char *str)
 		}
 		else
 		{
-			switch((instr >> 9) & 0x7)
-			{
-				case 0:	pf = "ori";		break;
-				case 1:	pf = "andi";	break;
-				case 2:	pf = "subi";	break;
-				case 3:	pf = "addi";	break;
-				/* case 4 is "static bit", which is handled above */
-				case 5:	pf = "eori";	break;
-				case 6:	pf = "cmpi";	break;
-				case 7: pf = "moves";	break;
-			}
+		    /* ori / andi / subi / addi / <static bit, handled above> / eori / cmpi / moves */
+		    pf = g_disasm_misc2[(instr >> 9) & 0x7];
 
 			if((src_mode == 7) && (src_reg == 4))		/* -> ccr/sr */
 			{
@@ -112,13 +146,7 @@ int disassemble(unsigned short **p, char *str)
 			}
 			else
 			{
-				switch(bit7_6)
-				{
-					case 0:	size = ea_byte;			break;
-					case 1:	size = ea_word;			break;
-					case 2:	size = ea_long;			break;
-					case 3:	size = ea_unsized;		break;	/* invalid */
-				}
+			    size = g_disasm_sizemap[bit7_6];
 
 				if(size)
 				{
@@ -134,12 +162,7 @@ int disassemble(unsigned short **p, char *str)
 	case 0x1:
 	case 0x2:
 	case 0x3:
-		switch(instr >> 12)
-		{
-			case 1:	size = ea_byte;	break;
-			case 2:	size = ea_long;	break;
-			case 3:	size = ea_word;	break;
-		}
+	    size = g_disasm_sizemap[instr >> 12];
 
 		if(dest_mode == 1)		/* movea */
 		{
@@ -256,12 +279,7 @@ int disassemble(unsigned short **p, char *str)
 			}
 			else
 			{
-				switch(bit7_6)
-				{
-					case 0: size = ea_byte;	break;
-					case 1: size = ea_word;	break;
-					case 2: size = ea_long;	break;
-				}
+			    size = g_disasm_sizemap[bit7_6];
 
 				switch(dest_reg)
 				{
@@ -369,21 +387,15 @@ int disassemble(unsigned short **p, char *str)
 							break;
 
 						case 6:						/* reset / nop / stop / rte / rtd / rts / trapv / rtr */
-							size = ea_unsized;
 							switch(src_reg)
 							{
-							case 0:	pf = "reset";	break;
-							case 1:	pf = "nop";		break;
-							case 2:
-                                pf = "stop";
-                                size = ea_unsized;
-                                sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
-                                break;
-							case 3:	pf = "rte";		break;
-							case 4:	pf = "rtd";		break;
-							case 5:	pf = "rts";		break;
-							case 6:	pf = "trapv";	break;
-							case 7:	pf = "rtr";		break;
+                                case 2:
+                                    sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+                                    /* fall through */
+                                default:
+                                    size = ea_unsized;
+                                    pf = g_disasm_misc1[src_reg];
+                                    break;
 							}
 							break;
 
@@ -442,25 +454,7 @@ int disassemble(unsigned short **p, char *str)
 		{
 			if(src_mode == 1)		/* dbcc */
 			{
-				switch((instr >> 8) & 0xf)
-				{
-					case 0x0:	pf = "dbt";		break;
-					case 0x1:	pf = "dbf";		break;
-					case 0x2:	pf = "dbhi";	break;
-					case 0x3:	pf = "dbls";	break;
-					case 0x4:	pf = "dbcc";	break;
-					case 0x5:	pf = "dbcs";	break;
-					case 0x6:	pf = "dbne";	break;
-					case 0x7:	pf = "dbeq";	break;
-					case 0x8:	pf = "dbvc";	break;
-					case 0x9:	pf = "dbvs";	break;
-					case 0xa:	pf = "dbpl";	break;
-					case 0xb:	pf = "dbmi";	break;
-					case 0xc:	pf = "dbge";	break;
-					case 0xd:	pf = "dblt";	break;
-					case 0xe:	pf = "dbgt";	break;
-					case 0xf:	pf = "dble";	break;
-				}
+			    pf = g_disasm_dbranches[(instr >> 8) & 0xf];
 
 				size = ea_word;
 				a1[0] = 'd';
@@ -469,25 +463,7 @@ int disassemble(unsigned short **p, char *str)
 			}
 			else					/* scc */
 			{
-				switch((instr >> 8) & 0xf)
-				{
-					case 0x0:	pf = "st";	break;
-					case 0x1:	pf = "sf";	break;
-					case 0x2:	pf = "shi";	break;
-					case 0x3:	pf = "sls";	break;
-					case 0x4:	pf = "scc";	break;
-					case 0x5:	pf = "scs";	break;
-					case 0x6:	pf = "sne";	break;
-					case 0x7:	pf = "seq";	break;
-					case 0x8:	pf = "svc";	break;
-					case 0x9:	pf = "svs";	break;
-					case 0xa:	pf = "spl";	break;
-					case 0xb:	pf = "smi";	break;
-					case 0xc:	pf = "sge";	break;
-					case 0xd:	pf = "slt";	break;
-					case 0xe:	pf = "sgt";	break;
-					case 0xf:	pf = "sle";	break;
-				}
+			    pf = g_disasm_sets[(instr >> 8) & 0xf];
 
 				size = ea_byte;
 				ea(a1, src_mode, src_reg, p, ea_long);
@@ -495,17 +471,8 @@ int disassemble(unsigned short **p, char *str)
 		}
 		else					/* addq / subq */
 		{
-			if(BIT(instr, 8))		/* subq */
-				pf = "subq";
-			else					/* addq */
-				pf = "addq";
-
-			switch(bit7_6)
-			{
-				case 0:	size = ea_byte;	break;
-				case 1:	size = ea_word;	break;
-				case 2:	size = ea_long;	break;
-			}
+		    pf = BIT(instr, 8) ? "subq" : "addq";
+            size = g_disasm_sizemap[bit7_6];
 
 			a1[0] = '#';
 			a1[1] = (dest_reg == 0) ? '8' : '0' + dest_reg;
@@ -514,25 +481,7 @@ int disassemble(unsigned short **p, char *str)
 		break;
 
 	case 0x6:					/* bcc / bra / bsr */
-		switch((instr >> 8) & 0xf)
-		{
-			case 0x0:	pf = "bra";	break;
-			case 0x1:	pf = "bsr";	break;
-			case 0x2:	pf = "bhi";	break;
-			case 0x3:	pf = "bls";	break;
-			case 0x4:	pf = "bcc";	break;
-			case 0x5:	pf = "bcs";	break;
-			case 0x6:	pf = "bne";	break;
-			case 0x7:	pf = "beq";	break;
-			case 0x8:	pf = "bvc";	break;
-			case 0x9:	pf = "bvs";	break;
-			case 0xa:	pf = "bpl";	break;
-			case 0xb:	pf = "bmi";	break;
-			case 0xc:	pf = "bge";	break;
-			case 0xd:	pf = "blt";	break;
-			case 0xe:	pf = "bgt";	break;
-			case 0xf:	pf = "ble";	break;
-		}
+	    pf = g_disasm_branches[(instr >> 8) & 0xf];
 
 		if(!(instr & 0xff))
 		{
@@ -629,12 +578,7 @@ int disassemble(unsigned short **p, char *str)
 			else									/* and / or */
 			{
 				pf = ((instr >> 12) == 0x8) ? "or" : "and";
-				switch(bit7_6)
-				{
-					case 0:	size = ea_byte;	break;
-					case 1:	size = ea_word;	break;
-					case 2:	size = ea_long;	break;
-				}
+				size = g_disasm_sizemap[bit7_6];
 
 				if(BIT(instr, 8))		/* <ea>, Dn */
 				{
@@ -664,12 +608,7 @@ int disassemble(unsigned short **p, char *str)
 		}
 		else
 		{
-			switch(bit7_6)
-			{
-				case 0:	size = ea_byte;	break;
-				case 1:	size = ea_word;	break;
-				case 2:	size = ea_long;	break;
-			}
+		    size = g_disasm_sizemap[bit7_6];
 
 			if((instr & 0x0130) == 0x0100)	/* addx / subx */
 			{
@@ -722,12 +661,7 @@ int disassemble(unsigned short **p, char *str)
 		}
 		else
 		{
-			switch(bit7_6)
-			{
-				case 0:	size = ea_byte;	break;
-				case 1:	size = ea_word;	break;
-				case 2:	size = ea_long;	break;
-			}
+            size = g_disasm_sizemap[bit7_6];
 
 			if(BIT(instr, 8))
 			{
@@ -761,22 +695,7 @@ int disassemble(unsigned short **p, char *str)
 		break;
 
 	case 0xe:		/* shift/rotate register/memory */
-		if(BIT(instr, 8))
-			switch(src_mode & 3)
-			{
-				case 0:	pf = "asl";		break;
-				case 1:	pf = "lsl";		break;
-				case 2:	pf = "roxl";	break;
-				case 3:	pf = "rol";		break;
-			}
-		else
-			switch(src_mode & 3)
-			{
-				case 0:	pf = "asr";		break;
-				case 1:	pf = "lsr";		break;
-				case 2:	pf = "roxr";	break;
-				case 3:	pf = "ror";		break;
-			}
+		pf = (BIT(instr, 8)) ? g_disasm_lshifts[src_mode & 3] : g_disasm_rshifts[src_mode & 3];
 
 		if(bit7_6 == 3)		/* memory */
 		{
@@ -785,12 +704,7 @@ int disassemble(unsigned short **p, char *str)
 		}
 		else				/* register */
 		{
-			switch(bit7_6)
-			{
-				case 0:	size = ea_byte;	break;
-				case 1: size = ea_word;	break;
-				case 2:	size = ea_long;	break;
-			}
+		    size = g_disasm_sizemap[bit7_6];
 
 			/* immediate shift or register shift? */
 			a1[0] = (src_mode & 4) ? 'd' : '#';
