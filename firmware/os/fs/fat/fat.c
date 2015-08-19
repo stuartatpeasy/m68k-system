@@ -233,7 +233,7 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
         /* Read the next entry from the node */
         for(lfn_len = 0; dir_ctx->de < dir_ctx->buffer_end; ++dir_ctx->de)
         {
-            if(dir_ctx->de->file_name[0] == 0x00)
+            if(dir_ctx->de->file_name[0] == FAT_DIRENT_END)
                 return ENOENT;  /* No more entries in this directory */
             else if((u8) dir_ctx->de->file_name[0] == FAT_DIRENT_UNUSED)
                 continue;
@@ -244,7 +244,7 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
                 u16 chars[FAT_LFN_PART_TOTAL_LEN];
                 s32 i, j, offset;
 
-                offset = ((lde->order & 0x1f) - 1) * FAT_LFN_PART_TOTAL_LEN;
+                offset = FAT_LFN_PART_NUM(lde->order) * FAT_LFN_PART_TOTAL_LEN;
 
                 /* Extract this part of the long filename into the "chars" buffer */
                 for(j = 0, i = 0; i < FAT_LFN_PART1_LEN;)
@@ -305,43 +305,54 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
                 */
                 if((name == NULL) || !strcasecmp(name, lfn))
                 {
-                    ku16 attribs = dir_ctx->de->attribs;
-                    u16 flags = 0;
-
-                    dirent->vfs = vfs;
-
-                    dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
-                    dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
-                                                                LE2N16(dir_ctx->de->ctime));
-                    dirent->mtime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->mdate),
-                                                                LE2N16(dir_ctx->de->mtime));
-
-                    dirent->first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
-                                            | LE2N16(dir_ctx->de->first_cluster_low);
-
-                    dirent->type = (attribs & FAT_FILEATTRIB_DIRECTORY) ?
-                                        FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
-
-                    if(attribs & FAT_FILEATTRIB_HIDDEN)
-                        flags |= VFS_FLAG_HIDDEN;
-                    if(attribs & FAT_FILEATTRIB_SYSTEM)
-                        flags |= VFS_FLAG_SYSTEM;
-                    if(attribs & FAT_FILEATTRIB_ARCHIVE)
-                        flags |= VFS_FLAG_ARCHIVE;
-
-                    dirent->flags = flags;
-
-                    strcpy(dirent->name, lfn);
-                    dirent->size = LE2N32(dir_ctx->de->size);
-
                     /*
-                        None of the following three items (permissions, uid, gid) have any meaning
-                        in the FAT filesystem.
+                        Populate the supplied dirent structure.  If dirent is NULL, the caller was
+                        checking whether or not the dirent exists, and doesn't care about any
+                        details beyond that.
                     */
-                    dirent->permissions = (attribs & FAT_FILEATTRIB_READ_ONLY) ?
-                                            VFS_PERM_UGORX : VFS_PERM_UGORWX;
-                    dirent->gid = 0;
-                    dirent->uid = 0;
+                    if(dirent != NULL)
+                    {
+                        ku16 attribs = dir_ctx->de->attribs;
+                        u16 flags = 0;
+
+                        dirent->vfs = vfs;
+
+                        dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
+                        dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
+                                                                    LE2N16(dir_ctx->de->ctime));
+                        dirent->mtime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->mdate),
+                                                                    LE2N16(dir_ctx->de->mtime));
+
+                        dirent->first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
+                                                | LE2N16(dir_ctx->de->first_cluster_low);
+
+                        dirent->type = (attribs & FAT_FILEATTRIB_DIRECTORY) ?
+                                            FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
+
+                        if(attribs & FAT_FILEATTRIB_HIDDEN)
+                            flags |= VFS_FLAG_HIDDEN;
+                        if(attribs & FAT_FILEATTRIB_SYSTEM)
+                            flags |= VFS_FLAG_SYSTEM;
+                        if(attribs & FAT_FILEATTRIB_ARCHIVE)
+                            flags |= VFS_FLAG_ARCHIVE;
+
+                        dirent->flags = flags;
+
+                        strcpy(dirent->name, lfn);
+                        dirent->size = LE2N32(dir_ctx->de->size);
+
+                        /*
+                            The FAT fs does not conform to the Unix file-permissions system, so we
+                            set some defaults here: rwxrwxrwx for writeable files, and r-xr-xr-x
+                            for read-only files.
+                        */
+                        dirent->permissions = (attribs & FAT_FILEATTRIB_READ_ONLY) ?
+                                                VFS_PERM_UGORX : VFS_PERM_UGORWX;
+
+                        /* The FAT fs has no concept of file ownership */
+                        dirent->gid = 0;
+                        dirent->uid = 0;
+                    }
 
                     ++dir_ctx->de;
                     return SUCCESS;
@@ -367,6 +378,39 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx)
 {
     kfree(((fat_dir_ctx_t *) ctx)->buffer);
     kfree(ctx);
+    return SUCCESS;
+}
+
+
+s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent, u32 *new_node)
+{
+    void *ctx;
+    u32 node;
+    s32 ret;
+
+    /* Open parent node */
+    if((ret = fat_open_dir(vfs, parent_node, &ctx)) != SUCCESS)
+        return ret;
+
+    /* Check that there isn't already an entry with the same name */
+    if((ret = fat_read_dir(vfs, ctx, NULL, dirent->name)) != ENOENT)
+        return ret;
+
+    /*
+        TODO
+            find end of directory entries
+            no space for new dirent?
+                extend directory chain
+                cannot extend dir chain? (e.g. root dir is full)
+                    fail: directory full
+            append LFN entries for new node
+            append short-filename entry, including other dirent data
+            set size=0; mark free cluster as EOC [problem!!!]
+    */
+
+    fat_close_dir(vfs, ctx);
+//    *new_node = node;
+
     return SUCCESS;
 }
 
@@ -409,7 +453,7 @@ s32 fat_find_free_node(vfs_t *vfs, u32 *node)
         }
     }
 
-    return ENOENT;   /* No free nodes found */
+    return ENOSPC;   /* No free nodes found */
 }
 
 

@@ -150,10 +150,15 @@ typedef u16 fat16_cluster_id;
                                      FAT_FILEATTRIB_VOLUME_ID)
 
 #define FAT_LFN_MAX_LEN             (255)
+#define FAT_LFN_ORDER_MASK          (0x1f)  /* AND this with LFN order byte to get LFN order + 1 */
+
+#define FAT_LFN_PART_NUM(order_byte) \
+    (((order_byte) & FAT_LFN_ORDER_MASK) - 1)
 
 #define FAT_CHAIN_END(x)            ((x) >= 0xfff7)
 
-#define FAT_DIRENT_UNUSED           (0xe5)
+#define FAT_DIRENT_END              (0x00)  /* End-of-directory-entries marker  */
+#define FAT_DIRENT_UNUSED           (0xe5)  /* Deleted directory entry marker   */
 
 /* FAT-format date/time extraction/conversion macros */
 #define FAT_YEAR_FROM_DATE(d)       ((((d) & 0xFE00) >> 9) + 1980)
@@ -199,12 +204,14 @@ vfs_driver_t g_fat_ops;
 s32 fat_init();
 s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
-s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
-s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8* const name);
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8* const name);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
+
+s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
+s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent, u32 *new_node);
+s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_find_free_node(vfs_t *vfs, u32 *node);
 void fat_debug_dump_superblock(vfs_t *vfs);
 
