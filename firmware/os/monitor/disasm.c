@@ -80,640 +80,646 @@ int disassemble(unsigned short **p, char *str)
 
 	switch(instr >> 12)
 	{
-	case 0x0:
-		if(BIT(instr, 8) || (((instr >> 8) & 0xf) == 8))		/* static/dynamic bit / movep */
-		{
-			if(src_mode == 1)	/* movep */
-			{
-				const unsigned char dir = BIT(instr, 7),
-									sz = BIT(instr, 6);
+        case 0x0:
+            if(BIT(instr, 8) || (((instr >> 8) & 0xf) == 8))		/* static/dynamic bit / movep */
+            {
+                if(src_mode == 1)	/* movep */
+                {
+                    const unsigned char dir = BIT(instr, 7),
+                                        sz = BIT(instr, 6);
 
-				pf = "movep";
-				size = sz ? ea_long : ea_word;
+                    pf = "movep";
+                    size = sz ? ea_long : ea_word;
 
-				if(dir)		/* reg -> mem */
-				{
-					a1[0] = 'd';
-					a1[1] = '0' + dest_reg;
+                    if(dir)		/* reg -> mem */
+                    {
+                        a1[0] = 'd';
+                        a1[1] = '0' + dest_reg;
 
-					sprintf(a2, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
-				}
-				else		/* mem -> reg */
-				{
-					sprintf(a1, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
+                        sprintf(a2, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
+                    }
+                    else		/* mem -> reg */
+                    {
+                        sprintf(a1, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
 
-					a2[0] = 'd';
-					a2[1] = '0' + dest_reg;
-				}
-			}
-			else				/* static/dynamic bit */
-			{
-			    pf = g_disasm_bits[bit7_6];
+                        a2[0] = 'd';
+                        a2[1] = '0' + dest_reg;
+                    }
+                }
+                else				/* static/dynamic bit */
+                {
+                    pf = g_disasm_bits[bit7_6];
 
-				if(BIT(instr, 8))	/* dynamic bit */
-				{
-					size = src_mode ? ea_byte : ea_long;
+                    if(BIT(instr, 8))	/* dynamic bit */
+                    {
+                        size = src_mode ? ea_byte : ea_long;
 
-					a1[0] = 'd';
-					a1[1] = '0' + dest_reg;
-				}
-				else				/* static bit */
-				{
-					sprintf(a1, "#%d", HTOP_SHORT(*(*p)++) & 0xff);
-				}
-				ea(a2, src_mode, src_reg, p, size);
-			}
-		}
-		else
-		{
-		    /* ori / andi / subi / addi / <static bit, handled above> / eori / cmpi / moves */
-		    pf = g_disasm_misc2[(instr >> 9) & 0x7];
+                        a1[0] = 'd';
+                        a1[1] = '0' + dest_reg;
+                    }
+                    else				/* static bit */
+                    {
+                        sprintf(a1, "#%d", HTOP_SHORT(*(*p)++) & 0xff);
+                    }
+                    ea(a2, src_mode, src_reg, p, size);
+                }
+            }
+            else
+            {
+                /* ori / andi / subi / addi / <static bit, handled above> / eori / cmpi / moves */
+                pf = g_disasm_misc2[(instr >> 9) & 0x7];
 
-			if((src_mode == 7) && (src_reg == 4))		/* -> ccr/sr */
-			{
-				/* TODO: only andi/eori/ori are permitted here - validate this */
-				if(BIT(instr, 6))
-				{
-					size = ea_word;
-					a2[0] = 's'; a2[1] = 'r';
-				}
-				else
-				{
-					size = ea_byte;
-					a2[0] = 'c'; a2[1] = 'c'; a2[2] = 'r';
-				}
-				ea(a1, EAMODE_IMM, EAMODE_IMM_IMM, p, size);
-			}
-			else
-			{
-			    size = g_disasm_sizemap[bit7_6];
+                if((src_mode == 7) && (src_reg == 4))		/* -> ccr/sr */
+                {
+                    /* TODO: only andi/eori/ori are permitted here - validate this */
+                    if(BIT(instr, 6))
+                    {
+                        size = ea_word;
+                        a2[0] = 's'; a2[1] = 'r';
+                    }
+                    else
+                    {
+                        size = ea_byte;
+                        a2[0] = 'c'; a2[1] = 'c'; a2[2] = 'r';
+                    }
+                    ea(a1, EAMODE_IMM, EAMODE_IMM_IMM, p, size);
+                }
+                else
+                {
+                    size = g_disasm_sizemap[bit7_6];
 
-				if(size)
-				{
-					ea(a1, EAMODE_IMM, EAMODE_IMM_IMM, p, size);
-					ea(a2, src_mode, src_reg, p, size);
-				}
-				else
-					pf = NULL;
-			}
-		}
-		break;
+                    if(size)
+                    {
+                        ea(a1, EAMODE_IMM, EAMODE_IMM_IMM, p, size);
+                        ea(a2, src_mode, src_reg, p, size);
+                    }
+                    else
+                        pf = NULL;
+                }
+            }
+            break;
 
-	case 0x1:
-	case 0x2:
-	case 0x3:
-	    size = g_disasm_sizemap[instr >> 12];
+        case 0x1:
+        case 0x2:
+        case 0x3:
+            size = g_disasm_sizemap[instr >> 12];
 
-		if(dest_mode == 1)		/* movea */
-		{
-			if(size == ea_byte)
-				break;		/* movea.b is not allowed */
+            if(dest_mode == 1)		/* movea */
+            {
+                if(size == ea_byte)
+                    break;		/* movea.b is not allowed */
 
-			pf = "movea";
-		}
-		else
-			pf = "move";
+                pf = "movea";
+            }
+            else
+                pf = "move";
 
-		ea(a1, src_mode, src_reg, p, size);
-		ea(a2, dest_mode, dest_reg, p, size);
-		break;
+            ea(a1, src_mode, src_reg, p, size);
+            ea(a2, dest_mode, dest_reg, p, size);
+            break;
 
-	case 0x4:
-		if(BIT(instr, 8))
-		{
-			if(bit7_6 == 2)		/* chk */
-			{
-				pf = "chk";
-				size = ea_word;
-				a2[0] = 'd';
-			}
-			else				/* lea */
-			{
-				pf = "lea";
-				size = ea_long;
-				a2[0] = 'a';
-			}
-			ea(a1, src_mode, src_reg, p, size);
-			a2[1] = '0' + dest_reg;
-		}
-		else
-		{
-			if(src_mode && (bit7_6 & 2) && ((dest_reg & 5) == 4))		/* movem */
-			{
-				pf = "movem";
-				size = BIT(instr, 6) ? ea_long : ea_word;
-				if(dest_reg == 4)		/* movem regs -> <ea> */
-				{
-					movem_regs(a1, HTOP_SHORT(*(*p)++), src_mode == 4);
-					ea(a2, src_mode, src_reg, p, ea_long);
-				}
-				else					/* movem <ea> -> regs */
-				{
-					movem_regs(a2, HTOP_SHORT(*(*p)++), src_mode == 4);
-					ea(a1, src_mode, src_reg, p, ea_long);
-				}
-				break;
-			}
+        case 0x4:
+            if(BIT(instr, 8))
+            {
+                if(bit7_6 == 2)		/* chk */
+                {
+                    pf = "chk";
+                    size = ea_word;
+                    a2[0] = 'd';
+                }
+                else				/* lea */
+                {
+                    pf = "lea";
+                    size = ea_long;
+                    a2[0] = 'a';
+                }
+                ea(a1, src_mode, src_reg, p, size);
+                a2[1] = '0' + dest_reg;
+            }
+            else
+            {
+                if(src_mode && (bit7_6 & 2) && ((dest_reg & 5) == 4))		/* movem */
+                {
+                    pf = "movem";
+                    size = BIT(instr, 6) ? ea_long : ea_word;
+                    if(dest_reg == 4)		/* movem regs -> <ea> */
+                    {
+                        movem_regs(a1, HTOP_SHORT(*(*p)++), src_mode == 4);
+                        ea(a2, src_mode, src_reg, p, ea_long);
+                    }
+                    else					/* movem <ea> -> regs */
+                    {
+                        movem_regs(a2, HTOP_SHORT(*(*p)++), src_mode == 4);
+                        ea(a1, src_mode, src_reg, p, ea_long);
+                    }
+                    break;
+                }
 
-			if(bit7_6 == 3)
-			{
-				switch(dest_reg)
-				{
-				case 0:		/* move from sr */
-					pf = "move";
-					size = ea_word;
-					a1[0] = 's';
-					a1[1] = 'r';
-					ea(a2, src_mode, src_reg, p, ea_long);
-					break;
+                if(bit7_6 == 3)
+                {
+                    switch(dest_reg)
+                    {
+                        case 0:		/* move from sr */
+                            pf = "move";
+                            size = ea_word;
+                            a1[0] = 's';
+                            a1[1] = 'r';
+                            ea(a2, src_mode, src_reg, p, ea_long);
+                            break;
 
-				case 1:		/* move from ccr */
-					pf = "move";
-					size = ea_word;
-					a1[0] = 'c';
-					a1[1] = 'c';
-					a1[2] = 'r';
-					ea(a2, src_mode, src_reg, p, ea_long);
-					break;
+                        case 1:		/* move from ccr */
+                            pf = "move";
+                            size = ea_word;
+                            a1[0] = 'c';
+                            a1[1] = 'c';
+                            a1[2] = 'r';
+                            ea(a2, src_mode, src_reg, p, ea_long);
+                            break;
 
-				case 2:		/* move to ccr */
-					pf = "move";
-					size = ea_word;
-					ea(a1, src_mode, src_reg, p, ea_long);
-					a2[0] = 'c';
-					a2[1] = 'c';
-					a2[2] = 'r';
-					break;
+                        case 2:		/* move to ccr */
+                            pf = "move";
+                            size = ea_word;
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            a2[0] = 'c';
+                            a2[1] = 'c';
+                            a2[2] = 'r';
+                            break;
 
-				case 3:		/* move to sr */
-					pf = "move";
-					size = ea_word;
-					ea(a1, src_mode, src_reg, p, ea_long);
-					a2[0] = 's';
-					a2[1] = 'r';
-					break;
+                        case 3:		/* move to sr */
+                            pf = "move";
+                            size = ea_word;
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            a2[0] = 's';
+                            a2[1] = 'r';
+                            break;
 
-				case 4:		/* ext.l */
-					pf = "ext";
-					size = ea_long;
-					a1[0] = 'd';
-					a1[1] = '0' + src_reg;
-					break;
+                        case 4:		/* ext.l */
+                            pf = "ext";
+                            size = ea_long;
+                            a1[0] = 'd';
+                            a1[1] = '0' + src_reg;
+                            break;
 
-				case 5:		/* tas / illegal */
-					if((src_mode == 7) && (src_reg == 4))
-						pf = "illegal";
-					else
-					{
-						pf = "tas";
-						size = ea_byte;
-						ea(a1, src_mode, src_reg, p, ea_long);
-					}
-					break;
+                        case 5:		/* tas / illegal */
+                            if((src_mode == 7) && (src_reg == 4))
+                                pf = "illegal";
+                            else
+                            {
+                                pf = "tas";
+                                size = ea_byte;
+                                ea(a1, src_mode, src_reg, p, ea_long);
+                            }
+                            break;
 
-				case 7:		/* jmp */
-					pf = "jmp";
-					ea(a1, src_mode, src_reg, p, ea_long);
-					break;
-				}
-			}
-			else
-			{
-			    size = g_disasm_sizemap[bit7_6];
+                        case 7:		/* jmp */
+                            pf = "jmp";
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            break;
+                    }
+                }
+                else
+                {
+                    size = g_disasm_sizemap[bit7_6];
 
-				switch(dest_reg)
-				{
-				case 0:		/* negx */
-					pf = "negx";
-					ea(a1, src_mode, src_reg, p, ea_long);
-					break;
+                    switch(dest_reg)
+                    {
+                        case 0:		/* negx */
+                            pf = "negx";
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            break;
 
-				case 1:		/* clr */
-					pf = "clr";
-					ea(a1, src_mode, src_reg, p, ea_long);
-					break;
+                        case 1:		/* clr */
+                            pf = "clr";
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            break;
 
-				case 2:		/* neg */
-					pf = "neg";
-					ea(a1, src_mode, src_reg, p, ea_long);
-					break;
+                        case 2:		/* neg */
+                            pf = "neg";
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            break;
 
-				case 3:		/* not */
-					pf = "not";
-					ea(a1, src_mode, src_reg, p, ea_long);
-					break;
+                        case 3:		/* not */
+                            pf = "not";
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            break;
 
-				case 4:		/* nbcd / swap / pea / ext.w */
-					if(size == ea_byte)			/* nbcd */
-					{
-						pf = "nbcd";
-						break;
-					}
+                        case 4:		/* nbcd / swap / pea / ext.w */
+                            if(size == ea_byte)			/* nbcd */
+                            {
+                                pf = "nbcd";
+                                break;
+                            }
 
-					if(!src_mode)
-					{
-						if(size == ea_word)		/* swap */
-						{
-							pf = "swap";
-							a1[0] = 'd';
-							a1[1] = '0' + src_reg;
-						}
-						else					/* ext.w */
-						{
-							pf = "ext";
-							size = ea_word;
-							a1[0] = 'd';
-							a1[1] = '0' + src_reg;
-						}
-					}
-					else if(bit7_6 == 1)			/* pea */
-					{
-						pf = "pea";
-						size = ea_long;
-						ea(a1, src_mode, src_reg, p, ea_long);
-					}
-					break;
+                            if(!src_mode)
+                            {
+                                if(size == ea_word)		/* swap */
+                                {
+                                    pf = "swap";
+                                    a1[0] = 'd';
+                                    a1[1] = '0' + src_reg;
+                                }
+                                else					/* ext.w */
+                                {
+                                    pf = "ext";
+                                    size = ea_word;
+                                    a1[0] = 'd';
+                                    a1[1] = '0' + src_reg;
+                                }
+                            }
+                            else if(bit7_6 == 1)			/* pea */
+                            {
+                                pf = "pea";
+                                size = ea_long;
+                                ea(a1, src_mode, src_reg, p, ea_long);
+                            }
+                            break;
 
-				case 5:		/* tst */
-					pf = "tst";
-					ea(a1, src_mode, src_reg, p, ea_long);
-					break;
+                        case 5:		/* tst */
+                            pf = "tst";
+                            ea(a1, src_mode, src_reg, p, ea_long);
+                            break;
 
-				case 7:		/* trap / link / unlk / move -> usp / move <- usp / reset / nop / stop / rte / rtd / rts / trapv / rtr / movec / jsr */
-					if(bit7_6 == 1)
-					{
-						switch(src_mode)
-						{
-						case 0:						/* trap */
-						case 1:
-							pf = "trap";
-							size = ea_unsized;
-							sprintf(a1, "#%d", instr & 0xf);
-							break;
+                        case 7:		            /* trap / link / unlk / move -> usp /             */
+                            if(bit7_6 == 1)     /* move <- usp /reset / nop / stop / rte / rtd /  */
+                            {                   /* rts / trapv / rtr / movec / jsr                */
+                                switch(src_mode)
+                                {
+                                    case 0:						/* trap */
+                                    case 1:
+                                        pf = "trap";
+                                        size = ea_unsized;
+                                        sprintf(a1, "#%d", instr & 0xf);
+                                        break;
 
-						case 2:						/* link */
-							pf = "link";
-							size = ea_unsized;
-							a1[0] = 'a';
-							a1[1] = '0' + src_reg;
-							sprintf(a2, "#%d", (short) HTOP_SHORT(*(*p)++));
-							break;
+                                    case 2:						/* link */
+                                        pf = "link";
+                                        size = ea_unsized;
+                                        a1[0] = 'a';
+                                        a1[1] = '0' + src_reg;
+                                        sprintf(a2, "#%d", (short) HTOP_SHORT(*(*p)++));
+                                        break;
 
-						case 3:						/* unlk */
-							pf = "unlk";
-							size = ea_unsized;
-							a1[0] = 'a';
-							a1[1] = '0' + src_reg;
-							break;
+                                    case 3:						/* unlk */
+                                        pf = "unlk";
+                                        size = ea_unsized;
+                                        a1[0] = 'a';
+                                        a1[1] = '0' + src_reg;
+                                        break;
 
-						case 4:						/* move -> usp */
-							pf = "move";
-							size = ea_long;
-							a1[0] = 'a';
-							a1[1] = '0' + src_reg;
-							a2[0] = 'u';
-							a2[1] = 's';
-							a2[2] = 'p';
-							break;
+                                    case 4:						/* move -> usp */
+                                        pf = "move";
+                                        size = ea_long;
+                                        a1[0] = 'a';
+                                        a1[1] = '0' + src_reg;
+                                        a2[0] = 'u';
+                                        a2[1] = 's';
+                                        a2[2] = 'p';
+                                        break;
 
-						case 5:						/* move <- usp */
-							pf = "move";
-							size = ea_long;
-							a1[0] = 'u';
-							a1[1] = 's';
-							a1[2] = 'p';
-							a2[0] = 'a';
-							a2[1] = '0' + src_reg;
-							break;
+                                    case 5:						/* move <- usp */
+                                        pf = "move";
+                                        size = ea_long;
+                                        a1[0] = 'u';
+                                        a1[1] = 's';
+                                        a1[2] = 'p';
+                                        a2[0] = 'a';
+                                        a2[1] = '0' + src_reg;
+                                        break;
 
-						case 6:						/* reset / nop / stop / rte / rtd / rts / trapv / rtr */
-							switch(src_reg)
-							{
-                                case 2:
-                                    sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
-                                    /* fall through */
-                                default:
-                                    size = ea_unsized;
-                                    pf = g_disasm_misc1[src_reg];
-                                    break;
-							}
-							break;
+                                    case 6:						/* reset / nop / stop / rte /   */
+                                        switch(src_reg)         /* rtd / rts / trapv / rtr      */
+                                        {
+                                            case 2:
+                                                sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+                                                /* fall through */
+                                            default:
+                                                size = ea_unsized;
+                                                pf = g_disasm_misc1[src_reg];
+                                                break;
+                                        }
+                                        break;
 
-						case 7:						/* movec */
-							pf = "movec";
-							size = ea_long;
-							if(BIT(instr, 0))			/* general reg -> control reg */
-							{
-								a1[0] = BIT(**p, 15) ? 'a' : 'd';
-								a1[1] = '0' + (((**p) >> 12) & 0x7);
-								switch(**p & 0xfff)
-								{
-									case 0x000:		a2[0] = 's'; a2[1] = 'f'; a2[2] = 'c';	break;
-									case 0x001:		a2[0] = 'd'; a2[1] = 'f'; a2[2] = 'c';	break;
-									case 0x800:		a2[0] = 'u'; a2[1] = 's'; a2[2] = 'p';	break;
-									case 0x801:		a2[0] = 'v'; a2[1] = 'b'; a2[2] = 'r';	break;
-									default:			/* invalid register */
-										pf = NULL;
-										break;
-								}
-							}
-							else						/* control reg -> general reg */
-							{
-								switch(**p & 0xfff)
-								{
-									case 0x000:		a1[0] = 's'; a1[1] = 'f'; a1[2] = 'c';	break;
-									case 0x001:		a1[0] = 'd'; a1[1] = 'f'; a1[2] = 'c';	break;
-									case 0x800:		a1[0] = 'u'; a1[1] = 's'; a1[2] = 'p';	break;
-									case 0x801:		a1[0] = 'v'; a1[1] = 'b'; a1[2] = 'r';	break;
-									default:			/* invalid register */
-										pf = NULL;
-										break;
-								}
-								a2[0] = BIT(**p, 15) ? 'a' : 'd';
-								a2[1] = '0' + (((**p) >> 12) & 0x7);
-							}
-							(*p)++;
-							break;
-						}
-					}
-					else if(bit7_6 == 2)			/* jsr */
-					{
-						pf = "jsr";
-						size = ea_unsized;
-						ea(a1, src_mode, src_reg, p, ea_long);
-					}
-					break;
-				}
+                                    case 7:						/* movec */
+                                        pf = "movec";
+                                        size = ea_long;
+                                        if(BIT(instr, 0))			/* general reg -> control reg */
+                                        {
+                                            a1[0] = BIT(**p, 15) ? 'a' : 'd';
+                                            a1[1] = '0' + (((**p) >> 12) & 0x7);
+                                            switch(**p & 0xfff)
+                                            {
+                                                case 0x000:
+                                                    a2[0] = 's'; a2[1] = 'f'; a2[2] = 'c';	break;
+                                                case 0x001:
+                                                    a2[0] = 'd'; a2[1] = 'f'; a2[2] = 'c';	break;
+                                                case 0x800:
+                                                    a2[0] = 'u'; a2[1] = 's'; a2[2] = 'p';	break;
+                                                case 0x801:
+                                                    a2[0] = 'v'; a2[1] = 'b'; a2[2] = 'r';	break;
+                                                default:			/* invalid register */
+                                                    pf = NULL;
+                                                    break;
+                                            }
+                                        }
+                                        else						/* control reg -> general reg */
+                                        {
+                                            switch(**p & 0xfff)
+                                            {
+                                                case 0x000:
+                                                    a1[0] = 's'; a1[1] = 'f'; a1[2] = 'c';	break;
+                                                case 0x001:
+                                                    a1[0] = 'd'; a1[1] = 'f'; a1[2] = 'c';	break;
+                                                case 0x800:
+                                                    a1[0] = 'u'; a1[1] = 's'; a1[2] = 'p';	break;
+                                                case 0x801:
+                                                    a1[0] = 'v'; a1[1] = 'b'; a1[2] = 'r';	break;
+                                                default:			/* invalid register */
+                                                    pf = NULL;
+                                                    break;
+                                            }
+                                            a2[0] = BIT(**p, 15) ? 'a' : 'd';
+                                            a2[1] = '0' + (((**p) >> 12) & 0x7);
+                                        }
+                                        (*p)++;
+                                        break;
+                                }
+                            }
+                            else if(bit7_6 == 2)			/* jsr */
+                            {
+                                pf = "jsr";
+                                size = ea_unsized;
+                                ea(a1, src_mode, src_reg, p, ea_long);
+                            }
+                            break;
+                    }
+                }
+            }
+            break;
 
-			}
-		}
-		break;
+        case 0x5:
+            if(bit7_6 == 3)			/* scc / dbcc */
+            {
+                if(src_mode == 1)		/* dbcc */
+                {
+                    pf = g_disasm_dbranches[(instr >> 8) & 0xf];
 
-	case 0x5:
-		if(bit7_6 == 3)			/* scc / dbcc */
-		{
-			if(src_mode == 1)		/* dbcc */
-			{
-			    pf = g_disasm_dbranches[(instr >> 8) & 0xf];
+                    size = ea_word;
+                    a1[0] = 'd';
+                    a1[1] = '0' + src_reg;
+                    sprintf(a2, "%d", (short) HTOP_SHORT(*(*p)++));
+                }
+                else					/* scc */
+                {
+                    pf = g_disasm_sets[(instr >> 8) & 0xf];
 
-				size = ea_word;
-				a1[0] = 'd';
-				a1[1] = '0' + src_reg;
-				sprintf(a2, "%d", (short) HTOP_SHORT(*(*p)++));
-			}
-			else					/* scc */
-			{
-			    pf = g_disasm_sets[(instr >> 8) & 0xf];
+                    size = ea_byte;
+                    ea(a1, src_mode, src_reg, p, ea_long);
+                }
+            }
+            else					/* addq / subq */
+            {
+                pf = BIT(instr, 8) ? "subq" : "addq";
+                size = g_disasm_sizemap[bit7_6];
 
-				size = ea_byte;
-				ea(a1, src_mode, src_reg, p, ea_long);
-			}
-		}
-		else					/* addq / subq */
-		{
-		    pf = BIT(instr, 8) ? "subq" : "addq";
-            size = g_disasm_sizemap[bit7_6];
+                a1[0] = '#';
+                a1[1] = (dest_reg == 0) ? '8' : '0' + dest_reg;
+                ea(a2, src_mode, src_reg, p, ea_long);
+            }
+            break;
 
-			a1[0] = '#';
-			a1[1] = (dest_reg == 0) ? '8' : '0' + dest_reg;
-			ea(a2, src_mode, src_reg, p, ea_long);
-		}
-		break;
+        case 0x6:					/* bcc / bra / bsr */
+            pf = g_disasm_branches[(instr >> 8) & 0xf];
 
-	case 0x6:					/* bcc / bra / bsr */
-	    pf = g_disasm_branches[(instr >> 8) & 0xf];
+            if(!(instr & 0xff))
+            {
+                size = ea_word;
+                sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+            }
+            else
+            {
+                size = ea_byte;
+                sprintf(a1, "#%d", (char) (instr & 0xff));
+            }
+            break;
 
-		if(!(instr & 0xff))
-		{
-			size = ea_word;
-			sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
-		}
-		else
-		{
-			size = ea_byte;
-			sprintf(a1, "#%d", (char) (instr & 0xff));
-		}
-		break;
+        case 0x7:
+            if(!BIT(instr, 8))
+            {
+                pf = "moveq";
+                size = ea_long;
 
-	case 0x7:
-		if(!BIT(instr, 8))
-		{
-			pf = "moveq";
-			size = ea_long;
+                sprintf(a1, "#%d", instr & 0xff);
 
-			sprintf(a1, "#%d", instr & 0xff);
+                a2[0] = 'd';
+                a2[1] = '0' + dest_reg;
+            }
+            break;
 
-			a2[0] = 'd';
-			a2[1] = '0' + dest_reg;
-		}
-		break;
+        case 0xc:					/* and / mulu / abcd / exg / muls */
+            if(dest_mode == 5)
+            {
+                if(src_mode == 0)			/* exg dx, dy */
+                {
+                    pf = "exg";
+                    size = ea_long;
+                    a1[0] = a2[0] = 'd';
+                    a1[1] = '0' + dest_reg;
+                    a2[1] = '0' + src_reg;
+                    break;
+                }
+                else if(src_mode == 1)		/* exg ax, ay */
+                {
+                    pf = "exg";
+                    size = ea_long;
+                    a1[0] = a2[0] = 'a';
+                    a1[1] = '0' + dest_reg;
+                    a2[1] = '0' + src_reg;
+                    break;
+                }
+            }
+            else if((dest_mode == 6) && (src_mode == 1))
+            {
+                pf = "exg";
+                size = ea_long;
+                a1[0] = 'd';
+                a1[1] = '0' + dest_reg;
+                a2[0] = 'a';
+                a2[1] = '0' + src_reg;
+            }
 
-	case 0xc:					/* and / mulu / abcd / exg / muls */
-		if(dest_mode == 5)
-		{
-			if(src_mode == 0)			/* exg dx, dy */
-			{
-				pf = "exg";
-				size = ea_long;
-				a1[0] = a2[0] = 'd';
-				a1[1] = '0' + dest_reg;
-				a2[1] = '0' + src_reg;
-				break;
-			}
-			else if(src_mode == 1)		/* exg ax, ay */
-			{
-				pf = "exg";
-				size = ea_long;
-				a1[0] = a2[0] = 'a';
-				a1[1] = '0' + dest_reg;
-				a2[1] = '0' + src_reg;
-				break;
-			}
-		}
-		else if((dest_mode == 6) && (src_mode == 1))
-		{
-			pf = "exg";
-			size = ea_long;
-			a1[0] = 'd';
-			a1[1] = '0' + dest_reg;
-			a2[0] = 'a';
-			a2[1] = '0' + src_reg;
-		}
+        case 0x8:					/* or / divu / sbcd / divs */
+            if((dest_mode == 3) || (dest_mode == 7))
+            {
+                pf = ((instr >> 12) == 0x8) ? ((dest_mode == 3) ? "divu" : "divs")
+                                            : ((dest_mode == 3) ? "mulu" : "muls");
+                size = ea_word;
 
-	case 0x8:					/* or / divu / sbcd / divs */
-		if((dest_mode == 3) || (dest_mode == 7))
-		{
-			pf = ((instr >> 12) == 0x8) ? ((dest_mode == 3) ? "divu" : "divs")
-										: ((dest_mode == 3) ? "mulu" : "muls");
-			size = ea_word;
+                ea(a1, src_mode, src_reg, p, ea_word);
+                a2[0] = 'd';
+                a2[1] = '0' + dest_reg;
+            }
+            else
+            {
+                if((dest_mode == 4) && !(src_mode & 6))	/* abcd / sbcd */
+                {
+                    pf = ((instr >> 12) == 0x8) ? "sbcd" : "abcd";
+                    size = ea_byte;
+                    if(BIT(instr, 3))
+                    {
+                        a1[0] = a2[0] = '-';
+                        a1[1] = a2[1] = '(';
+                        a1[2] = a2[2] = 'a';
+                        a1[4] = a2[4] = ')';
 
-			ea(a1, src_mode, src_reg, p, ea_word);
-			a2[0] = 'd';
-			a2[1] = '0' + dest_reg;
-		}
-		else
-		{
-			if((dest_mode == 4) && !(src_mode & 6))	/* abcd / sbcd */
-			{
-				pf = ((instr >> 12) == 0x8) ? "sbcd" : "abcd";
-				size = ea_byte;
-				if(BIT(instr, 3))
-				{
-					a1[0] = a2[0] = '-';
-					a1[1] = a2[1] = '(';
-					a1[2] = a2[2] = 'a';
-					a1[4] = a2[4] = ')';
+                        a1[3] = '0' + src_reg;
+                        a2[3] = '0' + dest_reg;
+                    }
+                    else
+                    {
+                        a1[0] = a2[0] = 'd';
+                        a1[1] = '0' + src_reg;
+                        a2[1] = '0' + dest_reg;
+                    }
+                }
+                else									/* and / or */
+                {
+                    pf = ((instr >> 12) == 0x8) ? "or" : "and";
+                    size = g_disasm_sizemap[bit7_6];
 
-					a1[3] = '0' + src_reg;
-					a2[3] = '0' + dest_reg;
-				}
-				else
-				{
-					a1[0] = 'd';
-					a1[1] = '0' + src_reg;
-					a2[0] = 'd';
-					a2[1] = '0' + dest_reg;
-				}
-			}
-			else									/* and / or */
-			{
-				pf = ((instr >> 12) == 0x8) ? "or" : "and";
-				size = g_disasm_sizemap[bit7_6];
+                    if(BIT(instr, 8))		/* <ea>, Dn */
+                    {
+                        ea(a1, src_mode, src_reg, p, size);
+                        a2[0] = 'd';
+                        a2[1] = '0' + dest_reg;
+                    }
+                    else					/* Dn, <ea> */
+                    {
+                        a1[0] = 'd';
+                        a1[1] = '0' + dest_reg;
+                        ea(a2, src_mode, src_reg, p, size);
+                    }
+                }
+            }
+            break;
 
-				if(BIT(instr, 8))		/* <ea>, Dn */
-				{
-					ea(a1, src_mode, src_reg, p, size);
-					a2[0] = 'd';
-					a2[1] = '0' + dest_reg;
-				}
-				else					/* Dn, <ea> */
-				{
-					a1[0] = 'd';
-					a1[1] = '0' + dest_reg;
-					ea(a2, src_mode, src_reg, p, size);
-				}
-			}
-		}
-		break;
+        case 0x9:		/* sub / suba / subx */
+        case 0xd:		/* add / adda / addx */
+            if((instr & 0x00c0) == 0x00c0)	/* adda / suba */
+            {
+                pf = ((instr >> 12) == 0x9) ? "suba" : "adda";
+                size = BIT(instr, 8) ? ea_long : ea_word;
+                ea(a1, src_mode, src_reg, p, size);
+                a2[0] = 'a';
+                a2[1] = '0' + dest_reg;
+            }
+            else
+            {
+                size = g_disasm_sizemap[bit7_6];
 
-	case 0x9:		/* sub / suba / subx */
-	case 0xd:		/* add / adda / addx */
-		if((instr & 0x00c0) == 0x00c0)	/* adda / suba */
-		{
-			pf = ((instr >> 12) == 0x9) ? "suba" : "adda";
-			size = BIT(instr, 8) ? ea_long : ea_word;
-			ea(a1, src_mode, src_reg, p, size);
-			a2[0] = 'a';
-			a2[1] = '0' + dest_reg;
-		}
-		else
-		{
-		    size = g_disasm_sizemap[bit7_6];
+                if((instr & 0x0130) == 0x0100)	/* addx / subx */
+                {
+                    pf = ((instr >> 12) == 0x9) ? "subx" : "addx";
+                    if(src_mode & 0x1)
+                    {
+                        a1[0] = a2[0] = '-';
+                        a1[1] = a2[1] = '(';
+                        a1[2] = a2[2] = 'a';
+                        a1[4] = a2[4] = ')';
 
-			if((instr & 0x0130) == 0x0100)	/* addx / subx */
-			{
-				pf = ((instr >> 12) == 0x9) ? "subx" : "addx";
-				if(src_mode & 0x1)
-				{
-					a1[0] = a2[0] = '-';
-					a1[1] = a2[1] = '(';
-					a1[2] = a2[2] = 'a';
-					a1[4] = a2[4] = ')';
+                        a1[3] = '0' + src_reg;
+                        a1[3] = '0' + dest_reg;
+                    }
+                    else
+                    {
+                        a1[0] = a2[0] = 'd';
 
-					a1[3] = '0' + src_reg;
-					a1[3] = '0' + dest_reg;
-				}
-				else
-				{
-					a1[0] = a2[0] = 'd';
+                        a1[1] = '0' + src_reg;
+                        a2[1] = '0' + dest_reg;
+                    }
+                }
+                else							/* add / sub */
+                {
+                    pf = ((instr >> 12) == 0x9) ? "sub" : "add";
+                    if(BIT(instr, 8))
+                    {
+                        a1[0] = 'd';
+                        a1[1] = '0' + dest_reg;
+                        ea(a2, src_mode, src_reg, p, size);
+                    }
+                    else
+                    {
+                        ea(a1, src_mode, src_reg, p, size);
+                        a2[0] = 'd';
+                        a2[1] = '0' + dest_reg;
+                    }
+                }
+            }
+            break;
 
-					a1[1] = '0' + src_reg;
-					a2[1] = '0' + dest_reg;
-				}
-			}
-			else							/* add / sub */
-			{
-				pf = ((instr >> 12) == 0x9) ? "sub" : "add";
-				if(BIT(instr, 8))
-				{
-					a1[0] = 'd';
-					a1[1] = '0' + dest_reg;
-					ea(a2, src_mode, src_reg, p, size);
-				}
-				else
-				{
-					ea(a1, src_mode, src_reg, p, size);
-					a2[0] = 'd';
-					a2[1] = '0' + dest_reg;
-				}
-			}
-		}
-		break;
+        case 0xb:		/* cmp / cmpa / cmpm / eor */
+            if((instr & 0x00c0) == 0x00c0)		/* cmpa */
+            {
+                pf = "cmpa";
+                size = BIT(instr, 8) ? ea_long : ea_word;
+                ea(a1, src_mode, src_reg, p, size);
+                a2[0] = 'a';
+                a2[1] = '0' + dest_reg;
+            }
+            else
+            {
+                size = g_disasm_sizemap[bit7_6];
 
-	case 0xb:		/* cmp / cmpa / cmpm / eor */
-		if((instr & 0x00c0) == 0x00c0)		/* cmpa */
-		{
-			pf = "cmpa";
-			size = BIT(instr, 8) ? ea_long : ea_word;
-			ea(a1, src_mode, src_reg, p, size);
-			a2[0] = 'a';
-			a2[1] = '0' + dest_reg;
-		}
-		else
-		{
-            size = g_disasm_sizemap[bit7_6];
+                if(BIT(instr, 8))
+                {
+                    if(src_mode == 1)			/* cmpm */
+                    {
+                        pf = "cmpm";
+                        a1[0] = a2[0] = '(';
+                        a1[1] = a2[1] = 'a';
+                        a1[3] = a2[3] = ')';
+                        a1[4] = a2[4] = '+';
 
-			if(BIT(instr, 8))
-			{
-				if(src_mode == 1)			/* cmpm */
-				{
-					pf = "cmpm";
-					a1[0] = a2[0] = '(';
-					a1[1] = a2[1] = 'a';
-					a1[3] = a2[3] = ')';
-					a1[4] = a2[4] = '+';
+                        a1[2] = '0' + src_reg;
+                        a2[2] = '0' + dest_reg;
+                    }
+                    else						/* eor */
+                    {
+                        pf = "eor";
+                        a1[0] = 'd';
+                        a1[1] = '0' + dest_reg;
+                        ea(a2, src_mode, src_reg, p, size);
+                    }
+                }
+                else							/* cmp */
+                {
+                    pf = "cmp";
+                    ea(a1, src_mode, src_reg, p, size);
+                    a2[0] = 'd';
+                    a2[1] = '0' + dest_reg;
+                }
+            }
+            break;
 
-					a1[2] = '0' + src_reg;
-					a2[2] = '0' + dest_reg;
-				}
-				else						/* eor */
-				{
-					pf = "eor";
-					a1[0] = 'd';
-					a1[1] = '0' + dest_reg;
-					ea(a2, src_mode, src_reg, p, size);
-				}
-			}
-			else							/* cmp */
-			{
-				pf = "cmp";
-				ea(a1, src_mode, src_reg, p, size);
-				a2[0] = 'd';
-				a2[1] = '0' + dest_reg;
-			}
-		}
-		break;
+        case 0xe:		/* shift/rotate register/memory */
+            pf = (BIT(instr, 8)) ? g_disasm_lshifts[src_mode & 3] : g_disasm_rshifts[src_mode & 3];
 
-	case 0xe:		/* shift/rotate register/memory */
-		pf = (BIT(instr, 8)) ? g_disasm_lshifts[src_mode & 3] : g_disasm_rshifts[src_mode & 3];
+            if(bit7_6 == 3)		/* memory */
+            {
+                size = ea_word;
+                ea(a1, src_mode, src_reg, p, ea_long);
+            }
+            else				/* register */
+            {
+                size = g_disasm_sizemap[bit7_6];
 
-		if(bit7_6 == 3)		/* memory */
-		{
-			size = ea_word;
-			ea(a1, src_mode, src_reg, p, ea_long);
-		}
-		else				/* register */
-		{
-		    size = g_disasm_sizemap[bit7_6];
+                /* immediate shift or register shift? */
+                a1[0] = (src_mode & 4) ? 'd' : '#';
+                a1[1] = '0' + dest_reg;
 
-			/* immediate shift or register shift? */
-			a1[0] = (src_mode & 4) ? 'd' : '#';
-			a1[1] = '0' + dest_reg;
-
-			a2[0] = 'd';
-			a2[1] = '0' + src_reg;
-		}
-		break;
+                a2[0] = 'd';
+                a2[1] = '0' + src_reg;
+            }
+            break;
 	}
 
 
@@ -783,11 +789,12 @@ char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, c
 			break;
 
 		case 6:		/* address register indirect with index */
-			sprintf(str, "%d(a%d, %c%d)", BEW_DISPLACEMENT(**p), reg, BEW_DA(**p), BEW_REGISTER(**p));
+			sprintf(str, "%d(a%d, %c%d)", BEW_DISPLACEMENT(**p),
+                        reg, BEW_DA(**p), BEW_REGISTER(**p));
 			(*p)++;
 			break;
 
-		case 7:		/* absolute / program counter with displacement / immediate or status register */
+		case 7:		/* absolute / program counter + displacement / immediate or status register */
 			switch(reg)
 			{
 				case 0:		/* absolute short */
@@ -806,7 +813,8 @@ char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, c
 					break;
 
 				case 3:		/* program counter with index */
-					sprintf(str, "%d(pc, %c%d)", BEW_DISPLACEMENT(**p), BEW_DA(**p), BEW_REGISTER(**p));
+					sprintf(str, "%d(pc, %c%d)", BEW_DISPLACEMENT(**p),
+                                BEW_DA(**p), BEW_REGISTER(**p));
 					(*p)++;
 					break;
 
