@@ -106,7 +106,7 @@ struct fat_fs
     u32 first_fat_sector;
     u32 root_dir_first_sector;
     u16 total_clusters;
-    u16 root_dir_sectors;
+    u16 root_dir_clusters;
     u16 sectors_per_fat;
     u16 sectors_per_cluster;
     u16 bytes_per_cluster;
@@ -121,6 +121,7 @@ struct fat_dir_ctx
     fat_dirent_t *buffer_end;
     u32 node;
     fat_dirent_t *de;
+    s8 is_root_dir;
 };
 
 typedef struct fat_dir_ctx fat_dir_ctx_t;
@@ -155,7 +156,8 @@ typedef u16 fat16_cluster_id;
 #define FAT_LFN_PART_NUM(order_byte) \
     (((order_byte) & FAT_LFN_ORDER_MASK) - 1)
 
-#define FAT_CHAIN_END(x)            ((x) >= 0xfff7)
+#define FAT_CHAIN_TERMINATOR        (0xfff7)
+#define FAT_CHAIN_END(x)            ((x) >= FAT_CHAIN_TERMINATOR)
 
 #define FAT_DIRENT_END              (0x00)  /* End-of-directory-entries marker  */
 #define FAT_DIRENT_UNUSED           (0xe5)  /* Deleted directory entry marker   */
@@ -210,7 +212,7 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 
 s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
-s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent, u32 *new_node);
+s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent);
 s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_find_free_node(vfs_t *vfs, u32 *node);
 void fat_debug_dump_superblock(vfs_t *vfs);
