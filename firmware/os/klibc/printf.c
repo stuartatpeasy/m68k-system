@@ -246,7 +246,7 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 				}
 				else
 				{
-					// if arg is -ve, convert it to +ve and output a '-'
+					/* if arg is -ve, convert it to +ve and output a '-' */
 					if((ch != 'u') && (u & 0x80000000))
 					{
 						u = ~u + 1;
