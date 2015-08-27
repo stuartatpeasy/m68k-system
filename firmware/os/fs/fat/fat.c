@@ -157,31 +157,41 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)];
 
-    /* Is this node within the root directory area? */
     if((node - FAT_ROOT_NODE) < fs->root_dir_clusters)
     {
+        /*
+            This node is within the root directory area.  The next node is node+1, unless we have
+            reached the end of the root dir nodes.
+        */
         if(++*next_node == (fs->root_dir_clusters - FAT_ROOT_NODE))
             *next_node = FAT_CHAIN_TERMINATOR;
     }
+    else if(FAT_CHAIN_END(node))
+    {
+        /* node represents an end-of-chain marker; set next_node to an EOC marker too. */
+        *next_node = FAT_CHAIN_TERMINATOR;
+    }
+    else
+    {
+        /* Compute offset from start of FAT, in bytes, of the specified node */
+        ku32 fat_offset = node * sizeof(fat16_cluster_id);
 
-    /* Compute offset from start of FAT, in bytes, of the specified node */
-    u32 fat_offset = node * sizeof(fat16_cluster_id);
+        /* Determine which sector contains the bytes specified by fat_offset */
+        u32 fat_sector = fs->first_fat_sector + (fat_offset >> LOG_BLOCK_SIZE);
 
-    /* Determine which sector contains the bytes specified by fat_offset */
-    u32 fat_sector = fs->first_fat_sector + (fat_offset >> LOG_BLOCK_SIZE);
+        /* Calculate the offset into the sector */
+        u32 ent_offset = (fat_offset & (BLOCK_SIZE - 1)) >> 1;
 
-    /* Calculate the offset into the sector */
-    u32 ent_offset = (fat_offset & (BLOCK_SIZE - 1)) >> 1;
+        /* Read sector */
+        u32 ret = device_read(vfs->dev, fat_sector, 1, &sector);
+        if(ret != SUCCESS)
+            return ret;
 
-    /* Read sector */
-    u32 ret = device_read(vfs->dev, fat_sector, 1, &sector);
-    if(ret != SUCCESS)
-        return ret;
+        /* HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK */
+        fat_hack_sector_swap_bytes(&sector, 1);
 
-    /* HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK */
-    fat_hack_sector_swap_bytes(&sector, 1);
-
-    *next_node = sector[ent_offset];
+        *next_node = sector[ent_offset];
+    }
 
     return SUCCESS;
 }
