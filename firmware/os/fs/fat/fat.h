@@ -201,6 +201,21 @@ typedef u16 fat16_cluster_id;
     ts;                                                     \
 })
 
+#define RTC_DATE_TO_FAT_DATE(rdate)                         \
+({                                                          \
+    (u16) (((rdate)->year - 1980) << 9) |                   \
+            ((rdate)->month << 5) |                         \
+            ((rdate)->day);                                 \
+})
+
+#define RTC_DATE_TO_FAT_TIME(rdate)                         \
+({                                                          \
+    (u16) ((rdate)->hour << 11) |                           \
+            ((rdate)->minute << 5) |                        \
+            ((rdate)->second >> 1);                         \
+})
+
+
 vfs_driver_t g_fat_ops;
 
 s32 fat_init();
@@ -215,6 +230,7 @@ s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
 s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent);
 s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_find_free_node(vfs_t *vfs, u32 *node);
+u8 fat_lfn_checksum(u8 *short_name);
 void fat_debug_dump_superblock(vfs_t *vfs);
 
 #endif

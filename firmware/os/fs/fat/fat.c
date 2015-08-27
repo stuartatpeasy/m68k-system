@@ -5,6 +5,10 @@
 
 
     (c) Stuart Wallace, July 2015
+
+
+    TODO: validate names when creating new nodes
+          many other things
 */
 
 #include "fat.h"
@@ -82,6 +86,7 @@ s32 fat_mount(vfs_t *vfs)
     {
         printf("%s: bad FAT sector size %d; can only handle %d-byte sectors\n",
                vfs->dev->name, LE2N16(bpb.bytes_per_sector), BLOCK_SIZE);
+		kfree(fs);
         return EBADSBLK;
     }
 
@@ -462,10 +467,12 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
                         append LFN entries for new node
                         append short-filename entry, including other dirent data
                         type(new_dirent)==dir?
-                            create new empty dir structure
+                            create new empty dir structure (allocate one cluster, zero it)
+                            set size=0
+                            create "." and ".." entries
                             ...more here
                         type(new_dirent)==file?
-                        set size=0; mark free cluster as EOC [problem!!!]
+                            set size=0
                 */
             }
             else if((u8) dir_ctx->de->file_name[0] == FAT_DIRENT_UNUSED)
@@ -490,8 +497,9 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
                     chars[j++] = LE2N16(lde->name_part3[i++]);
 
                 /* Copy any representable ASCII-representable chars into lfn[] */
+                /* The FAT spec requires that all non-representable chars are translated to '_' */
                 for(i = 0; (i < FAT_LFN_PART_TOTAL_LEN) && chars[i]; ++i)
-                    lfn[offset + i] = (chars[i] < 0x80) ? (s8) (chars[i] & 0xff) : '?';
+                    lfn[offset + i] = (chars[i] < 0x80) ? (s8) (chars[i] & 0xff) : '_';
 
                 if((offset + i) > lfn_len)
                     lfn_len = offset + i;
@@ -605,6 +613,22 @@ s32 fat_find_free_node(vfs_t *vfs, u32 *node)
     }
 
     return ENOSPC;   /* No free nodes found */
+}
+
+
+/*
+    fat_lfn_checksum() - compute a one-byte checksum from an 11-character raw short filename string,
+    e.g. "FOO     BAR" (representing the name "FOO.BAR")
+*/
+u8 fat_lfn_checksum(u8 *short_name)
+{
+    u16 x;
+    u8 sum;
+
+    for(sum = 0, x = FAT_FILENAME_LEN + FAT_FILEEXT_LEN; x; --x)
+        sum = ((sum & 1) ? 0x80 : 0x00) + (sum >> 1) + *short_name++;
+
+    return sum;
 }
 
 
