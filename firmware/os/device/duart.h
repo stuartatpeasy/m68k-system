@@ -112,5 +112,6 @@ int duarta_putc(const char c);
 int duarta_getc(void);
 
 void duart_start_counter(void);
+void duart_stop_counter(void);
 
 #endif

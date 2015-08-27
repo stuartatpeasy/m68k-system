@@ -16,7 +16,7 @@ proc_t g_ps[64];
 #define for_each_proc_struct(p) \
             for(p = g_ps; p < &(g_ps[NPROC_STRUCTS]); ++p)
 
-volatile proc_t *g_current_proc = NULL;
+proc_t *g_current_proc = NULL;
 pid_t g_next_pid;
 u32 g_ncontext_switches = 0;
 
@@ -119,6 +119,7 @@ void irq_schedule(void)
         g_current_task->regs.a0 explicitly.
     */
 
+    duart_stop_counter();
     cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 
     /* Store the outgoing process's state in *g_current_proc. */
@@ -128,12 +129,15 @@ void irq_schedule(void)
         "movel %%sp@(18), %0@-              \n"      /*   regs.pc = *(SP + 18)             */
         "movel %%usp, %%a1                  \n"      /* } regs.a7 = USP                    */
         "movel %%a1, %0@-                   \n"      /* }                                  */
-        "moveml %%d0-%%d7/%%a0-%%a6, %0@-   \n"      /*   regs.[d0-d7,a0-a6] = d0-d7,a0-a6 */
-        "movel %%sp@(8), %0@(32)            \n"      /*   regs.a0 = *(SP + 8)              */
-        "movel %%sp@(12), %0@(36)           \n"      /*   regs.a1 = *(SP - 12)             */
+        "moveml %%a2-%%a6, %0@-             \n"      /*   regs.[a2-a6] = a2-a6             */
+        "movel %%sp@(12), %0@-              \n"      /*   regs.a1 = *(SP + 12)             */
+        "movel %%sp@(8), %0@-               \n"      /*   regs.a0 = *(SP + 8)              */
+        "moveml %%d2-%%d7, %0@-             \n"      /*   regs.[d2-d7] = d2-d7             */
+        "movel %%sp@(4), %0@-               \n"      /*   regs.d1 = *(SP + 4)              */
+        "movel %%sp@, %0@-                  \n"      /*   regs.d0 = *(SP + 0)              */
         : /* no output operands */
         : "a" (&(g_current_proc->regs.sr))
-        : "memory", "cc"
+        : "memory", "cc", "a1"
 	);
 
 	/*
@@ -157,7 +161,6 @@ void irq_schedule(void)
         registers' values on the stack with values from the incoming task's state.  We also
         overwrite the return address on the stack with the incoming task's program counter value.
     */
-
     asm volatile
     (
         "movel %0@+, %%sp@                  \n"      /*   *(SP)      = regs.d0             */
@@ -169,11 +172,26 @@ void irq_schedule(void)
         "movel %0@+, %%a1                   \n"      /*  } USP = regs.a[7]                 */
         "movel %%a1, %%usp                  \n"      /*  }                                 */
         "movel %0@+, %%sp@(18)              \n"      /*   *(SP + 18) = PC                  */
-        "movew %0@, %%ccr                   \n"      /*   *(SP + 16) = SR                  */
+        "movew %0@, %%sp@(16)               \n"      /*   *(SP + 16) = SR                  */
         : /* no output operands */
         : "a" (&(g_current_proc->regs.d[0]))
-        : "memory", "cc"
+        : "memory", "cc", "a1"
     );
 
     cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
+}
+
+
+void sched_dump_proc(proc_t *ps)
+{
+    printf("D0=%08x  D1=%08x  D2=%08x  D3=%08x\n"
+           "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"
+           "A0=%08x  A1=%08x  A2=%08x  A3=%08x\n"
+           "A4=%08x  A5=%08x  A6=%08x  SP=%08x\n\n"
+           "PC=%08x  SR=%04x  [%s]\n",
+           ps->regs.d[0], ps->regs.d[1], ps->regs.d[2], ps->regs.d[3],
+           ps->regs.d[4], ps->regs.d[5], ps->regs.d[6], ps->regs.d[7],
+           ps->regs.a[0], ps->regs.a[1], ps->regs.a[2], ps->regs.a[3],
+           ps->regs.a[4], ps->regs.a[5], ps->regs.a[6], ps->regs.a[7],
+           ps->regs.pc, ps->regs.sr, cpu_dump_status_register(ps->regs.sr));
 }
