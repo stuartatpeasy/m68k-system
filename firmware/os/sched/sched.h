@@ -12,6 +12,7 @@
 #include "cpu/utilities.h"
 #include "device/duart.h"          /* DUART generates the scheduler interrupt */
 #include "include/defs.h"
+#include "include/syscall.h"
 #include "include/types.h"
 #include <strings.h>
 
@@ -69,7 +70,7 @@ u32 g_ncontext_switches;
 void irq_schedule(void) __attribute__((interrupt_handler));
 void sched_init(void);
 
-pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku16 flags);
+pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags);
 void process_end(void);
 
 void sched_dump_proc(proc_t *ps);

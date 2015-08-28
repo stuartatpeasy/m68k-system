@@ -174,5 +174,5 @@ memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
 
 sched/sched.o: \
-	sched/sched.c sched/sched.h cpu/utilities.h device/duart.h include/defs.h include/types.h \
-	klibc/strings.h
+	sched/sched.c sched/sched.h cpu/utilities.h device/duart.h include/defs.h include/syscall.h \
+	include/types.h klibc/strings.h

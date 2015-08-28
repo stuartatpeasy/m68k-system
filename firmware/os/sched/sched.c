@@ -33,7 +33,7 @@ void sched_init(void)
 }
 
 
-pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku16 flags)
+pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags)
 {
     proc_t *p;
     pid_t retval = -1;      /* -1 indicates failure */
@@ -47,14 +47,13 @@ pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku16 flags)
         {
             /* TODO: work out how best to store name */
             /* FIXME - allocate this space in user RAM */
-            u8 *process_stack = (u8 *) umalloc(PROC_STACK_SIZE);
+            u8 *process_stack = (u8 *) umalloc(stack_len);
 
-            u32 *process_stack_top = (u32 *) (process_stack + PROC_STACK_SIZE);
+            u32 *process_stack_top = (u32 *) (process_stack + stack_len);
 
 printf("umalloc()ed process stack at %p\n", process_stack);
 printf("stack top = %p\n", process_stack_top);
             p->id = g_next_pid++;
-            p->state = ps_runnable;
             p->parent = NULL;
             p->next = NULL;
 
@@ -69,6 +68,7 @@ printf("stack top = %p\n", process_stack_top);
             p->regs.pc = (u32) main_fn;
 
             retval = p->id;
+            p->state = ps_runnable; /* Mark process as runnable so scheduler will pick it up. */
             break;
         }
     }
@@ -84,10 +84,24 @@ void process_end(void)
     /*
         If a process's main_fn returns, this is where we'll end up.  Note that we may be in user
         mode when this fn is called, so it's not possible to do anything here that requires
-        supervisor privilege
-    */
+        supervisor privilege.
 
-    /* TODO - probably TRAP here, passing the process's ID to the handler. */
+        move.l  d0, d1          // the process's retval should arrive in d0
+        move.l  #SYS_exit, d0
+        trap    #0
+    */
+    register u32 proc_retval asm("d0");
+#if 0
+    asm volatile
+    (
+        "movel %%d0, %0"
+        : "=m" (&proc_retval)
+        : /* no input operands */
+        : "cc"
+    );
+#endif
+    SYSCALL1(SYS_exit, proc_retval);
+    /* will not return */
 }
 
 
