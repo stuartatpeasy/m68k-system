@@ -14,10 +14,11 @@ CSOURCES=dfu.c main.c \
 		 device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
+		 kernel/syscalls.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
 		 sched/sched.c
 
-ASMSOURCES=cpu/syscall.S
+ASMSOURCES=kernel/syscall.S
 
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
@@ -81,9 +82,6 @@ libmonitor.a:
 #
 # Dependencies below this point
 #
-
-asm/syscall.o: \
-	asm/syscall.S include/syscall.h
 
 main.o: \
 	main.c cpu/utilities.h device/devctl.h device/device.h device/expansion.h device/led.h \
@@ -158,6 +156,9 @@ fs/vfs.o: \
 include/byteorder.h: \
 	asm/bswap.h
 
+kernel/syscalls.o: \
+	kernel/syscalls.c kernel/syscall.h
+
 memory/buddy.o: \
 	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a
 
@@ -174,5 +175,5 @@ memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
 
 sched/sched.o: \
-	sched/sched.c sched/sched.h cpu/utilities.h device/duart.h include/defs.h include/syscall.h \
+	sched/sched.c sched/sched.h cpu/utilities.h device/duart.h include/defs.h kernel/syscall.h \
 	include/types.h klibc/strings.h

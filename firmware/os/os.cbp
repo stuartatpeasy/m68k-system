@@ -31,7 +31,6 @@
 		</Unit>
 		<Unit filename="cpu/exceptions.h" />
 		<Unit filename="cpu/exceptionstackframes.h" />
-		<Unit filename="cpu/syscall.S" />
 		<Unit filename="cpu/utilities.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -105,6 +104,10 @@
 		<Unit filename="include/syscall.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
+		<Unit filename="kernel/syscall.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/syscall.h" />
 		<Unit filename="klibc/Makefile" />
 		<Unit filename="klibc/assert.c">
 			<Option compilerVar="CC" />

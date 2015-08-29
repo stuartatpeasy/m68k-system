@@ -62,7 +62,7 @@ printf("stack top = %p\n", process_stack_top);
 
             /* Set up the process's initial stack */
             *(--process_stack_top) = (u32) arg;
-            *(--process_stack_top) = (u32) process_end;
+            *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
 
             p->regs.a[7] = (u32) process_stack_top;
             p->regs.pc = (u32) main_fn;
@@ -79,40 +79,15 @@ printf("stack top = %p\n", process_stack_top);
 }
 
 
-void process_end(void)
-{
-    /*
-        If a process's main_fn returns, this is where we'll end up.  Note that we may be in user
-        mode when this fn is called, so it's not possible to do anything here that requires
-        supervisor privilege.
-
-        move.l  d0, d1          // the process's retval should arrive in d0
-        move.l  #SYS_exit, d0
-        trap    #0
-    */
-    register u32 proc_retval asm("d0");
-#if 0
-    asm volatile
-    (
-        "movel %%d0, %0"
-        : "=m" (&proc_retval)
-        : /* no input operands */
-        : "cc"
-    );
-#endif
-    SYSCALL1(SYS_exit, proc_retval);
-    /* will not return */
-}
-
-
 void irq_schedule(void)
 {
     /*
         This is the interrupt handler for the system timer interrupt, which triggers a context
         switch.  This function performs the context switch.
 
-        This function is marked as __attribute__((interrupt_handler)), which results in this
-        instruction being emitted by the compiler on entry:
+        This function is marked as __attribute__((interrupt_handler)), which results in it
+        returning via an RTE instruction, instead of an RTS.  On entry, the four throwaway registers
+        are stacked using a MOVEM instruction:
 
             movem.l d0-d1/a0-a1, -(sp)
 

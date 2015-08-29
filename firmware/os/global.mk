@@ -36,7 +36,7 @@ LIBCSWDIR=$(PROJECTDIR)/libc-sw
 
 APPNAME=ayumos
 
-CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -Os -m68000 -g \
+CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -O3 -m68000 -g \
         -DKMALLOC_HEAP -DTARGET_BIGENDIAN -DTARGET_MC68010 -ffreestanding -fomit-frame-pointer
 AFLAGS=-m68000
 
