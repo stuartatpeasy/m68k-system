@@ -29,8 +29,8 @@ void ds17485_init()
     /* Write register 4A: enable extended RAM burst mode */
     DS17485_REG_WRITE(DS17485_REG_4A, DS17485_BME);
 
-    /* Write register 4B: enable RAM clear input pin */
-    DS17485_REG_WRITE(DS17485_REG_4B, DS17485_RCE);
+    /* Write register 4B: enable RAM clear input pin; select 12.5pF crystal load capacitance */
+    DS17485_REG_WRITE(DS17485_REG_4B, DS17485_RCE | DS17485_CS);
 
     /* Write register A: select standard registers */
     DS17485_REG_WRITE(DS17485_REG_A, DS17485_DV1);
