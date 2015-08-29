@@ -230,6 +230,7 @@ s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
 s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent);
 s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_find_free_node(vfs_t *vfs, u32 *node);
+void fat_generate_basis_name(ks8 * const lfn, u32 tailnum, char * const basis_name);
 u8 fat_lfn_checksum(u8 *short_name);
 void fat_debug_dump_superblock(vfs_t *vfs);
 

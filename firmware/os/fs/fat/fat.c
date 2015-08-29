@@ -616,6 +616,75 @@ s32 fat_find_free_node(vfs_t *vfs, u32 *node)
 }
 
 
+
+/*
+    fat_generate_basis_name() - generate a "basis name" from a long filename.  E.g.:
+
+        "Letter to the bank manager.doc" (long fn) --> "LETTER~1.DOC" (basis name)
+
+    "tailnum" specifies the numeric tail number (the "~1" part).  No numeric tail is generated if
+    the long filename can be fit losslessly into basis_name.  "tailnum" must be >=1.  "basis_name"
+    must point to a buffer of at least 11 bytes.
+*/
+void fat_generate_basis_name(ks8 * const lfn, u32 tailnum, char * const basis_name)
+{
+    /*
+        Trim leading whitespace
+        Trim leading '.'s
+
+    */
+    u8 lossy = 0;
+
+    /*
+        1.	Strip all leading and embedded spaces from the long name.
+        2.	Strip all leading periods from the long name.
+        3.	The UNICODE name passed to the file system is converted to upper case.
+        4.	The upper cased UNICODE name is converted to OEM.
+            if(the uppercased UNICODE glyph does not exist as an OEM glyph in the OEM code page)
+                or(the OEM glyph is invalid in an 8.3 name)
+            {
+                Replace the glyph to an OEM '_' (underscore) character.
+                Set a "lossy conversion" flag.
+            }
+        5.	While(not at end of the long name)
+                    and(char is not a period)
+                    and(total chars copied < 8)
+            {
+                Copy characters into primary portion of the basis name
+            }
+        6.	Insert a dot at the end of the primary components of the basis-name iff the basis name
+            has an extension after the last period in the name.
+        7.	Scan for the last embedded period in the long name.
+                If(the last embedded period was found)
+                {
+                    While(not at end of the long name)
+                            and	(total chars copied < 3)
+                    {
+                        Copy characters into extension portion of the basis name
+                    }
+                }
+
+        Proceed to numeric-tail generation.
+        The Numeric-Tail Generation Algorithm
+
+        If(a "lossy conversion" was not flagged)
+            and(the long name fits within the 8.3 naming conventions)
+            and(the basis-name does not collide with any existing short name
+        {
+            The short name is only the basis-name without the numeric tail.
+        }
+        else
+        {
+            Insert a numeric-tail "~n" to the end of the primary name such that the value of the
+            "~n" is chosen so that the name thus formed does not collide with any existing short
+            name and that the primary name does not exceed eight characters in length.
+        }
+    */
+
+
+}
+
+
 /*
     fat_lfn_checksum() - compute a one-byte checksum from an 11-character raw short filename string,
     e.g. "FOO     BAR" (representing the name "FOO.BAR")
