@@ -1,36 +1,59 @@
-APPNAME=libtache.a
+LIBNAME=ayumos
+TESTAPP=testapp
 PLATFORM=m68000
+TARGET_ARCH=m68k
 
-CC=m68k-coff-gcc
-AR=m68k-coff-ar
-AS=m68k-coff-as
-LD=m68k-coff-ld
+# old-style (gcc 3) config
+TARGET_FMT=elf
 
-BASEDIR=/opt/m68k/lib/gcc/m68k-coff/3.4.2
+# new-style (gcc 5) config
+TARGET_FMT=linux-elf
 
-AFLAGS=-$(PLATFORM)
-CFLAGS=-$(PLATFORM) -Wall -O2 -c
-LDFLAGS=-nostdlib -static -L$(BASEDIR)/m68000
+TARGET_PREFIX=$(TARGET_ARCH)-$(TARGET_FMT)
 
-ASMSOURCES=malloc.S free.S
+CC=$(TARGET_PREFIX)-gcc
+AR=$(TARGET_PREFIX)-ar
+AS=$(TARGET_PREFIX)-as
+LD=$(TARGET_PREFIX)-ld
 
-OBJECTS=$(ASMSOURCES:.S=.o)
+GCC_VERSION=$(shell $(CC) --version | head -n 1 | sed 's/.* //')
 
-all: $(APPNAME)
+BASEDIR=/opt/m68k
+LIBDIR=$(BASEDIR)/lib/gcc/$(TARGET_ARCH)-$(TARGET_FMT)/$(GCC_VERSION)/
+
+AFLAGS=-$(PLATFORM) -Wall -O3 -c -fPIE
+CFLAGS=-$(PLATFORM) -Wall -O3 -c -fPIE
+LDFLAGS=-nostdlib -static -L$(LIBDIR)/$(PLATFORM)
+
+CSOURCES=
+
+ASMSOURCES=syscalln.S
+
+OBJECTS=$(ASMSOURCES:.S=.o) $(CSOURCES:.c=.o)
+LIBFILE=lib$(LIBNAME).a
+
+all: $(LIBFILE) crt0.o testapp
+
+.c.o:
+	$(CC) $(CFLAGS) -o$@ $<
 
 .S.o:
-	$(AS) $(AFLAGS) -o$@ $<
+	$(CC) $(AFLAGS) -o$@ $<
 
-$(APPNAME): $(OBJECTS)
-	$(AR) rcs $(APPNAME) $(OBJECTS)
+$(LIBFILE): $(OBJECTS)
+	$(AR) rcs $(LIBFILE) $(OBJECTS)
 
-test:
-	$(CC) $(CFLAGS) -otest.o test.c
-	$(LD) test.o -otest -L. -ltache
+$(TESTAPP): testapp.o
+	$(LD) $(LDFLAGS) -nostdlib crt0.o testapp.o -o$(TESTAPP) -L. -l$(LIBNAME) -s
 
 clean:
-	rm -f $(APPNAME) $(OBJECTS) test test.o
+	rm -f $(LIBFILE) $(OBJECTS) crt0.o $(TESTAPP) $(TESTAPP).o
 
-free.o: free.S tache.h
-malloc.o: malloc.S tache.h
+crt0.o: \
+	crt0.S
 
+ayumos.o: \
+	ayumos.S 
+
+testapp.o: \
+	testapp.c ayumos.h $(LIBFILE)
