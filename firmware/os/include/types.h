@@ -37,7 +37,8 @@ typedef signed long long			s64;
 typedef const signed long long		ks64;
 typedef volatile signed long long	vs64;
 
-#ifndef size_t
+/* Test harnesses may already have defined size_t, so define it conditionally here */
+#ifndef HAVE_SIZE_T
 typedef u32 size_t;
 #endif
 
@@ -57,7 +58,10 @@ struct rtc_time
 typedef struct rtc_time rtc_time_t;
 
 /* Process ID */
+/* Test harnesses may already have defined pid_t, so define it conditionally here */
+#ifndef HAVE_PID_T
 typedef s16 pid_t;
+#endif
 
 /* This probably isn't the right place to define NULL, but I don't think it warrants its
    own header file. */
