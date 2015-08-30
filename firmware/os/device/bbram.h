@@ -23,7 +23,7 @@ struct bbram_param_block
     u32 magic;
     s8 rootfs[8];
     s8 fstype[8];
-    u32 mdate;
+    s32 mdate;
     u16 checksum;
 } __attribute__((packed));
 

@@ -54,7 +54,8 @@ void detect_clock_freq()
 void _main()
 {
     rtc_time_t tm;
-    char sn[6], timebuf[12], datebuf[32];
+    char timebuf[12], datebuf[32];
+    u8 sn[6];
 
 	/* === Initialise CPU === */
 

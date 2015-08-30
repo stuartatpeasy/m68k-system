@@ -22,9 +22,6 @@ ASMSOURCES=kernel/syscall.S
 
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
-#
-# FIXME: _mulsi3 is used somewhere; find where.
-#
 LDFLAGS=-g -T rom.ld -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
 LIBS=-lgcc -lc -lkutil -lmonitor
