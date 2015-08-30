@@ -43,11 +43,11 @@ void detect_clock_freq()
     for(loops = 0; curr_second == tm.second; ++loops)
         ds17485_get_time(&tm);
 
-    freq = loops / 142;     /* freq in hundreds of kHz */
+    freq = loops / 147;     /* freq in hundreds of kHz */
     printf("CPU fclk ~%2u.%uMHz (tc=%u)\n", freq / 10, freq - ((freq / 10) * 10), loops);
 
-    // CPU fclk/MHz ~= loops/1451
-    // CPU fclk/Hz ~= 687 * loops
+    // CPU fclk/MHz ~= loops/1470
+    // CPU fclk/Hz ~= 680 * loops
 }
 
 
