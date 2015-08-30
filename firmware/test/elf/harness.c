@@ -26,10 +26,10 @@ void elf_dump_hdr(const Elf32_Ehdr * const h)
 		   "e_shentsize = %u\n"
 		   "e_shnum     = %u\n"
 		   "e_shstrndx  = %u\n",
-		   B2L16(h->e_type), B2L16(h->e_machine), B2L32(h->e_version), B2L32(h->e_entry),
-		   B2L32(h->e_phoff), B2L32(h->e_shoff), B2L32(h->e_flags), B2L16(h->e_ehsize),
-		   B2L16(h->e_phentsize), B2L16(h->e_phnum), B2L16(h->e_shentsize), B2L16(h->e_shnum),
-		   B2L16(h->e_shstrndx));
+		   BE2N16(h->e_type), BE2N16(h->e_machine), BE2N32(h->e_version), BE2N32(h->e_entry),
+		   BE2N32(h->e_phoff), BE2N32(h->e_shoff), BE2N32(h->e_flags), BE2N16(h->e_ehsize),
+		   BE2N16(h->e_phentsize), BE2N16(h->e_phnum), BE2N16(h->e_shentsize), BE2N16(h->e_shnum),
+		   BE2N16(h->e_shstrndx));
 }
 
 
@@ -44,8 +44,8 @@ void elf_dump_phdr(const Elf32_Phdr * const h)
 		   "p_memsz  = %u\n"
 		   "p_flags  = 0x%08x\n"
 		   "p_align  = %u\n",
-		   B2L32(h->p_type), B2L32(h->p_offset), B2L32(h->p_vaddr), B2L32(h->p_paddr),
-		   B2L32(h->p_filesz), B2L32(h->p_memsz), B2L32(h->p_flags), B2L32(h->p_align));
+		   BE2N32(h->p_type), BE2N32(h->p_offset), BE2N32(h->p_vaddr), BE2N32(h->p_paddr),
+		   BE2N32(h->p_filesz), BE2N32(h->p_memsz), BE2N32(h->p_flags), BE2N32(h->p_align));
 }
 
 
@@ -62,9 +62,9 @@ void elf_dump_shdr(const Elf32_Shdr * const h, ks8 *stab)
 		   "sh_info      = %u\n"
 		   "sh_addralign = %u\n"
 		   "sh_entsize   = %u\n",
-		   B2L32(h->sh_name), stab + B2L32(h->sh_name), B2L32(h->sh_type), B2L32(h->sh_flags), B2L32(h->sh_addr),
-		   B2L32(h->sh_offset), B2L32(h->sh_size), B2L32(h->sh_link), B2L32(h->sh_info),
-		   B2L32(h->sh_addralign), B2L32(h->sh_entsize));
+		   BE2N32(h->sh_name), stab + BE2N32(h->sh_name), BE2N32(h->sh_type), BE2N32(h->sh_flags),
+		   BE2N32(h->sh_addr), BE2N32(h->sh_offset), BE2N32(h->sh_size), BE2N32(h->sh_link),
+		   BE2N32(h->sh_info), BE2N32(h->sh_addralign), BE2N32(h->sh_entsize));
 }
 
 
@@ -80,8 +80,8 @@ void old_program_header_inspection_code()
 	u16 nphdr, pass;
 
 	/* Parse program header and load sections */
-	phdr = (Elf32_Phdr *) ((u8 *) buf + B2L32(ehdr->e_phoff));
-	nphdr = B2L16(ehdr->e_phnum);
+	phdr = (Elf32_Phdr *) ((u8 *) buf + BE2N32(ehdr->e_phoff));
+	nphdr = BE2N16(ehdr->e_phnum);
 
 	/* Check that the program header sections don't run past the end of the file */
 	if((u8 *) &phdr[nphdr] > ((u8 *) buf + len))
@@ -97,7 +97,7 @@ void old_program_header_inspection_code()
 	{
 		for(ph = phdr; ph < &phdr[nphdr]; ++ph)
 		{
-			if(B2L32(phdr->p_type) != PT_LOAD)
+			if(BE2N32(phdr->p_type) != PT_LOAD)
 				continue;	/* Only interested in loadable regions */
 
 			if(pass == 0)
@@ -105,11 +105,11 @@ void old_program_header_inspection_code()
 				/* Pass 0: determine the virtual address range required by the executable */
 				elf_dump_phdr(ph);
 
-				if(B2L32(ph->p_vaddr) < vaddr_start)
-					vaddr_start = B2L32(ph->p_vaddr);
+				if(BE2N32(ph->p_vaddr) < vaddr_start)
+					vaddr_start = BE2N32(ph->p_vaddr);
 
-				if((B2L32(ph->p_vaddr) + B2L32(ph->p_memsz)) > vaddr_end)
-					vaddr_end = (B2L32(ph->p_vaddr) + B2L32(ph->p_memsz));
+				if((BE2N32(ph->p_vaddr) + BE2N32(ph->p_memsz)) > vaddr_end)
+					vaddr_end = (BE2N32(ph->p_vaddr) + BE2N32(ph->p_memsz));
 			}
 			else
 			{

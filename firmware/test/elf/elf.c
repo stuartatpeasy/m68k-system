@@ -63,22 +63,22 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 	}
 
 	/* Verify that this is an executable image (vs. an object file, etc.) */
-	if(B2L16(ehdr->e_type) != ET_EXEC)
+	if(BE2N16(ehdr->e_type) != ET_EXEC)
 	{
-		printf("This is not an executable file (e_type=%d)\n", B2L16(ehdr->e_type));
+		printf("This is not an executable file (e_type=%d)\n", BE2N16(ehdr->e_type));
 		return EINVAL;
 	}
 
 	/* Verify that this file matches our architecture */
-	if(B2L16(ehdr->e_machine) != EM_68K)
+	if(BE2N16(ehdr->e_machine) != EM_68K)
 	{
-		printf("This is not a m68k-family executable (e_machine=%d)\n", B2L16(ehdr->e_machine));
+		printf("This is not a m68k-family executable (e_machine=%d)\n", BE2N16(ehdr->e_machine));
 		return EINVAL;
 	}
 
-	if((B2L32(ehdr->e_flags) & EF_M68K_ARCH_MASK) != EF_M68K_M68000)
+	if((BE2N32(ehdr->e_flags) & EF_M68K_ARCH_MASK) != EF_M68K_M68000)
 	{
-		printf("This is not an mc68000 executable (e_flags=%08x)\n", B2L32(ehdr->e_flags));
+		printf("This is not an mc68000 executable (e_flags=%08x)\n", BE2N32(ehdr->e_flags));
 		return EINVAL;
 	}
 
@@ -89,8 +89,8 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 	}
 
 	/* Parse section headers */
-	shdr = (Elf32_Shdr *) ((u8 *) buf + B2L32(ehdr->e_shoff));
-	nshdr = B2L16(ehdr->e_shnum);
+	shdr = (Elf32_Shdr *) ((u8 *) buf + BE2N32(ehdr->e_shoff));
+	nshdr = BE2N16(ehdr->e_shnum);
 
 	/* Check that the section headers don't run past the end of the file */
 	if((u8 *) &shdr[nshdr] > ((u8 *) buf + len))
@@ -101,8 +101,8 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 
 	/* Search the section headers for the string table */
 	for(strtab = NULL, sh = shdr; sh < &shdr[nshdr]; ++sh)
-		if((B2L32(sh->sh_type) == SHT_STRTAB) && sh->sh_size)
-			strtab = (s8 *) buf + B2L32(sh->sh_offset);		/* Found the string table */
+		if((BE2N32(sh->sh_type) == SHT_STRTAB) && sh->sh_size)
+			strtab = (s8 *) buf + BE2N32(sh->sh_offset);		/* Found the string table */
 
 	if(strtab == NULL)
 	{
@@ -117,16 +117,16 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 	/* Pass 1: calculate extents of the memory region required for the program */
 	for(sh = shdr; sh < &shdr[nshdr]; ++sh)
 	{
-		ks8 * const name = strtab + B2L32(sh->sh_name);
-		if(((B2L32(sh->sh_type) == SHT_PROGBITS) && elf_is_relevant_progbits_section(name))
-			|| ((B2L32(sh->sh_type) == SHT_NOBITS) && elf_is_relevant_nobits_section(name)))
+		ks8 * const name = strtab + BE2N32(sh->sh_name);
+		if(((BE2N32(sh->sh_type) == SHT_PROGBITS) && elf_is_relevant_progbits_section(name))
+			|| ((BE2N32(sh->sh_type) == SHT_NOBITS) && elf_is_relevant_nobits_section(name)))
 		{
 			/* This section will be loaded */
-			if(B2L32(sh->sh_addr) < vaddr_start)
-				vaddr_start = B2L32(sh->sh_addr);
+			if(BE2N32(sh->sh_addr) < vaddr_start)
+				vaddr_start = BE2N32(sh->sh_addr);
 
-			if((B2L32(sh->sh_addr) + B2L32(sh->sh_size)) > vaddr_end)
-				vaddr_end = B2L32(sh->sh_addr) + B2L32(sh->sh_size);
+			if((BE2N32(sh->sh_addr) + BE2N32(sh->sh_size)) > vaddr_end)
+				vaddr_end = BE2N32(sh->sh_addr) + BE2N32(sh->sh_size);
 		}
 	}
 
@@ -139,33 +139,33 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 	/* Pass 2: copy segments into buffer; intialise as required */
 	for(sh = shdr; sh < &shdr[nshdr]; ++sh)
 	{
-		ks8 * const name = strtab + B2L32(sh->sh_name);
-		u8 * const sect_start_img = imgbuf + (B2L32(sh->sh_addr) - vaddr_start),
-		   * const sect_start_buf = (u8 *) buf + B2L32(sh->sh_offset);
+		ks8 * const name = strtab + BE2N32(sh->sh_name);
+		u8 * const sect_start_img = imgbuf + (BE2N32(sh->sh_addr) - vaddr_start),
+		   * const sect_start_buf = (u8 *) buf + BE2N32(sh->sh_offset);
 
-		if((B2L32(sh->sh_type) == SHT_PROGBITS) && elf_is_relevant_progbits_section(name))
+		if((BE2N32(sh->sh_type) == SHT_PROGBITS) && elf_is_relevant_progbits_section(name))
 		{
 			/* Copy the section to the buffer */
-			memcpy(sect_start_img, sect_start_buf, B2L32(sh->sh_size));
+			memcpy(sect_start_img, sect_start_buf, BE2N32(sh->sh_size));
 
 			if(!strcmp(name, ".got"))
 			{
 				/* .got section: adjust offset addresses appropriately */
 				u32 *got_entry = (u32 *) sect_start_img,
-					*got_end = (u32 *) (sect_start_img + B2L32(sh->sh_size));
+					*got_end = (u32 *) (sect_start_img + BE2N32(sh->sh_size));
 
 				for(; got_entry < got_end; ++got_entry)
 					if(*got_entry)
-						*got_entry = B2L32(B2L32(*got_entry) - vaddr_start + (u32) imgbuf);
+						*got_entry = BE2N32(BE2N32(*got_entry) - vaddr_start + (u32) imgbuf);
 			}
 		}
-		else if((B2L32(sh->sh_type) == SHT_NOBITS) && elf_is_relevant_nobits_section(name))
-			bzero(sect_start_img, B2L32(sh->sh_size));	/* Zero-init NOBITS sections (eg. .bss) */
+		else if((BE2N32(sh->sh_type) == SHT_NOBITS) && elf_is_relevant_nobits_section(name))
+			bzero(sect_start_img, BE2N32(sh->sh_size));	/* Zero-init NOBITS sections (eg. .bss) */
 	}
 
 	img->start = imgbuf;
 	img->len = size;
-	img->entry_point = (u16 *) (imgbuf + (B2L32(ehdr->e_entry) - vaddr_start));
+	img->entry_point = (u16 *) (imgbuf + (BE2N32(ehdr->e_entry) - vaddr_start));
 
 	return SUCCESS;
 }

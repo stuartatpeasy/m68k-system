@@ -10,8 +10,8 @@
 */
 
 /* Test harness runs on a little-endian platform, so ... */
-#define B2L16(x)	((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
-#define B2L32(x)	((((x) & 0xff) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | (((x) >> 24) & 0xff))
+#define BE2N16(x)	((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
+#define BE2N32(x)	((((x) & 0xff) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | (((x) >> 24) & 0xff))
 #define umalloc(x)	malloc(x)
 
 /* Define these in order to avoid picking up the defs in the ayumos code FIXME remove*/
