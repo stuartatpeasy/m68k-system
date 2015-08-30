@@ -12,7 +12,6 @@
 /* Test harness runs on a little-endian platform, so ... */
 #define BE2N16(x)	((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
 #define BE2N32(x)	((((x) & 0xff) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | (((x) >> 24) & 0xff))
-#define umalloc(x)	malloc(x)
 
 /* Define these in order to avoid picking up the defs in the ayumos code FIXME remove*/
 #define HAVE_SIZE_T	1
@@ -30,6 +29,11 @@
 
 void elf_dump_hdr(const Elf32_Ehdr * const h);
 void elf_dump_phdr(const Elf32_Phdr * const h);
+
+u16 bswap_16(u16 val);
+u32 bswap_32(u32 val);
+
+void *umalloc(u32 size);
 
 #endif
 

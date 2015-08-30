@@ -9,6 +9,23 @@
 
 #include "harness.h"
 
+u16 bswap_16(u16 val)
+{
+	return ((val >> 8) & 0xff) | (val << 8);
+}
+
+
+u32 bswap_32(u32 val)
+{
+	return (val << 24) | ((val & 0xff00) << 8) | ((val & 0xff0000) >> 8) | ((val >> 24) & 0xff);
+}
+
+
+void *umalloc(u32 size)
+{
+	return malloc(size);
+}
+
 
 void elf_dump_hdr(const Elf32_Ehdr * const h)
 {

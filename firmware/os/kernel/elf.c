@@ -9,8 +9,11 @@
 	TODO: fix up error codes: add some new kernel-specific codes, maybe
 */
 
-
-#include "harness.h"		/* FIXME - remove */
+#include "include/byteorder.h"
+#include "errno.h"
+#include "stdio.h"
+#include "string.h"
+#include "strings.h"
 
 #include "include/elf.h"
 

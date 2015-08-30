@@ -11,6 +11,8 @@
 
 #include "include/types.h"
 
+#if defined(TARGET_MC68000) || defined(TARGET_MC68010) \
+    || defined(TARGET_MC68020) || defined(TARGET_MC68030)
 
 #define bswap_16(x)											\
 					(__extension__ ({						\
@@ -55,5 +57,6 @@
 						x_; 								\
 					}))
 
+#endif /* defined(TARGET_MC680x0) */
 #endif
 
