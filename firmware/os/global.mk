@@ -1,10 +1,10 @@
 ARCH=m68k
 
 # for older toolchain
-FORMAT=elf
+#FORMAT=elf
 
 # for gcc-5.2 toolchain
-#FORMAT=linux-elf
+FORMAT=linux-elf
 
 
 TARGET_FMT=$(ARCH)-$(FORMAT)
@@ -23,11 +23,11 @@ BASEDIR=/opt/m68k/lib/gcc/$(TARGET_FMT)/$(GCC_VERSION)
 
 PROJECTDIR=/home/swallace/projects/m68k-system/firmware
 SRCDIR=$(PROJECTDIR)/os
-LIBCSWDIR=$(PROJECTDIR)/libc-sw
 
 APPNAME=ayumos
 
-CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -O3 -m68000 -g \
-        -DKMALLOC_HEAP -DTARGET_BIGENDIAN -DTARGET_MC68010 -ffreestanding -fomit-frame-pointer
+CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -Os -m68000 -g \
+        -DKMALLOC_HEAP -DTARGET_BIGENDIAN -DTARGET_MC68010 -ffreestanding -fomit-frame-pointer \
+		-fno-delete-null-pointer-checks
 AFLAGS=-m68000
 
