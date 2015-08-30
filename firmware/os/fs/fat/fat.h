@@ -194,7 +194,7 @@ typedef u16 fat16_cluster_id;
 #define FAT_DATETIME_TO_TIMESTAMP(fdate, ftime)             \
 ({                                                          \
     struct rtc_time tm;                                     \
-    u32 ts;                                                 \
+    s32 ts;                                                 \
     FAT_DATE_TO_RTC_DATE(fdate, tm);                        \
     FAT_TIME_TO_RTC_DATE(ftime, tm);                        \
     rtc_time_to_timestamp(&tm, &ts);                        \

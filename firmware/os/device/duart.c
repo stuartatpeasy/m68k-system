@@ -127,7 +127,6 @@ int duarta_getc(void)
 */
 void duart_start_counter(void)
 {
-//    u8 dummy = DUART_STOP_CC;
     u8 dummy;
 
     /* Set CTUR/CTLR - the counter/timer upper/lower timeout counts */
@@ -135,6 +134,7 @@ void duart_start_counter(void)
     DUART_CTLR = ((DUART_CLK_HZ / 16) / TICK_RATE) & 0xff;
 
     dummy = DUART_START_CC;
+    dummy += 0;     /* silence the "var set but not used" compiler warning */
 }
 
 
@@ -145,5 +145,5 @@ void duart_start_counter(void)
 void duart_stop_counter(void)
 {
     u8 dummy = DUART_STOP_CC;
-    dummy += 0;     /* silence the compiler warning */
+    dummy += 0;     /* silence the "var set but not used" compiler warning */
 }

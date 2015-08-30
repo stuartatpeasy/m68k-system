@@ -12,9 +12,9 @@
 typedef unsigned char				u8;
 typedef const unsigned char			ku8;
 typedef volatile unsigned char		vu8;
-typedef signed char					s8;
-typedef const signed char			ks8;
-typedef volatile signed char		vs8;
+typedef char						s8;
+typedef const char					ks8;
+typedef volatile char				vs8;
 
 typedef unsigned short int			u16;
 typedef const unsigned short int	ku16;
