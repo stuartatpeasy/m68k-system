@@ -1,8 +1,28 @@
+Note: the "old" (gcc-2.9x) toolchain was built for the targets "m68k-coff" / "m68k-elf", i.e. no
+platform was specified.  Gcc now appears to require a named platform at build-time, hence this
+more recent toolchain builds for the target "m68k-linux-elf".  This means that global.mk must be
+edited to specify the correct tool names, e.g.
+
+	old toolchain: CC=m68k-elf-gcc
+                   (...etc for other tools)
+
+	new toolchain: CC=m68k-linux-elf-gcc
+                   (...etc for other tools)
+
+[2015-08-30] update: new toolchain built using binutils-2.25.1 (the latest version at the time of
+writing).  Also, it now seems to be possible to build a C++ compiler for m68k.  Toolchains built
+using older versions of gcc (<3.0) and binutils (<2.23) didn't seem to allow this.  Writing some
+viable C++ code for the m68k platform would be *very* nice!
+
+
 0. Configure build environment
 
 0a. install necessary packages
 
 	- flex
+	- libgmp-dev
+	- libmpfr-dev
+	- libmpc-dev
 
 0b. create installation root and build directory
 
@@ -10,30 +30,30 @@
 	$ mkdir tools
 	$ cd tools
 
-1. Build and install binutils-2.15a
+1. Build and install binutils-2.25.1.tar.bz2
 
-	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.15a.tar.bz2
-	$ tar xf binutils-2.15a.tar.bz2
-	$ cd binutils-2.15
-	$ patch -p1 -i ../../binutils-2.15.patch
-	$ ./configure --prefix=/opt/m68k --target=m68k-coff
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.25.1.tar.bz2
+	$ tar xf binutils-2.25.1.tar.bz2
+	$ cd binutils-2.25.1
+	$ ./configure --prefix=/opt/m68k --target=m68k-linux-elf
 	$ make -j4
 	$ sudo make install
 	$ cd ..
 
-2. build and install gcc-core-3.4.2
+2. build and install gcc-5.2.0
 
-	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-3.4.2/gcc-core-3.4.2.tar.bz2
-	$ tar xf gcc-core-3.4.2.tar.bz2
-	$ cd gcc-3.4.2
-	$ patch -p1 -i ../../gcc-3.4.2.patch
-	$ ./configure --prefix=/opt/m68k --target=m68k-coff --enable-languages=c
-	$ make -j4
-	$ sudo make install
+	$ wget https://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-5.2.0/gcc-5.2.0.tar.bz2
+	$ tar xf gcc-5.2.0.tar.bz2
+	$ mkdir gcc-build
+	$ cd gcc-build
+	$ ../gcc-5.2.0/configure --prefix=/opt/m68k --target=m68k-linux-elf --enable-languages=c,c++
+	$ make -j4 all-gcc all-target-libgcc
+	$ sudo make install-gcc install-target-libgcc
 	$ cd ..
 
 3. tidy up
 
 	$ cd ..
 	$ rm -rf tools
+
 
