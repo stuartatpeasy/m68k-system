@@ -63,6 +63,17 @@ typedef struct rtc_time rtc_time_t;
 typedef s16 pid_t;
 #endif
 
+/* In-memory executable image */
+struct exe_img
+{
+    void *start;            /* Ptr to first byte of img in memory   */
+    u32 len;                /* Img len                              */
+    u16 *entry_point;       /* Ptr to first instruction of img      */
+};
+
+typedef struct exe_img exe_img_t;
+
+
 /* This probably isn't the right place to define NULL, but I don't think it warrants its
    own header file. */
 #ifndef NULL

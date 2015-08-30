@@ -10,21 +10,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-/* Define these in order to avoid picking up the defs in the ayumos code */
-#define HAVE_SIZE_T	1
-#define HAVE_PID_T	1
+#include "harness.h"
 
-#include "elf.h"
+#include "include/elf.h"
 
 
 int main(int argc, char **argv)
 {
-	FILE *fp;
+	FILE *fp_elf, *fp_out;
 	struct stat st;
 	void *buf;
+	exe_img_t img;
 
-	if(argc != 2)
-		error(1, 0, "No ELF file specified");
+	if(argc != 3)
+		error(1, 0, "Syntax: %s <elf_file> <mem_img>", argv[0]);
 	
 	if(stat(argv[1], &st))
 		error(2, 0, "Failed to stat '%s'", argv[1]);
@@ -32,20 +31,32 @@ int main(int argc, char **argv)
 	if(!st.st_size)
 		error(3, 0, "File '%s' is zero-length", argv[1]);
 
-	if((fp = fopen(argv[1], "r")) == NULL)
+	if((fp_elf = fopen(argv[1], "r")) == NULL)
 		error(4, errno, "Failed to open '%s'", argv[1]);
+
+	if((fp_out = fopen(argv[2], "w")) == NULL)
+		error(5, errno, "Failed to create '%s'", argv[2]);
 	
 	buf = malloc(st.st_size);
 	if(!buf)
-		error(5, 0, "Failed to allocate %d bytes", (int) st.st_size);
+		error(6, 0, "Failed to allocate %d bytes", (int) st.st_size);
 	
-	if(fread(buf, 1, st.st_size, fp) != st.st_size)
-		error(6, errno, "Failed to read file '%s'", argv[1]);
+	if(fread(buf, 1, st.st_size, fp_elf) != st.st_size)
+		error(7, errno, "Failed to read file '%s'", argv[1]);
 	
-	fclose(fp);
+	fclose(fp_elf);
 
 	/* File image is in memory; attempt to parse and "load" it */
-	elf_load_exe(buf, st.st_size);
+	elf_load_exe(buf, st.st_size, &img);
+
+	printf("Local buffer: %p\nImage len: %u\nEntry point: %p\n",
+			img.start, img.len, (void *) img.entry_point);
+
+	if(fwrite(img.start, 1, img.len, fp_out) != img.len)
+		error(8, errno, "Failed to write data to file '%s'", argv[2]);
+
+	fclose(fp_out);
+	
 
 	return 0;
 }

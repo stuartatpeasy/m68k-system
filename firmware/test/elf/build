@@ -1,0 +1,2 @@
+#!/bin/sh
+gcc -std=c99 -Wall -pedantic -Wno-pointer-sign -Wno-pointer-to-int-cast -I../../os harness.c main.c elf.c -oelftest

@@ -119,10 +119,10 @@ typedef enum
 } Elf_IdentIndex;
 
 /* File identification magic numbers (Elf32_Ehdr.e_ident[0..3]) */
-#define ELFMAG0				(0x7f)
-#define ELFMAG1				('E')
-#define ELFMAG2				('L')
-#define ELFMAG3				('F')
+#define ELFMAG0			(0x7f)
+#define ELFMAG1			('E')
+#define ELFMAG2			('L')
+#define ELFMAG3			('F')
 
 /* File classes (Elf32_Ehdr.e_ident[EI_CLASS]) */
 typedef enum
@@ -139,6 +139,16 @@ typedef enum
 	ELFDATA2LSB			= 1,			/* Little-endian encoding	*/
 	ELFDATA2MSB			= 2				/* Big-endian encoding		*/
 } Elf_DataEncoding;
+
+/* m68k-specific flags (Elf32_Ehdr.e_flags) */
+#define EF_M68K_CPU32	(0x00810000)	/* CPU32 variant			*/
+#define EF_M68K_M68000	(0x01000000)	/* Motorola 68000			*/
+#define EF_M68K_CFV4E	(0x00008000)	/* ColdFire v4				*/
+#define EF_M68K_FIDO	(0x02000000)	/* Fido architecture		*/
+
+#define EF_M68K_ARCH_MASK	\
+	(EF_M68K_CPU32 | EF_M68K_M68000 | EF_M68K_CFV4E | EF_M68K_FIDO)
+
 
 /* ELF header structure */
 typedef struct
@@ -295,6 +305,13 @@ typedef struct
 #define PT_LOPROC			(0x70000000)	/* Processor-specific semantics - lower bound	*/
 #define PT_HIPROC			(0xffffffff)	/* Processor-specific semantics - upper bound	*/
 
+/* Segment flags (Elf32_Phdr.p_flags) */
+#define PF_X				(0x1)			/* Execute						*/
+#define PF_W				(0x2)			/* Write						*/
+#define PF_R				(0x4)			/* Read							*/
+#define PF_MASKOS			(0xff000000)	/* OS-specific flag mask		*/
+#define PF_MASKPROC			(0xf0000000)	/* Processor-specific flag mask	*/
+
 /* Program header */
 typedef struct
 {
@@ -308,7 +325,9 @@ typedef struct
 	u32		p_align;			/* Alignment of segment in memory and file				*/
 } Elf32_Phdr;
 
-s32 elf_load_exe(const void * const buf, ku32 len);
+s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img);
+
+u32 elf_is_relevant_progbits_section(ks8 * name);
+u32 elf_is_relevant_nobits_section(ks8 * name);
 
 #endif
-

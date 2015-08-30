@@ -98,16 +98,17 @@
 		<Unit filename="include/byteorder.h" />
 		<Unit filename="include/ctype.h" />
 		<Unit filename="include/defs.h" />
+		<Unit filename="include/elf.h" />
 		<Unit filename="include/error.h" />
 		<Unit filename="include/limits.h" />
 		<Unit filename="include/list.h" />
-		<Unit filename="include/syscall.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
-		<Unit filename="kernel/syscall.c">
+		<Unit filename="kernel/syscall.S" />
+		<Unit filename="kernel/syscall.h" />
+		<Unit filename="kernel/syscalls.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/syscall.h" />
 		<Unit filename="klibc/Makefile" />
 		<Unit filename="klibc/assert.c">
 			<Option compilerVar="CC" />
