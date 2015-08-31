@@ -15,6 +15,7 @@ LD=$(TARGET_FMT)-ld
 CPP=$(TARGET_FMT)-cpp
 OBJCOPY=$(TARGET_FMT)-objcopy
 AR=$(TARGET_FMT)-ar
+NM=$(TARGET_FMT)-nm
 
 GCC_VERSION=$(shell $(CC) --version 2>&1 | head -n 1 | cut -d' ' -f3)
 

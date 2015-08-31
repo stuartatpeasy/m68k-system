@@ -10,6 +10,7 @@
 */
 
 #include "include/types.h"
+#include "device/block/block.h"
 #include "device/device.h"
 #include "kutil/kutil.h"
 
@@ -20,6 +21,8 @@
 /*
 	"Driver" functions
 */
+
+blockdev_stats_t g_ata_stats;
 
 struct device_driver g_ata_driver;
 

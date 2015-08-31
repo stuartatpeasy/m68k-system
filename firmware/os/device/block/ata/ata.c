@@ -15,6 +15,7 @@
 
 
 static ata_device_t g_ata_devices[ATA_MAX_DEVICES];
+blockdev_stats_t g_ata_stats;
 
 struct device_driver g_ata_driver =
 {
@@ -229,6 +230,8 @@ s32 ata_read(void *data, ku32 offset, u32 len, void * buf)
 		buf += ATA_SECTOR_SIZE;
 	}
 
+	g_ata_stats.blocks_read += len;
+
 	return SUCCESS;
 }
 
@@ -282,6 +285,8 @@ s32 ata_write(void *data, ku32 offset, u32 len, const void * buf)
 		/* FIXME: correctly report the error */
 		return EUNKNOWN;
 	}
+
+	g_ata_stats.blocks_written += len;
 
 	return SUCCESS;
 }

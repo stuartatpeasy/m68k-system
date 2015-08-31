@@ -22,6 +22,8 @@ ASMSOURCES=kernel/syscall.S
 
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
+MAPFILE=$(APPNAME).map
+
 LDFLAGS=-g -T rom.ld -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
 LIBS=-lgcc -lc -lkutil -lmonitor
@@ -41,6 +43,7 @@ all: $(APPNAME)
 
 $(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
+	$(NM) $(APPNAME) > $(MAPFILE)
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
 	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
 	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
@@ -62,7 +65,7 @@ dfu:
 	$(DFU) --program --infile $(APPNAME).rom
 
 clean:
-	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom
+	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom $(MAPFILE)
 	$(MAKE) $(MFLAGS) -Cklibc clean
 	$(MAKE) $(MFLAGS) -Ckutil clean
 	$(MAKE) $(MFLAGS) -Cmonitor clean
@@ -123,8 +126,8 @@ device/led.o: \
 
 device/block/ata/ata.o: \
 	device/block/ata/ata.c device/block/ata/ata.h device/block/ata/ata-internal.h \
-	device/block/partition/mbr.h device/devctl.h device/device.h include/byteorder.h \
-	include/defs.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
+	device/block/block.h device/block/partition/mbr.h device/devctl.h device/device.h \
+	include/byteorder.h include/defs.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
 
 device/block/partition/partition.o: \
 	device/block/partition/partition.c device/block/partition/partition.h \
@@ -140,7 +143,7 @@ fs/fat/fat.o: \
 	include/types.h klibc/strings.h kutil/kutil.h
 
 fs/file.o: \
-	fs/file.c fs/file.h
+	fs/file.c fs/file.h fs/vfs.h include/defs.h include/types.h
 
 fs/mount.o: \
 	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h fs/vfs.h include/defs.h \
