@@ -18,7 +18,7 @@
 1435405116 source:/home/swallace/projects/m68k-system/tools/dfu/args.cpp
 	"args.h"
 
-1435424728 source:/home/swallace/projects/m68k-system/tools/dfu/dfu.cpp
+1441016510 source:/home/swallace/projects/m68k-system/tools/dfu/dfu.cpp
 	"dfu.h"
 
 1435407733 /home/swallace/projects/m68k-system/tools/dfu/dfu.h
@@ -48,14 +48,16 @@
 	"serialport.h"
 	"exception.h"
 
-1435407792 /home/swallace/projects/m68k-system/tools/dfu/serialport.h
+1441017223 /home/swallace/projects/m68k-system/tools/dfu/serialport.h
 	<fcntl.h>
 	<signal.h>
+	<sys/ioctl.h>
 	<sys/time.h>
 	<sys/types.h>
 	<sys/stat.h>
 	<termios.h>
 	<unistd.h>
+	<linux/serial.h>
 	<string>
 	<cstring>
 	<cstdint>
@@ -65,10 +67,10 @@
 1435405116 source:/home/swallace/projects/m68k-system/tools/dfu/programmer.cpp
 	"programmer.h"
 
-1435406484 source:/home/swallace/projects/m68k-system/tools/dfu/serialport.cpp
+1441047932 source:/home/swallace/projects/m68k-system/tools/dfu/serialport.cpp
 	"serialport.h"
 
-1435424245 /home/swallace/projects/m68k-system/tools/dfu/target.h
+1441015912 /home/swallace/projects/m68k-system/tools/dfu/target.h
 	<string>
 	<cstring>
 	<iostream>
@@ -79,6 +81,6 @@
 	"serialport.h"
 	"exception.h"
 
-1435425224 source:/home/swallace/projects/m68k-system/tools/dfu/target.cpp
+1441015586 source:/home/swallace/projects/m68k-system/tools/dfu/target.cpp
 	"target.h"
 

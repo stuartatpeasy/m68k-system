@@ -11,6 +11,7 @@
 struct parameter g_params[] =
 {
 //	 						arg?	verb?
+    {"baud",                true,   false},
 	{"device",				true,	false},
 
 	{"program",				false,	true},
@@ -35,6 +36,8 @@ const char * const g_pHelpString =
 	"\n"
 	"    --device <device>      Connect to the programmer on device <device>\n"
 	"                           (e.g. \"/dev/ttyS0\").\n"
+	"\n"
+	"    --baud <rate>          Specify baud rate (default: 38400 baud)\n"
 	"\n"
 	"    --verbose              Be verbose.\n"
 	"\n"
@@ -103,6 +106,9 @@ int main(int argc, char **argv)
 				try
 				{
 					Target p(*it);
+					if(args.has("baud"))
+                        p.port().setBaudRate(args.getUnsigned("baud"));
+
 					if(p.find())
 					{
 						if(args.has("verbose"))
@@ -149,6 +155,9 @@ int main(int argc, char **argv)
             throw AppException("Failed to read input file");
 
         Target t(device);
+
+        if(args.has("baud"))
+            t.port().setBaudRate(args.getUnsigned("baud"));
 
         t.program(buf, stat_buf.st_size);
 

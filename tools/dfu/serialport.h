@@ -12,11 +12,13 @@ extern "C"
 {
 #include <fcntl.h>
 #include <signal.h>
+#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
+#include <linux/serial.h>
 };
 
 #include <string>

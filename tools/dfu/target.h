@@ -36,6 +36,7 @@ public:
 
 	const bool			find();
 	const bool          program(const uint8_t *buffer, const size_t len);
+	SerialPort&         port(void);
 
 protected:
 	const bool          doCommand(const char *cmd, const ssize_t cmdlength, char *response, ssize_t responselength);

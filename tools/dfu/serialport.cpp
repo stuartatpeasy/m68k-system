@@ -25,15 +25,17 @@ SerialPort::SerialPort(const string device)
 	setWordSize(DEFAULT_WORD_SIZE);
 	setParity(DEFAULT_PARITY);
 
-	m_term.c_cflag |= CLOCAL | CREAD;
+	m_term.c_cflag |= CLOCAL | CREAD | CRTSCTS;
 	m_term.c_iflag = IGNPAR;
-	m_term.c_oflag = OPOST;
+//	m_term.c_oflag = OPOST;
+	m_term.c_oflag = 0;
 	m_term.c_lflag = 0;
 
 	m_term.c_cc[VTIME] = 0;
 	m_term.c_cc[VMIN] = 1;
 
 	setAttr();
+
 
 	if(::fcntl(m_fd, F_SETOWN, ::getpid()) == -1)
 		throw SysException();

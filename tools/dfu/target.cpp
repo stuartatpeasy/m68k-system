@@ -149,3 +149,8 @@ const double Target::getTimeOfDay(void) const
 	return (double) tv.tv_sec + ((double) tv.tv_usec / 1000000.0);
 }
 
+
+SerialPort& Target::port(void)
+{
+    return m_port;
+}
