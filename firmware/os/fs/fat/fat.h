@@ -221,6 +221,7 @@ vfs_driver_t g_fat_ops;
 s32 fat_init();
 s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
+s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8* const name);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);

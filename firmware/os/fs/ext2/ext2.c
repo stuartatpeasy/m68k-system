@@ -43,6 +43,7 @@ vfs_driver_t g_ext2_ops =
     .init = ext2_init,
     .mount = ext2_mount,
     .umount = ext2_umount,
+    .get_root_dirent = ext2_get_root_dirent,
     .open_dir = ext2_open_dir,
     .read_dir = ext2_read_dir,
     .close_dir = ext2_close_dir,
@@ -557,6 +558,12 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 	*inum = in;
 
 	return SUCCESS;
+}
+
+
+s32 ext2_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
+{
+    return ENOSYS;
 }
 
 #if 0

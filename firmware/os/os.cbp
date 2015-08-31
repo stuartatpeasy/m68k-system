@@ -104,6 +104,9 @@
 		<Unit filename="include/list.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
+		<Unit filename="kernel/elf.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kernel/syscall.S" />
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.c">

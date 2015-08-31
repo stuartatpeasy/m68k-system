@@ -69,6 +69,18 @@ s32 vfs_init()
             puts("OK");
         else
             puts("failed");     /* TODO handle this - make the fs driver unavailable */
+
+        /*
+            If the driver has chosen not to expose any function, point it at the default version
+            of that function.  The default version simply returns ENOSYS.
+        */
+        if(NULL == drv->mount)           drv->mount           = vfs_default_mount;
+        if(NULL == drv->umount)          drv->umount          = vfs_default_umount;
+        if(NULL == drv->get_root_dirent) drv->get_root_dirent = vfs_default_get_root_dirent;
+        if(NULL == drv->open_dir)        drv->open_dir        = vfs_default_open_dir;
+        if(NULL == drv->read_dir)        drv->read_dir        = vfs_default_read_dir;
+        if(NULL == drv->close_dir)       drv->close_dir       = vfs_default_close_dir;
+        if(NULL == drv->stat)            drv->stat            = vfs_default_stat;
     }
 
     ret = mount_init();
@@ -110,6 +122,23 @@ s32 vfs_init()
 
 	return SUCCESS;
 }
+
+
+/* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
+s32 vfs_default_mount(vfs_t *vfs)
+{ return ENOSYS; }
+s32 vfs_default_umount(vfs_t *vfs)
+{ return ENOSYS; }
+s32 vfs_default_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
+{ return ENOSYS; }
+s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
+{ return ENOSYS; }
+s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
+{ return ENOSYS; }
+s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
+{ return ENOSYS; }
+s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st)
+{ return ENOSYS; }
 
 
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
@@ -188,18 +217,25 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
     if(vfs == NULL)
         return ENOENT;      /* Should only happen if no root fs is mounted */
 
+    node = vfs->root_node;
+
+    if(rel[0] == '\0')
+        return vfs->driver->get_root_dirent(vfs, ent);  /* Special case: root directory */
+
     path_component = (s8 *) kmalloc(NAME_MAX_LEN + 1);
     if(!path_component)
         return ENOMEM;
 
-    node = vfs->root_node;
     do
     {
+        for(; *rel == DIR_SEPARATOR; ++rel)
+            ;                       /* Skip over empty path components */
+
         for(i = 0; (*rel != DIR_SEPARATOR) && (*rel != '\0'); ++i)
             path_component[i] = *rel++;
 
         if(!i)
-            continue;               /* Skip over empty path components */
+            continue;
 
         path_component[i] = '\0';
 
@@ -244,6 +280,8 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 /*
     vfs_dirent_perm_str() build in str a ten-character "permission string", e.g. "drwxr-x---" from
     the supplied dirent.  str must point to a buffer of at least 10 characters.
+
+    TODO: this probably shouldn't be here; put it somewhere else.
 */
 s8 *vfs_dirent_perm_str(const vfs_dirent_t * const dirent, s8 *str)
 {

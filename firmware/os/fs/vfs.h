@@ -56,6 +56,7 @@ typedef struct vfs_driver
     s32 (*init)();
     s32 (*mount)(vfs_t *vfs);
     s32 (*umount)(vfs_t *vfs);
+    s32 (*get_root_dirent)(vfs_t *vfs, vfs_dirent_t *dirent);
     s32 (*open_dir)(vfs_t *vfs, u32 node, void **ctx);
     s32 (*read_dir)(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name);
     s32 (*close_dir)(vfs_t *vfs, void *ctx);
@@ -117,5 +118,15 @@ s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_dirent_t *dirent, ks8 *const name);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
 s32 vfs_lookup(ks8 *path, vfs_dirent_t *ent);
 s8 *vfs_dirent_perm_str(const vfs_dirent_t * const dirent, s8 *str);
+
+/* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
+s32 vfs_default_mount(vfs_t *vfs);
+s32 vfs_default_umount(vfs_t *vfs);
+s32 vfs_default_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
+s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
+s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name);
+s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
+s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
+
 #endif
 

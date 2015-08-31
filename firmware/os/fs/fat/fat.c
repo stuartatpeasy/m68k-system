@@ -20,6 +20,7 @@ vfs_driver_t g_fat_ops =
     .init = fat_init,
     .mount = fat_mount,
     .umount = fat_umount,
+    .get_root_dirent = fat_get_root_dirent,
     .open_dir = fat_open_dir,
     .read_dir = fat_read_dir,
     .close_dir = fat_close_dir,
@@ -203,12 +204,35 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
 
 
 /*
+    fat_get_root_dirent() - populate a vfs_dirent_t with details of the root directory
+*/
+s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
+{
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+
+    /* Zero out the dirent struct - that way we only have to set nonzero fields */
+    bzero(dirent, sizeof(vfs_dirent_t));
+
+    /* TODO - set correct values for ctime, mtime and atime */
+    dirent->vfs = vfs;
+    dirent->name[0] = DIR_SEPARATOR;
+    dirent->type = FSNODE_TYPE_DIR;
+    dirent->permissions = VFS_PERM_UGORWX;
+    dirent->size = fs->root_dir_clusters * fs->bytes_per_cluster;
+    dirent->first_node = FAT_ROOT_NODE;
+
+    return SUCCESS;
+}
+
+
+/*
     fat_open_dir() - prepare to iterate over the directory at node
 */
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
 {
     fat_dir_ctx_t *dir_ctx;
     u32 bytes_per_cluster;
+    s32 ret;
 
     /* Allocate space to hold a directory context */
     *ctx = kmalloc(sizeof(fat_dir_ctx_t));
@@ -224,6 +248,15 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     {
         kfree(*ctx);
         return ENOMEM;
+    }
+
+    /* Read the cluster into dir_ctx->buffer */
+    ret = fat_read_node(vfs, node, dir_ctx->buffer);
+    if(ret != SUCCESS)
+    {
+        kfree(dir_ctx->buffer);
+        kfree(*ctx);
+        return ret;
     }
 
     dir_ctx->buffer_end = ((void *) dir_ctx->buffer) + bytes_per_cluster;
@@ -247,11 +280,6 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
 
     while(!FAT_CHAIN_END(dir_ctx->node))
     {
-        /* Read the cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
-        ret = fat_read_node(vfs, dir_ctx->node, dir_ctx->buffer);
-        if(ret != SUCCESS)
-            return ret;
-
         /* Read the next entry from the node */
         for(lfn_len = 0; dir_ctx->de < dir_ctx->buffer_end; ++dir_ctx->de)
         {
@@ -388,6 +416,8 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
                     return SUCCESS;
                 }
             }
+
+            /* Read next cluster in chain */
         }
 
         /* Reached the end of the node without finding a complete entry. */
@@ -395,6 +425,14 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
         ret = fat_get_next_node(vfs, dir_ctx->node, &dir_ctx->node);
         if(ret != SUCCESS)
             return ret;
+
+        if(!FAT_CHAIN_END(dir_ctx->node))
+        {
+            /* Read the next cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
+            ret = fat_read_node(vfs, dir_ctx->node, dir_ctx->buffer);
+            if(ret != SUCCESS)
+                return ret;
+        }
     }
 
     return ENOENT;  /* Reached the end of the chain */
