@@ -17,10 +17,12 @@ OBJCOPY=$(TARGET_FMT)-objcopy
 AR=$(TARGET_FMT)-ar
 NM=$(TARGET_FMT)-nm
 
-GCC_VERSION=$(shell $(CC) --version 2>&1 | head -n 1 | cut -d' ' -f3)
+TARGET_GCC_VERSION=$(shell $(CC) --version 2>&1 | head -n 1 | cut -d' ' -f3)
 
+HOSTCC=gcc
+HOSTLD=ld
 
-BASEDIR=/opt/m68k/lib/gcc/$(TARGET_FMT)/$(GCC_VERSION)
+BASEDIR=/opt/m68k/lib/gcc/$(TARGET_FMT)/$(TARGET_GCC_VERSION)
 
 PROJECTDIR=/home/swallace/projects/m68k-system/firmware
 SRCDIR=$(PROJECTDIR)/os

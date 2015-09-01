@@ -22,6 +22,8 @@ ASMSOURCES=kernel/syscall.S
 
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
+TOOLS=tools/bin/makemap
+
 MAPFILE=$(APPNAME).map
 
 LDFLAGS=-g -T rom.ld -nostdlib -static -L$(BASEDIR)/m68000 -L.
@@ -41,10 +43,12 @@ all: $(APPNAME)
 .S.o:
 	$(CC) $(CFLAGS) -o$@ $<
 
-$(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE)
+$(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE) $(TOOLS)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
 	$(NM) $(APPNAME) > $(MAPFILE)
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
+	truncate --size %4 $(APPNAME).rom
+	tools/bin/makemap <$(MAPFILE) >>$(APPNAME).rom
 	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
 	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
 	chmod -f -x $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom || true
@@ -69,6 +73,7 @@ clean:
 	$(MAKE) $(MFLAGS) -Cklibc clean
 	$(MAKE) $(MFLAGS) -Ckutil clean
 	$(MAKE) $(MFLAGS) -Cmonitor clean
+	$(MAKE) $(MFLAGS) -Ctools clean
 
 libc.a:
 	$(MAKE) $(MFLAGS) -Cklibc
@@ -78,6 +83,11 @@ libkutil.a:
 
 libmonitor.a:
 	$(MAKE) $(MFLAGS) -Cmonitor
+
+$(TOOLS):
+	mkdir -p tools/bin
+	$(MAKE) $(MFLAGS) -Ctools
+
 
 #
 # Dependencies below this point

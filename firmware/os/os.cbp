@@ -160,6 +160,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kutil/kutil.h" />
+		<Unit filename="kutil/numeric.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kutil/string.c">
 			<Option compilerVar="CC" />
 		</Unit>
