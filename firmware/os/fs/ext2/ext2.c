@@ -439,7 +439,7 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
 	if(!block_id)
 		block_id = inode->i_block[12];
 
-	ret = ext2_read_block(vfs, block_id, (u8 **) &buf);
+	ret = ext2_read_block(vfs, block_id, (void **) &buf);
 	if(ret)
 	{
 		kfree(buf);
@@ -519,7 +519,7 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 					break;
 				}
 
-				ret = ext2_read_block(vfs, data_block, &buf);
+				ret = ext2_read_block(vfs, data_block, (void **) &buf);
 				if(ret)
 				{
 					kfree(buf);
