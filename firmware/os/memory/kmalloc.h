@@ -69,5 +69,25 @@ void ufree(void *ptr);
 u32 ufreemem();
 u32 uusedmem();
 
+/*
+    Helper macros to implement the common case of calling *malloc(), checking for ret == NULL,
+    and returning ENOMEM if so.
+*/
+#define CHECKED_KMALLOC(size)   \
+({                              \
+    void *_ptr = kmalloc(size); \
+    if(_ptr == NULL)            \
+        return ENOMEM;          \
+    _ptr;                       \
+})
+
+#define CHECKED_UMALLOC(size)   \
+({                              \
+    void *_ptr = umalloc(size); \
+    if(_ptr) == NULL)           \
+        return ENOMEM;          \
+    _ptr;                       \
+})
+
 
 #endif

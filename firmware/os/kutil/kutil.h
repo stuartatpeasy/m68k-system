@@ -48,6 +48,12 @@ s32 rtc_time_to_timestamp(const rtc_time_t *dt, s32 *timestamp);
        && ((d)->day_of_week > 0) && ((d)->day_of_week < 8))
 
 /*
+    Numeric functions
+*/
+u16 log10(ku32 n);
+
+
+/*
     String-related functions
 */
 s32 dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes);

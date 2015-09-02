@@ -663,27 +663,49 @@ s32 fat_find_free_node(vfs_t *vfs, u32 *node)
     "tailnum" specifies the numeric tail number (the "~1" part).  No numeric tail is generated if
     the long filename can be fit losslessly into basis_name.  "tailnum" must be >=1.  "basis_name"
     must point to a buffer of at least 11 bytes.
+
+    Note: this code does not properly support Unicode.
 */
-void fat_generate_basis_name(ks8 * const lfn, u32 tailnum, char * const basis_name)
+s32 fat_generate_basis_name(ks8 * lfn, u32 tailnum, char * const basis_name)
 {
     /*
-        Trim leading whitespace
-        Trim leading '.'s
-
+        This function implements the basis-name generation algorithm specified in the Microsoft
+        document "FAT General Specification".
     */
     u8 lossy = 0;
+    s8 *buf, *p;
+    u16 u;
 
     /*
-        1.	Strip all leading and embedded spaces from the long name.
-        2.	Strip all leading periods from the long name.
-        3.	The UNICODE name passed to the file system is converted to upper case.
-        4.	The upper cased UNICODE name is converted to OEM.
+        1. Strip all leading and embedded spaces from the long name
+        2. Strip all leading periods ('.') from the long name
+        3. The UNICODE name passed to the file system is converted to upper case.
+        4. This step is skipped, because this code does not yet support Unicode:
+            The upper cased UNICODE name is converted to OEM.
             if(the uppercased UNICODE glyph does not exist as an OEM glyph in the OEM code page)
                 or(the OEM glyph is invalid in an 8.3 name)
             {
                 Replace the glyph to an OEM '_' (underscore) character.
                 Set a "lossy conversion" flag.
             }
+    */
+
+    for(; isspace(*lfn); ++lfn)     /* Step over all leading whitespace     */
+        ;
+
+    for(; *lfn == '.'; ++lfn)       /* Step over all leading periods ('.')  */
+        ;
+
+    buf = CHECKED_KMALLOC(strlen(lfn) + 1);
+
+    /* Copy lfn to buf, upper-casing it and ignoring any embedded whitespace */
+    for(p = buf; *lfn; ++lfn)
+        if(!isspace(*lfn))
+            *p++ = toupper(*lfn);
+
+    u = log10(tailnum) + 1;     /* Number of chars required for tailnum */
+
+    /*
         5.	While(not at end of the long name)
                     and(char is not a period)
                     and(total chars copied < 8)
