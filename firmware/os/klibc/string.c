@@ -114,6 +114,18 @@ s8 *strcat(s8 *dest, ks8 *src)
 
 
 /*
+    strchr()
+*/
+s8 *strchr(s8 *s, s32 c)
+{
+    for(; (*s != c) && *s; ++s)
+        ;
+
+    return s;
+}
+
+
+/*
     strcmp()
 */
 s32 strcmp(ks8 *s1, ks8 *s2)
@@ -346,6 +358,20 @@ s8 *strncpy(s8 *dest, ks8 *src, u32 n)
 		dest[n_] = '\0';
 
 	return dest;
+}
+
+
+/*
+    strrchr()
+*/
+s8 *strrchr(s8 *s, s32 c)
+{
+    s8 *p = s + strlen(s);
+
+    for(; (p >= s) && (*p != c); --p)
+        ;
+
+    return (p < s) ? NULL : p;
 }
 
 
