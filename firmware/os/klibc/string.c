@@ -366,12 +366,13 @@ s8 *strncpy(s8 *dest, ks8 *src, u32 n)
 */
 s8 *strrchr(s8 *s, s32 c)
 {
-    s8 *p = s + strlen(s);
+    s8 *p;
 
-    for(; (p >= s) && (*p != c); --p)
-        ;
+    for(p = NULL; *s; ++s)
+        if(*s == c)
+            p = s;
 
-    return (p < s) ? NULL : p;
+    return p;
 }
 
 
