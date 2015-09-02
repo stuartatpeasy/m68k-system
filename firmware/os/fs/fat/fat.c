@@ -666,15 +666,14 @@ s32 fat_find_free_node(vfs_t *vfs, u32 *node)
 
     Note: this code does not properly support Unicode.
 */
-s32 fat_generate_basis_name(ks8 * lfn, u32 tailnum, char * const basis_name)
+s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name)
 {
     /*
         This function implements the basis-name generation algorithm specified in the Microsoft
         document "FAT General Specification".
     */
-    u8 lossy = 0;
     s8 *buf, *p;
-    u16 u;
+    u16 u, taillen;
 
     /*
         1. Strip all leading and embedded spaces from the long name
@@ -703,28 +702,41 @@ s32 fat_generate_basis_name(ks8 * lfn, u32 tailnum, char * const basis_name)
         if(!isspace(*lfn))
             *p++ = toupper(*lfn);
 
-    u = log10(tailnum) + 1;     /* Number of chars required for tailnum */
-
     /*
-        5.	While(not at end of the long name)
-                    and(char is not a period)
-                    and(total chars copied < 8)
+        5.	While(not at end of the long name) and(char is not a period) and(chars copied < 8)
             {
                 Copy characters into primary portion of the basis name
             }
+    */
+    for(u = 0; *buf && (*buf != '.') && (u < FAT_FILENAME_LEN); ++u)
+        basis_name[u] = *buf++;
+
+    kfree(buf);     /* Finished with the processed version of the LFN */
+
+    while(u < FAT_FILENAME_LEN)
+        basis_name[u] = ' ';
+
+    /*
         6.	Insert a dot at the end of the primary components of the basis-name iff the basis name
             has an extension after the last period in the name.
         7.	Scan for the last embedded period in the long name.
                 If(the last embedded period was found)
                 {
-                    While(not at end of the long name)
-                            and	(total chars copied < 3)
+                    While(not at end of the long name) and (chars copied < 3)
                     {
                         Copy characters into extension portion of the basis name
                     }
                 }
+    */
 
-        Proceed to numeric-tail generation.
+    p = strrchr(lfn, '.');
+    if(p)
+    {
+        for(u = 0; *p && (u < FAT_FILEEXT_LEN); ++u)
+            basis_name[u + FAT_FILENAME_LEN] = *p++;
+    }
+
+    /*
         The Numeric-Tail Generation Algorithm
 
         If(a "lossy conversion" was not flagged)
@@ -739,9 +751,25 @@ s32 fat_generate_basis_name(ks8 * lfn, u32 tailnum, char * const basis_name)
             "~n" is chosen so that the name thus formed does not collide with any existing short
             name and that the primary name does not exceed eight characters in length.
         }
+
+        Note: this function does things a bit differently.  There is no concept of a "lossy"
+        conversion, as Unicode is not yet supported.  Also, if tailnum != 0, we always add the
+        requested tailnum.
     */
 
+    if(tailnum)
+    {
+        s8 *tailptr;
 
+        taillen = tailnum ? log10(tailnum) + 2 : 0;     /* Number of chars required for tailnum */
+
+        tailptr = basis_name + FAT_FILENAME_LEN - taillen;
+        *tailptr++ = '~';
+
+        sprintf(tailptr, "%u", tailnum);
+    }
+
+    return SUCCESS;
 }
 
 
