@@ -59,6 +59,7 @@ u16 log10(ku32 n);
 s32 dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
 ks8 *kstrerror(ks32 errnum);
 s8 *str_trim(s8 *dest, ks8 *src);
+s8 *strn_trim(s8 *dest, ks8 *src, u32 n);
 s8 *strn_trim_cpy(s8 *dest, s8 *src, ku32 len);
 
 #endif

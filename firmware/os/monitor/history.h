@@ -11,16 +11,29 @@
 
 
 #include "include/defs.h"
+#include "include/types.h"
+#include "memory/kmalloc.h"
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
-#define MONITOR_HISTORY_LEN     (10)
 
-void history_init(void);
-void history_clear(void);
-void history_add(const char *cmd);
-const char *history_get_at(int where);
+struct command_history
+{
+    char **item;
+    u32 start;
+    u32 next;
+    u32 len;
+};
 
+typedef struct command_history command_history_t;
+
+
+s32 history_init(command_history_t **h, u32 len);
+s32 history_destroy(command_history_t *h);
+void history_clear(command_history_t *h);
+void history_add(command_history_t *h, const char *cmd);
+const char *history_get_at(command_history_t *h, u32 where);
+u32 history_get_len(command_history_t *h);
 
 #endif

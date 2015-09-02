@@ -9,59 +9,102 @@
 
 #include "monitor/history.h"
 
-char **g_history = NULL;
-int g_history_pos = 0;
 
-
-void history_init(void)
-{
-    g_history = malloc(MONITOR_HISTORY_LEN * sizeof(char *));
-    bzero(g_history, sizeof(char *) * MONITOR_HISTORY_LEN);
-}
-
-
-void history_clear(void)
-{
-    int i;
-    for(i = 0; i < MONITOR_HISTORY_LEN; i++)
-    {
-        if(g_history[i])
-        {
-            free(g_history[i]);
-            g_history[i] = NULL;
-        }
-    }
-
-    g_history_pos = 0;
-}
-
-
-void history_add(const char *cmd)
-{
-    if(g_history[g_history_pos])
-        free(g_history[g_history_pos]);
-
-    g_history[g_history_pos] = malloc(strlen(cmd) + 1);
-    if(g_history[g_history_pos])
-    {
-        strcpy(g_history[g_history_pos], cmd);
-
-        if(++g_history_pos == MONITOR_HISTORY_LEN)
-        {
-            g_history_pos = 0;
-        }
-    }
-}
-
-
-const char *history_get_at(int where)
-{
-    if(where >= MONITOR_HISTORY_LEN)
-        return NULL;
 /*
-    where += g_history_pos + 1;
-    if(where >= MONITOR_HISTORY_LEN)
-        where -= MONITOR_HISTORY_LEN;
+    history_init() - allocate a new command_history_t object and initialise it in readiness to hold
+    len entries.
 */
-    return g_history[where];
+s32 history_init(command_history_t **h, unsigned int len)
+{
+    *h = CHECKED_KMALLOC(sizeof(command_history_t));
+
+    (*h)->item = kcalloc(len, sizeof(char *));
+    if(!(*h)->item)
+    {
+        kfree(*h);
+        return ENOMEM;
+    }
+
+    (*h)->start = 0;
+    (*h)->next = 0;
+    (*h)->len = len;
+
+    return SUCCESS;
+}
+
+
+/*
+    history_destroy() - destructor for a command_history_t object
+*/
+s32 history_destroy(command_history_t *h)
+{
+    history_clear(h);
+    kfree(h);
+
+    return SUCCESS;
+}
+
+
+/*
+    history_clear() - free all items held in a command_history_t object
+*/
+void history_clear(command_history_t *h)
+{
+    u32 u;
+    for(u = 0; u < h->len; u++)
+        if(h->item[u])
+            kfree(h->item[u]);
+
+    bzero(h->item, sizeof(char *) * h->len);
+
+    h->start = 0;
+    h->next = 0;
+}
+
+
+/*
+    history_add() - add an item to a command_history_t object
+*/
+void history_add(command_history_t *h, const char *cmd)
+{
+    if(h->item[h->next])
+        free(h->item[h->next]);
+
+    h->item[h->next] = kmalloc(strlen(cmd) + 1);
+    if(h->item[h->next])
+    {
+        strcpy(h->item[h->next], cmd);
+
+        if(++h->next == h->len)
+            h->next = 0;
+
+        if(h->next == h->start)
+            if(++h->start == h->len)
+                h->len = 0;
+    }
+}
+
+
+/*
+    history_get_at() - get a ptr to a particular item
+*/
+const char *history_get_at(command_history_t *h, u32 where)
+{
+    if(where >= h->len)
+        return NULL;
+
+    where += h->start;
+    if(where > h->len)
+        where -= h->len;
+
+    return h->item[where];
+}
+
+
+/*
+    history_get_len() - return the maximum number of items a history obj can hold
+*/
+u32 history_get_len(command_history_t *h)
+{
+    return h->len;
 }

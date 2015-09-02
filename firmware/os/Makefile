@@ -14,7 +14,7 @@ CSOURCES=dfu.c main.c \
 		 device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
-		 kernel/elf.c kernel/syscalls.c \
+		 kernel/elf.c kernel/ksym.c kernel/syscalls.c \
 		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
 		 sched/sched.c
 
@@ -169,6 +169,9 @@ include/byteorder.h: \
 kernel/elf.o: \
 	kernel/elf.c include/byteorder.h include/defs.h include/elf.h include/types.h klibc/errno.h \
 	klibc/stdio.h klibc/string.h klibc/strings.h
+
+kernel/ksym.o: \
+	kernel/ksym.c kernel/ksym.h include/defs.h include/types.h
 
 kernel/syscalls.o: \
 	kernel/syscalls.c kernel/syscall.h

@@ -30,7 +30,7 @@ env.o: \
 	env.c env.h
 
 history.o: \
-	history.c history.h ../include/defs.h
+	history.c history.h ../include/defs.h ../include/types.h
 
 monitor.o: \
 	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../device/bbram.h \

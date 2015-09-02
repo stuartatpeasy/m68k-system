@@ -12,8 +12,8 @@
 #include "memory/kmalloc.h"
 
 #define CMD_MAX_LEN (255)
-#define HISTORY_LEN (32)
 
+command_history_t *g_hist;
 ks8 * const g_prompt = "$ ";
 u32 g_echo;
 
@@ -55,7 +55,7 @@ const struct command g_commands[] =
 
 void monitor(void)
 {
-    history_init();
+    history_init(&g_hist, 10);
 
     for(;;)
         monitor_main();
@@ -82,27 +82,32 @@ void monitor_main(void)
 }
 
 
-void dispatch_command(const char *cmdline)
+void dispatch_command(char *cmdline)
 {
-	unsigned char c = 0, num_args = 0, cmd_len;
+	const struct command *p, *pcommand = NULL;
+	unsigned char c = 0, num_args = 0;
 	char command[MON_VERB_MAX_LENGTH + 1];
 	s8 *args[MON_MAX_ARGS + 1];
+	u32 u;
 
 	/* trim leading space */
-	while((*cmdline == ' ') || (*cmdline == '\t'))
-		++cmdline;
+	for(; isspace(*cmdline); ++cmdline)
+        ;
 
-	for(c = 0; *cmdline && (c < ((sizeof(command) / sizeof(unsigned char)) - 1)) && (*cmdline != ' ');
-		command[c++] = *cmdline++) ;
-	command[c] = '\0';
+    /* trim trailing space */
+    for(u = strlen(cmdline); u && isspace(cmdline[--u]);)
+        cmdline[u] = '\0';
 
-	cmd_len = strlen(command);
-	if(!cmd_len)
-		return;
+    if(!*cmdline)
+        return;
 
-    history_add(cmdline);
+    history_add(g_hist, cmdline);
 
-	const struct command *p, *pcommand = NULL;
+    for(u = 0; *cmdline && !isspace(*cmdline) && (u < MON_VERB_MAX_LENGTH); ++u)
+        command[u] = *cmdline++;
+
+    command[u] = '\0';
+
 	for(p = g_commands; p->name; ++p)
     {
 		if(strstr(p->name, command) == p->name)
@@ -115,7 +120,7 @@ void dispatch_command(const char *cmdline)
 			else
 			{
 				pcommand = p;
-				if(cmd_len == strlen(p->name))
+				if(u == strlen(p->name))
 					break;	/* exact match */
 			}
 		}

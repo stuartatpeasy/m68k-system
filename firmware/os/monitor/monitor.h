@@ -29,6 +29,7 @@
 #include <string.h>
 
 
+
 #define MON_VERB_MAX_LENGTH		(16)	/* maximum length of the "verb", i.e. the first word in a
 										   command line */
 #define MON_MAX_ARGS			(8)		/* maximum number of arguments that may be passed to a
@@ -58,10 +59,11 @@ struct command
 };
 
 u32 g_echo;
+command_history_t *g_hist;
 
 void monitor(void);
 void monitor_main(void);
-void dispatch_command(const char *cmdline);
+void dispatch_command(char *cmdline);
 
 /* command handler declarations */
 MONITOR_CMD_HANDLER(date);

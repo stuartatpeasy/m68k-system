@@ -458,9 +458,9 @@ MONITOR_CMD_HANDLER(history)
 {
     s32 i;
 
-    for(i = 0; i < MONITOR_HISTORY_LEN; ++i)
+    for(i = 0; i < history_get_len(g_hist); ++i)
     {
-        const char *cmd = history_get_at(i);
+        const char *cmd = history_get_at(g_hist, i);
         printf("%3i: %s\n", i, cmd == NULL ? "" : cmd);
     }
 

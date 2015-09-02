@@ -33,6 +33,34 @@ s8 *str_trim(s8 *dest, ks8 *src)
     return dest;
 }
 
+/*
+    strn_trim() - like str_trim(), but copies at most n chars into dest
+    NOTE: src must be null-terminated
+*/
+s8 *strn_trim(s8 *dest, ks8 *src, u32 n)
+{
+    s32 x;
+
+    /* Trim leading whitespace */
+    for(; isspace(*src); ++src)
+        ;
+
+    /* Find end of source string */
+    for(x = strlen(src); x && isspace(src[x - 1]); --x)
+        ;
+
+    if(x > n)
+        x = n;
+
+    strncpy(dest, src, x);
+
+    if(x < n)
+        dest[x] = '\0';
+
+    return dest;
+}
+
+
 
 /*
     kstrerror() - extends libc-style strerror() to add descriptions of kernel-specific error codes
