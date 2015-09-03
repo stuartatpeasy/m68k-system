@@ -14,8 +14,11 @@
     history_init() - allocate a new command_history_t object and initialise it in readiness to hold
     len entries.
 */
-s32 history_init(command_history_t **h, unsigned int len)
+s32 history_init(command_history_t **h, s32 len)
 {
+    if(len < 1)
+        return EINVAL;
+
     *h = CHECKED_KMALLOC(sizeof(command_history_t));
 
     (*h)->item = kcalloc(len, sizeof(char *));
@@ -25,7 +28,6 @@ s32 history_init(command_history_t **h, unsigned int len)
         return ENOMEM;
     }
 
-    (*h)->start = 0;
     (*h)->next = 0;
     (*h)->len = len;
 
@@ -50,14 +52,13 @@ s32 history_destroy(command_history_t *h)
 */
 void history_clear(command_history_t *h)
 {
-    u32 u;
-    for(u = 0; u < h->len; u++)
-        if(h->item[u])
-            kfree(h->item[u]);
+    s32 i;
+    for(i = 0; i < h->len; i++)
+        if(h->item[i])
+            kfree(h->item[i]);
 
     bzero(h->item, sizeof(char *) * h->len);
 
-    h->start = 0;
     h->next = 0;
 }
 
@@ -68,7 +69,7 @@ void history_clear(command_history_t *h)
 void history_add(command_history_t *h, const char *cmd)
 {
     if(h->item[h->next])
-        free(h->item[h->next]);
+        kfree(h->item[h->next]);
 
     h->item[h->next] = kmalloc(strlen(cmd) + 1);
     if(h->item[h->next])
@@ -77,10 +78,6 @@ void history_add(command_history_t *h, const char *cmd)
 
         if(++h->next == h->len)
             h->next = 0;
-
-        if(h->next == h->start)
-            if(++h->start == h->len)
-                h->len = 0;
     }
 }
 
@@ -88,13 +85,13 @@ void history_add(command_history_t *h, const char *cmd)
 /*
     history_get_at() - get a ptr to a particular item
 */
-const char *history_get_at(command_history_t *h, u32 where)
+const char *history_get_at(command_history_t *h, s32 where)
 {
     if(where >= h->len)
         return NULL;
 
-    where += h->start;
-    if(where > h->len)
+    where += h->next;
+    if(where >= h->len)
         where -= h->len;
 
     return h->item[where];

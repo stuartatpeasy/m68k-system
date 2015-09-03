@@ -458,6 +458,10 @@ MONITOR_CMD_HANDLER(history)
 {
     s32 i;
 
+    printf("next = %u\n", g_hist->next);
+    for(i = 0; i < history_get_len(g_hist); ++i)
+        printf("item[%u] = %s\n", i, g_hist->item[i] ? g_hist->item[i] : "");
+
     for(i = 0; i < history_get_len(g_hist); ++i)
     {
         const char *cmd = history_get_at(g_hist, i);

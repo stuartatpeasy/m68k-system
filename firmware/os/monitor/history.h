@@ -21,19 +21,18 @@
 struct command_history
 {
     char **item;
-    u32 start;
-    u32 next;
-    u32 len;
+    s32 next;
+    s32 len;
 };
 
 typedef struct command_history command_history_t;
 
 
-s32 history_init(command_history_t **h, u32 len);
+s32 history_init(command_history_t **h, s32 len);
 s32 history_destroy(command_history_t *h);
 void history_clear(command_history_t *h);
 void history_add(command_history_t *h, const char *cmd);
-const char *history_get_at(command_history_t *h, u32 where);
+const char *history_get_at(command_history_t *h, s32 where);
 u32 history_get_len(command_history_t *h);
 
 #endif
