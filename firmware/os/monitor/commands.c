@@ -814,11 +814,6 @@ MONITOR_CMD_HANDLER(test)
         printf("foo is %d\n", p->foo);
     }
 
-    /* Switch to 115200 baud */
-    u8 dummy = DUART_BRG_TEST;      /* Read BRG test reg to enable "test" baud rates */
-    DUART_CSRA = 0x66;
-    dummy += 0;     /* silence "set but not used" compiler warning" */
-
     return MON_E_OK;
 }
 

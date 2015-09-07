@@ -25,7 +25,7 @@ SerialPort::SerialPort(const string device)
 	setWordSize(DEFAULT_WORD_SIZE);
 	setParity(DEFAULT_PARITY);
 
-	m_term.c_cflag |= CLOCAL | CREAD | CRTSCTS;
+	m_term.c_cflag |= CLOCAL | CREAD; // | CRTSCTS;
 	m_term.c_iflag = IGNPAR;
 //	m_term.c_oflag = OPOST;
 	m_term.c_oflag = 0;

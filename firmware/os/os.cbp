@@ -107,6 +107,10 @@
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="kernel/ksym.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/ksym.h" />
 		<Unit filename="kernel/syscall.S" />
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.c">
