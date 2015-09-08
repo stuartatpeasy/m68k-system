@@ -33,8 +33,8 @@
 
 #if defined(TARGET_BIGENDIAN)
 
-#define LE2N16(x)	bswap_16(x)
-#define LE2N32(x)	bswap_32(x)
+#define LE2N16(x)	__builtin_bswap16(x)
+#define LE2N32(x)	__builtin_bswap32(x)
 #define BE2N16(x)	(x)
 #define BE2N32(x)	(x)
 
@@ -45,8 +45,8 @@
 
 #define LE2N16(x)	(x)
 #define LE2N32(x)	(x)
-#define BE2N16(x)	bswap_16(x)
-#define BE2N32(x)	bswap_32(x)
+#define BE2N16(x)	__builtin_bswap16(x)
+#define BE2N32(x)	__builtin_bswap32(x)
 
 #define LEHW2N32(x) (x)
 #define BEHW2N32(x)	wswap_32(x)

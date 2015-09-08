@@ -119,15 +119,15 @@ s32 ata_init()
             */
             for(p = (u16 *) &id.model_number;
                 p < (u16 *) (&id.model_number[sizeof(id.model_number)]); ++p)
-                *p = __builtin_bswap16(*p);     /* FIXME - remove intrinsic */
+                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
 
             for(p = (u16 *) &id.serial_number;
                 p < (u16 *) (&id.serial_number[sizeof(id.serial_number)]); ++p)
-                *p = __builtin_bswap16(*p);     /* FIXME - remove intrinsic */
+                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
 
             for(p = (u16 *) &id.firmware_revision;
                 p < (u16 *) (&id.firmware_revision[sizeof(id.firmware_revision)]); ++p)
-                *p = __builtin_bswap16(*p);     /* FIXME - remove intrinsic */
+                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
 
             strn_trim_cpy(devp->model, id.model_number, sizeof(id.model_number));
             strn_trim_cpy(devp->serial, id.serial_number, sizeof(id.serial_number));
@@ -142,7 +142,7 @@ s32 ata_init()
 			if(create_device(DEVICE_TYPE_BLOCK, DEVICE_CLASS_DISC, &g_ata_driver, device_name,
                              devp) == SUCCESS)
                 printf("%s: %s, %uMB [serial %s firmware %s]\n", device_name, devp->model,
-                       devp->num_sectors >> 11, devp->serial, devp->firmware);
+                       devp->num_sectors >> (20 - LOG_BLOCK_SIZE), devp->serial, devp->firmware);
             else
                 printf("%s: failed to create device\n", device_name);
 		}
