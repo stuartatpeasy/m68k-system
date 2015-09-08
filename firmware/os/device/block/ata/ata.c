@@ -5,8 +5,6 @@
 
 
 	(c) Stuart Wallace, December 2011.
-
-	TODO: remove libc-sw functions (bcopy, strncpy, etc)
 */
 
 #include "ata-internal.h"
