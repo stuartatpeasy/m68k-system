@@ -46,17 +46,26 @@ MONITOR_CMD_HANDLER(date)
 }
 
 
+/*
+    dfu <len> <checksum>
+
+    Re-flash boot ROM
+*/
 MONITOR_CMD_HANDLER(dfu)
 {
-	u32 len, buffer_len, i, ret;
+	u32 len, buffer_len, cksum_sent, cksum_calculated, i, ret;
 	s8 *data, *endptr;
 
-	if(num_args != 1)
+	if(num_args != 2)
 		return MON_E_SYNTAX;
 
 	len = strtoul(args[0], &endptr, 0);
 	if(*endptr || !len)
 		return MON_E_INVALID_ARG;
+
+    cksum_sent = strtoul(args[1], &endptr, 0);
+    if(*endptr || !len)
+        return MON_E_INVALID_ARG;
 
     /*
         The dfu() function requires an even number of bytes, so - if the new firmware image is an
@@ -65,7 +74,7 @@ MONITOR_CMD_HANDLER(dfu)
     */
     buffer_len = (len & 1) ? len + 1 : len;
 
-	if((data = kmalloc(buffer_len)) == NULL)
+	if((data = umalloc(buffer_len)) == NULL)
 		return MON_E_OUT_OF_MEMORY;
 
     printf("Send %u bytes\n", len);
@@ -75,13 +84,24 @@ MONITOR_CMD_HANDLER(dfu)
     if(len & 1)
         data[i] = 0x00;     /* Add padding byte - see above */
 
+    cksum_calculated = fletcher16(data, len);
+    if(cksum_calculated != cksum_sent)
+        return MON_E_BAD_CHECKSUM;
+
 	if((ret = dfu((ku16 *) data, buffer_len)))
 		printf("Firmware update failed: %s\n", kstrerror(ret));
+
+    ufree(data);
 
 	return MON_E_OK;
 }
 
 
+/*
+    disassemble <start> [<count>]
+
+    Disassemble <count> (default 256) bytes of code starting at <start>.
+*/
 MONITOR_CMD_HANDLER(disassemble)
 {
 	u32 num_bytes, start;
@@ -396,9 +416,9 @@ MONITOR_CMD_HANDLER(help)
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
           "    in YYYYMMDDHHMMSS format, set the RTC date and time accordingly.\n\n"
-		  "dfu <size>\n"
+		  "dfu <size> <checksum>\n"
 		  "    Receive <size> bytes and re-flash the firmware ROMs with this data.  <size> must\n"
-		  "    be an even number\n\n"
+		  "    be an even number.  <checksum> is the Fletcher16 checksum of the data.\n\n"
 		  "disassemble <start> [<count>]\n"
 		  "    Disassemble <count> bytes starting at offset <start>.  <count> must be an\n"
 		  "    even number greater than or equal to two.  <start> must be an even number.\n\n"

@@ -50,6 +50,7 @@
 #define MON_E_NOT_IMPLEMENTED	(3)
 #define MON_E_INTERNAL_ERROR	(4)
 #define MON_E_OUT_OF_MEMORY		(5)
+#define MON_E_BAD_CHECKSUM      (6)
 
 
 struct command

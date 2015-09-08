@@ -194,6 +194,10 @@ void dispatch_command(char *cmdline)
 			puts("Out of memory");
 			break;
 
+        case MON_E_BAD_CHECKSUM:
+            puts("Bad checksum");
+            break;
+
 		case MON_E_OK:
 			break;
 	}
