@@ -9,6 +9,7 @@
 	(c) Stuart Wallace, December 2011.
 */
 
+#include "include/byteorder.h"
 #include "include/types.h"
 #include "device/block/block.h"
 #include "device/device.h"

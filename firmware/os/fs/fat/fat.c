@@ -28,19 +28,6 @@ vfs_driver_t g_fat_ops =
 };
 
 
-/* HACK - in rev0 hardware, the ATA interface has its bytes the wrong way around.  This function
-    swaps the endianness of each pair of bytes */
-void *fat_hack_sector_swap_bytes(void *buffer, u32 num_sectors)
-{
-    s32 i;
-    u16 *p = (u16 *) buffer;
-    for(i = (num_sectors * BLOCK_SIZE) >> 1; i--; ++p)
-        *p = ((*p >> 8) | (*p << 8));
-
-    return buffer;
-}
-
-
 s32 fat_init()
 {
     /* Nothing to do here */
@@ -59,8 +46,6 @@ s32 fat_mount(vfs_t *vfs)
     ret = device_read(vfs->dev, 0, 1, &bpb);
     if(ret != SUCCESS)
         return ret;
-
-    fat_hack_sector_swap_bytes(&bpb, 1);    /* HACK */
 
     /* Validate jump entry */
     if((bpb.jmp[0] != 0xeb) || (bpb.jmp[2] != 0x90))
@@ -145,13 +130,8 @@ s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
 
-    /* HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK */
-    s32 ret = device_read(vfs->dev, ((node - 2) * fs->sectors_per_cluster) + fs->first_data_sector,
-                          fs->sectors_per_cluster, buffer);
-
-    fat_hack_sector_swap_bytes(buffer, fs->sectors_per_cluster);
-
-    return ret;
+    return device_read(vfs->dev, ((node - 2) * fs->sectors_per_cluster) + fs->first_data_sector,
+                        fs->sectors_per_cluster, buffer);
 }
 
 
@@ -192,9 +172,6 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
         u32 ret = device_read(vfs->dev, fat_sector, 1, &sector);
         if(ret != SUCCESS)
             return ret;
-
-        /* HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK */
-        fat_hack_sector_swap_bytes(&sector, 1);
 
         *next_node = sector[ent_offset];
     }
@@ -636,9 +613,6 @@ s32 fat_find_free_node(vfs_t *vfs, u32 *node)
         u32 ret = device_read(vfs->dev, fs->first_fat_sector + u, 1, &sector);
         if(ret != SUCCESS)
             return ret;
-
-        /* HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK */
-        fat_hack_sector_swap_bytes(&sector, 1);
 
         for(v = 0; v < ARRAY_COUNT(sector); ++v)
         {
