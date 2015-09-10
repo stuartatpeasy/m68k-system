@@ -31,6 +31,6 @@ APPNAME=ayumos
 
 CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -Os -m68000 -g \
         -DKMALLOC_HEAP -DTARGET_BIGENDIAN -DTARGET_MC68010 -ffreestanding -fomit-frame-pointer \
-		-fno-delete-null-pointer-checks
+		-DBUG_ATA_BYTE_SWAP -fno-delete-null-pointer-checks
 AFLAGS=-m68000
 

@@ -116,7 +116,9 @@ const bool Target::program(const uint8_t *buffer, const size_t len)
     if(!command("serial echo off\n", "serial echo off\n$ "))
         throw ProgrammerException("Unable to set serial line discipline on target");
 
-    sprintf(cmd, "dfu %u\n", (unsigned int) len);
+    const uint16_t cksum = fletcher16(buffer, len);
+
+    sprintf(cmd, "dfu %u %u\n", (unsigned int) len, cksum);
     sprintf(response, "Send %u bytes", (unsigned int) len);
     if(!command(cmd, response))
         throw ProgrammerException("Failed to initiate DFU process on target");
@@ -136,6 +138,30 @@ const bool Target::program(const uint8_t *buffer, const size_t len)
     cout << endl;
 
     return true;
+}
+
+
+const uint16_t Target::fletcher16(const uint8_t *buffer, size_t len)
+{
+    uint16_t sum1 = 0xff, sum2 = 0xff;
+
+    while(len)
+    {
+        uint32_t tlen = (len > 20) ? 20 : len;
+        len -= tlen;
+        do
+        {
+            sum2 += sum1 += *((uint8_t *) buffer++);
+        } while(--tlen);
+
+        sum1 = (sum1 & 0xff) + (sum1 >> 8);
+        sum2 = (sum2 & 0xff) + (sum2 >> 8);
+    }
+
+    sum1 = (sum1 & 0xff) + (sum1 >> 8);
+    sum2 = (sum2 & 0xff) + (sum2 >> 8);
+
+    return (sum2 << 8) | sum1;
 }
 
 

@@ -22,8 +22,7 @@ SECTIONS
 
 	_srodata = .;
 
-	.rodata :
-	AT(ADDR(.text) + SIZEOF(.text))
+	.rodata ALIGN(4):
 	{
 		*(.rodata*)
 	} > rom

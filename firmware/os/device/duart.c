@@ -11,6 +11,8 @@
 
 void duart_init(void)
 {
+    u8 dummy;
+
 	DUART_CRA = 0x10;		/* Reset MRA pointer; disable transmitter and receiver	*/
 	DUART_IMR = 0x00;		/* Disable all interrupts								*/
 
@@ -104,6 +106,11 @@ void duart_init(void)
 	*/
 	DUART_SOPR = 0xff;
 	DUART_ROPR = 0x00;
+
+	/* Switch to 115200 baud */
+    dummy = DUART_BRG_TEST;         /* Read BRG test reg to enable "test" baud rates */
+    DUART_CSRA = 0x66;              /* Select 115200 baud */
+    dummy += 0;                     /* (silence "set but not used" compiler warning) */
 }
 
 

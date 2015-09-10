@@ -28,7 +28,7 @@ struct device_driver g_partition_driver =
     .control    = partition_control
 };
 
-#include "kutil/kutil.h" // FIXME remove
+
 s32 partition_init()
 {
 	/* Scan all devices, enumerate partitions, create partition devices */
@@ -51,7 +51,7 @@ s32 partition_init()
 			if(dev->driver->read(dev->data, 0, 1, (u8 *) &m) != SUCCESS)
 				continue;		/* Failed to read sector TODO: report error */
 
-			if(m.mbr_signature != MBR_SIGNATURE)
+			if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)
 				continue;		/* Sector is not a MBR */
 
 			bzero(name, sizeof(name));
@@ -75,8 +75,8 @@ s32 partition_init()
 
 				data->device		= dev;
 				data->sector_len	= bytes_per_sector;
-				data->offset 		= wswap_32(p->first_sector_lba);
-				data->len			= wswap_32(p->num_sectors);
+				data->offset 		= LE2N32(p->first_sector_lba);
+				data->len			= LE2N32(p->num_sectors);
 				data->type			= p->type;
 				data->status		= p->status;
 

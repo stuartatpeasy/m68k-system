@@ -42,6 +42,7 @@ protected:
 	const bool          doCommand(const char *cmd, const ssize_t cmdlength, char *response, ssize_t responselength);
 	const bool          doCommand(const char *cmd, char *response, ssize_t responselength);
 	const bool          command(const char *cmd, const char *expectedResponse);
+    const uint16_t      fletcher16(const uint8_t *buffer, size_t len);
 	const double		getTimeOfDay(void) const;
 
 	string				m_device;

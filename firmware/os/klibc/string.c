@@ -57,31 +57,8 @@ void *memcpy(void *dest, const void *src, u32 n)
     else
     {
         /* src and dest can't be aligned.  Do this the slow way */
-        if(n > 8)
-        {
-            u32 n_ = n - 8;
-            for(; n_--; *dest_++ = *src_++) ;
-
-            n = 8;
-        }
-
-        if(n)
-        {
-            switch(n)
-            {
-                case 8:		*dest_++ = *src_++;
-                case 7:		*dest_++ = *src_++;
-                case 6:		*dest_++ = *src_++;
-                case 5:		*dest_++ = *src_++;
-                case 4:		*dest_++ = *src_++;
-                case 3:		*dest_++ = *src_++;
-                case 2:		*dest_++ = *src_++;
-                case 1:		*dest_++ = *src_++;
-                case 0:
-                default:
-                    break;
-            }
-        }
+        for(; n; --n)
+            *dest_++ = *src_++;
     }
 
 	return dest;

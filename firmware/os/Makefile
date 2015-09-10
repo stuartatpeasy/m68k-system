@@ -66,7 +66,7 @@ roms:
 	$(FLASHTOOL) --program --infile $(APPNAME).O.rom --verify
 
 dfu:
-	$(DFU) --program --infile $(APPNAME).rom
+	$(DFU) --program --baud 115200 --infile $(APPNAME).rom
 
 clean:
 	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom $(MAPFILE)

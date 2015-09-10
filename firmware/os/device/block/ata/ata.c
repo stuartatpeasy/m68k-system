@@ -5,8 +5,6 @@
 
 
 	(c) Stuart Wallace, December 2011.
-
-	TODO: remove libc-sw functions (bcopy, strncpy, etc)
 */
 
 #include "ata-internal.h"
@@ -62,6 +60,7 @@ s32 ata_init()
 		{
 			struct ata_identify_device_ret id;
 			ata_device_t * const devp = &g_ata_devices[(bus * ATA_DEVICES_PER_BUS) + device];
+			u16 *p;
 
 			/* Wait for BSY to become low */
 			if(!ATA_WAIT_NBSY(bus))
@@ -112,11 +111,28 @@ s32 ata_init()
 			devp->addr.bus = bus;
 			devp->addr.device = device;
 
+            /*
+                For some reason, the strings returned in the IDENTIFY DEVICE structure are big-
+                endian.  All of the rest of the data in the response is little-endian.  Why not?
+            */
+            for(p = (u16 *) &id.model_number;
+                p < (u16 *) (&id.model_number[sizeof(id.model_number)]); ++p)
+                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
+
+            for(p = (u16 *) &id.serial_number;
+                p < (u16 *) (&id.serial_number[sizeof(id.serial_number)]); ++p)
+                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
+
+            for(p = (u16 *) &id.firmware_revision;
+                p < (u16 *) (&id.firmware_revision[sizeof(id.firmware_revision)]); ++p)
+                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
+
             strn_trim_cpy(devp->model, id.model_number, sizeof(id.model_number));
             strn_trim_cpy(devp->serial, id.serial_number, sizeof(id.serial_number));
             strn_trim_cpy(devp->firmware, id.firmware_revision, sizeof(id.firmware_revision));
 
-			devp->num_sectors = id.log_cyls * id.log_heads * id.log_sects_per_log_track;
+			devp->num_sectors = LE2N16(id.log_cyls) * LE2N16(id.log_heads)
+                                * LE2N16(id.log_sects_per_log_track);
 
 			*dn = g_device_sub_names[(bus * ATA_DEVICES_PER_BUS) + device];
 			devp->status = online;
@@ -124,7 +140,7 @@ s32 ata_init()
 			if(create_device(DEVICE_TYPE_BLOCK, DEVICE_CLASS_DISC, &g_ata_driver, device_name,
                              devp) == SUCCESS)
                 printf("%s: %s, %uMB [serial %s firmware %s]\n", device_name, devp->model,
-                       devp->num_sectors >> 11, devp->serial, devp->firmware);
+                       devp->num_sectors >> (20 - LOG_BLOCK_SIZE), devp->serial, devp->firmware);
             else
                 printf("%s: failed to create device\n", device_name);
 		}
@@ -301,7 +317,35 @@ void ata_read_data(ku32 bus, void *buf)
 	u32 count = (ATA_SECTOR_SIZE / sizeof(u16));
 
 	for(; count--;)
+    {
+#ifdef BUG_ATA_BYTE_SWAP
+        /*
+            The lambda rev0 pcb has its ATA data bus connected to the CPU data bus as:
+
+                ATA_D[15..8] <=> CPU_D[15..8]
+                ATA_D[7..0]  <=> CPU_D[7..0]
+
+            This seems correct but creates interop problems with volumes created on little-endian
+            hosts.  The desired electrical arrangement is:
+
+                ATA_D[15..8] <=> CPU_D[7..0]
+                ATA_D[7..0]  <=> CPU_D[15..8]
+
+            ...i.e. byte-swapping.  This results in single bytes, being stored in memory in the
+            "correct" order when read from / written to little-endian file systems.  Note that
+            16-/32-bit (or larger) numerics need to be converted to target endianness under this
+            arrangement.
+
+           If the BUG_ATA_BYTE_SWAP constant is defined, we therefore swap the bytes in each 16-bit
+           datum read/written in order to work round the incorrect board design.
+        */
+        u16 data = ATA_REG_DATA(bus);
+        bswap_16(data);
+        *buf_++ = data;
+#else
 		*buf_++ = ATA_REG_DATA(bus);
+#endif
+    }
 }
 
 
@@ -314,7 +358,35 @@ void ata_write_data(ku32 bus, const void *buf)
 	u32 count = (ATA_SECTOR_SIZE / sizeof(u16));
 
 	for(; count--;)
+    {
+#ifdef BUG_ATA_BYTE_SWAP
+        /*
+            The lambda rev0 pcb has its ATA data bus connected to the CPU data bus as:
+
+                ATA_D[15..8] <=> CPU_D[15..8]
+                ATA_D[7..0]  <=> CPU_D[7..0]
+
+            This seems correct but creates interop problems with volumes created on little-endian
+            hosts.  The desired electrical arrangement is:
+
+                ATA_D[15..8] <=> CPU_D[7..0]
+                ATA_D[7..0]  <=> CPU_D[15..8]
+
+            ...i.e. byte-swapping.  This results in single bytes, being stored in memory in the
+            "correct" order when read from / written to little-endian file systems.  Note that
+            16-/32-bit (or larger) numerics need to be converted to target endianness under this
+            arrangement.
+
+           If the BUG_ATA_BYTE_SWAP constant is defined, we therefore swap the bytes in each 16-bit
+           datum read/written in order to work round the incorrect board design.
+        */
+        u16 data = *buf_++;
+        bswap_16(data);
+		ATA_REG_DATA(bus) = data;
+#else
 		ATA_REG_DATA(bus) = *buf_++;
+#endif
+    }
 }
 
 
