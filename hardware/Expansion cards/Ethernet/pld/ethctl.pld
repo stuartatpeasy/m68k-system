@@ -1,0 +1,87 @@
+Name      ethctl;
+PartNo    1;
+Date      2015-09-10;
+Revision  00;
+Designer  swallace;
+Company   ;
+Assembly  None;
+Location  None;
+Device    G16V8AS;  /* god knows why G16V8AS works but G16V8A doesn't */
+
+/*
+Description
+===========
+
+This file contains equations which implement the glue logic for the ethernet controller peripheral.
+
+PLD pin descriptions
+====================
+
+    nCS               [in]  Card chip select
+    nID               [in]  Expansion card identity request
+    nETHIRQ           [in]  nIRQ from the ethernet controller
+    nUR               [in]  CPU bus cycle control: upper byte read
+    nLR               [in]  CPU bus cycle control: lower byte read
+    nUW               [in]  CPU bus cycle control: upper byte write
+    nLW               [in]  CPU bus cycle control: lower byte write
+    ETHCS             [out] Ethernet controller chip select
+    nETHWR            [out] Ethernet controller read/write
+    ETHB1SEL          [out] Ethernet controller byte 1 select
+    ETHB0SEL          [out] Ethernet controller byte 0 select
+    nIRQ              [out] Expansion card interrupt request
+    DIR               [out] Data bus buffer direction control
+    nBUFEN            [out] Data bus buffer enable
+    nACK              [out] CPU transfer acknowledge
+
+Target device pinout
+====================
+
+                         16V8
+                      _____ _____
+             CLK/IN -| 1   U  20 |- VCC
+  nCS            IN -| 2      19 |- I/O    ETHCS
+  nID            IN -| 3      18 |- I/O	  nETHWR
+  nETHIRQ        IN -| 4      17 |- I/O    ETHB1SEL
+  nUR            IN -| 5      16 |- I/O	  ETHB0SEL
+  nLR            IN -| 6      15 |- I/O	  nIRQ
+  nUW            IN -| 7      14 |- I/O	  DIR
+  nLW            IN -| 8      13 |- I/O	  nBUFEN
+                 IN -| 9      12 |- I/O	  nACK
+                GND -| 10     11 |- I/nOE	  
+                      ----------- 
+*/
+
+/* Inputs */
+Pin  2 = !CS;
+Pin  3 = !ID;
+Pin  4 = !ETHIRQ;
+Pin  5 = !UR;
+Pin  6 = !LR;
+Pin  7 = !UW;
+Pin  8 = !LW;
+
+/** Outputs **/
+
+Pin 12 = !ACK;
+Pin 13 = !BUFEN;
+Pin 14 = DIR;
+Pin 15 = !IRQ;
+Pin 16 = ETHB0SEL;
+Pin 17 = ETHB1SEL;
+Pin 18 = !ETHWR;
+Pin 19 = ETHCS;
+
+
+W = UW # LW;
+R = UR # LR;
+U = UR # UW;
+L = LR # LW;
+
+ETHCS = CS & !ID;
+ETHWR = ETHCS & W;
+ETHB1SEL = ETHCS & L;
+ETHB0SEL = ETHCS & U;
+IRQ = ETHIRQ;
+DIR = W;
+BUFEN = ETHCS;
+ACK = CS;
