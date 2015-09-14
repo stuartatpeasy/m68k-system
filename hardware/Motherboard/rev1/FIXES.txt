@@ -3,46 +3,18 @@ Major (prevents design working as manufactured)
 -----------------------------------------------
 
 
-byte-swap ATA data bus
-
-
 
 Moderate (makes assembly fiddly, or affects usability)
 
 ------------------------------------------------------
 
-2	470n capacitors have 0.1" pitch holes; 0.2" pitch needed
-
-3	Reset switch footprint - spacing incorrect, and holes are too small
-
-12	R701, R704 too close together
-
-14	L902 footprint - hole spacing is too great
-
 19	Battery footprint is entirely wrong
-
-check sense of power switch.  maybe fixed this twice (i.e. unfixed it) in the schematic design?
-
-some expansion slot connectors are too close together, maybe
-
-
 
 
 Minor (cosmetic)
 
 ----------------
 
-5	LED silkscreen outline is too small
-
-6	R106, R401 - footprint is wrong?  Appears as if common pin is not connected to VCC
-
-9	LED silkscreen - orientation mark is obscured by holes
-
-18	Significant switching noise (250mV spikes, 30mV sq wave @~250kHz on +12V supply)
-
-22	D601 (bi-col) very bright - increase current-limit R
-
-23	D701 (HDD) is quite dim
 
 
 
@@ -50,7 +22,5 @@ Minor (cosmetic)
 Enhancements
 
 ------------
-
-26	Some signal names in MEMCTL PLD have changed; update schematic to match.
 
 Pull-up to prevent buzzer buzzing when RESET is held?
