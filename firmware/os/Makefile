@@ -10,8 +10,8 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=dfu.c main.c \
-		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/expansion.c \
-		 device/led.c device/block/ata/ata.c device/block/partition/partition.c \
+		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/enc624j600.c \
+		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 		 kernel/elf.c kernel/ksym.c kernel/syscalls.c \
@@ -124,6 +124,9 @@ device/device.o: \
 
 device/ds17485.o: \
 	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
+
+device/enc624j600.o: \
+	device/enc624j600.c device/enc624j600.h include/types.h
 
 device/duart.o: \
 	device/duart.c device/duart.h include/defs.h include/types.h
