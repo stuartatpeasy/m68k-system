@@ -10,7 +10,7 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=dfu.c main.c \
-		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/enc624j600.c \
+		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
 		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
@@ -125,14 +125,16 @@ device/device.o: \
 device/ds17485.o: \
 	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
 
-device/enc624j600.o: \
-	device/enc624j600.c device/enc624j600.h include/types.h
+device/encx24j600.o: \
+	device/encx24j600.c device/encx24j600.h cpu/exceptions.h device/device.h device/expansion.h \
+	include/defs.h include/error.h include/types.h
 
 device/duart.o: \
 	device/duart.c device/duart.h include/defs.h include/types.h
 
 device/expansion.o: \
-	device/expansion.c device/expansion.h include/defs.h include/types.h klibc/stdio.h
+	device/expansion.c device/expansion.h cpu/exceptions.h device/duart.h include/defs.h \
+	include/types.h klibc/stdio.h
 
 device/led.o: \
 	device/led.c device/led.h device/duart.h include/defs.h include/types.h
@@ -195,5 +197,5 @@ memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
 
 sched/sched.o: \
-	sched/sched.c sched/sched.h cpu/utilities.h device/duart.h include/defs.h kernel/syscall.h \
-	include/types.h klibc/strings.h
+	sched/sched.c sched/sched.h cpu/exceptions.h cpu/utilities.h device/duart.h include/defs.h \
+	kernel/syscall.h include/types.h klibc/strings.h

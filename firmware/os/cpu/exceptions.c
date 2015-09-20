@@ -10,39 +10,50 @@
 #include "cpu/exceptions.h"
 
 
+/*
+	Install the default handlers for every exception.  Default behaviour for every exception is to
+	report the exception and dump its stack frame, then halt the system.
+*/
 void cpu_exc_install_default_handlers(void)
 {
 	unsigned short u;
 
 	/* Start by pointing all exception vectors at the generic handler */
 	for(u = 0; u < 256; ++u)
-		CPU_EXC_VPTR_SET(u, cpu_exc_generic);
+        CPU_EXC_VPTR_SET(u, cpu_exc_generic);
 
 	/* Now set specific handlers */
-	V_ssp			        = CPU_EXC_VPTR(0xca5caded);				/* nonsense number */
-	V_reset			        = CPU_EXC_VPTR(0xbed51de5);				/* nonsense number */
-	V_bus_error		        = CPU_EXC_VPTR(cpu_exc_bus_error);
-	V_address_error	        = CPU_EXC_VPTR(cpu_exc_address_error);
-
-	V_level_1_autovector    = CPU_EXC_VPTR(irq_schedule);           /* scheduler IRQ handler */
+	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
+	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
+	CPU_EXC_VPTR_SET(V_bus_error,       cpu_exc_bus_error);
+	CPU_EXC_VPTR_SET(V_address_error,   cpu_exc_address_error);
 
 	/* TODO install TRAP handlers */
-	V_trap_0  = CPU_EXC_VPTR(cpu_trap_0_handler);
-	V_trap_1  = CPU_EXC_VPTR(cpu_trap_1_handler);
-	V_trap_2  = CPU_EXC_VPTR(cpu_trap_2_handler);
-	V_trap_3  = CPU_EXC_VPTR(cpu_trap_3_handler);
-	V_trap_4  = CPU_EXC_VPTR(cpu_trap_4_handler);
-	V_trap_5  = CPU_EXC_VPTR(cpu_trap_5_handler);
-	V_trap_6  = CPU_EXC_VPTR(cpu_trap_6_handler);
-	V_trap_7  = CPU_EXC_VPTR(cpu_trap_7_handler);
-	V_trap_8  = CPU_EXC_VPTR(cpu_trap_8_handler);
-	V_trap_9  = CPU_EXC_VPTR(cpu_trap_9_handler);
-	V_trap_10 = CPU_EXC_VPTR(cpu_trap_10_handler);
-	V_trap_11 = CPU_EXC_VPTR(cpu_trap_11_handler);
-	V_trap_12 = CPU_EXC_VPTR(cpu_trap_12_handler);
-	V_trap_13 = CPU_EXC_VPTR(cpu_trap_13_handler);
-	V_trap_14 = CPU_EXC_VPTR(cpu_trap_14_handler);
-	V_trap_15 = CPU_EXC_VPTR(cpu_trap_15_handler);
+    CPU_EXC_VPTR_SET(V_trap_0,  cpu_trap_0_handler);
+    CPU_EXC_VPTR_SET(V_trap_1,  cpu_trap_1_handler);
+    CPU_EXC_VPTR_SET(V_trap_2,  cpu_trap_2_handler);
+    CPU_EXC_VPTR_SET(V_trap_3,  cpu_trap_3_handler);
+    CPU_EXC_VPTR_SET(V_trap_4,  cpu_trap_4_handler);
+    CPU_EXC_VPTR_SET(V_trap_5,  cpu_trap_5_handler);
+    CPU_EXC_VPTR_SET(V_trap_6,  cpu_trap_6_handler);
+    CPU_EXC_VPTR_SET(V_trap_7,  cpu_trap_7_handler);
+    CPU_EXC_VPTR_SET(V_trap_8,  cpu_trap_8_handler);
+    CPU_EXC_VPTR_SET(V_trap_9,  cpu_trap_9_handler);
+    CPU_EXC_VPTR_SET(V_trap_10, cpu_trap_10_handler);
+    CPU_EXC_VPTR_SET(V_trap_11, cpu_trap_11_handler);
+    CPU_EXC_VPTR_SET(V_trap_12, cpu_trap_12_handler);
+    CPU_EXC_VPTR_SET(V_trap_13, cpu_trap_13_handler);
+    CPU_EXC_VPTR_SET(V_trap_14, cpu_trap_14_handler);
+    CPU_EXC_VPTR_SET(V_trap_15, cpu_trap_15_handler);
+}
+
+
+/*
+    Set "handler" as the handler for exception vector "vecnum"
+*/
+void cpu_set_handler(u32 vecnum, exc_handler_t handler)
+{
+    CPU_EXC_VPTR_SET(vecnum, handler);
 }
 
 

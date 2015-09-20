@@ -9,6 +9,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, January 2012.
 */
 
+#include "cpu/exceptions.h"
 #include "cpu/utilities.h"
 #include "device/duart.h"          /* DUART generates the scheduler interrupt */
 #include "include/defs.h"
@@ -67,7 +68,7 @@ typedef struct proc_struct proc_t;
 proc_t *g_current_proc;
 u32 g_ncontext_switches;
 
-void irq_schedule(void) __attribute__((interrupt_handler));
+IRQ_HANDLER_DECL(irq_schedule);
 void sched_init(void);
 
 pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags);

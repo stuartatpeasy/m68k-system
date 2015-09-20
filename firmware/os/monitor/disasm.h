@@ -19,7 +19,7 @@
 #define BEW_SCALE(x)			(((x) & 0x0600) >> 9)
 #define BEW_DA(x)				(((x) & 0x8000) ? 'a' : 'd')
 
-#define BIT(x, y)				(((x) & (1 << y)) ? 1 : 0)
+#define TEST(x, y)              (((x) & (1 << (y))) ? 1 : 0)
 
 /*
 	host-to-platform (HTOP_*) macros

@@ -81,12 +81,12 @@ int disassemble(unsigned short **p, char *str)
 	switch(instr >> 12)
 	{
         case 0x0:
-            if(BIT(instr, 8) || (((instr >> 8) & 0xf) == 8))		/* static/dynamic bit / movep */
+            if(TEST(instr, 8) || (((instr >> 8) & 0xf) == 8))		/* static/dynamic bit / movep */
             {
                 if(src_mode == 1)	/* movep */
                 {
-                    const unsigned char dir = BIT(instr, 7),
-                                        sz = BIT(instr, 6);
+                    const unsigned char dir = TEST(instr, 7),
+                                        sz = TEST(instr, 6);
 
                     pf = "movep";
                     size = sz ? ea_long : ea_word;
@@ -110,7 +110,7 @@ int disassemble(unsigned short **p, char *str)
                 {
                     pf = g_disasm_bits[bit7_6];
 
-                    if(BIT(instr, 8))	/* dynamic bit */
+                    if(TEST(instr, 8))	/* dynamic bit */
                     {
                         size = src_mode ? ea_byte : ea_long;
 
@@ -132,7 +132,7 @@ int disassemble(unsigned short **p, char *str)
                 if((src_mode == 7) && (src_reg == 4))		/* -> ccr/sr */
                 {
                     /* TODO: only andi/eori/ori are permitted here - validate this */
-                    if(BIT(instr, 6))
+                    if(TEST(instr, 6))
                     {
                         size = ea_word;
                         a2[0] = 's'; a2[1] = 'r';
@@ -179,7 +179,7 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0x4:
-            if(BIT(instr, 8))
+            if(TEST(instr, 8))
             {
                 if(bit7_6 == 2)		/* chk */
                 {
@@ -201,7 +201,7 @@ int disassemble(unsigned short **p, char *str)
                 if(src_mode && (bit7_6 & 2) && ((dest_reg & 5) == 4))		/* movem */
                 {
                     pf = "movem";
-                    size = BIT(instr, 6) ? ea_long : ea_word;
+                    size = TEST(instr, 6) ? ea_long : ea_word;
                     if(dest_reg == 4)		/* movem regs -> <ea> */
                     {
                         movem_regs(a1, HTOP_SHORT(*(*p)++), src_mode == 4);
@@ -402,9 +402,9 @@ int disassemble(unsigned short **p, char *str)
                                     case 7:						/* movec */
                                         pf = "movec";
                                         size = ea_long;
-                                        if(BIT(instr, 0))			/* general reg -> control reg */
+                                        if(TEST(instr, 0))			/* general reg -> control reg */
                                         {
-                                            a1[0] = BIT(**p, 15) ? 'a' : 'd';
+                                            a1[0] = TEST(**p, 15) ? 'a' : 'd';
                                             a1[1] = '0' + (((**p) >> 12) & 0x7);
                                             switch(**p & 0xfff)
                                             {
@@ -437,7 +437,7 @@ int disassemble(unsigned short **p, char *str)
                                                     pf = NULL;
                                                     break;
                                             }
-                                            a2[0] = BIT(**p, 15) ? 'a' : 'd';
+                                            a2[0] = TEST(**p, 15) ? 'a' : 'd';
                                             a2[1] = '0' + (((**p) >> 12) & 0x7);
                                         }
                                         (*p)++;
@@ -478,7 +478,7 @@ int disassemble(unsigned short **p, char *str)
             }
             else					/* addq / subq */
             {
-                pf = BIT(instr, 8) ? "subq" : "addq";
+                pf = TEST(instr, 8) ? "subq" : "addq";
                 size = g_disasm_sizemap[bit7_6];
 
                 a1[0] = '#';
@@ -503,7 +503,7 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0x7:
-            if(!BIT(instr, 8))
+            if(!TEST(instr, 8))
             {
                 pf = "moveq";
                 size = ea_long;
@@ -564,7 +564,7 @@ int disassemble(unsigned short **p, char *str)
                 {
                     pf = ((instr >> 12) == 0x8) ? "sbcd" : "abcd";
                     size = ea_byte;
-                    if(BIT(instr, 3))
+                    if(TEST(instr, 3))
                     {
                         a1[0] = a2[0] = '-';
                         a1[1] = a2[1] = '(';
@@ -586,7 +586,7 @@ int disassemble(unsigned short **p, char *str)
                     pf = ((instr >> 12) == 0x8) ? "or" : "and";
                     size = g_disasm_sizemap[bit7_6];
 
-                    if(BIT(instr, 8))		/* <ea>, Dn */
+                    if(TEST(instr, 8))		/* <ea>, Dn */
                     {
                         ea(a1, src_mode, src_reg, p, size);
                         a2[0] = 'd';
@@ -607,7 +607,7 @@ int disassemble(unsigned short **p, char *str)
             if((instr & 0x00c0) == 0x00c0)	/* adda / suba */
             {
                 pf = ((instr >> 12) == 0x9) ? "suba" : "adda";
-                size = BIT(instr, 8) ? ea_long : ea_word;
+                size = TEST(instr, 8) ? ea_long : ea_word;
                 ea(a1, src_mode, src_reg, p, size);
                 a2[0] = 'a';
                 a2[1] = '0' + dest_reg;
@@ -640,7 +640,7 @@ int disassemble(unsigned short **p, char *str)
                 else							/* add / sub */
                 {
                     pf = ((instr >> 12) == 0x9) ? "sub" : "add";
-                    if(BIT(instr, 8))
+                    if(TEST(instr, 8))
                     {
                         a1[0] = 'd';
                         a1[1] = '0' + dest_reg;
@@ -660,7 +660,7 @@ int disassemble(unsigned short **p, char *str)
             if((instr & 0x00c0) == 0x00c0)		/* cmpa */
             {
                 pf = "cmpa";
-                size = BIT(instr, 8) ? ea_long : ea_word;
+                size = TEST(instr, 8) ? ea_long : ea_word;
                 ea(a1, src_mode, src_reg, p, size);
                 a2[0] = 'a';
                 a2[1] = '0' + dest_reg;
@@ -669,7 +669,7 @@ int disassemble(unsigned short **p, char *str)
             {
                 size = g_disasm_sizemap[bit7_6];
 
-                if(BIT(instr, 8))
+                if(TEST(instr, 8))
                 {
                     if(src_mode == 1)			/* cmpm */
                     {
@@ -701,7 +701,7 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0xe:		/* shift/rotate register/memory */
-            pf = (BIT(instr, 8)) ? g_disasm_lshifts[src_mode & 3] : g_disasm_rshifts[src_mode & 3];
+            pf = (TEST(instr, 8)) ? g_disasm_lshifts[src_mode & 3] : g_disasm_rshifts[src_mode & 3];
 
             if(bit7_6 == 3)		/* memory */
             {

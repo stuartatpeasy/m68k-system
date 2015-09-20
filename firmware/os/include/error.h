@@ -25,5 +25,6 @@
 #define EDATA               (503)   /* Data error                                       */
 #define ECKSUM              (504)   /* Checksum error                                   */
 #define EBADSBLK            (505)   /* Bad superblock                                   */
+#define EDEVINITFAILED      (506)   /* Device initialisation failed                     */
 
 #endif

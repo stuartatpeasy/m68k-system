@@ -16,12 +16,17 @@
 void expansion_init()
 {
     u32 i;
+    expansion_root_t root;
 
 	puts("Scanning expansion slots");
 
-	for(i = 0; i < 4; ++i)
+	for(root.base = EXP_BASE_ADDR, root.len = EXP_ADDR_LEN, root.irql = EXP_BASE_IRQ, i = 0;
+        i < EXP_NUM_SLOTS;
+        ++i, root.base += EXP_ADDR_LEN, ++root.irql)
     {
-        printf("slot %d: ", i);
+        printf("slot %d (0x%08x-0x%08x irq %u): ", i, root.base, root.base + root.len - 1,
+               root.irql);
+
         if(EXP_PRESENT(i))
         {
             /* A card is present; read its identity from the first byte of its address space */

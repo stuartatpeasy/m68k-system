@@ -58,6 +58,8 @@
     (type *) ((char *) mptr - offsetof(type, member));  \
 })
 
+#define BIT(x)          (1 << (x))
+
 
 extern u8 _sdata,       /* .data section start */
           _edata,       /* .data section end   */

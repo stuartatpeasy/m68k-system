@@ -78,6 +78,7 @@ ks8 *kstrerror(ks32 errnum)
         case EDATA:             return "Data error";
         case ECKSUM:            return "Checksum error";
         case EBADSBLK:          return "Bad superblock";
+        case EDEVINITFAILED:    return "Device initialisation failed";
 
         default:                return "Unrecognised error code";
     }

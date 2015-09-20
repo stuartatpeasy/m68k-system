@@ -23,16 +23,17 @@
 
 enum device_type
 {
-	DEVICE_TYPE_BLOCK,
-	DEVICE_TYPE_CHARACTER
+	DEVICE_TYPE_BLOCK       = 0x01,
+	DEVICE_TYPE_CHARACTER   = 0x02,
+	DEVICE_TYPE_NET         = 0x03
 };
 
 typedef enum device_type device_type_t;
 
 enum device_class
 {
-    DEVICE_CLASS_DISC,
-    DEVICE_CLASS_PARTITION
+    DEVICE_CLASS_DISC       = 0x01,
+    DEVICE_CLASS_PARTITION  = 0x02
 };
 
 typedef enum device_class device_class_t;
