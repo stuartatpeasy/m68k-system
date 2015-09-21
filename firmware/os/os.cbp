@@ -26,6 +26,14 @@
 		<Unit filename="asm/stop.h" />
 		<Unit filename="asm/tas.h" />
 		<Unit filename="asm/trap.h" />
+		<Unit filename="board/lambda/device.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="board/lambda/device.h" />
+		<Unit filename="board/lambda/mc68681.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="board/lambda/mc68681.h" />
 		<Unit filename="cpu/exceptions.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -62,6 +70,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/duart.h" />
+		<Unit filename="device/encx24j600.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/encx24j600.h" />
 		<Unit filename="device/expansion.c">
 			<Option compilerVar="CC" />
 		</Unit>

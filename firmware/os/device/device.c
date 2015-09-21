@@ -35,6 +35,40 @@ device_driver_t *g_drivers[] =
 };
 
 
+static dev_t *root_dev = NULL;
+
+
+s32 dev_enumerate()
+{
+    /* Root device is implicit */
+    root_dev = CHECKED_KCALLOC(sizeof(dev_t));
+
+    /* Populating the device tree is a board-specific operation */
+    return b_dev_enumerate(&(root_dev->first_child));
+}
+
+
+dev_t *dev_get_root()
+{
+    return root_dev;
+}
+
+
+dev_t *dev_add_child(dev_t *parent, dev_t *child)
+{
+    dev_t *p;
+
+    /* TODO - should use list_head stuff here */
+    for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
+        ;
+
+    p->next_sibling = child;
+    child->prev_sibling = p;
+
+    return parent;
+}
+
+
 u32 driver_init()
 {
     u32 x;

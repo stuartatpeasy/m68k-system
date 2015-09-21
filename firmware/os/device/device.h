@@ -20,9 +20,15 @@
 
 #define INVALID_DEVICE_ID		(-1)	/* Device guaranteed not to exist */
 
+typedef enum
+{
+    DEV_STATE_UNKNOWN   = 0,
+    DEV_STATE_READY     = 1
+} device_state_t;
 
 enum device_type
 {
+    DEVICE_TYPE_NONE        = 0x00,
 	DEVICE_TYPE_BLOCK       = 0x01,
 	DEVICE_TYPE_CHARACTER   = 0x02,
 	DEVICE_TYPE_NET         = 0x03
@@ -32,6 +38,7 @@ typedef enum device_type device_type_t;
 
 enum device_class
 {
+    DEVICE_CLASS_NONE       = 0x00,
     DEVICE_CLASS_DISC       = 0x01,
     DEVICE_CLASS_PARTITION  = 0x02
 };
@@ -53,6 +60,24 @@ struct device_driver
 };
 
 typedef struct device_driver device_driver_t;
+
+
+struct dev;
+typedef struct dev
+{
+    device_type_t       type;
+    device_class_t      class;
+    device_driver_t *   driver;
+    const char *        name;
+    void *              data;
+    u32                 irq;
+    void *              base_addr;
+    struct dev *        parent;
+    struct dev *        first_child;
+    struct dev *        prev_sibling;
+    struct dev *        next_sibling;
+    device_state_t      state;
+} dev_t;
 
 
 struct device
