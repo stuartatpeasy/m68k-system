@@ -43,10 +43,10 @@
     Expansion slot "identify" (EID) line
 */
 
-#define EXP_ID_BIT                  (2)
-#define EXP_ID_MASK                 (1 << EXP_ID_BIT)
-#define EXP_ID_ASSERT()             (DUART_SOPR |= (EXP_ID_MASK))
-#define EXP_ID_NEGATE()             (DUART_ROPR |= ~(EXP_ID_MASK))
+#define EXP_ID                      (2)
+#define EXP_ID_MASK                 BIT(EXP_ID)
+#define EXP_ID_ASSERT()             (DUART_SOPR = (EXP_ID_MASK))
+#define EXP_ID_NEGATE()             (DUART_ROPR = (EXP_ID_MASK))
 
 
 typedef struct
