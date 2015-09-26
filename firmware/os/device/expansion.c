@@ -39,7 +39,7 @@ void expansion_init()
             switch(id)
             {
                 default:
-                    puts("unknown peripheral");
+                    printf("unknown peripheral %02x\n", id);
             }
         }
         else
