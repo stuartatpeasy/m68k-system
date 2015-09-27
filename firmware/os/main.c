@@ -4,6 +4,7 @@
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 */
 
+#include <platform/spec.h>
 #include <stdio.h>
 #include <strings.h>
 
@@ -53,6 +54,7 @@ void detect_clock_freq()
 
 void _main()
 {
+    u32 x, y, sz;
     rtc_time_t tm;
     char timebuf[12], datebuf[32];
     u8 sn[6];
@@ -81,11 +83,25 @@ void _main()
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
-    /* Zero RAM.  This happens after init'ing the DUART, because beeper. */
-    bzero((void *) USER_RAM_START, g_ram_top - USER_RAM_START);
+    /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
+    for(x = 0; x < g_nram_extents; ++x)
+        if(g_ram_extents[x].flags & RAM_EXTENT_USER)
+            bzero(g_ram_extents[x].base, g_ram_extents[x].len);
 
-    /* Initialise user heap - can't do this before zero'ing user RAM */
-	umeminit((void *) USER_RAM_START, (void *) g_ram_top);
+    /* Initialise user heap.  Place it in the largest user RAM extent. */
+    for(x = 0, y = 0, sz = 0; x < g_nram_extents; ++x)
+    {
+        if((g_ram_extents[x].flags & RAM_EXTENT_USER) && (g_ram_extents[x].len > sz))
+        {
+            sz = g_ram_extents[x].len;
+            y = x;
+        }
+    }
+
+    /* TODO: panic on: no user RAM extents found */
+    if(sz)
+        umeminit(g_ram_extents[y].base,
+                 (void *) ((u32) g_ram_extents[y].base + g_ram_extents[y].len));
 
     /*
         At this point, minimal configuration has been done.  The scheduler is not yet running,

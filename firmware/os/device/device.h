@@ -14,6 +14,7 @@
 #include "include/types.h"
 
 #define DEVICE_NAME_LEN			(6)		/* Max length of device name, including terminating \0 	*/
+// FIXME REMOVE
 #define MAX_DEVICES             (64)    /* Maximum number of devices allowed by the system      */
 
 #define DEVICE_MAX_SUBDEVICES	(61)	/* e.g. ataa1, ataa2, ataa3, ...ataaZ */
@@ -22,30 +23,27 @@
 
 typedef enum
 {
-    DEV_STATE_UNKNOWN   = 0,
-    DEV_STATE_READY     = 1
-} device_state_t;
+    DEV_STATE_UNKNOWN           = 0,
+    DEV_STATE_READY             = 1,
+    DEV_STATE_OFFLINE           = 2
+} dev_state_t;
 
-enum device_type
+typedef enum
 {
-    DEVICE_TYPE_NONE        = 0x00,
-	DEVICE_TYPE_BLOCK       = 0x01,
-	DEVICE_TYPE_CHARACTER   = 0x02,
-	DEVICE_TYPE_NET         = 0x03
-};
+    DEV_TYPE_NONE               = 0x00,
+	DEV_TYPE_BLOCK              = 0x01,
+	DEV_TYPE_CHARACTER          = 0x02,
+	DEV_TYPE_NET                = 0x03
+} dev_type_t;
 
-typedef enum device_type device_type_t;
-
-enum device_class
+typedef enum
 {
-    DEVICE_CLASS_NONE       = 0x00,
-    DEVICE_CLASS_DISC       = 0x01,
-    DEVICE_CLASS_PARTITION  = 0x02
-};
+    DEV_SUBTYPE_NONE            = 0x00,
+    DEV_SUBTYPE_MASS_STORAGE    = 0x01,
+    DEV_SUBTYPE_PARTITION       = 0x02
+} dev_subtype_t;
 
-typedef enum device_class device_class_t;
-
-struct device_driver
+typedef struct
 {
 	const char *name;
 	u32 version;
@@ -57,45 +55,45 @@ struct device_driver
 	s32 (*write)(void *data, ku32 offset, ku32 len, const void *buf);
 
 	s32 (*control)(void *data, ku32 function, void *in, void *out);
-};
-
-typedef struct device_driver device_driver_t;
+} dev_driver_t;
 
 
 struct dev;
 typedef struct dev
 {
-    device_type_t       type;
-    device_class_t      class;
-    device_driver_t *   driver;
+    dev_type_t          type;
+    dev_subtype_t       subtype;
+    dev_driver_t *      driver;
     const char *        name;
     void *              data;
     u32                 irq;
     void *              base_addr;
+
     struct dev *        parent;
     struct dev *        first_child;
     struct dev *        prev_sibling;
     struct dev *        next_sibling;
-    device_state_t      state;
+    dev_state_t         state;
 } dev_t;
 
-
+// FIXME REMOVE
 struct device
 {
-	enum device_type type;
-	enum device_class class;
-	struct device_driver *driver;
+	dev_type_t type;
+	dev_subtype_t subtype;
+	dev_driver_t *driver;
 	char name[DEVICE_NAME_LEN];
 	void *data;
 };
 
+// FIXME REMOVE
 typedef struct device device_t;
 
 /*
     Variable declarations
 */
 const char * const g_device_sub_names;
-device_t * g_devices[MAX_DEVICES];
+dev_t * g_devices[MAX_DEVICES];      // FIXME REMOVE
 
 
 /*
@@ -103,17 +101,17 @@ device_t * g_devices[MAX_DEVICES];
 */
 u32 driver_init();
 void driver_shut_down();
-s32 create_device(const device_type_t type, const device_class_t class,
-                         struct device_driver * const driver, const char *name, void * const data);
+s32 create_device(const dev_type_t type, const dev_subtype_t class, dev_driver_t * const driver,
+                  const char *name, void * const data);
 
 s32 driver_method_not_implemented();
 
-device_t *get_device_by_name(const char * const name);
+dev_t *get_device_by_name(const char * const name);
 
-s32 device_read(const device_t * const dev, ku32 offset, u32 len, void *buf);
-s32 device_write(const device_t * const dev, ku32 offset, u32 len, const void *buf);
+s32 device_read(const dev_t * const dev, ku32 offset, u32 len, void *buf);
+s32 device_write(const dev_t * const dev, ku32 offset, u32 len, const void *buf);
 
-s32 device_control(const device_t * const dev, ku32 function, void *in, void *out);
+s32 device_control(const dev_t * const dev, ku32 function, void *in, void *out);
 
 
 #endif

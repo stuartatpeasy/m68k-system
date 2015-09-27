@@ -12,7 +12,7 @@
 #include "device/encx24j600.h"
 
 
-const device_driver_t g_encx24j600_device =
+const dev_driver_t g_encx24j600_device =
 {
     .name       = "eth",
     .version    = 0x00000100,

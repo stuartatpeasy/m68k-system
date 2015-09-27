@@ -15,7 +15,7 @@
 static ata_device_t g_ata_devices[ATA_MAX_DEVICES];
 blockdev_stats_t g_ata_stats;
 
-struct device_driver g_ata_driver =
+dev_driver_t g_ata_driver =
 {
     .name       = "ata",
     .version    = 0x00000100,
@@ -137,7 +137,7 @@ s32 ata_init()
 			*dn = g_device_sub_names[(bus * ATA_DEVICES_PER_BUS) + device];
 			devp->status = online;
 
-			if(create_device(DEVICE_TYPE_BLOCK, DEVICE_CLASS_DISC, &g_ata_driver, device_name,
+			if(create_device(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, &g_ata_driver, device_name,
                              devp) == SUCCESS)
                 printf("%s: %s, %uMB [serial %s firmware %s]\n", device_name, devp->model,
                        devp->num_sectors >> (20 - LOG_BLOCK_SIZE), devp->serial, devp->firmware);

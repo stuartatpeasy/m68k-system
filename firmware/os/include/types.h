@@ -42,8 +42,20 @@ typedef volatile signed long long	vs64;
 typedef u32 size_t;
 #endif
 
+/* RAM extent */
+
+#define RAM_EXTENT_USER     (0x00000001)    /* User RAM                                           */
+#define RAM_EXTENT_KERN     (0x00000002)    /* Kernel RAM - user-mode accesses cause an exception */
+
+typedef struct ram_extent
+{
+    void *      base;
+    u32         len;
+    u32         flags;
+} ram_extent_t;
+
 /* Wall-clock time */
-struct rtc_time
+typedef struct rtc_time
 {
     u16     year;
     u8      month;          /* 1=Jan, ..., 12=Dec */
@@ -53,9 +65,7 @@ struct rtc_time
     u8      second;
     u8      day_of_week;
     u8      dst;
-};
-
-typedef struct rtc_time rtc_time_t;
+} rtc_time_t;
 
 /* Process ID */
 /* Test harnesses may already have defined pid_t, so define it conditionally here */

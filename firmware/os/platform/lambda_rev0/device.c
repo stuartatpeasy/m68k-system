@@ -4,11 +4,13 @@
     Stuart Wallace, September 2015
 */
 
-#include <board/lambda/device.h>
-#include <board/lambda/mc68681.h>   /* DUART            */
-#include <board/lambda/ds17485.h>   /* RTC              */
-#include <board/lambda/ata.h>       /* ATA interface    */
-#include <board/lambda/exp16.h>     /* Expansion slots  */
+#include <platform/spec.h>
+
+#include <platform/lambda_rev0/device.h>
+#include <platform/lambda_rev0/mc68681.h>   /* DUART            */
+#include <platform/lambda_rev0/ds17485.h>   /* RTC              */
+#include <platform/lambda_rev0/ata.h>       /* ATA interface    */
+#include <platform/lambda_rev0/exp16.h>     /* Expansion slots  */
 
 s32 b_dev_enumerate(dev_t *first_dev)
 {
@@ -31,4 +33,6 @@ s32 b_dev_enumerate(dev_t *first_dev)
     /*
         Enumerate expansion cards (if any)
     */
+
+    return SUCCESS;
 }

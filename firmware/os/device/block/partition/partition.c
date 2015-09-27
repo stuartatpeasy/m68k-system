@@ -16,7 +16,7 @@
 static struct partition_data g_partitions[MAX_PARTITIONS];
 static u32 g_next_partition;
 
-struct device_driver g_partition_driver =
+dev_driver_t g_partition_driver =
 {
     .name       = "part",
     .version    = 0x00000100,
@@ -38,9 +38,9 @@ s32 partition_init()
 
 	for(device_id = 0; device_id < MAX_DEVICES; ++device_id)
 	{
-		device_t * const dev = g_devices[device_id];
+		dev_t * const dev = g_devices[device_id];
 
-		if(dev && (dev->type == DEVICE_TYPE_BLOCK) && (dev->class == DEVICE_CLASS_DISC))
+		if(dev && (dev->type == DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_MASS_STORAGE))
 		{
 			/* Read sector 0.  If it contains a master boot record (MBR), enumerate its partition
 			 * table and create partition devices. */
@@ -82,7 +82,7 @@ s32 partition_init()
 
 				if(data->len)   /* Skip zero-length "partitions" */
                 {
-                    if(create_device(DEVICE_TYPE_BLOCK, DEVICE_CLASS_PARTITION, &g_partition_driver,
+                    if(create_device(DEV_TYPE_BLOCK, DEV_SUBTYPE_PARTITION, &g_partition_driver,
                                   name, data) == SUCCESS)
                         printf("%s: %4uMB [%s, %s]\n", name, data->len >> (20 - LOG_BLOCK_SIZE),
                                partition_type_name(p->type), partition_status_desc(p->status));

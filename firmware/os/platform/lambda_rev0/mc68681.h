@@ -10,6 +10,7 @@
 */
 
 #include <include/defs.h>
+#include <include/error.h>
 #include <include/types.h>
 
 /*
@@ -106,7 +107,7 @@
 #define MC68681_SR_RXRDY				(0)
 
 
-void mc68681_init(void);
+s32 mc68681_init(void);
 
 int mc68681_putc(ku32 channel, const char c);
 int mc68681_getc(ku32 channel);

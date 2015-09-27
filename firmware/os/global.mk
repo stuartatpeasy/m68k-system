@@ -34,3 +34,5 @@ CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -O3 -m680
 		-fomit-frame-pointer -DBUG_ATA_BYTE_SWAP -fno-delete-null-pointer-checks
 AFLAGS=-m68000
 
+PLATFORM=lambda_rev0
+

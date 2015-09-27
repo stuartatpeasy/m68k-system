@@ -20,7 +20,7 @@
 const char * const g_device_sub_names = "123456789abcdefghijklmnopqrstuv"
                                         "wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-device_t *g_devices[MAX_DEVICES];
+dev_t *g_devices[MAX_DEVICES];
 
 /*
     #include driver registration function declarations here
@@ -28,7 +28,7 @@ device_t *g_devices[MAX_DEVICES];
 #include "device/block/ata/ata.h"
 #include "device/block/partition/partition.h"
 
-device_driver_t *g_drivers[] =
+dev_driver_t *g_drivers[] =
 {
     &g_ata_driver,
     &g_partition_driver
@@ -41,7 +41,7 @@ static dev_t *root_dev = NULL;
 s32 dev_enumerate()
 {
     /* Root device is implicit */
-    root_dev = CHECKED_KCALLOC(sizeof(dev_t));
+    root_dev = CHECKED_KCALLOC(1, sizeof(dev_t));
 
     /* Populating the device tree is a board-specific operation */
     return b_dev_enumerate(&(root_dev->first_child));
@@ -74,7 +74,7 @@ u32 driver_init()
     u32 x;
 	for(x = 0; x < (sizeof(g_drivers) / sizeof(g_drivers[0])); ++x)
 	{
-	    device_driver_t * const drv = g_drivers[x];
+	    dev_driver_t * const drv = g_drivers[x];
 
 		if(drv->init() != SUCCESS)	/* init() will create devices */
 		{
@@ -126,7 +126,7 @@ void driver_shut_down()
 }
 
 
-device_t *get_device_by_name(const char * const name)
+dev_t *get_device_by_name(const char * const name)
 {
 	int i;
 	for(i = 0; i < (sizeof(g_devices) / sizeof(g_devices[0])); ++i)
@@ -144,11 +144,11 @@ device_t *get_device_by_name(const char * const name)
 
 /* Create (i.e. register) a new device.  This function is called by each driver's init() function
  * during device enumeration. */
-s32 create_device(const device_type_t type, const device_class_t class,
-                         device_driver_t * const driver, const char *name, void * const data)
+s32 create_device(const dev_type_t type, const dev_subtype_t subtype, dev_driver_t * const driver,
+                  const char *name, void * const data)
 {
     u32 u;
-    device_t * dev;
+    dev_t * dev;
 
     /* Find a vacant device ID */
     for(u = 0; u < MAX_DEVICES; ++u)
@@ -160,12 +160,12 @@ s32 create_device(const device_type_t type, const device_class_t class,
     if(u == MAX_DEVICES)
         return ENFILE;      /* Too many devices */
 
-    dev = (device_t *) kmalloc(sizeof(device_t));
+    dev = (dev_t *) kmalloc(sizeof(dev_t));
     if(dev == NULL)
         return ENOMEM;
 
 	dev->type = type;
-	dev->class = class;
+	dev->subtype = subtype;
 	dev->driver = driver;
 	dev->data = data;
 
@@ -178,19 +178,19 @@ s32 create_device(const device_type_t type, const device_class_t class,
 }
 
 
-s32 device_read(const device_t * const dev, ku32 offset, u32 len, void *buf)
+s32 device_read(const dev_t * const dev, ku32 offset, u32 len, void *buf)
 {
 	return dev->driver->read(dev->data, offset, len, buf);
 }
 
 
-s32 device_write(const device_t * const dev, ku32 offset, u32 len, const void *buf)
+s32 device_write(const dev_t * const dev, ku32 offset, u32 len, const void *buf)
 {
 	return dev->driver->write(dev->data, offset, len, buf);
 }
 
 
-s32 device_control(const device_t * const dev, ku32 function, void *in, void *out)
+s32 device_control(const dev_t * const dev, ku32 function, void *in, void *out)
 {
 	return dev->driver->control(dev->data, function, in, out);
 }

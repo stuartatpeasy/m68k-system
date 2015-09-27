@@ -28,7 +28,7 @@ MAPFILE=$(APPNAME).map
 
 LDFLAGS=-g -T rom.ld -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
-LIBS=-lgcc -lc -lkutil -lmonitor
+LIBS=-lgcc -lc -lkutil -lmonitor -lplatform
 
 LDSCRIPT=rom.ld
 
@@ -44,6 +44,7 @@ all: $(APPNAME)
 	$(CC) $(CFLAGS) -o$@ $<
 
 $(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE) $(TOOLS)
+	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
 	$(NM) $(APPNAME) > $(MAPFILE)
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
@@ -70,6 +71,7 @@ dfu:
 
 clean:
 	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom $(MAPFILE)
+	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Cklibc clean
 	$(MAKE) $(MFLAGS) -Ckutil clean
 	$(MAKE) $(MFLAGS) -Cmonitor clean

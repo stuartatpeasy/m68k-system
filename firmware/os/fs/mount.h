@@ -32,7 +32,7 @@ u32 g_mount_end;
 
 
 s32 mount_init();
-s32 mount_add(const char * const mount_point, vfs_driver_t *driver, device_t *dev);
+s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev);
 s32 mount_remove(const char * const mount_point);
 vfs_t *mount_find(const char * const path, const char **rel);
 

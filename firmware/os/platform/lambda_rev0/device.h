@@ -6,7 +6,8 @@
     Stuart Wallace, September 2015
 */
 
-#include <board/lambda/device.h>
+#include <platform/lambda_rev0/device.h>
+
 #include <device/device.h>
 #include <include/defs.h>
 #include <include/types.h>

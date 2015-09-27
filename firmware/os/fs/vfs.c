@@ -28,7 +28,7 @@ vfs_driver_t *g_fs_drivers[] =
 };
 
 
-device_t *find_boot_device()
+dev_t *find_boot_device()
 {
 	u32 i;
 
@@ -36,8 +36,8 @@ device_t *find_boot_device()
 	{
         if(g_devices[i] != NULL)
         {
-            device_t * const dev = g_devices[i];
-            if(dev->type == DEVICE_TYPE_BLOCK)
+            dev_t * const dev = g_devices[i];
+            if(dev->type == DEV_TYPE_BLOCK)
             {
                 u32 bootable = 0;
 
@@ -96,8 +96,8 @@ s32 vfs_init()
         {
             if(g_devices[i] != NULL)
             {
-                device_t * const dev = g_devices[i];
-                if((dev->type == DEVICE_TYPE_BLOCK) && (dev->class == DEVICE_CLASS_PARTITION) &&
+                dev_t * const dev = g_devices[i];
+                if((dev->type == DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_PARTITION) &&
                    !strcmp(dev->name, bpb.rootfs))
                 {
                     /* Find FS driver corresponding to bpb.fstype */

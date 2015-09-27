@@ -4,15 +4,15 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include <board/lambda/mc68681.h>
+#include <platform/lambda_rev0/mc68681.h>
 
 
-void mc68681_init(void)
+s32 mc68681_init(void)
 {
     u8 dummy;
 
-	DUART_CRA = 0x10;		/* Reset MRA pointer; disable transmitter and receiver	*/
-	DUART_IMR = 0x00;		/* Disable all interrupts								*/
+	MC68681_CRA = 0x10;		/* Reset MRA pointer; disable transmitter and receiver	*/
+	MC68681_IMR = 0x00;		/* Disable all interrupts								*/
 
 	/*
 		Set MR1A:
@@ -27,7 +27,7 @@ void mc68681_init(void)
 			1		1		} Bits per character
 			0		1		} 11 = 8 bits per character.
 	*/
-	DUART_MRA = 0xd3;
+	MC68681_MRA = 0xd3;
 
 	/*
 		Set MR2A:
@@ -42,14 +42,14 @@ void mc68681_init(void)
 			1		1		} 0111 = 1.000 bits
 			0		1		}
 	*/
-	DUART_MRA = 0x17;
+	MC68681_MRA = 0x17;
 
 	/*
 		Set CSRA:
 			bits 7-4: receiver clock select; 1100 = 38.4kbaud (with ACR[7] == 0)
 			bits 3-0: transmitter clock select; 1100 = 38.4kbaud (with ACR[7] == 0)
 	*/
-	DUART_CSRA = 0xcc;
+	MC68681_CSRA = 0xcc;
 
 	/*
         Set ACR - auxiliary control register
@@ -65,7 +65,7 @@ void mc68681_init(void)
             0       0       IP0 change visible in ISR (0 = not visible)
 	*/
 
-	DUART_ACR = 0x30;
+	MC68681_ACR = 0x30;
 
 	/*
 		Set CRA:
@@ -80,7 +80,7 @@ void mc68681_init(void)
 			1		0		Disable Rx
 			0		1		Enable Rx
 	*/
-	DUART_CRA = 0x05;
+	MC68681_CRA = 0x05;
 
 
 	/*
@@ -96,19 +96,21 @@ void mc68681_init(void)
 			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
 			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
 	*/
-	DUART_OPCR = 0x04;
+	MC68681_OPCR = 0x04;
 
 	/*
 		Set OPR - output port bits
 		Each bit in the OPR must be set to the complement of the required output pin level.
 	*/
-	DUART_SOPR = 0xff;
-	DUART_ROPR = 0x00;
+	MC68681_SOPR = 0xff;
+	MC68681_ROPR = 0x00;
 
 	/* Switch to 115200 baud */
-    dummy = DUART_BRG_TEST;         /* Read BRG test reg to enable "test" baud rates */
-    DUART_CSRA = 0x66;              /* Select 115200 baud */
+    dummy = MC68681_BRG_TEST;         /* Read BRG test reg to enable "test" baud rates */
+    MC68681_CSRA = 0x66;              /* Select 115200 baud */
     dummy += 0;                     /* (silence "set but not used" compiler warning) */
+
+    return SUCCESS;
 }
 
 
@@ -116,14 +118,14 @@ s32 mc68681_putc(ku32 channel, const char c)
 {
     if(channel == 0)
     {
-        while(!(DUART_SRA & (1 << DUART_SR_TXEMT))) ;
-        DUART_THRA = c;
+        while(!(MC68681_SRA & (1 << MC68681_SR_TXEMT))) ;
+        MC68681_THRA = c;
         return c;
     }
     else if(channel == 1)
     {
-        while(!(DUART_SRB & (1 << DUART_SR_TXEMT))) ;
-        DUART_THRB = c;
+        while(!(MC68681_SRB & (1 << MC68681_SR_TXEMT))) ;
+        MC68681_THRB = c;
         return c;
     }
     else return -EINVAL;
@@ -134,13 +136,13 @@ int mc68681_getc(ku32 channel)
 {
     if(channel == 0)
     {
-        while(!(DUART_SRA & (1 << DUART_SR_RXRDY))) ;
-        return DUART_RHRA;
+        while(!(MC68681_SRA & (1 << MC68681_SR_RXRDY))) ;
+        return MC68681_RHRA;
     }
     else if(channel == 1)
     {
-        while(!(DUART_SRB & (1 << DUART_SR_RXRDY))) ;
-        return DUART_RHRB;
+        while(!(MC68681_SRB & (1 << MC68681_SR_RXRDY))) ;
+        return MC68681_RHRB;
     }
     else return -EINVAL;
 }
@@ -154,10 +156,10 @@ void mc68681_start_counter(void)
     u8 dummy;
 
     /* Set CTUR/CTLR - the counter/timer upper/lower timeout counts */
-    DUART_CTUR = (((DUART_CLK_HZ / 16) / TICK_RATE) & 0xff00) >> 8;
-    DUART_CTLR = ((DUART_CLK_HZ / 16) / TICK_RATE) & 0xff;
+    MC68681_CTUR = (((MC68681_CLK_HZ / 16) / TICK_RATE) & 0xff00) >> 8;
+    MC68681_CTLR = ((MC68681_CLK_HZ / 16) / TICK_RATE) & 0xff;
 
-    dummy = DUART_START_CC;
+    dummy = MC68681_START_CC;
     dummy += 0;     /* silence the "var set but not used" compiler warning */
 }
 
@@ -168,6 +170,6 @@ void mc68681_start_counter(void)
 */
 void mc68681_stop_counter(void)
 {
-    u8 dummy = DUART_STOP_CC;
+    u8 dummy = MC68681_STOP_CC;
     dummy += 0;     /* silence the "var set but not used" compiler warning */
 }

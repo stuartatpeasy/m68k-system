@@ -26,14 +26,6 @@
 		<Unit filename="asm/stop.h" />
 		<Unit filename="asm/tas.h" />
 		<Unit filename="asm/trap.h" />
-		<Unit filename="board/lambda/device.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="board/lambda/device.h" />
-		<Unit filename="board/lambda/mc68681.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="board/lambda/mc68681.h" />
 		<Unit filename="cpu/exceptions.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -234,6 +226,23 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="monitor/srec.h" />
+		<Unit filename="platform/lambda_rev0/Makefile" />
+		<Unit filename="platform/lambda_rev0/ata.h" />
+		<Unit filename="platform/lambda_rev0/device.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="platform/lambda_rev0/device.h" />
+		<Unit filename="platform/lambda_rev0/ds17485.h" />
+		<Unit filename="platform/lambda_rev0/exp16.h" />
+		<Unit filename="platform/lambda_rev0/lambda.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="platform/lambda_rev0/lambda.h" />
+		<Unit filename="platform/lambda_rev0/mc68681.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="platform/lambda_rev0/mc68681.h" />
+		<Unit filename="platform/spec.h" />
 		<Unit filename="rom.ld" />
 		<Unit filename="sched/sched.c">
 			<Option compilerVar="CC" />

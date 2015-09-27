@@ -58,7 +58,7 @@ s32 mount_init()
 }
 
 
-s32 mount_add(const char * const mount_point, vfs_driver_t *driver, device_t *dev)
+s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev)
 {
 	s32 i, ret;
 	mount_ent_t *ent;
