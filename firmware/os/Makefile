@@ -126,8 +126,8 @@ device/ds17485.o: \
 	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
 
 device/encx24j600.o: \
-	device/encx24j600.c device/encx24j600.h cpu/exceptions.h device/device.h device/expansion.h \
-	include/defs.h include/error.h include/types.h
+	device/encx24j600.c device/encx24j600.h cpu/exceptions.h cpu/utilities.h device/device.h \
+	device/expansion.h include/byteorder.h include/defs.h include/error.h include/types.h
 
 device/duart.o: \
 	device/duart.c device/duart.h include/defs.h include/types.h

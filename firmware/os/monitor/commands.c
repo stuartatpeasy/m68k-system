@@ -800,8 +800,11 @@ struct mydata
     list_t ll;
 };
 
+
+#include "device/encx24j600.h"
 MONITOR_CMD_HANDLER(test)
 {
+/*
     struct mydata
     x = {
         .meh = 1,
@@ -833,6 +836,19 @@ MONITOR_CMD_HANDLER(test)
     {
         printf("foo is %d\n", p->foo);
     }
+*/
+
+    expansion_root_t exp =
+    {
+        .base = (void *) 0xb00000,
+        .len = 0x100000,
+        .irql = 29          /* IRQ 5 */
+    };
+
+    s32 ret = encx24j600_init(&exp);
+
+    printf("encx24j600_init() returned %s\n", kstrerror(ret));
+
 
     return MON_E_OK;
 }
