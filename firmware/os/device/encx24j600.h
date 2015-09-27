@@ -12,8 +12,10 @@
 */
 
 #include "cpu/exceptions.h"
+#include "cpu/utilities.h"
 #include "device/device.h"
 #include "device/expansion.h"
+#include "include/byteorder.h"
 #include "include/defs.h"
 #include "include/error.h"
 #include "include/types.h"
@@ -23,10 +25,12 @@
 #define ENCX24_SFR_SHIFT		(1)			/* Regs are 16 bit, so regnum must be <<'ed by 1	*/
 
 /* This macro provides the offset of register x from the start of the controller's memory map */
-#define ENCX24_SFR_OFFSET(x)	(ENCX24_SFR_BASE + (((u32) (x)) << ENCX24_SFR_SHIFT))
+#define ENCX24_SFR_OFFSET(x)	    (ENCX24_SFR_BASE + (((u32) (x)) << ENCX24_SFR_SHIFT))
+
+#define ENCX24_SFR_ADDR(base, x)    ((base) + ENCX24_SFR_OFFSET(x))
 
 /* This macro is an accessor for register x, given a controller at address "base" */
-#define ENCX24_REG(base, x)     *((vu16 *) ((base) + ENCX24_SFR_OFFSET(x)))
+#define ENCX24_REG(base, x)         *((vu16 *) ENCX24_SFR_ADDR(base, x))
 
 const device_driver_t g_encx24j600_device;
 
@@ -228,71 +232,142 @@ enum ENC624J600_PHYReg
 
 /*
     Individual register bits
+
+    NOTE: these bit-offsets assume that the halves of the data bus between the ENCx24J600 and
+    the host CPU are swapped, i.e.:
+        CPU_D[15..8]  ->  ENC_D[7..0]
+        CPU_D[7..0]   ->  ENC_D[15..8]
+    They are therefore not the same as the bit-offsets listed in the ENCx24J600 documentation.
 */
 
 /* ECON1 register */
-#define ECON1_MODEXST       (15)        /* Modular exponentiation start             (RW-0) */
-#define ECON1_HASHEN        (14)        /* MD5/SHA-1 hash enable                    (RW-0) */
-#define ECON1_HASHOP        (13)        /* MD5/SHA-1 hash operation control         (RW-0) */
-#define ECON1_HASHLST       (12)        /* MD5/SHA-1 hash last block control        (RW-0) */
-#define ECON1_AESST         (11)        /* AES encrypt/decrypt start                (RW-0) */
-#define ECON1_AESOP1        (10)        /* AES operation control bit 1              (RW-0) */
-#define ECON1_AESOP0        (9)         /* AES operation control bit 0              (RW-0) */
-#define ECON1_PKTDEC        (8)         /* RX packet counter decrement control      (RW-0) */
-#define ECON1_FCOP1         (7)         /* Flow control operation ctrl/status bit 1 (RW-0) */
-#define ECON1_FCOP0         (6)         /* Flow control operation ctrl/status bit 0 (RW-0) */
-#define ECON1_DMAST         (5)         /* DMA start                                (RW-0) */
-#define ECON1_DMACPY        (4)         /* DMA copy control                         (RW-0) */
-#define ECON1_DMACSSD       (3)         /* DMA checksum seed control                (RW-0) */
-#define ECON1_DMANOCS       (2)         /* DMA no checksum control                  (RW-0) */
-#define ECON1_TXRTS         (1)         /* Transmit RTS ctrl/status bit             (RW-0) */
-#define ECON1_RXEN          (0)         /* RX enable                                (RW-0) */
+#define ECON1_MODEXST       (7)         /* Modular exponentiation start             (RW-0) */
+#define ECON1_HASHEN        (6)         /* MD5/SHA-1 hash enable                    (RW-0) */
+#define ECON1_HASHOP        (5)         /* MD5/SHA-1 hash operation control         (RW-0) */
+#define ECON1_HASHLST       (4)         /* MD5/SHA-1 hash last block control        (RW-0) */
+#define ECON1_AESST         (3)         /* AES encrypt/decrypt start                (RW-0) */
+#define ECON1_AESOP1        (2)         /* AES operation control bit 1              (RW-0) */
+#define ECON1_AESOP0        (1)         /* AES operation control bit 0              (RW-0) */
+#define ECON1_PKTDEC        (0)         /* RX packet counter decrement control      (RW-0) */
+#define ECON1_FCOP1         (15)        /* Flow control operation ctrl/status bit 1 (RW-0) */
+#define ECON1_FCOP0         (14)        /* Flow control operation ctrl/status bit 0 (RW-0) */
+#define ECON1_DMAST         (13)        /* DMA start                                (RW-0) */
+#define ECON1_DMACPY        (12)        /* DMA copy control                         (RW-0) */
+#define ECON1_DMACSSD       (11)        /* DMA checksum seed control                (RW-0) */
+#define ECON1_DMANOCS       (10)        /* DMA no checksum control                  (RW-0) */
+#define ECON1_TXRTS         (9)         /* Transmit RTS ctrl/status bit             (RW-0) */
+#define ECON1_RXEN          (8)         /* RX enable                                (RW-0) */
 
 /* ECON2 register */
-#define ECON2_ETHEN         (15)        /* Ethernet enable                          (RW-1) */
-#define ECON2_STRCH         (14)        /* LED stretching enable                    (RW-1) */
-#define ECON2_TXMAC         (13)        /* Automatically transmit MAC address       (RW-0) */
-#define ECON2_SHA1MD5       (12)        /* SHA-1/MD5 hash control                   (RW-0) */
-#define ECON2_AUTOFC        (7)         /* Automatic flow control enable            (RW-0) */
-#define ECON2_TXRST         (6)         /* Transmit logic reset                     (RW-0) */
-#define ECON2_RXRST         (5)         /* Receive logic reset                      (RW-0) */
-#define ECON2_ETHRST        (4)         /* Master Ethernet reset                    (RW-0) */
+#define ECON2_ETHEN         (7)        /* Ethernet enable                          (RW-1) */
+#define ECON2_STRCH         (6)        /* LED stretching enable                    (RW-1) */
+#define ECON2_TXMAC         (5)        /* Automatically transmit MAC address       (RW-0) */
+#define ECON2_SHA1MD5       (4)        /* SHA-1/MD5 hash control                   (RW-0) */
+#define ECON2_AUTOFC        (15)         /* Automatic flow control enable            (RW-0) */
+#define ECON2_TXRST         (14)         /* Transmit logic reset                     (RW-0) */
+#define ECON2_RXRST         (13)         /* Receive logic reset                      (RW-0) */
+#define ECON2_ETHRST        (12)         /* Master Ethernet reset                    (RW-0) */
 
-#define ECON2_COCON_MASK    (0x0f00)    /* CLKOUT frequency control bits mask    (RW-1011) */
-#define ECON2_COCON_SHIFT   (8)
+#define ECON2_COCON_MASK    (0x000f)    /* CLKOUT frequency control bits mask    (RW-1011) */
+#define ECON2_COCON_SHIFT   (0)
 
-#define ECON2_MODLEN_MASK   (0x00c0)    /* Modular exponentiation length mask      (RW-00) */
-#define ECON2_MODLEN_SHIFT  (2)
+#define ECON2_MODLEN_MASK   (0x0c00)    /* Modular exponentiation length mask      (RW-00) */
+#define ECON2_MODLEN_SHIFT  (10)
 
-#define ECON2_AESLEN_MASK   (0x0003)    /* AES key length mask                     (RW-00) */
-#define ECON2_AESLEN_SHIFT  (0)
+#define ECON2_AESLEN_MASK   (0x0300)    /* AES key length mask                     (RW-00) */
+#define ECON2_AESLEN_SHIFT  (8)
+
+/* EIDLED register */
+#define EIDLED_LACFG_MASK   (0x00f0)    /* LED A configuration mask              (RW-0010) */
+#define EIDLED_LACFG_SHIFT  (4)
+#define EIDLED_LBCFG_MASK   (0x000f)    /* LED B configuration mask              (RW-0110) */
+#define EIDLED_LBCFG_SHIFT  (0)
+#define EIDLED_DEVID_MASK   (0xe000)    /* Device ID mask                         (RW-001) */
+#define EIDLED_DEVID_SHIFT  (13)
+#define EIDLED_REVID_MASK   (0x1f00)    /* Silicon revision ID mask                        */
+#define EIDLED_REVID_SHIFT  (8)
+
+/* These constants define the events to be displayed by the LEDs attached to the controller */
+#define EIDLED_LSTR         (15)        /* Link + speed + TX + RX                          */
+#define EIDLED_LDTR         (14)        /* Link + duplex + TX + RX                         */
+/*                          (13)           (reserved)                                      */
+#define EIDLED_LC           (12)        /* Link + collisions                               */
+#define EIDLED_LTR          (11)        /* Link + TX + RX                                  */
+#define EIDLED_LR           (10)        /* Link + RX                                       */
+#define EIDLED_LT           (9)         /* Link + TX                                       */
+#define EIDLED_LS           (8)         /* Link + speed                                    */
+#define EIDLED_LD           (7)         /* Link + duplex                                   */
+#define EIDLED_TR           (6)         /* TX + RX                                         */
+#define EIDLED_R            (5)         /* RX                                              */
+#define EIDLED_T            (4)         /* TX                                              */
+#define EIDLED_C            (3)         /* Collisions                                      */
+#define EIDLED_L            (2)         /* Link                                            */
+#define EIDLED_ON           (1)         /* LED permanently on                              */
+#define EIDLED_OFF          (0)         /* LED permanently off                             */
 
 /* EIE register */
-#define EIE_INTIE           (15)        /* Global interrupt enable                  (RW-1) */
-#define EIE_MODEXIE         (14)        /* Modular exponentiation interrupt enable  (RW-0) */
-#define EIE_HASHIE          (13)        /* MD5/SHA-1 hash interrupt enable          (RW-0) */
-#define EIE_AESIE           (12)        /* AES encrypt/decrypt interrupt enable     (RW-0) */
-#define EIE_LINKIE          (11)        /* PHY link status change interrupt enable  (RW-0) */
-/*                          (10)           (reserved - write as 0)                         */
-/*                          (9)            (reserved - write as 0)                         */
-/*                          (8)            (reserved - write as 0)                         */
-/*                          (7)            (reserved - write as 0)                         */
-#define EIE_PKTIE           (6)         /* RX packet pending interrupt enable       (RW-0) */
-#define EIE_DMAIE           (5)         /* DMA interrupt enable                     (RW-0) */
-/*                          (4)            (reserved - don't care on write, read 0)        */
-#define EIE_TXIE            (3)         /* Transmit done interrupt enable           (RW-0) */
-#define EIE_TXABTIE         (2)         /* Transmit abort interrupt enable          (RW-0) */
-#define EIE_RXABTIE         (1)         /* Receive abort interrupt enable           (RW-0) */
-#define EIE_PCFULIE         (0)         /* Packet counter full interrupt enable     (RW-0) */
+#define EIE_INTIE           (7)         /* Global interrupt enable                  (RW-1) */
+#define EIE_MODEXIE         (6)         /* Modular exponentiation interrupt enable  (RW-0) */
+#define EIE_HASHIE          (5)         /* MD5/SHA-1 hash interrupt enable          (RW-0) */
+#define EIE_AESIE           (4)         /* AES encrypt/decrypt interrupt enable     (RW-0) */
+#define EIE_LINKIE          (3)         /* PHY link status change interrupt enable  (RW-0) */
+/*                          (2)            (reserved - write as 0)                         */
+/*                          (1)            (reserved - write as 0)                         */
+/*                          (0)            (reserved - write as 0)                         */
+/*                          (15)           (reserved - write as 0)                         */
+#define EIE_PKTIE           (14)        /* RX packet pending interrupt enable       (RW-0) */
+#define EIE_DMAIE           (13)        /* DMA interrupt enable                     (RW-0) */
+/*                          (12)           (reserved - don't care on write, read 0)        */
+#define EIE_TXIE            (11)        /* Transmit done interrupt enable           (RW-0) */
+#define EIE_TXABTIE         (10)        /* Transmit abort interrupt enable          (RW-0) */
+#define EIE_RXABTIE         (9)         /* Receive abort interrupt enable           (RW-0) */
+#define EIE_PCFULIE         (8)         /* Packet counter full interrupt enable     (RW-0) */
 
 /* ESTAT register */
-#define ESTAT_INT           (15)
-#define ESTAT_FCIDLE        (14)
-#define ESTAT_RXBUSY        (13)
-#define ESTAT_CLKRDY        (12)
-#define ESTAT_PHYDPX        (10)
-#define ESTAT_PHYLINK       (8)
-#define ESTAT_PKTCNT_MASK   (0xff)
+#define ESTAT_INT           (7)
+#define ESTAT_FCIDLE        (6)
+#define ESTAT_RXBUSY        (5)
+#define ESTAT_CLKRDY        (4)
+#define ESTAT_PHYDPX        (3)
+#define ESTAT_PHYLINK       (2)
+#define ESTAT_PKTCNT_MASK   (0xff00)
+
+/* ERXFCON register */
+#define ERXFCON_HTEN        (7)         /* Hash table collection filter enable      (RW-0) */
+#define ERXFCON_MPEN        (6)         /* Magic packet collection filter enable    (RW-0) */
+/*                          (5)            (unimplemented - read as 0)                     */
+#define ERXFCON_NOTPM       (4)         /* Pattern match inversion control          (RW-0) */
+
+#define ERXFCON_PMEN_MASK   (0x000f)    /* Pattern match filter enable bits      (RW-0000) */
+#define ERXFCON_PMEN_SHIFT  (0)
+
+#define ERXFCON_CRCEEN      (15)        /* CRC error collection filter enable       (RW-0) */
+#define ERXFCON_CRCEN       (14)        /* CRC error rejection filter enable        (RW-1) */
+#define ERXFCON_RUNTEEN     (13)        /* Runt error collection filter enable      (RW-0) */
+#define ERXFCON_RUNTEN      (12)        /* Runt error rejection filter enable       (RW-1) */
+#define ERXFCON_UCEN        (11)        /* Unicast dest. collection filter enable   (RW-1) */
+#define ERXFCON_NOTMEEN     (10)        /* Not-Me unicast dest. coll. filter enable (RW-0) */
+#define ERXFCON_MCEN        (9)         /* Multicast dest. coll. filter enable      (RW-0) */
+#define ERXFCON_BCEN        (8)         /* Broadcast dest. coll. filter enable      (RW-1) */
+
+/* MACON2 register */
+/*                          (7)            (unimplemented - read as 0)                     */
+#define MACON2_DEFER        (6)         /* Defer transmission enable                (RW-1) */
+#define MACON2_BPEN         (5)         /* No back-off during back pressure         (RW-0) */
+#define MACON2_NOBKOFF      (4)         /* No back-off enable                       (RW-0) */
+/*                          (3)            (unimplemented - read as 0)                     */
+/*                          (2)            (unimplemented - read as 0)                     */
+/*                          (1)            (reserved - write as 0)                         */
+/*                          (0)            (reserved - write as 0)                         */
+
+#define MACON2_PADCFG_MASK  (0xe000)    /* Automatic pad and CRC configuration    (RW-101) */
+#define MACON2_PADCFG_SHIFT (13)
+
+#define MACON2_TXCRCEN      (12)        /* Transmit CRC enable                      (RW-1) */
+#define MACON2_PHDREN       (11)        /* Proprietary header enable                (RW-0) */
+#define MACON2_HFRMEN       (10)        /* Huge frame enable                        (RW-0) */
+/*                          (9)            (reserved - write as 0)                         */
+#define MACON2_FULDPX       (8)         /* Full duplex mode enable                  (RW-0) */
 
 
 #endif

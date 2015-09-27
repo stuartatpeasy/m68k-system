@@ -41,7 +41,7 @@ s32 encx24j600_reset(expansion_root_t *root)
         return ETIME;
 
     /* Wait for CLKRDY (ESTAT<12>) to become set */
-    for(x = 1000; !(ENCX24_REG(root->base, ESTAT) & BIT(ESTAT_CLKRDY)) && --x;)
+    for(x = 10000; !(ENCX24_REG(root->base, ESTAT) & BIT(ESTAT_CLKRDY)) && --x;)
         ;
 
     if(!x)
@@ -51,16 +51,16 @@ s32 encx24j600_reset(expansion_root_t *root)
     ENCX24_REG(root->base, ECON2) |= BIT(ECON2_ETHRST);
 
     /* Wait for the reset to complete */
-    for(x = 100; --x;)              /* FIXME - hardwired delay */
+    for(x = 10000; (ENCX24_REG(root->base, EUDAST) != 0x0000) && --x;)
         ;
 
     /* Check that EUDAST has returned to its post-reset value of 0x0000 */
-    if(ENCX24_REG(root->base, EUDAST) != 0x0000)
+    if(!x)
         return EDEVINITFAILED;
 
     /* Wait at least 256us for the PHY to initialise */
     for(x = 1000; --x;)
-        ;                           /* FIXME - hardwired delay */
+        cpu_nop();                                  /* FIXME - hardwired delay */
 
     return SUCCESS;
 }
@@ -68,7 +68,11 @@ s32 encx24j600_reset(expansion_root_t *root)
 
 IRQ_HANDLER_FN(encx24j600_irq)
 {
+    /* ??? how can we find out the current IRQ level ??? */
 
+    /* Disable interrupts on the ENCX24 while we process this one */
+//    ENCX24_REG(root->base, )
+    putchar('*');
 }
 
 
@@ -83,22 +87,38 @@ s32 encx24j600_init(expansion_root_t *root)
 
     cpu_set_handler(root->irql, encx24j600_irq);            /* Install IRQ handler */
 
-    ENCX24_REG(root->base, ECON2) = ~ECON2_COCON_MASK;      /* Disable the ENC's output clock */
-    ENCX24_REG(root->base, ERXST) = 0x1000;                 /* Initialise packet RX buffer */
+    ENCX24_REG(root->base, ECON2) &= ~ECON2_COCON_MASK;     /* Disable the ENC's output clock */
+    ENCX24_REG(root->base, ERXST) = N2LE16(0x1000);         /* Initialise packet RX buffer */
 
-    /* TODO - Initialise receive filters */
+    /* Initialise receive filters */
+    ENCX24_REG(root->base, ERXFCON) =
+        BIT(ERXFCON_CRCEN) |                /* Reject packets with CRC errors       */
+        BIT(ERXFCON_RUNTEN) |               /* Reject runt packets                  */
+        BIT(ERXFCON_UCEN) |                 /* Accept unicast packets sent to us    */
+        BIT(ERXFCON_BCEN);                  /* Accept broadcast packets             */
 
-    /* TODO - Initialise MAC */
+    /* Initialise MAC */
+    ENCX24_REG(root->base, MACON2) =
+        BIT(MACON2_DEFER) |                 /* Defer TX until medium is available           */
+        (5 << MACON2_PADCFG_SHIFT) |        /* Auto-pad, understand VLAN frames, add CRC    */
+        BIT(MACON2_TXCRCEN);                /* Enable auto CRC generation and append        */
+        /* TODO: enable full duplex? */
+
+    ENCX24_REG(root->base, MAMXFL) = N2LE16(1522);  /* Set max. frame length */
 
     /* TODO - Initialise PHY */
 
     /* Configure MAC inter-packet gap (MAIPG = 0x12) */
-    ENCX24_REG(root->base, MAIPG) = 0x0c12; /* high byte reserved bits must be set to 0x0c */
+    ENCX24_REG(root->base, MAIPG) = N2LE16(0x0c12); /* high byte reserved; must be set to 0x0c */
+
+    /* Configure LEDs: LED A - link state; LED B - TX/RX events */
+    ENCX24_REG(root->base, EIDLED) = (EIDLED_L << EIDLED_LACFG_SHIFT) |
+                                     (EIDLED_TR << EIDLED_LBCFG_SHIFT);
 
     /* Enable interrupts on link state changed and packet received events */
-    ENCX24_REG(root->base, EIE) = BIT(EIE_INTIE) | BIT(EIE_LINKIE) | BIT(EIE_PKTIE);
+//    ENCX24_REG(root->base, EIE) = BIT(EIE_INTIE) | BIT(EIE_LINKIE) | BIT(EIE_PKTIE);
 
-    ENCX24_REG(root->base, ECON1SET) = BIT(ECON1_RXEN);     /* Enable packet reception */
+    ENCX24_REG(root->base, ECON1) |= BIT(ECON1_RXEN);       /* Enable packet reception */
 
     return SUCCESS;
 }
