@@ -42,18 +42,6 @@ typedef volatile signed long long	vs64;
 typedef u32 size_t;
 #endif
 
-/* RAM extent */
-
-#define RAM_EXTENT_USER     (0x00000001)    /* User RAM                                           */
-#define RAM_EXTENT_KERN     (0x00000002)    /* Kernel RAM - user-mode accesses cause an exception */
-
-typedef struct ram_extent
-{
-    void *      base;
-    u32         len;
-    u32         flags;
-} ram_extent_t;
-
 /* Wall-clock time */
 typedef struct rtc_time
 {

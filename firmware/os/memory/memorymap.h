@@ -42,9 +42,6 @@
 */
 
 
-#define VECTOR_TABLE_START		(0)			/*     0K: CPU vector table			        */
-#define VECTOR_TABLE_END		(0x000400)
-
 #define OS_STACK_BOTTOM			(0x038000)	/*	 224K: OS stack (32K)			        */
 #define OS_STACK_TOP			(0x040000)
 

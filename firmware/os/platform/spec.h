@@ -10,18 +10,20 @@
 */
 
 #include <include/defs.h>
+#include <memory/extents.h>
 #include <include/types.h>
 
 struct hwinfo;	/* FIXME - declare this, or ditch it, or whatever. */
 typedef struct hwinfo hwinfo_t;
 
-extern ram_extent_t g_ram_extents[];
-extern u32 g_nram_extents;
+extern mem_extent_t *g_mem_extents;
+extern mem_extent_t *g_mem_extents_end;
 
-void plat_cpu_init(void);	/* Perform any CPU initialisation tasks that might be needed	*/
-void plat_ram_init(void);	/* Initialise RAM												*/
-void plat_ram_detect();		/* Populate g_ram_extents with type & location of RAM extents 	*/
-
+void plat_cpu_init(void);		/* Perform any CPU initialisation tasks that might be needed	*/
+void plat_mem_init(void);		/* Initialise memory											*/
+void plat_mem_detect();			/* Populate g_mem_extents with type & location of memory 		*/
+								/* Place an eight-byte hardware serial number in sn				*/
+void plat_get_serial_number(u8 sn[8]);
 
 /*
 	Base
@@ -30,7 +32,6 @@ void plat_ram_detect();		/* Populate g_ram_extents with type & location of RAM e
 	and one green LED, to be used as status indicators.  It must be provide a means of estimating
 	the system clock frequency.
 */
-s32 base_ram_detect();
 s32 base_led_on(u32 leds);
 s32 base_led_off(u32 leds);
 s32 base_clockfreq_detect();

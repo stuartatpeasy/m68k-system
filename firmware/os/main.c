@@ -18,8 +18,8 @@
 #include <fs/vfs.h>
 #include <include/defs.h>
 #include <kutil/kutil.h>
+#include <memory/extents.h>
 #include <memory/kmalloc.h>
-#include <memory/ramdetect.h>
 #include <memory/slab.h>
 #include <monitor/monitor.h>
 #include <sched/sched.h>
@@ -54,7 +54,7 @@ void detect_clock_freq()
 
 void _main()
 {
-    u32 x, y, sz;
+    mem_extent_t *ramext;
     rtc_time_t tm;
     char timebuf[12], datebuf[32];
     u8 sn[6];
@@ -70,7 +70,6 @@ void _main()
 
     memcpy(&_sdata, &_etext, &_edata - &_sdata);        /* Copy .data section to kernel RAM */
     bzero(&_sbss, &_ebss - &_sbss);                     /* Initialise .bss section          */
-    ram_detect();                                       /* Find out how much RAM we have    */
     slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
 	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
 
@@ -83,25 +82,14 @@ void _main()
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
+    plat_mem_detect();      /* Detect installed RAM */
+
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
-    for(x = 0; x < g_nram_extents; ++x)
-        if(g_ram_extents[x].flags & RAM_EXTENT_USER)
-            bzero(g_ram_extents[x].base, g_ram_extents[x].len);
+    mem_zero_extents(MEM_EXTENT_USER | MEM_EXTENT_RAM);
 
     /* Initialise user heap.  Place it in the largest user RAM extent. */
-    for(x = 0, y = 0, sz = 0; x < g_nram_extents; ++x)
-    {
-        if((g_ram_extents[x].flags & RAM_EXTENT_USER) && (g_ram_extents[x].len > sz))
-        {
-            sz = g_ram_extents[x].len;
-            y = x;
-        }
-    }
-
-    /* TODO: panic on: no user RAM extents found */
-    if(sz)
-        umeminit(g_ram_extents[y].base,
-                 (void *) ((u32) g_ram_extents[y].base + g_ram_extents[y].len));
+    ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
+    umeminit(ramext->base, ramext->base + ramext->len);
 
     /*
         At this point, minimal configuration has been done.  The scheduler is not yet running,
@@ -110,7 +98,8 @@ void _main()
 
     puts(g_warmup_message);
 
-    printf("%uMB RAM detected\n", g_ram_top >> 20);
+    printf("%uMB RAM detected\n", (mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM)
+            + mem_get_total_size(MEM_EXTENT_KERN | MEM_EXTENT_RAM)) >> 20);
 
     /* === Initialise peripherals - phase 2 === */
 
@@ -136,7 +125,8 @@ void _main()
 	expansion_init();
 
 	printf("%u bytes of kernel heap memory available\n"
-           "%u bytes of user memory available\n", kfreemem(), g_ram_top - USER_RAM_START);
+           "%u bytes of user memory available\n", kfreemem(),
+                mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM));
 
 	if(vfs_init() != SUCCESS)
 		puts("VFS failed to initialise");

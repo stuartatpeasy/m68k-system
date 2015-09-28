@@ -15,7 +15,7 @@ CSOURCES=dfu.c main.c \
 		 cpu/exceptions.c cpu/utilities.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 		 kernel/elf.c kernel/ksym.c kernel/syscalls.c \
-		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
+		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c \
 		 sched/sched.c
 
 ASMSOURCES=kernel/syscall.S
@@ -98,7 +98,7 @@ $(TOOLS):
 main.o: \
 	main.c cpu/utilities.h device/devctl.h device/device.h device/expansion.h device/led.h \
 	device/ds17485.h device/duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
-	kutil/kutil.h memory/kmalloc.h memory/ramdetect.h memory/slab.h monitor/monitor.h \
+	kutil/kutil.h memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h \
 	device/duart.o device/device.o sched/sched.h
 
 dfu.o: \
@@ -186,14 +186,14 @@ kernel/syscalls.o: \
 memory/buddy.o: \
 	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a
 
+memory/extents.o: \
+	memory/extents.c memory/extents.h include/defs.h include/types.h klibc/strings.h
+
 memory/heap.o: \
 	memory/heap.c memory/heap.h include/types.h
 
 memory/kmalloc.o: \
 	memory/kmalloc.c memory/kmalloc.h include/types.h memory/memorymap.h
-
-memory/ramdetect.o: \
-	memory/memorymap.h memory/ramdetect.c memory/ramdetect.h include/defs.h include/types.h
 
 memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h

@@ -31,6 +31,7 @@
 		</Unit>
 		<Unit filename="cpu/exceptions.h" />
 		<Unit filename="cpu/exceptionstackframes.h" />
+		<Unit filename="cpu/mc68000/mc68000.h" />
 		<Unit filename="cpu/utilities.c">
 			<Option compilerVar="CC" />
 		</Unit>
