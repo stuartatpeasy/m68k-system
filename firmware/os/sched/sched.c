@@ -26,7 +26,7 @@ void sched_init(void)
     proc_t *p;
 
     /* Install the scheduler IRQ handler */
-    cpu_set_handler(V_level_1_autovector, irq_schedule);
+    cpu_set_interrupt_handler(V_level_1_autovector, irq_schedule);
 
     for_each_proc_struct(p)
         p->state = ps_unborn;
@@ -82,7 +82,7 @@ printf("stack top = %p\n", process_stack_top);
 }
 
 
-IRQ_HANDLER_FN(irq_schedule)
+void irq_schedule(u16 irql, const struct regs *regs)
 {
     /*
         This is the interrupt handler for the system timer interrupt, which triggers a context

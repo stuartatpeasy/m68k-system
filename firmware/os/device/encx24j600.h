@@ -11,7 +11,7 @@
     This device has driver ID 0x81.
 */
 
-#include "cpu/exceptions.h"
+#include <cpu/cpu.h>
 #include "cpu/utilities.h"
 #include "device/device.h"
 #include "device/expansion.h"
@@ -40,7 +40,7 @@ s32 encx24j600_shut_down(expansion_root_t *root);
 s32 encx24j600_read(expansion_root_t *root);
 s32 encx24j600_write(expansion_root_t *root);
 s32 encx24j600_control(expansion_root_t *root);
-IRQ_HANDLER_DECL(encx24j600_irq);
+void encx24j600_irq(u16 irql, const struct regs *regs);
 
 /*
     Cryptographic data memory map

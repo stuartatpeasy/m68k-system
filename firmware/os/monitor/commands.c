@@ -572,6 +572,9 @@ MONITOR_CMD_HANDLER(ls)
 */
 MONITOR_CMD_HANDLER(map)
 {
+    /* FIXME */
+    puts("This is broken at the moment.  Please check back later.");
+/*
     printf("--------------- Memory map ---------------\n"
            ".data : %08x - %08x (%u bytes)\n"
            ".bss  : %08x - %08x (%u bytes)\n"
@@ -588,7 +591,7 @@ MONITOR_CMD_HANDLER(map)
            OS_STACK_BOTTOM, OS_STACK_TOP, OS_STACK_TOP - OS_STACK_BOTTOM,
            USER_RAM_START, g_ram_top, g_ram_top - USER_RAM_START,
            &_stext, &_etext, &_etext - &_stext);
-
+*/
     return MON_E_OK;
 }
 

@@ -21,12 +21,14 @@
 
 #define INVALID_DEVICE_ID		(-1)	/* Device guaranteed not to exist */
 
+
 typedef enum
 {
     DEV_STATE_UNKNOWN           = 0,
     DEV_STATE_READY             = 1,
     DEV_STATE_OFFLINE           = 2
 } dev_state_t;
+
 
 typedef enum
 {
@@ -36,12 +38,14 @@ typedef enum
 	DEV_TYPE_NET                = 0x03
 } dev_type_t;
 
+
 typedef enum
 {
     DEV_SUBTYPE_NONE            = 0x00,
     DEV_SUBTYPE_MASS_STORAGE    = 0x01,
     DEV_SUBTYPE_PARTITION       = 0x02
 } dev_subtype_t;
+
 
 typedef struct
 {
@@ -64,7 +68,7 @@ typedef struct dev
     dev_type_t          type;
     dev_subtype_t       subtype;
     dev_driver_t *      driver;
-    const char *        name;
+    char *              name;
     void *              data;
     u32                 irq;
     void *              base_addr;

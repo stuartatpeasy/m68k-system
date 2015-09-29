@@ -9,7 +9,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, January 2012.
 */
 
-#include "cpu/exceptions.h"
+#include <cpu/cpu.h>
+#include <cpu/exceptions.h>         /* FIXME - arch-specific - need this for V_level_1_autovector */
+#include <cpu/mc68000/mc68000.h>    /* FIXME - arch-specific include */
 #include "cpu/utilities.h"
 #include "device/duart.h"          /* DUART generates the scheduler interrupt */
 #include "include/defs.h"
@@ -17,9 +19,6 @@
 #include "include/types.h"
 #include <strings.h>
 
-
-typedef u32 reg32_t;
-typedef u16 reg16_t;
 
 typedef void *(*proc_main_t)(void *);
 
@@ -46,13 +45,7 @@ enum proc_state
 */
 struct proc_struct
 {
-    struct
-    {
-        reg32_t d[8];
-        reg32_t a[8];
-        reg32_t pc;
-        reg16_t sr;
-    } regs;
+    regs_t regs;
 
 	const struct proc_struct *parent;       /* needed yet? */
 	struct proc_struct *next;               /* needed yet? */
@@ -68,7 +61,7 @@ typedef struct proc_struct proc_t;
 proc_t *g_current_proc;
 u32 g_ncontext_switches;
 
-IRQ_HANDLER_DECL(irq_schedule);
+void irq_schedule(u16 irql, const struct regs *regs);
 void sched_init(void);
 
 pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags);

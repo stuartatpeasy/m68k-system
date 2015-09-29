@@ -10,6 +10,7 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=dfu.c main.c \
+		 cpu/cpu.c \
 		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
 		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
@@ -18,7 +19,7 @@ CSOURCES=dfu.c main.c \
 		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c \
 		 sched/sched.c
 
-ASMSOURCES=kernel/syscall.S
+ASMSOURCES=kernel/syscall.S cpu/$(CPU)/irq.S
 
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
@@ -100,6 +101,9 @@ main.o: \
 	device/ds17485.h device/duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
 	kutil/kutil.h memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h \
 	device/duart.o device/device.o sched/sched.h
+
+cpu/cpu.o: \
+	cpu/cpu.c cpu/cpu.h include/types.h
 
 dfu.o: \
 	dfu.c dfu.h asm/reset.h cpu/exceptions.h device/duart.h include/types.h include/error.h \

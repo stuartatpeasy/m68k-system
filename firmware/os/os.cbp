@@ -26,11 +26,13 @@
 		<Unit filename="asm/stop.h" />
 		<Unit filename="asm/tas.h" />
 		<Unit filename="asm/trap.h" />
+		<Unit filename="cpu/cpu.h" />
 		<Unit filename="cpu/exceptions.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="cpu/exceptions.h" />
 		<Unit filename="cpu/exceptionstackframes.h" />
+		<Unit filename="cpu/mc68000/irq.S" />
 		<Unit filename="cpu/mc68000/mc68000.h" />
 		<Unit filename="cpu/utilities.c">
 			<Option compilerVar="CC" />
@@ -182,6 +184,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="memory/buddy.h" />
+		<Unit filename="memory/extents.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/extents.h" />
 		<Unit filename="memory/heap.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -191,10 +197,6 @@
 		</Unit>
 		<Unit filename="memory/kmalloc.h" />
 		<Unit filename="memory/memorymap.h" />
-		<Unit filename="memory/ramdetect.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/ramdetect.h" />
 		<Unit filename="memory/slab.c">
 			<Option compilerVar="CC" />
 		</Unit>

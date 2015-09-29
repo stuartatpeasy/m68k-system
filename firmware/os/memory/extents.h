@@ -44,6 +44,6 @@ mem_extent_t *g_mem_extents_end;
 mem_extent_t *mem_get_largest_extent(ku32 flags);
 void mem_zero_extents(ku32 flags);
 u32 mem_get_total_size(ku32 flags);
-
+void *mem_get_highest_addr(ku32 flags);
 
 #endif

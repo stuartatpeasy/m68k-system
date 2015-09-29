@@ -29,31 +29,22 @@ void cpu_exc_install_default_handlers(void)
 	CPU_EXC_VPTR_SET(V_address_error,   cpu_exc_address_error);
 
 	/* TODO install TRAP handlers */
-    CPU_EXC_VPTR_SET(V_trap_0,  cpu_trap_0_handler);
-    CPU_EXC_VPTR_SET(V_trap_1,  cpu_trap_1_handler);
-    CPU_EXC_VPTR_SET(V_trap_2,  cpu_trap_2_handler);
-    CPU_EXC_VPTR_SET(V_trap_3,  cpu_trap_3_handler);
-    CPU_EXC_VPTR_SET(V_trap_4,  cpu_trap_4_handler);
-    CPU_EXC_VPTR_SET(V_trap_5,  cpu_trap_5_handler);
-    CPU_EXC_VPTR_SET(V_trap_6,  cpu_trap_6_handler);
-    CPU_EXC_VPTR_SET(V_trap_7,  cpu_trap_7_handler);
-    CPU_EXC_VPTR_SET(V_trap_8,  cpu_trap_8_handler);
-    CPU_EXC_VPTR_SET(V_trap_9,  cpu_trap_9_handler);
-    CPU_EXC_VPTR_SET(V_trap_10, cpu_trap_10_handler);
-    CPU_EXC_VPTR_SET(V_trap_11, cpu_trap_11_handler);
-    CPU_EXC_VPTR_SET(V_trap_12, cpu_trap_12_handler);
-    CPU_EXC_VPTR_SET(V_trap_13, cpu_trap_13_handler);
-    CPU_EXC_VPTR_SET(V_trap_14, cpu_trap_14_handler);
-    CPU_EXC_VPTR_SET(V_trap_15, cpu_trap_15_handler);
-}
-
-
-/*
-    Set "handler" as the handler for exception vector "vecnum"
-*/
-void cpu_set_handler(u32 vecnum, exc_handler_t handler)
-{
-    CPU_EXC_VPTR_SET(vecnum, handler);
+	cpu_set_interrupt_handler(V_trap_0, cpu_trap_0_handler);
+	cpu_set_interrupt_handler(V_trap_1, cpu_trap_1_handler);
+	cpu_set_interrupt_handler(V_trap_2, cpu_trap_2_handler);
+	cpu_set_interrupt_handler(V_trap_3, cpu_trap_3_handler);
+	cpu_set_interrupt_handler(V_trap_4, cpu_trap_4_handler);
+	cpu_set_interrupt_handler(V_trap_5, cpu_trap_5_handler);
+	cpu_set_interrupt_handler(V_trap_6, cpu_trap_6_handler);
+	cpu_set_interrupt_handler(V_trap_7, cpu_trap_7_handler);
+	cpu_set_interrupt_handler(V_trap_8, cpu_trap_8_handler);
+	cpu_set_interrupt_handler(V_trap_9, cpu_trap_9_handler);
+	cpu_set_interrupt_handler(V_trap_10, cpu_trap_10_handler);
+	cpu_set_interrupt_handler(V_trap_11, cpu_trap_11_handler);
+	cpu_set_interrupt_handler(V_trap_12, cpu_trap_12_handler);
+	cpu_set_interrupt_handler(V_trap_13, cpu_trap_13_handler);
+	cpu_set_interrupt_handler(V_trap_14, cpu_trap_14_handler);
+	cpu_set_interrupt_handler(V_trap_15, cpu_trap_15_handler);
 }
 
 
@@ -130,97 +121,97 @@ void cpu_exc_generic(const struct mc68010_exc_frame f)
 }
 
 
-void cpu_trap_0_handler(void)
+void cpu_trap_0_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 0");
 }
 
 
-void cpu_trap_1_handler(void)
+void cpu_trap_1_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 1");
 }
 
 
-void cpu_trap_2_handler(void)
+void cpu_trap_2_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 2");
 }
 
 
-void cpu_trap_3_handler(void)
+void cpu_trap_3_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 3");
 }
 
 
-void cpu_trap_4_handler(void)
+void cpu_trap_4_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 4");
 }
 
 
-void cpu_trap_5_handler(void)
+void cpu_trap_5_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 5");
 }
 
 
-void cpu_trap_6_handler(void)
+void cpu_trap_6_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 6");
 }
 
 
-void cpu_trap_7_handler(void)
+void cpu_trap_7_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 7");
 }
 
 
-void cpu_trap_8_handler(void)
+void cpu_trap_8_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 8");
 }
 
 
-void cpu_trap_9_handler(void)
+void cpu_trap_9_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 9");
 }
 
 
-void cpu_trap_10_handler(void)
+void cpu_trap_10_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 10");
 }
 
 
-void cpu_trap_11_handler(void)
+void cpu_trap_11_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 11");
 }
 
 
-void cpu_trap_12_handler(void)
+void cpu_trap_12_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 12");
 }
 
 
-void cpu_trap_13_handler(void)
+void cpu_trap_13_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 13");
 }
 
 
-void cpu_trap_14_handler(void)
+void cpu_trap_14_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 14");
 }
 
 
-void cpu_trap_15_handler(void)
+void cpu_trap_15_handler(u16 irql, const struct regs * regs)
 {
 	puts("TRAP 15");
 }

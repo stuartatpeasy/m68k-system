@@ -54,3 +54,19 @@ u32 mem_get_total_size(ku32 flags)
 
     return sz;
 }
+
+
+/*
+    mem_get_highest_addr() - return the highest address in any matching extent
+*/
+void *mem_get_highest_addr(ku32 flags)
+{
+    mem_extent_t *e;
+    void *highest = 0;
+
+    for_each_matching_mem_extent(e, flags)
+        if((e->base + e->len) > highest)
+            highest = e->base + e->len;
+
+    return highest;
+}

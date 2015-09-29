@@ -10,6 +10,7 @@
 */
 
 #include <include/types.h>
+#include <cpu/cpu.h>
 
 #if defined(TARGET_MC68008)
 #define DATA_BUS_WIDTH  (8)
