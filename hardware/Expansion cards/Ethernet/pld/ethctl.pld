@@ -52,6 +52,7 @@ Target device pinout
 */
 
 /* Inputs */
+Pin  1 = CLK;
 Pin  2 = !CS;
 Pin  3 = !ID;
 Pin  4 = !ETHIRQ;
@@ -79,8 +80,8 @@ L = LR # LW;
 
 ETHCS = CS & !ID;
 ETHWR = ETHCS & W;
-ETHB1SEL = ETHCS & L;
-ETHB0SEL = ETHCS & U;
+ETHB1SEL = (ETHCS & L) & (R # (W & !CLK));
+ETHB0SEL = (ETHCS & U) & (R # (W & !CLK));
 IRQ = ETHIRQ;
 DIR = W;
 BUFEN = ETHCS;
