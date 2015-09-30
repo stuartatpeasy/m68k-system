@@ -41,13 +41,6 @@ typedef void (*exc_handler_t)(void);
 */
 #define CPU_EXC_VPTR_SET(x, p)	do { CPU_EXC_VTBL(x) = CPU_EXC_VPTR(p); } while(0)
 
-/*
-    IRQ_HANDLER_DECL(fn): declare fn as an interrupt handler
-    IRQ_HANDLER_FN(fn): define fn as an interrupt handler
-*/
-#define IRQ_HANDLER_DECL(fn)    void fn(void) __attribute__((interrupt_handler))
-#define IRQ_HANDLER_FN(fn)      void fn(void)
-
 
 /*
 	Vector table definition
@@ -326,21 +319,21 @@ void cpu_exc_address_error(int dummy, const struct mc68010_address_exc_frame f);
 void cpu_exc_generic(const struct mc68010_exc_frame f);
 
 
-void cpu_trap_0_handler(u16 irql, const struct regs * regs);
-void cpu_trap_1_handler(u16 irql, const struct regs * regs);
-void cpu_trap_2_handler(u16 irql, const struct regs * regs);
-void cpu_trap_3_handler(u16 irql, const struct regs * regs);
-void cpu_trap_4_handler(u16 irql, const struct regs * regs);
-void cpu_trap_5_handler(u16 irql, const struct regs * regs);
-void cpu_trap_6_handler(u16 irql, const struct regs * regs);
-void cpu_trap_7_handler(u16 irql, const struct regs * regs);
-void cpu_trap_8_handler(u16 irql, const struct regs * regs);
-void cpu_trap_9_handler(u16 irql, const struct regs * regs);
-void cpu_trap_10_handler(u16 irql, const struct regs * regs);
-void cpu_trap_11_handler(u16 irql, const struct regs * regs);
-void cpu_trap_12_handler(u16 irql, const struct regs * regs);
-void cpu_trap_13_handler(u16 irql, const struct regs * regs);
-void cpu_trap_14_handler(u16 irql, const struct regs * regs);
-void cpu_trap_15_handler(u16 irql, const struct regs * regs);
+void cpu_trap_0_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_1_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_2_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_3_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_4_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_5_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_6_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_7_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_8_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_9_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_10_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_11_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_12_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_13_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_14_handler(u16 irql, void *data, const struct regs * regs);
+void cpu_trap_15_handler(u16 irql, void *data, const struct regs * regs);
 
 #endif

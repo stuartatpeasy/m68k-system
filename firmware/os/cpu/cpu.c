@@ -9,10 +9,14 @@
 
 #include <cpu/cpu.h>
 
-interrupt_handler g_irq_handlers[CPU_MAX_IRQL];
+interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
 
-void cpu_set_interrupt_handler(u16 irql, interrupt_handler handler)
+
+void cpu_set_interrupt_handler(u16 irql, void *data, interrupt_handler handler)
 {
     if(irql < CPU_MAX_IRQL)
-        g_irq_handlers[irql] = handler;
+    {
+        g_interrupt_handlers[irql].handler  = handler;
+        g_interrupt_handlers[irql].data     = data;
+    }
 }

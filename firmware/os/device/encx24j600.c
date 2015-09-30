@@ -66,9 +66,9 @@ s32 encx24j600_reset(expansion_root_t *root)
 }
 
 
-void encx24j600_irq(u16 irql, const struct regs *regs)
+void encx24j600_irq(u16 irql, void *data, const struct regs *regs)
 {
-    /* ??? given the current irq level, how can we find out peripheral base address ??? */
+    expansion_root_t *root = (expansion_root_t *) data;
 
     /* Disable interrupts on the ENCX24 while we process this one */
 //    ENCX24_REG(root->base, )
@@ -85,7 +85,7 @@ s32 encx24j600_init(expansion_root_t *root)
     if(ret != SUCCESS)
         return ret;
 
-    cpu_set_interrupt_handler(root->irql, encx24j600_irq);  /* Install IRQ handler */
+    cpu_set_interrupt_handler(root->irql, root, encx24j600_irq);  /* Install IRQ handler */
 
     ENCX24_REG(root->base, ECON2) &= ~ECON2_COCON_MASK;     /* Disable the ENC's output clock */
     ENCX24_REG(root->base, ERXST) = N2LE16(0x1000);         /* Initialise packet RX buffer */

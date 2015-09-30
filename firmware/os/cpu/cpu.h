@@ -19,10 +19,18 @@ typedef u16 reg16_t;
 
 struct regs;        /* Forward declaration - will be refined by CPU-specific code */
 
-typedef void(*interrupt_handler)(u16 irql, const struct regs * regs);
+/* Set a handler for a particular IRQ level */
+typedef void(*interrupt_handler)(u16 irql, void *data, const struct regs * regs);
 
-interrupt_handler g_irq_handlers[CPU_MAX_IRQL];
+typedef struct
+{
+    interrupt_handler   handler;
+    void *              data;
+} interrupt_handler_table_entry_t;
 
-void cpu_set_interrupt_handler(u16 irql, interrupt_handler handler);
+
+interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
+
+void cpu_set_interrupt_handler(u16 irql, void *data, interrupt_handler handler);
 
 #endif

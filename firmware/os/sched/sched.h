@@ -61,7 +61,7 @@ typedef struct proc_struct proc_t;
 proc_t *g_current_proc;
 u32 g_ncontext_switches;
 
-void irq_schedule(u16 irql, const struct regs *regs);
+void irq_schedule(u16 irql, void *data, const struct regs *regs);
 void sched_init(void);
 
 pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags);

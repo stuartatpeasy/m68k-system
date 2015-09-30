@@ -40,7 +40,7 @@ s32 encx24j600_shut_down(expansion_root_t *root);
 s32 encx24j600_read(expansion_root_t *root);
 s32 encx24j600_write(expansion_root_t *root);
 s32 encx24j600_control(expansion_root_t *root);
-void encx24j600_irq(u16 irql, const struct regs *regs);
+void encx24j600_irq(u16 irql, void *data, const struct regs *regs);
 
 /*
     Cryptographic data memory map
