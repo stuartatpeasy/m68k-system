@@ -25,6 +25,9 @@ void plat_mem_detect();			/* Populate g_mem_extents with type & location of memo
 								/* Place an eight-byte hardware serial number in sn				*/
 void plat_get_serial_number(u8 sn[8]);
 
+void plat_stop_quantum();       /* Stop the currently-running quantum (task time-slice)         */
+void plat_start_quantum();      /* Start a new quantum                                          */
+
 /*
 	Base
 

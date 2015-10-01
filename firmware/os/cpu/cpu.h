@@ -11,16 +11,24 @@
 
 #include <include/types.h>
 
+
 /* FIXME - should be defined for the specific CPU */
 #define CPU_MAX_IRQL        255
 
 typedef u32 reg32_t;
 typedef u16 reg16_t;
 
-struct regs;        /* Forward declaration - will be refined by CPU-specific code */
+/* Parse target-specific header */
+#if defined(TARGET_MC68000) || defined(TARGET_MC68010)
+#include <cpu/mc68000/mc68000.h>
+#else
+#error No CPU-specific include file for the target architecture
+#endif
+
+typedef struct regs regs_t;
 
 /* Set a handler for a particular IRQ level */
-typedef void(*interrupt_handler)(u16 irql, void *data, const struct regs * regs);
+typedef void(*interrupt_handler)(u16 irql, void *data, const struct regs regs);
 
 typedef struct
 {

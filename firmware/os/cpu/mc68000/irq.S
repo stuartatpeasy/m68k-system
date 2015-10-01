@@ -29,46 +29,48 @@
         SP +0       |    status register   |
                     +----------------------+
 
-    We need to end up making a function call like this:
+    We need to call the interrupt handler in this way:
 
         some_handler(u16 irql, void *data, regs_t *regs);
 
     Hence the stack needs to end up looking like this, immediately before we jsr to some_handler():
+    (note that the top two elements in the regs_t struct are SR and PC, and we "borrow" these from
+    the interrupt stack frame)
 
                     15                     0
-                    | ..other junk, maybe..|
-                    +------+---------------+  \
-       SP +82       |format| vector offset |  |
-                    +------+---------------+  |
-          +80       | program counter low  |  |  Interrupt stack frame
-          +78       | program counter high |  |
-                    +----------------------+  |
-          +76       |    status register   |  /
-                    +----------------------+  \
-                    |                      |  |
-                    .                      .  |
-                    .   <regs_t struct>    .  |
-                    .                      .  |
-           +6       |                      |  |  Args for interrupt handler function
-                    +----------------------+  |  (regs_t is also used to save/restore CPU state)
-           +4       |       data low       |  |
-           +2       |       data high      |  |
-                    +----------------------+  |
-        SP +0       |         irql         |  |
-                    +----------------------+  /
+                    | ..other junk, maybe..|  .
+                    +------+---------------+  .
+       SP +76       |format| vector offset |  |    Interrupt stack frame
+                    +------+---------------+  |  \
+          +74       | program counter low  |  |  |
+          +72       | program counter high |  |  |
+                    +----------------------+  |  |
+          +70       |    status register   |  |  |
+                    +----------------------+  /  |
+                    |                      |     |
+                    .       rest of        .     |  Args for interrupt handler function
+                    .    regs_t struct     .     |  (regs_t is also used to save/restore CPU state)
+                    .                      .     |
+           +6       |                      |     |
+                    +----------------------+     |
+           +4       |       data low       |     |
+           +2       |       data high      |     |
+                    +----------------------+     |
+        SP +0       |         irql         |     |
+                    +----------------------+     /
 
     When some_handler() returns, we need to restore CPU state and issue an RTE to resume normal
     processing.
 */
 
+.global irq_handler
+
 irq_handler:
-    movew       %sp@, %sp@-
-    movel       %sp@(4), %sp@-
     moveml      %d0-%d7/%a0-%a7, %sp@-
     movel       %usp, %a0
     movel       %a0, %sp@(60)
     clrl        %d0
-    movew       %sp@(76), %d0
+    movew       %sp@(70), %d0
     andiw       #0xfff, %d0
     aslw        #1, %d0
     movel       %d0, %a0
@@ -81,5 +83,5 @@ irq_handler:
     movel       %sp@(60), %a0
     movel       %a0, %usp
     moveml      %sp@+, %d0-%d7/%a0-%a6
-    addl        #10, %sp
+    addl        #4, %sp
     rte
