@@ -66,7 +66,7 @@ s32 encx24j600_reset(expansion_root_t *root)
 }
 
 
-void encx24j600_irq(u16 irql, void *data, const struct regs *regs)
+void encx24j600_irq(u16 irql, void *data, const regs_t regs)
 {
     expansion_root_t *root = (expansion_root_t *) data;
 
