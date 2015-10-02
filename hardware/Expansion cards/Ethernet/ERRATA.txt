@@ -1,0 +1,20 @@
+Major (prevents design working as manufactured)
+-----------------------------------------------
+-	CPU clock should be connected to pin 1 of PLD
+
+
+Moderate (makes assembly fiddly, or affects usability)
+------------------------------------------------------
+2	R2 holes too small for selected resistor
+3	R2 pad spacing is 0.3"; should be 0.4"
+-	Y1 is too close to C16 (and, to a lesser extent, C19)
+
+
+Minor (cosmetic)
+----------------
+5	J1 footprint slightly wrong - connector sits low
+6	Decoupling around regulator is probably excessive
+
+
+Enhancements
+------------
