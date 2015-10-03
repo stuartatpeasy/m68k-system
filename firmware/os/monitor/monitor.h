@@ -18,7 +18,6 @@
 #include <include/version.h>
 #include <kutil/kutil.h>
 #include <memory/kmalloc.h>
-#include <memory/ramdetect.h>
 #include <memory/slab.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>
