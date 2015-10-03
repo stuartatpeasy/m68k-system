@@ -1,5 +1,5 @@
-#ifndef CPU_EXCEPTIONS_H_INC
-#define CPU_EXCEPTIONS_H_INC
+#ifndef CPU_MC68000_EXCEPTIONS_H_INC
+#define CPU_MC68000_EXCEPTIONS_H_INC
 /*
 	MC68010 exception-management function and macro declarations
 
@@ -13,14 +13,9 @@
 */
 
 #include <stdio.h>
-#include <cpu/cpu.h>
-#include "cpu/exceptionstackframes.h"
-#include "cpu/utilities.h"
 #include "include/types.h"
 #include "kutil/kutil.h"
 
-
-typedef void (*exc_handler_t)(void);
 
 /* CPU_EXC_VTBL: a vector table entry, i.e. the address in RAM of a particular exception vector. */
 #define CPU_EXC_VTBL(x)	(*((vu32 *) ((x) << 2)))
@@ -39,6 +34,7 @@ typedef void (*exc_handler_t)(void);
 	CPU_EXC_VPTR_SET(x, p): set vector number x to point at function p.
 */
 #define CPU_EXC_VPTR_SET(x, p)	do { CPU_EXC_VTBL(x) = CPU_EXC_VPTR(p); } while(0)
+
 
 
 /*
@@ -303,38 +299,5 @@ typedef enum m68k_excvec
 	V_user_190                  = 254,      /* 254 3f8 User-defined vector 190		    */
 	V_user_191                  = 255,      /* 255 3fc User-defined vector 191		    */
 } m68k_excvec_t;
-
-
-extern void irq_handler(void);      /* defined in irq.S */
-
-void cpu_exc_install_default_handlers(void);
-
-
-/*
-	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
-	this table and descriptions of each exception.
-*/
-void cpu_exc_bus_error(int dummy, const struct mc68010_address_exc_frame f);
-void cpu_exc_address_error(int dummy, const struct mc68010_address_exc_frame f);
-
-void cpu_exc_generic(const struct mc68010_exc_frame f);
-
-
-void cpu_trap_0_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_1_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_2_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_3_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_4_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_5_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_6_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_7_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_8_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_9_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_10_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_11_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_12_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_13_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_14_handler(u16 irql, void *data, const regs_t regs);
-void cpu_trap_15_handler(u16 irql, void *data, const regs_t regs);
 
 #endif

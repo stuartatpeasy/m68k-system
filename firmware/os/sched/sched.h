@@ -10,9 +10,8 @@
 */
 
 #include <cpu/cpu.h>
-#include <cpu/exceptions.h>         /* FIXME - arch-specific - need this for V_level_1_autovector */
+#include <cpu/mc68000/exceptions.h> /* FIXME - arch-specific - need this for V_level_1_autovector */
 #include <cpu/mc68000/mc68000.h>    /* FIXME - arch-specific include */
-#include "cpu/utilities.h"
 #include "device/duart.h"          /* DUART generates the scheduler interrupt */
 #include "include/defs.h"
 #include "kernel/syscall.h"
@@ -65,7 +64,5 @@ void irq_schedule(u16 irql, void *data, regs_t regs);
 void sched_init(void);
 
 pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags);
-
-void sched_dump_proc(proc_t *ps);
 
 #endif

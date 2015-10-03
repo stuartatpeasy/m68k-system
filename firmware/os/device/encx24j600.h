@@ -12,7 +12,6 @@
 */
 
 #include <cpu/cpu.h>
-#include "cpu/utilities.h"
 #include "device/device.h"
 #include "device/expansion.h"
 #include "include/byteorder.h"

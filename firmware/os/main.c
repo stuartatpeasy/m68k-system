@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <strings.h>
 
-#include <cpu/utilities.h>
 #include <device/devctl.h>
 #include <device/device.h>
 #include <device/ds17485.h>
@@ -64,7 +63,7 @@ void _main()
     cpu_disable_interrupts();   /* Just in case we were called manually */
 
 	/* By default, all exceptions cause a context-dump followed by a halt. */
-	cpu_exc_install_default_handlers();
+	cpu_init_interrupt_handlers();
 
     /* === Initialise memory === */
 

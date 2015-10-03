@@ -13,7 +13,6 @@ CSOURCES=dfu.c main.c \
 		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
 		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
 		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
-		 cpu/exceptions.c cpu/utilities.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 		 kernel/elf.c kernel/ksym.c kernel/syscalls.c \
 		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c \
@@ -97,10 +96,10 @@ $(TOOLS):
 #
 
 main.o: \
-	main.c cpu/utilities.h device/devctl.h device/device.h device/expansion.h device/led.h \
-	device/ds17485.h device/duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
-	kutil/kutil.h memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h \
-	device/duart.o device/device.o sched/sched.h
+	main.c device/devctl.h device/device.h device/expansion.h device/led.h device/ds17485.h \
+	device/duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h \
+	memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h device/duart.o \
+	device/device.o sched/sched.h
 
 cpu/cpu.o: \
 	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
@@ -109,19 +108,11 @@ cpu/$(CPU)/$(CPU).o: \
 	cpu/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c include/defs.h include/types.h
 
 dfu.o: \
-	dfu.c dfu.h cpu/cpu.h cpu/exceptions.h device/duart.h include/types.h include/error.h \
-	kutil/kutil.h memory/kmalloc.h memory/memorymap.h klibc/string.h
+	dfu.c dfu.h cpu/cpu.h device/duart.h include/types.h include/error.h kutil/kutil.h \
+	memory/kmalloc.h memory/memorymap.h klibc/string.h
 
 startup.o: \
 	startup.S memory/memorymap.h
-
-cpu/exceptions.o: \
-    cpu/exceptions.c cpu/exceptions.h cpu/utilities.o cpu/exceptionstackframes.h include/types.h \
-	kutil/kutil.h klibc/stdio.h sched/sched.h
-
-cpu/utilities.o: \
-    cpu/utilities.c cpu/utilities.h cpu/exceptionstackframes.h include/types.h \
-	klibc/stdio.h kutil/kutil.h
 
 device/bbram.o: \
 	device/bbram.c device/bbram.h device/ds17485.h include/defs.h include/error.h include/types.h \
@@ -135,15 +126,15 @@ device/ds17485.o: \
 	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
 
 device/encx24j600.o: \
-	device/encx24j600.c device/encx24j600.h cpu/exceptions.h cpu/utilities.h device/device.h \
+	device/encx24j600.c device/encx24j600.h cpu/cpu.h device/device.h device/expansion.h \
 	device/expansion.h include/byteorder.h include/defs.h include/error.h include/types.h
 
 device/duart.o: \
 	device/duart.c device/duart.h include/defs.h include/types.h
 
 device/expansion.o: \
-	device/expansion.c device/expansion.h cpu/exceptions.h device/duart.h include/defs.h \
-	include/types.h klibc/stdio.h
+	device/expansion.c device/expansion.h device/duart.h include/defs.h include/types.h \
+	klibc/stdio.h
 
 device/led.o: \
 	device/led.c device/led.h device/duart.h include/defs.h include/types.h
@@ -206,5 +197,5 @@ memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
 
 sched/sched.o: \
-	sched/sched.c sched/sched.h cpu/exceptions.h cpu/utilities.h device/duart.h include/defs.h \
-	kernel/syscall.h include/types.h klibc/strings.h
+	sched/sched.c sched/sched.h cpu/cpu.h device/duart.h include/defs.h kernel/syscall.h \
+	include/types.h klibc/strings.h

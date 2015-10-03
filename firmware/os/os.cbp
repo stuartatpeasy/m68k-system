@@ -20,27 +20,17 @@
 			</Target>
 		</Build>
 		<Unit filename="Makefile" />
-		<Unit filename="asm/bswap.h" />
-		<Unit filename="asm/reset.h" />
-		<Unit filename="asm/rte.h" />
-		<Unit filename="asm/stop.h" />
-		<Unit filename="asm/tas.h" />
-		<Unit filename="asm/trap.h" />
+		<Unit filename="cpu/arch_specific.h" />
 		<Unit filename="cpu/cpu.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="cpu/cpu.h" />
-		<Unit filename="cpu/exceptions.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="cpu/exceptions.h" />
-		<Unit filename="cpu/exceptionstackframes.h" />
+		<Unit filename="cpu/mc68000/exceptions.h" />
 		<Unit filename="cpu/mc68000/irq.S" />
-		<Unit filename="cpu/mc68000/mc68000.h" />
-		<Unit filename="cpu/utilities.c">
+		<Unit filename="cpu/mc68000/mc68000.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="cpu/utilities.h" />
+		<Unit filename="cpu/mc68000/mc68000.h" />
 		<Unit filename="device/bbram.c">
 			<Option compilerVar="CC" />
 		</Unit>

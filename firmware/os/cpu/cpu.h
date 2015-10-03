@@ -13,10 +13,12 @@
 
 #include <include/types.h>
 
+typedef struct regs regs_t;
+
 /* Parse target-specific header */
 #include <cpu/arch_specific.h>
 
-typedef struct regs regs_t;     /* struct regs must hold a complete CPU context */
+//typedef struct regs regs_t;     /* struct regs must hold a complete CPU context */
 
 void cpu_halt(void);                            /* Halt processing, pending an interrupt        */
 void cpu_reset(void) __attribute__((noreturn)); /* Reset the CPU                                */
@@ -32,7 +34,14 @@ inline u32 wswap_32(u32 x);
 
 /*
     Interrupt-related declarations
+    ==============================
 */
+
+/*
+    Initialise the CPU's IRQ handler table to safe defaults, either to handle, ignore or stop on
+    various IRQ levels, as appropriate.
+*/
+void cpu_init_interrupt_handlers(void);
 
 /* Set a handler for a particular IRQ level */
 typedef void(*interrupt_handler)(u16 irql, void *data, const regs_t regs);

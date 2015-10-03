@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include <cpu/cpu.h>
-#include "cpu/exceptions.h"
 #include "device/duart.h"			/* for led_on() */
 #include "include/error.h"
 #include "include/types.h"
