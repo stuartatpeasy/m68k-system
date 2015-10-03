@@ -50,7 +50,6 @@ pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku32 stack_l
         if(p->state == ps_unborn)
         {
             /* TODO: work out how best to store name */
-            /* FIXME - allocate this space in user RAM */
             u8 *process_stack = (u8 *) umalloc(stack_len);
 
             u32 *process_stack_top = (u32 *) (process_stack + stack_len);

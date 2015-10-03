@@ -4,7 +4,7 @@
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 */
 
-#include <platform/spec.h>
+#include <platform/platform.h>
 #include <stdio.h>
 #include <strings.h>
 

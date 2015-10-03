@@ -4,7 +4,7 @@
     Stuart Wallace, September 2015
 */
 
-#include <platform/spec.h>
+#include <platform/platform.h>
 
 #include <platform/lambda_rev0/device.h>
 #include <platform/lambda_rev0/mc68681.h>   /* DUART            */

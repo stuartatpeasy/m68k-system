@@ -238,7 +238,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="platform/lambda_rev0/mc68681.h" />
-		<Unit filename="platform/spec.h" />
+		<Unit filename="platform/platform.h" />
 		<Unit filename="rom.ld" />
 		<Unit filename="sched/sched.c">
 			<Option compilerVar="CC" />

@@ -6,6 +6,6 @@
     Stuart Wallace, September 2015
 */
 
-#include <platform/spec.h>
+#include <platform/platform.h>
 
 #endif

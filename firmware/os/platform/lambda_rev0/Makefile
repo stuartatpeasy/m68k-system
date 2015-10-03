@@ -9,7 +9,7 @@ CSOURCES=device.c lambda.c mc68681.c
 
 OBJECTS=$(CSOURCES:.c=.o)
 
-STDDEPS=../spec.h $(OS_INCDIR)/defs.h $(OS_INCDIR)/error.h $(OS_INCDIR)/types.h
+STDDEPS=../platform.h $(OS_INCDIR)/defs.h $(OS_INCDIR)/error.h $(OS_INCDIR)/types.h
 
 all: $(LIBNAME)
 

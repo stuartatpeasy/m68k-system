@@ -1,3 +1,5 @@
+#ifndef PLATFORM_PLATFORM_H_INC
+#define PLATFORM_PLATFORM_H_INC
 /*
 	Platform call specification
 
@@ -100,3 +102,4 @@ s32 ata_read(void *data, u32 first_sector, u32 nsectors, void *buffer);
 s32 ata_write(void *data, u32 first_sector, u32 nsectors, const void *buffer);
 s32 ata_hwinfo(hwinfo_t *);
 
+#endif
