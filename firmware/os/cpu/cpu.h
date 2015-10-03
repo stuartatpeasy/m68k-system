@@ -13,12 +13,10 @@
 
 #include <include/types.h>
 
-typedef struct regs regs_t;
-
 /* Parse target-specific header */
 #include <cpu/arch_specific.h>
 
-//typedef struct regs regs_t;     /* struct regs must hold a complete CPU context */
+typedef struct regs regs_t;     /* struct regs must hold a complete CPU context */
 
 void cpu_halt(void);                            /* Halt processing, pending an interrupt        */
 void cpu_reset(void) __attribute__((noreturn)); /* Reset the CPU                                */

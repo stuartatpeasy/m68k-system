@@ -19,15 +19,24 @@ void cpu_init_interrupt_handlers(void)
 {
 	u16 u;
 
-	/* Start by pointing all exception vectors at the generic handler */
-	for(u = 0; u < 256; ++u)
+    /* Initialise the generic IRQ handler's jump table */
+    for(u = 0; u < CPU_MAX_IRQL; ++u)
+        cpu_set_interrupt_handler(u, NULL, mc68000_exc_generic);
+
+	/* Point all exception vectors at the generic IRQ handler code initially */
+	for(u = 0; u < CPU_MAX_IRQL; ++u)
         CPU_EXC_VPTR_SET(u, irq_handler);
 
 	/* Now set specific handlers */
 	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
 	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
-	CPU_EXC_VPTR_SET(V_bus_error,       mc68000_exc_bus_error);
-	CPU_EXC_VPTR_SET(V_address_error,   mc68000_exc_address_error);
+
+    CPU_EXC_VPTR_SET(V_bus_error, mc68000_exc_bus_error);
+    CPU_EXC_VPTR_SET(V_address_error, mc68000_exc_address_error);
+
+// FIXME - do this properly
+//	cpu_set_interrupt_handler(V_bus_error, NULL, mc68000_exc_bus_error);
+//	cpu_set_interrupt_handler(V_address_error, NULL< mc68000_exc_address_error);
 
 	/* TODO install TRAP handlers */
 	cpu_set_interrupt_handler(V_trap_0, NULL, mc68000_trap_0_handler);

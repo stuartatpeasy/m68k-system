@@ -67,21 +67,32 @@
 
 irq_handler:
     moveml      %d0-%d7/%a0-%a7, %sp@-
+
     movel       %usp, %a0
     movel       %a0, %sp@(60)
+
     clrl        %d0
     movew       %sp@(70), %d0
-    andiw       #0xfff, %d0
-    aslw        #1, %d0
+    andiw       #0x03ff, %d0
+
+    asll        #1, %d0
     movel       %d0, %a0
-    addal       g_interrupt_handlers, %a0
+    addal       #g_interrupt_handlers, %a0
+
     movel       %a0@(4), %sp@-
-    asrw        #3, %d0
+
+    asrl        #3, %d0
     movew       %d0, %sp@-
+
+    movel       %a0@, %a0
     jsr         %a0@
-    addl        #6, %sp
+
+    addql       #6, %sp
+
     movel       %sp@(60), %a0
     movel       %a0, %usp
     moveml      %sp@+, %d0-%d7/%a0-%a6
-    addl        #4, %sp
+
+    addql       #4, %sp
+
     rte

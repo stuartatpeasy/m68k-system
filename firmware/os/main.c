@@ -23,8 +23,8 @@
 #include <monitor/monitor.h>
 #include <sched/sched.h>
 
-const char * const g_warmup_message = "\n68010 computer system\n"
-									  "Stuart Wallace, 2011-2015\n";
+const char * const g_warmup_message = "\n  \\   { ayumos }\n"
+									  "  /\\  Stuart Wallace, 2011-2015.\n";
 
 /* TODO - put this elsewhere */
 void detect_clock_freq()
@@ -62,15 +62,15 @@ void _main()
 
     cpu_disable_interrupts();   /* Just in case we were called manually */
 
-	/* By default, all exceptions cause a context-dump followed by a halt. */
-	cpu_init_interrupt_handlers();
-
     /* === Initialise memory === */
 
     memcpy(&_sdata, &_etext, &_edata - &_sdata);        /* Copy .data section to kernel RAM */
     bzero(&_sbss, &_ebss - &_sbss);                     /* Initialise .bss section          */
     slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
 	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
+
+	/* By default, all exceptions cause a context-dump followed by a halt. */
+	cpu_init_interrupt_handlers();
 
     /* === Initialise peripherals - phase 1 === */
 
