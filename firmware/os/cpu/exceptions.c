@@ -53,6 +53,7 @@ void cpu_exc_bus_error(int dummy, const struct mc68010_address_exc_frame f)
     cpu_disable_interrupts();
 	puts("\nException: Bus error");
 	cpu_dump_address_exc_frame(&f);
+	puts("\nSystem halted.");
 	cpu_halt();
 }
 
@@ -62,6 +63,7 @@ void cpu_exc_address_error(int dummy, const struct mc68010_address_exc_frame f)
     cpu_disable_interrupts();
 	puts("\nException: Address error");
 	cpu_dump_address_exc_frame(&f);
+	puts("\nSystem halted.");
 	cpu_halt();
 }
 
@@ -117,6 +119,7 @@ void cpu_exc_generic(const struct mc68010_exc_frame f)
 	}
 
 	cpu_dump_exc_frame(&f);
+	puts("\nSystem halted.");
 	cpu_halt();
 }
 

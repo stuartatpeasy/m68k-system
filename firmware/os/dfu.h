@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include "asm/reset.h"
+#include <cpu/cpu.h>
 #include "cpu/exceptions.h"
 #include "device/duart.h"			/* for led_on() */
 #include "include/error.h"

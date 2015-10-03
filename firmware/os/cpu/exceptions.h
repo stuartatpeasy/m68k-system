@@ -13,7 +13,6 @@
 */
 
 #include <stdio.h>
-#include "asm/rte.h"
 #include <cpu/cpu.h>
 #include "cpu/exceptionstackframes.h"
 #include "cpu/utilities.h"

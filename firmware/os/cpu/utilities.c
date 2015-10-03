@@ -11,17 +11,6 @@
 #include "kutil/kutil.h"
 
 
-void cpu_halt(void)
-{
-	puts("\nSystem halted.");
-
-    /* the arg to "stop" causes the CPU to stay in supervisor mode,
-       and sets the interrupt mask to 7 */
-	__asm__ volatile("stop #0x2700" : );
-	while(1) ;
-}
-
-
 /*
 	Write a string describing the contents of the status register
 */

@@ -10,7 +10,7 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=dfu.c main.c \
-		 cpu/cpu.c \
+		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
 		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
 		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
 		 cpu/exceptions.c cpu/utilities.c \
@@ -103,18 +103,21 @@ main.o: \
 	device/duart.o device/device.o sched/sched.h
 
 cpu/cpu.o: \
-	cpu/cpu.c cpu/cpu.h include/types.h
+	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
+
+cpu/$(CPU)/$(CPU).o: \
+	cpu/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c include/defs.h include/types.h
 
 dfu.o: \
-	dfu.c dfu.h asm/reset.h cpu/exceptions.h device/duart.h include/types.h include/error.h \
+	dfu.c dfu.h cpu/cpu.h cpu/exceptions.h device/duart.h include/types.h include/error.h \
 	kutil/kutil.h memory/kmalloc.h memory/memorymap.h klibc/string.h
 
 startup.o: \
 	startup.S memory/memorymap.h
 
 cpu/exceptions.o: \
-    asm/rte.h cpu/exceptions.c cpu/exceptions.h cpu/utilities.o cpu/exceptionstackframes.h \
-	include/types.h kutil/kutil.h klibc/stdio.h sched/sched.h
+    cpu/exceptions.c cpu/exceptions.h cpu/utilities.o cpu/exceptionstackframes.h include/types.h \
+	kutil/kutil.h klibc/stdio.h sched/sched.h
 
 cpu/utilities.o: \
     cpu/utilities.c cpu/utilities.h cpu/exceptionstackframes.h include/types.h \
@@ -153,7 +156,7 @@ device/block/ata/ata.o: \
 device/block/partition/partition.o: \
 	device/block/partition/partition.c device/block/partition/partition.h \
 	device/block/partition/mbr.h device/device.h include/byteorder.h include/defs.h \
-	include/types.h klibc/stdio.h kutil/kutil.h asm/bswap.h device/devctl.h
+	include/types.h klibc/stdio.h kutil/kutil.h cpu/cpu.h device/devctl.h
 
 fs/ext2/ext2.o: \
 	fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h klibc/string.h \
@@ -175,7 +178,7 @@ fs/vfs.o: \
 	include/types.h klibc/stdio.h
 
 include/byteorder.h: \
-	asm/bswap.h
+	cpu/cpu.h
 
 kernel/elf.o: \
 	kernel/elf.c include/byteorder.h include/defs.h include/elf.h include/types.h klibc/errno.h \

@@ -26,6 +26,9 @@
 		<Unit filename="asm/stop.h" />
 		<Unit filename="asm/tas.h" />
 		<Unit filename="asm/trap.h" />
+		<Unit filename="cpu/cpu.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="cpu/cpu.h" />
 		<Unit filename="cpu/exceptions.c">
 			<Option compilerVar="CC" />
