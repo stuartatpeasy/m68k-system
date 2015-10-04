@@ -68,7 +68,7 @@ typedef struct dev
     dev_type_t          type;
     dev_subtype_t       subtype;
     dev_driver_t *      driver;
-    char *              name;
+    char                name[DEVICE_NAME_LEN];
     void *              data;
     u32                 irq;
     void *              base_addr;

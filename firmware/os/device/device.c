@@ -171,7 +171,6 @@ s32 create_device(const dev_type_t type, const dev_subtype_t subtype, dev_driver
 
 	/* TODO: check that the name is not a duplicate */
 	strncpy(dev->name, name, sizeof(dev->name));
-
     g_devices[u] = dev;
 
 	return SUCCESS;

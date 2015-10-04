@@ -39,7 +39,7 @@ s32 ata_init()
 	bzero(g_ata_devices, sizeof(g_ata_devices));
 	bzero(device_name, DEVICE_NAME_LEN);
 
-	/* The first ATA device is called "ataa", the second "atab", etc.  device_name will pass the
+	/* The first ATA device is called "ata1", the second "ata2", etc.  device_name will pass the
 	 * name of each device to the create_device().  device_name is initialised to "ata"; dn
 	 * points to the next char after "ata".  This makes it easy to form the proper device names */
 	strcpy(device_name, g_ata_driver.name);
