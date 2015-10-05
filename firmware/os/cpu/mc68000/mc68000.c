@@ -31,12 +31,8 @@ void cpu_init_interrupt_handlers(void)
 	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
 	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
 
-    CPU_EXC_VPTR_SET(V_bus_error, mc68000_exc_bus_error);
-    CPU_EXC_VPTR_SET(V_address_error, mc68000_exc_address_error);
-
-// FIXME - do this properly
-//	cpu_set_interrupt_handler(V_bus_error, NULL, mc68000_exc_bus_error);
-//	cpu_set_interrupt_handler(V_address_error, NULL< mc68000_exc_address_error);
+	cpu_set_interrupt_handler(V_bus_error, NULL, mc68000_exc_bus_error);
+	cpu_set_interrupt_handler(V_address_error, NULL, mc68000_exc_address_error);
 
 	/* TODO install TRAP handlers */
 	cpu_set_interrupt_handler(V_trap_0, NULL, mc68000_trap_0_handler);
@@ -58,42 +54,48 @@ void cpu_init_interrupt_handlers(void)
 }
 
 
-void mc68000_exc_bus_error(int dummy, const struct mc68010_address_exc_frame f)
+void mc68000_exc_bus_error(ku16 irql, void *data, const regs_t regs)
 {
     cpu_disable_interrupts();
 	puts("\nException: Bus error");
-	mc68010_dump_address_exc_frame(&f);
+
+	mc68010_dump_address_exc_frame(irql, &regs);
+	putchar('\n');
+    mc68000_dump_regs(&regs);
+
 	puts("\nSystem halted.");
 	cpu_halt();
 }
 
 
-void mc68000_exc_address_error(int dummy, const struct mc68010_address_exc_frame f)
+void mc68000_exc_address_error(ku16 irql, void *data, const regs_t regs)
 {
     cpu_disable_interrupts();
 	puts("\nException: Address error");
-	mc68010_dump_address_exc_frame(&f);
+
+	mc68010_dump_address_exc_frame(irql, &regs);
+	putchar('\n');
+    mc68000_dump_regs(&regs);
+
 	puts("\nSystem halted.");
 	cpu_halt();
 }
 
 
-void mc68000_exc_generic(const struct mc68010_exc_frame f)
+void mc68000_exc_generic(u16 irql, void *data, const regs_t regs)
 {
-	const unsigned char vec = ((f.vector_offset & 0xfff) >> 2);
-
     cpu_disable_interrupts();
 	printf("\nUnhandled exception: ");
-	if((vec >= 25) && (vec <= 31))
-		printf("Level %d interrupt autovector\n", vec - 24);
-	else if((vec >= 32) && (vec <= 47))
-		printf("Trap #%d\n", vec - 32);
-	else if(vec >= 64)
-		printf("User-defined vector %d\n", vec - 64);
+	if((irql >= 25) && (irql <= 31))
+		printf("Level %d interrupt autoirqltor\n", irql - 24);
+	else if((irql >= 32) && (irql <= 47))
+		printf("Trap #%d\n", irql - 32);
+	else if(irql >= 64)
+		printf("User-defined vector %d\n", irql - 64);
 	else
 	{
 		const char *msg = NULL;
-		switch(vec)
+		switch(irql)
 		{
 			case 2:  msg = "Bus error";								break;
 			case 3:  msg = "Address error";							break;
@@ -125,10 +127,13 @@ void mc68000_exc_generic(const struct mc68010_exc_frame f)
 		if(msg)
 			puts(msg);
 		else
-			printf("Unknown #%d\n", vec);
+			printf("Unknown #%d\n", irql);
 	}
 
-	mc68010_dump_exc_frame(&f);
+	mc68010_dump_exc_frame(irql, &regs);
+	putchar('\n');
+    mc68000_dump_regs(&regs);
+
 	puts("\nSystem halted.");
 	cpu_halt();
 }
@@ -333,17 +338,16 @@ const char * const mc68000_dump_status_register(ku16 sr)
 
 	TODO: remove the dependency on printf()
 */
-void mc68010_dump_exc_frame(const struct mc68010_exc_frame * const f)
+void mc68010_dump_exc_frame(ku16 irql, const regs_t * const regs)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
 	printf("Status register     = %04x [%s]\n"
 		   "Program counter     = 0x%08x\n"
-		/* "Frame format        = %x\n" */
-		   "Vector offset       = %04x\n",
-			f->sr, mc68000_dump_status_register(f->sr), f->pc,
-			/*(f->vector_offset >> 12) & 0xf, */ f->vector_offset & 0xfff);
+		   "Vector number       = %u\n\n",
+			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc,
+			irql);
 }
 
 
@@ -352,32 +356,34 @@ void mc68010_dump_exc_frame(const struct mc68010_exc_frame * const f)
 
 	TODO: remove the dependency on printf()
 */
-void mc68010_dump_address_exc_frame(const struct mc68010_address_exc_frame * const f)
+void mc68010_dump_address_exc_frame(ku16 irql, const regs_t * const regs)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
+    const struct mc68010_address_exc_frame * const f =
+        (const struct mc68010_address_exc_frame * const) &(regs[1]);
+
 	printf("Status register     = %04x [%s]\n"
 		   "Program counter     = 0x%08x\n"
 		/* "Frame format        = %x\n" */
-		   "Vector offset       = %04x\n"
+		   "Vector number       = %u\n"
 		   "Special status word = %04x\n"
 		   "Fault address       = 0x%08x\n"
 		   "Data output buffer  = %04x\n"
 		   "Data input buffer   = %04x\n"
 		   "Instr output buffer = %04x\n"
 		   "Version number      = %04x\n",
-			f->sr, mc68000_dump_status_register(f->sr), f->pc,
-			/* (f->vector_offset >> 12) & 0xf, */ f->vector_offset & 0xfff, f->special_status_word,
-			f->fault_addr, f->data_output_buffer, f->data_input_buffer, f->instr_output_buffer,
-			f->version_number);
+			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc, irql,
+            f->special_status_word, f->fault_addr, f->data_output_buffer, f->data_input_buffer,
+            f->instr_output_buffer,	f->version_number);
 }
 
 
 /*
     mc68000_dump_regs() - dump the contents of a regs_t struct, in human-readable form
 */
-void mc68000_dump_regs(regs_t *regs)
+void mc68000_dump_regs(const regs_t *regs)
 {
     printf("D0=%08x  D1=%08x  D2=%08x  D3=%08x\n"
            "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"

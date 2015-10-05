@@ -19,10 +19,10 @@ s32 b_dev_enumerate(dev_t *first_dev)
     */
 
     /* MC68681 DUART */
-    if(mc68681_init() == SUCCESS)
-    {
+    dev_t duart;
+    duart.base_addr = (void *) 0xe00000;
+    mc68681_init(&duart);
 
-    }
 
     /* ATA interface */
 

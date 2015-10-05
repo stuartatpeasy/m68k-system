@@ -33,23 +33,22 @@ struct regs
 typedef struct regs regs_t;
 
 /*
-	MC68010 address/bus-error exception stack frame
+	MC68010 address/bus-error exception stack frame.  NOTE: this struct does not include the SR
+	and PC - they are extracted separately.
 */
 struct mc68010_address_exc_frame
 {
-	const u16 sr;
-	const u32 pc;
-	const u16 vector_offset;
-	const u16 special_status_word;
-	const u32 fault_addr;
-	const u16 unused_reserved_1;
-	const u16 data_output_buffer;
-	const u16 unused_reserved_2;
-	const u16 data_input_buffer;
-	const u16 unused_reserved_3;
-	const u16 instr_output_buffer;
-	const u16 version_number;
-	const u16 internal_information[15];
+	ku16 vector_offset;
+	ku16 special_status_word;
+	ku32 fault_addr;
+	ku16 unused_reserved_1;
+	ku16 data_output_buffer;
+	ku16 unused_reserved_2;
+	ku16 data_input_buffer;
+	ku16 unused_reserved_3;
+	ku16 instr_output_buffer;
+	ku16 version_number;
+	ku16 internal_information[15];
 } __attribute__((packed));
 
 
@@ -58,10 +57,10 @@ struct mc68010_address_exc_frame
 */
 struct mc68010_exc_frame
 {
-    const u32 dummy;
-	const u16 sr;
-	const u32 pc;
-	const u16 vector_offset;
+    ku32 dummy;
+	ku16 sr;
+	ku32 pc;
+	ku16 vector_offset;
 } __attribute__((packed));
 
 
@@ -160,10 +159,10 @@ extern void irq_handler(void);      /* defined in irq.S */
 	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
 	this table and descriptions of each exception.
 */
-void mc68000_exc_bus_error(int dummy, const struct mc68010_address_exc_frame f);
-void mc68000_exc_address_error(int dummy, const struct mc68010_address_exc_frame f);
+void mc68000_exc_bus_error(ku16 irql, void *data, const regs_t regs);
+void mc68000_exc_address_error(ku16 irql, void *data, const regs_t regs);
 
-void mc68000_exc_generic(const struct mc68010_exc_frame f);
+void mc68000_exc_generic(u16 irql, void *data, const regs_t regs);
 
 
 void mc68000_trap_0_handler(u16 irql, void *data, const regs_t regs);
@@ -185,8 +184,8 @@ void mc68000_trap_15_handler(u16 irql, void *data, const regs_t regs);
 
 
 const char * const mc68000_dump_status_register(ku16 sr);
-void mc68000_dump_regs(struct regs *regs);
-void mc68010_dump_exc_frame(const struct mc68010_exc_frame * const f);
-void mc68010_dump_address_exc_frame(const struct mc68010_address_exc_frame * const f);
+void mc68000_dump_regs(const regs_t *regs);
+void mc68010_dump_exc_frame(ku16 irql, const regs_t * const regs);
+void mc68010_dump_address_exc_frame(ku16 irql, const regs_t * const regs);
 
 #endif

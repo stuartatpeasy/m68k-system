@@ -23,8 +23,8 @@
 #include <monitor/monitor.h>
 #include <sched/sched.h>
 
-const char * const g_warmup_message = "\n  \\   { ayumos }\n"
-									  "  /\\  Stuart Wallace, 2011-2015.\n";
+const char * const g_warmup_message = "\n   \\\\   { ayumos }"
+                                      "\n  //\\\\  Stuart Wallace, 2011-2015.\n";
 
 /* TODO - put this elsewhere */
 void detect_clock_freq()
@@ -73,14 +73,16 @@ void _main()
 	cpu_init_interrupt_handlers();
 
     /* === Initialise peripherals - phase 1 === */
+    plat_init();
 
     /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
-	duart_init();
+//	duart_init();
 
     /* Activate red LED while the boot process continues */
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
+    plat_init();            /* Call the platform initialisation hook */
     plat_mem_detect();      /* Detect installed RAM */
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */

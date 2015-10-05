@@ -13,7 +13,7 @@
 #include "klibc/errno.h"
 #include "include/types.h"
 
-#define DEVICE_NAME_LEN			(6)		/* Max length of device name, including terminating \0 	*/
+#define DEVICE_NAME_LEN			(8)		/* Max length of device name, including terminating \0 	*/
 // FIXME REMOVE
 #define MAX_DEVICES             (64)    /* Maximum number of devices allowed by the system      */
 
@@ -80,18 +80,6 @@ typedef struct dev
     dev_state_t         state;
 } dev_t;
 
-// FIXME REMOVE
-struct device
-{
-	dev_type_t type;
-	dev_subtype_t subtype;
-	dev_driver_t *driver;
-	char name[DEVICE_NAME_LEN];
-	void *data;
-};
-
-// FIXME REMOVE
-typedef struct device device_t;
 
 /*
     Variable declarations

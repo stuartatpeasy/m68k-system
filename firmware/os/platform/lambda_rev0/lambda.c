@@ -23,15 +23,12 @@ mem_extent_t g_lambda_mem_extents[] =
 };
 
 
-void plat_cpu_init(void)
+void plat_init(void)
 {
-    /* Nothing to do here */
-}
-
-
-void plat_mem_init(void)
-{
-    /* Nothing to do here */
+    /* Initialise the DUART early, in order to shut up the beeper */
+    dev_t duart;
+    duart.base_addr = (void *) 0xe00000;
+    mc68681_init(&duart);
 }
 
 

@@ -21,6 +21,9 @@
 /*
     MC68000 / MC68010
 */
+
+#define TARGET_BIGENDIAN
+
 #include <cpu/mc68000/mc68000.h>
 #else
 /*
