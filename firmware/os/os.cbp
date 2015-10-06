@@ -108,6 +108,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/ksym.h" />
+		<Unit filename="kernel/sched.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/sched.h" />
 		<Unit filename="kernel/syscall.S" />
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.c">
@@ -241,10 +245,6 @@
 		</Unit>
 		<Unit filename="platform/lambda_rev0/mc68681.h" />
 		<Unit filename="platform/platform.h" />
-		<Unit filename="sched/sched.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="sched/sched.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

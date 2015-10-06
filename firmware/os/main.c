@@ -21,7 +21,7 @@
 #include <memory/kmalloc.h>
 #include <memory/slab.h>
 #include <monitor/monitor.h>
-#include <sched/sched.h>
+#include <kernel/sched.h>
 
 const char * const g_warmup_message = "\n   \\\\   { ayumos }"
                                       "\n  //\\\\  Stuart Wallace, 2011-2015.\n";

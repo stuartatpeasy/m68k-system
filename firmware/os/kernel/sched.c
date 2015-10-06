@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, July 2015.
 */
 
-#include "sched/sched.h"
+#include <kernel/sched.h>
 
 
 proc_t g_ps[64];

@@ -11,10 +11,8 @@
 
 #include <cpu/cpu.h>
 #include <cpu/mc68000/exceptions.h> /* FIXME - arch-specific - need this for V_level_1_autovector */
-#include <cpu/mc68000/mc68000.h>    /* FIXME - arch-specific include */
-#include "device/duart.h"          /* DUART generates the scheduler interrupt */
+#include "device/duart.h"           /* FIXME - platform-specific - DUART generates the scheduler interrupt */
 #include "include/defs.h"
-#include "kernel/syscall.h"
 #include "include/types.h"
 #include <strings.h>
 
