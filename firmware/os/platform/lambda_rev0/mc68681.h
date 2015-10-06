@@ -104,6 +104,17 @@
 	MC68681 register bits
 */
 
+/* MC68681_ACR - auxiliary control register */
+#define MC68681_ACR_BRG_SELECT          (7)     /* Baud rate gen select: 0 = set 1, 1 = set 2   */
+
+#define MC68681_ACR_CT_MODE_MASK        (0x70)  /* Counter/timer mode and source                */
+#define MC68681_ACR_CT_MODE_SHIFT       (4)
+
+#define MC68681_ACR_DELTA_IP3_INT       (3)     /* Interrupt on change of IP3                   */
+#define MC68681_ACR_DELTA_IP2_INT       (2)     /* Interrupt on change of IP2                   */
+#define MC68681_ACR_DELTA_IP1_INT       (1)     /* Interrupt on change of IP1                   */
+#define MC68681_ACR_DELTA_IP0_INT       (0)     /* Interrupt on change of IP0                   */
+
 /* MC68681_CR - command register */
 #define MC68681_CR_MISC_CMD_MASK        (0x70)  /* Miscellaneous commands                       */
 #define MC68681_CR_MISC_CMD_SHIFT       (4)
@@ -113,6 +124,13 @@
 
 #define MC68681_CR_RX_CMD_MASK          (0x03)  /* Receiver commands                            */
 #define MC68681_CR_RX_CMD_SHIFT         (0)
+
+/* MC68681_CSR[AB] - clock select register A/B */
+#define MC68681_CSR_RXCLK_MASK          (0xf0)  /* Receiver clock select                        */
+#define MC68681_CSR_RXCLK_SHIFT         (4)
+
+#define MC68681_CSR_TXCLK_MASK          (0x0f)  /* Transmitter clock select                     */
+#define MC68681_CSR_TXCLK_SHIFT         (0)
 
 /* MC68681_IMR - interrupt mask register */
 #define MC68681_IMR_INP_CHANGE          (7)     /* Input port change interrupt                  */
@@ -220,12 +238,43 @@
 #define MC68681_CMD_RX_DISABLE          (2)     /* Disable receiver                             */
 /*                                      (3)        Do not use - indeterminate results           */
 
+/* Counter/timer modes and sources (see MC68681_ACR_*) */
+#define MC68681_CT_MODE_C_EXT           (0)     /* Counter; clock = IP2                         */
+#define MC68681_CT_MODE_C_TXCA          (1)     /* Counter; clock = channel A transmitter       */
+#define MC68681_CT_MODE_C_TXCB          (2)     /* Counter; clock = channel B transmitter       */
+#define MC68681_CT_MODE_C_XTAL16        (3)     /* Counter; clock = crystal / 16                */
+#define MC68681_CT_MODE_T_EXT           (4)     /* Timer; clock = IP2                           */
+#define MC68681_CT_MODE_T_EXT16         (5)     /* Timer; clock = IP2 / 16                      */
+#define MC68681_CT_MODE_T_XTAL          (6)     /* Timer; clock = crystal                       */
+#define MC68681_CT_MODE_T_XTAL16        (7)     /* Timer; clock = crystal / 16                  */
+
+
+typedef struct
+{
+    u32     rate;           /* Actual baud rate                                         */
+    u8      csr;            /* CSR (clock select register) setting, and ACR[7] value    */
+} mc68681_baud_rate_entry;
+
+/* Bits in mc68681_baud_rate_entry.csr */
+#define MC68681_BRE_ACR7                BIT(4)  /* Alternate rate gen needed (ACR[7] = 1)   */
+#define MC68681_BRE_TEST                BIT(5)  /* Entry requires "BRG test" mode           */
+#define MC68681_BRE_CSR_MASK            (0x0f)  /* CSR part only                            */
+
+#define MC68681_CHANNEL_A               (0)
+#define MC68681_CHANNEL_B               (1)
+
+const mc68681_baud_rate_entry g_mc68681_baud_rates[22];
+
 
 void mc68681_reset(dev_t *dev);
-s32 mc68681_init(dev_t *dev);
+s32 mc68681_reset_tx(dev_t *dev, ku16 channel);
+s32 mc68681_reset_rx(dev_t *dev, ku16 channel);
 
-int mc68681_putc(dev_t *dev, ku32 channel, const char c);
-int mc68681_getc(dev_t *dev, ku32 channel);
+s32 mc68681_init(dev_t *dev);
+s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate);
+
+int mc68681_putc(dev_t *dev, ku16 channel, const char c);
+int mc68681_getc(dev_t *dev, ku16 channel);
 
 void mc68681_start_counter(dev_t *dev);
 void mc68681_stop_counter(dev_t *dev);

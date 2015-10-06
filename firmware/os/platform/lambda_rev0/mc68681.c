@@ -6,27 +6,143 @@
 
 #include <platform/lambda_rev0/mc68681.h>
 
+const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
+{
+    {50,        0x00},
+    {75,        0x10},
+    {110,       0x01},
+    {134,       0x02},
+    {150,       0x13},
+    {200,       0x03},
+    {300,       0x04},
+    {600,       0x05},
+    {1050,      0x07},
+    {1200,      0x06},
+    {1800,      0x1a},
+    {2000,      0x17},
+    {2400,      0x08},
+    {4800,      0x09},
+    {7200,      0x0a},
+    {9600,      0x0b},
+    {14400,     0x33},
+    {19200,     0x1c},
+    {28800,     0x24},
+    {38400,     0x0c},
+    {57600,     0x25},
+    {115200,    0x26},
+};
 
+
+s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
+{
+    const mc68681_baud_rate_entry *p;
+
+    if(channel > 1)
+        return EINVAL;  /* 0 = channel A; 1 = channel B; anything else = invalid */
+
+    for(p = g_mc68681_baud_rates; p < &(g_mc68681_baud_rates[sizeof(g_mc68681_baud_rates)]); ++p)
+    {
+        if(rate == p->rate)
+        {
+            mc68681_reset_tx(dev, channel);
+            mc68681_reset_rx(dev, channel);
+
+            if(p->csr & MC68681_BRE_TEST)
+            {
+                u8 dummy = MC68681_REG(dev->base_addr, MC68681_BRG_TEST);
+                dummy += 0;     /* Silence "set but not used" compiler warning */
+            }
+
+            if(p->csr & MC68681_BRE_ACR7)
+                MC68681_REG(dev->base_addr, MC68681_ACR) |= BIT(MC68681_ACR_BRG_SELECT);
+            else
+                MC68681_REG(dev->base_addr, MC68681_ACR) &= ~BIT(MC68681_ACR_BRG_SELECT);
+
+            if(channel == 0)    /* Channel A */
+            {
+                MC68681_REG(dev->base_addr, MC68681_CSRA) =
+                    ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_RXCLK_SHIFT) |
+                    ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_TXCLK_SHIFT);
+            }
+            else                /* Channel B */
+            {
+                MC68681_REG(dev->base_addr, MC68681_CSRB) =
+                    ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_RXCLK_SHIFT) |
+                    ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_TXCLK_SHIFT);
+            }
+        }
+    }
+
+    return EINVAL;      /* No such baud rate */
+}
+
+
+/*
+    mc68681_reset_rx() - reset MC68681 receiver
+*/
+s32 mc68681_reset_rx(dev_t *dev, ku16 channel)
+{
+    if(channel > MC68681_CHANNEL_B)
+        return EINVAL;
+
+    if(channel == MC68681_CHANNEL_A)        /* Channel A */
+        MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x20 */
+            (MC68681_CMD_RESET_RX << MC68681_CR_MISC_CMD_SHIFT);
+    else                                    /* Channel B */
+        MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x20 */
+            (MC68681_CMD_RESET_RX << MC68681_CR_MISC_CMD_SHIFT);
+
+    return SUCCESS;
+}
+
+
+/*
+    mc68681_reset_tx() - reset MC68681 transmitter
+*/
+s32 mc68681_reset_tx(dev_t *dev, ku16 channel)
+{
+    if(channel > MC68681_CHANNEL_B)
+        return EINVAL;
+
+    if(channel == MC68681_CHANNEL_A)        /* Channel A */
+        MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x30 */
+            (MC68681_CMD_RESET_TX << MC68681_CR_MISC_CMD_SHIFT);
+    else
+        MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x30 */
+            (MC68681_CMD_RESET_TX << MC68681_CR_MISC_CMD_SHIFT);
+
+    return SUCCESS;
+}
+
+
+/*
+    mc68681_reset() - perform a device reset on the MC68681.  Note: does not reset RX or TX
+*/
 void mc68681_reset(dev_t *dev)
 {
     /* Send some initialisation commands to the MC68681 */
     MC68681_REG(dev->base_addr, MC68681_CRA) =  /* 0x10 */
         (MC68681_CMD_RESET_MR_PTR << MC68681_CR_MISC_CMD_SHIFT) |   /* Reset MRA pointer        */
-        (MC68681_CMD_TX_DISABLE << MC68681_CR_TX_CMD_SHIFT) |       /* Disable transmitter      */
-        (MC68681_CMD_RX_DISABLE << MC68681_CR_RX_CMD_SHIFT);        /* Disable receiver         */
+        (MC68681_CMD_TX_DISABLE << MC68681_CR_TX_CMD_SHIFT) |       /* Disable channel A TX     */
+        (MC68681_CMD_RX_DISABLE << MC68681_CR_RX_CMD_SHIFT);        /* Disable channel A RX     */
 
-    MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x20 */
-        (MC68681_CMD_RESET_RX << MC68681_CR_MISC_CMD_SHIFT);        /* Reset receiver           */
+    MC68681_REG(dev->base_addr, MC68681_CRB) =  /* 0x10 */
+        (MC68681_CMD_RESET_MR_PTR << MC68681_CR_MISC_CMD_SHIFT) |   /* Reset MRA pointer        */
+        (MC68681_CMD_TX_DISABLE << MC68681_CR_TX_CMD_SHIFT) |       /* Disable channel B TX     */
+        (MC68681_CMD_RX_DISABLE << MC68681_CR_RX_CMD_SHIFT);        /* Disable channel B RX     */
 
-    MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x30 */
-        (MC68681_CMD_RESET_TX << MC68681_CR_MISC_CMD_SHIFT);        /* Reset transmitter        */
+    mc68681_reset_tx(dev, MC68681_CHANNEL_A);
+    mc68681_reset_tx(dev, MC68681_CHANNEL_B);
+    mc68681_reset_rx(dev, MC68681_CHANNEL_A);
+    mc68681_reset_rx(dev, MC68681_CHANNEL_B);
 }
 
 
+/*
+    mc68681_init() - initialise the MC68681 DUART
+*/
 s32 mc68681_init(dev_t *dev)
 {
-    u8 dummy;
-
     mc68681_reset(dev);
 
     MC68681_REG(dev->base_addr, MC68681_IMR) = 0x00;    /* Disable all interrupts               */
@@ -49,47 +165,22 @@ s32 mc68681_init(dev_t *dev)
         BIT(MC68681_MR2_CTS) |
         (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
 
-	/*
-		Set CSRA:
-			bits 7-4: receiver clock select; 1100 = 38.4kbaud (with ACR[7] == 0)
-			bits 3-0: transmitter clock select; 1100 = 38.4kbaud (with ACR[7] == 0)
-	*/
-	////////////////// TODO ////////////////////
-	MC68681_REG(dev->base_addr, MC68681_CSRA) = 0xcc;
+    /* Set baud rate generator clock source to the external crystal clock divided by 16 */
+	MC68681_REG(dev->base_addr, MC68681_ACR) = /* 0x30 */
+        (MC68681_CT_MODE_C_XTAL16 << MC68681_ACR_CT_MODE_SHIFT);    /* BRG source = xtal/16 */
 
-	/*
-        Set ACR - auxiliary control register
-            bit     val     desc
-        ------------------------------------------------------------------------
-			7		0		Bit-rate generator set select.  1 = set 2.
-            6       0       Counter/timer mode: 0 = counter mode
-            5       1       } ACR[5:4] counter/timer clock source
-            4       1       } 11 = crystal clock divided by 16
-            3       0       IP3 change visible in ISR (0 = not visible)
-            2       0       IP2 change visible in ISR (0 = not visible)
-            1       0       IP1 change visible in ISR (0 = not visible)
-            0       0       IP0 change visible in ISR (0 = not visible)
-	*/
+	/* Set channel A baud rate to 115200 */
+	mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, 115200);
 
-	////////////////// TODO ////////////////////
-	MC68681_REG(dev->base_addr, MC68681_ACR) = 0x30;
+	/* Enable the channel A transmitter and receiver */
+	MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x05 */
+        (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
+        (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
-	/*
-		Set CRA:
-			bit		val		desc
-		----------------------------------------------------------------------
-			7		0		Not used; must be 0
-			6		0		} Miscellaneous commands
-			5		0		}
-			4		0		}
-			3		0		Disable Tx
-			2		1		Enable Tx
-			1		0		Disable Rx
-			0		1		Enable Rx
-	*/
-	////////////////// TODO ////////////////////
-	MC68681_REG(dev->base_addr, MC68681_CRA) = 0x05;
-
+	/* Enable the channel B transmitter and receiver */
+	MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x05 */
+        (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
+        (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
 	/*
 		Set OPCR - output port function select
@@ -104,6 +195,7 @@ s32 mc68681_init(dev_t *dev)
 			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
 			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
 	*/
+    /////////////// FIXME - platform-specific code (sets OP3 to timer interrupt output) //////////
 	////////////////// TODO ////////////////////
 	MC68681_REG(dev->base_addr, MC68681_OPCR) = 0x04;
 
@@ -111,20 +203,14 @@ s32 mc68681_init(dev_t *dev)
 		Set OPR - output port bits
 		Each bit in the OPR must be set to the complement of the required output pin level.
 	*/
-	////////////////// TODO ////////////////////
 	MC68681_REG(dev->base_addr, MC68681_SOPR) = 0xff;
 	MC68681_REG(dev->base_addr, MC68681_ROPR) = 0x00;
-
-	/* Switch to 115200 baud */
-    dummy = MC68681_REG(dev->base_addr, MC68681_BRG_TEST);      /* Enable "test" baud rates */
-    MC68681_REG(dev->base_addr, MC68681_CSRA) = 0x66;           /* Select 115200 baud       */
-    dummy += 0;                     /* (silence "set but not used" compiler warning)        */
 
     return SUCCESS;
 }
 
 
-s32 mc68681_putc(dev_t *dev, ku32 channel, const char c)
+s32 mc68681_putc(dev_t *dev, ku16 channel, const char c)
 {
     if(channel == 0)
     {
@@ -142,7 +228,7 @@ s32 mc68681_putc(dev_t *dev, ku32 channel, const char c)
 }
 
 
-int mc68681_getc(dev_t *dev, ku32 channel)
+int mc68681_getc(dev_t *dev, ku16 channel)
 {
     if(channel == 0)
     {
