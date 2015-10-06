@@ -9,7 +9,7 @@ FLASHTOOL=/usr/local/bin/flashtool
 DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
-CSOURCES=dfu.c main.c \
+CSOURCES=main.c \
 		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
 		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
 		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
@@ -20,17 +20,17 @@ CSOURCES=dfu.c main.c \
 
 ASMSOURCES=kernel/syscall.S cpu/$(CPU)/irq.S
 
+LDSCRIPT=platform/$(PLATFORM)/kernel.ld
+
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
 TOOLS=tools/bin/makemap
 
 MAPFILE=$(APPNAME).map
 
-LDFLAGS=-g -T rom.ld -nostdlib -static -L$(BASEDIR)/m68000 -L.
+LDFLAGS=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
 LIBS=-lgcc -lc -lkutil -lmonitor -lplatform
-
-LDSCRIPT=rom.ld
 
 VTABLE=startup.o
 OBJECTS=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
@@ -106,10 +106,6 @@ cpu/cpu.o: \
 
 cpu/$(CPU)/$(CPU).o: \
 	cpu/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c include/defs.h include/types.h
-
-dfu.o: \
-	dfu.c dfu.h cpu/cpu.h device/duart.h include/types.h include/error.h kutil/kutil.h \
-	memory/kmalloc.h memory/memorymap.h klibc/string.h
 
 startup.o: \
 	startup.S memory/memorymap.h

@@ -70,10 +70,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/led.h" />
-		<Unit filename="dfu.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="dfu.h" />
 		<Unit filename="fs/ext2/ext2.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -228,8 +224,13 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="platform/lambda_rev0/device.h" />
+		<Unit filename="platform/lambda_rev0/dfu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="platform/lambda_rev0/dfu.h" />
 		<Unit filename="platform/lambda_rev0/ds17485.h" />
 		<Unit filename="platform/lambda_rev0/exp16.h" />
+		<Unit filename="platform/lambda_rev0/kernel.ld" />
 		<Unit filename="platform/lambda_rev0/lambda.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -239,7 +240,6 @@
 		</Unit>
 		<Unit filename="platform/lambda_rev0/mc68681.h" />
 		<Unit filename="platform/platform.h" />
-		<Unit filename="rom.ld" />
 		<Unit filename="sched/sched.c">
 			<Option compilerVar="CC" />
 		</Unit>

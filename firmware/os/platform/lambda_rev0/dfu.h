@@ -1,5 +1,5 @@
-#ifndef DFU_H_INC
-#define DFU_H_INC
+#ifndef PLATFORM_LAMBDA_REV0_DFU_H_INC
+#define PLATFORM_LAMBDA_REV0_DFU_H_INC
 /*
 	Device firmware update functions
 

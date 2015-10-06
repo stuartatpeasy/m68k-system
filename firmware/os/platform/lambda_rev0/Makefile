@@ -5,7 +5,7 @@ include $(SRC_ROOT)/global.mk
 
 LIBNAME=$(SRC_ROOT)/libplatform.a
 
-CSOURCES=device.c lambda.c mc68681.c
+CSOURCES=device.c dfu.c lambda.c mc68681.c
 
 OBJECTS=$(CSOURCES:.c=.o)
 
@@ -24,6 +24,10 @@ clean:
 
 device.o: \
 	$(STDDEPS) device.c device.h
+
+dfu.o: \
+	$(STDDEPS) dfu.c dfu.h $(SRC_ROOT)/device/duart.h $(SRC_ROOT)/kutil/kutil.h \
+	$(SRC_ROOT)/memory/kmalloc.h $(SRC_ROOT)/memory/memorymap.h
 
 lambda.o: \
 	$(STDDEPS) lambda.c lambda.h

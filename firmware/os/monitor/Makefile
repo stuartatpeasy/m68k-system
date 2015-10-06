@@ -20,8 +20,7 @@ clean:
 	rm -f $(LIBNAME) $(OBJECTS)
 
 commands.o: \
-	commands.c monitor.h disasm.o srec.o ../memory/kmalloc.h ../memory/kmalloc.c ../dfu.c ../dfu.h \
-	../kutil/kutil.h
+	commands.c monitor.h disasm.o srec.o ../memory/kmalloc.h ../memory/kmalloc.c ../kutil/kutil.h
 
 disasm.o: \
 	disasm.c disasm.h ../kutil/kutil.h ../libkutil.a
