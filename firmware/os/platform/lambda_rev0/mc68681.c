@@ -210,7 +210,32 @@ s32 mc68681_init(dev_t *dev)
 }
 
 
-s32 mc68681_putc(dev_t *dev, ku16 channel, const char c)
+/*
+    mc68681_channel_a_putc() - write a character to serial channel A, blocking until done.
+*/
+s16 mc68681_channel_a_putc(dev_t *dev, const char c)
+{
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT))) ;
+    MC68681_REG(dev->base_addr, MC68681_THRA) = c;
+    return c;
+}
+
+
+/*
+    mc68681_channel_b_putc() - write a character to serial channel B, blocking until done.
+*/
+s16 mc68681_channel_b_putc(dev_t *dev, const char c)
+{
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT))) ;
+    MC68681_REG(dev->base_addr, MC68681_THRB) = c;
+    return c;
+}
+
+
+/*
+    mc68681_putc() - write a character to the specified serial channel, blocking until done.
+*/
+s16 mc68681_putc(dev_t *dev, ku16 channel, const char c)
 {
     if(channel == 0)
     {
@@ -228,7 +253,30 @@ s32 mc68681_putc(dev_t *dev, ku16 channel, const char c)
 }
 
 
-int mc68681_getc(dev_t *dev, ku16 channel)
+/*
+    mc68681_channel_a_getc() - read a character from serial channel A, blocking until done.
+*/
+s16 mc68681_channel_a_getc(dev_t *dev)
+{
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY))) ;
+    return MC68681_REG(dev->base_addr, MC68681_RHRA);
+}
+
+
+/*
+    mc68681_channel_b_getc() - read a character from serial channel B, blocking until done.
+*/
+s16 mc68681_channel_b_getc(dev_t *dev)
+{
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY))) ;
+    return MC68681_REG(dev->base_addr, MC68681_RHRB);
+}
+
+
+/*
+    mc68681_getc() - read a character from the specified serial channel, blocking until done.
+*/
+s16 mc68681_getc(dev_t *dev, ku16 channel)
 {
     if(channel == 0)
     {
