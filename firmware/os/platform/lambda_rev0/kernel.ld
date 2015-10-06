@@ -50,5 +50,5 @@ SECTIONS
 
 ENTRY(_main)
 
-STARTUP(startup.o)
+STARTUP(cpu/mc68000/startup.o)
 

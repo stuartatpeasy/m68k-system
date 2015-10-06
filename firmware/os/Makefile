@@ -18,7 +18,7 @@ CSOURCES=main.c \
 		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c \
 		 sched/sched.c
 
-ASMSOURCES=kernel/syscall.S cpu/$(CPU)/irq.S
+ASMSOURCES=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
 
 LDSCRIPT=platform/$(PLATFORM)/kernel.ld
 
@@ -32,7 +32,7 @@ LDFLAGS=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
 LIBS=-lgcc -lc -lkutil -lmonitor -lplatform
 
-VTABLE=startup.o
+VTABLE=cpu/$(CPU)/startup.o
 OBJECTS=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
 
 all: $(APPNAME)
@@ -108,7 +108,7 @@ cpu/$(CPU)/$(CPU).o: \
 	cpu/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c include/defs.h include/types.h
 
 startup.o: \
-	startup.S memory/memorymap.h
+	cpu/$(CPU)/startup.S memory/memorymap.h
 
 device/bbram.o: \
 	device/bbram.c device/bbram.h device/ds17485.h include/defs.h include/error.h include/types.h \

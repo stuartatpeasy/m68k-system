@@ -29,7 +29,7 @@ SRCDIR=$(PROJECTDIR)/os
 
 APPNAME=ayumos
 
-CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -I. -c -Wall -O3 -m68000 -g \
+CFLAGS=-I$(BASEDIR)/include -I$(SRCDIR) -I$(SRCDIR)/klibc -c -Wall -O3 -m68000 -g \
 		-include buildcfg.h -DKMALLOC_HEAP -DTARGET_MC68010 -ffreestanding -fomit-frame-pointer \
 		-DBUG_ATA_BYTE_SWAP -fno-delete-null-pointer-checks
 AFLAGS=-m68000
