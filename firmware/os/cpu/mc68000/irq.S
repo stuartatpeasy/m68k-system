@@ -31,7 +31,7 @@
 
     We need to call the interrupt handler in this way:
 
-        some_handler(u16 irql, void *data, regs_t *regs);
+        some_handler(u16 irql, void *data, regs_t regs);
 
     Hence the stack needs to end up looking like this, immediately before we jsr to some_handler():
     (note that the top two elements in the regs_t struct are SR and PC, and we "borrow" these from
