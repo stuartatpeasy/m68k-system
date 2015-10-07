@@ -5,7 +5,7 @@ include $(SRC_ROOT)/global.mk
 
 LIBNAME=$(SRC_ROOT)/libplatform.a
 
-CSOURCES=device.c dfu.c lambda.c mc68681.c
+CSOURCES=device.c dfu.c lambda.c
 
 OBJECTS=$(CSOURCES:.c=.o)
 
@@ -31,7 +31,4 @@ dfu.o: \
 
 lambda.o: \
 	$(STDDEPS) lambda.c lambda.h
-
-mc68681.o: \
-	$(STDDEPS) mc68681.c mc68681.h
 

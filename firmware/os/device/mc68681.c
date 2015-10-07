@@ -4,7 +4,7 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include <platform/lambda_rev0/mc68681.h>
+#include <device/mc68681.h>
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 {
@@ -32,6 +32,17 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
     {115200,    0x26},
 };
 
+
+s32 mc68681_enumerate()
+{
+    /*
+        MC68681 contains these devices:
+
+        ser[0..1]
+        ctr[0..4]
+        iopin[...]
+    */
+}
 
 s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
 {

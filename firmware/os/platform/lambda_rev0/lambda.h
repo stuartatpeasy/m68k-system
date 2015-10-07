@@ -7,6 +7,6 @@
 */
 
 #include <platform/platform.h>
-#include <platform/lambda_rev0/mc68681.h>
+#include <device/mc68681.h>
 
 #endif

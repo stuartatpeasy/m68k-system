@@ -1,6 +1,5 @@
 /*
     TODO - BOOT PROCESS
-    - at boot, read root fs partition name from BPB and mount fs at /
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 */
 
@@ -82,7 +81,7 @@ void _main()
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
-    plat_init();            /* Call the platform initialisation hook */
+//  plat_init();            /* Call the platform initialisation hook */
     plat_mem_detect();      /* Detect installed RAM */
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */

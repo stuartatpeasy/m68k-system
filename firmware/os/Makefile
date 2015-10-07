@@ -12,7 +12,8 @@ FLASHPROGDEV=/dev/ttyS1
 CSOURCES=main.c \
 		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
 		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
-		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
+		 device/expansion.c device/led.c device/mc68681.c device/block/ata/ata.c \
+		 device/block/partition/partition.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 		 kernel/elf.c kernel/ksym.c kernel/sched.c kernel/syscalls.c \
 		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
@@ -133,6 +134,9 @@ device/expansion.o: \
 
 device/led.o: \
 	device/led.c device/led.h device/duart.h include/defs.h include/types.h
+
+device/mc68681.o: \
+	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
 
 device/block/ata/ata.o: \
 	device/block/ata/ata.c device/block/ata/ata.h device/block/ata/ata-internal.h \
