@@ -32,6 +32,7 @@
 		</Unit>
 		<Unit filename="cpu/mc68000/mc68000.h" />
 		<Unit filename="cpu/mc68000/startup.S" />
+		<Unit filename="cpu/mc68000/syscall.S" />
 		<Unit filename="device/bbram.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -116,7 +117,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/sched.h" />
-		<Unit filename="kernel/syscall.S" />
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.c">
 			<Option compilerVar="CC" />
@@ -237,7 +237,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="platform/lambda_rev0/dfu.h" />
-		<Unit filename="platform/lambda_rev0/ds17485.h" />
 		<Unit filename="platform/lambda_rev0/exp16.h" />
 		<Unit filename="platform/lambda_rev0/kernel.ld" />
 		<Unit filename="platform/lambda_rev0/lambda.c">

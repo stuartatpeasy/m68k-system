@@ -8,7 +8,7 @@
 
 #include <platform/lambda_rev0/device.h>
 #include <device/mc68681.h>                 /* DUART            */
-#include <platform/lambda_rev0/ds17485.h>   /* RTC              */
+#include <device/ds17485.h>                 /* RTC              */
 #include <platform/lambda_rev0/ata.h>       /* ATA interface    */
 #include <platform/lambda_rev0/exp16.h>     /* Expansion slots  */
 
