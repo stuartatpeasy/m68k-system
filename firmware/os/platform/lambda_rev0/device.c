@@ -42,6 +42,13 @@ s32 plat_dev_enumerate(dev_t *root_dev)
 		printf("mc68681: device creation failed: %s\n", kstrerror(ret));
 
     /* ATA interface */
+	ret = dev_create(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", 26, (void *) 0xe20000, &d);
+	if(ret == SUCCESS)
+	{
+
+	}
+	else
+		printf("ata: device creation failed: %s\n", kstrerror(ret));
 
     /* DS17485 RTC */
 

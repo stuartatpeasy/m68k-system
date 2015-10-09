@@ -215,8 +215,11 @@ s32 mc68681_init(dev_t *dev)
 */
 s16 mc68681_channel_a_putc(dev_t *dev, const char c)
 {
-    while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT))) ;
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT)))
+		;
+
     MC68681_REG(dev->base_addr, MC68681_THRA) = c;
+
     return c;
 }
 
@@ -226,8 +229,11 @@ s16 mc68681_channel_a_putc(dev_t *dev, const char c)
 */
 s16 mc68681_channel_b_putc(dev_t *dev, const char c)
 {
-    while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT))) ;
-    MC68681_REG(dev->base_addr, MC68681_THRB) = c;
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT)))
+		;
+
+	MC68681_REG(dev->base_addr, MC68681_THRB) = c;
+
     return c;
 }
 
@@ -239,17 +245,22 @@ s16 mc68681_putc(dev_t *dev, ku16 channel, const char c)
 {
     if(channel == 0)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT))) ;
+        while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT)))
+			;
+
         MC68681_REG(dev->base_addr, MC68681_THRA) = c;
-        return c;
     }
     else if(channel == 1)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT))) ;
-        MC68681_REG(dev->base_addr, MC68681_THRB) = c;
-        return c;
+        while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT)))
+			;
+
+		MC68681_REG(dev->base_addr, MC68681_THRB) = c;
     }
-    else return -EINVAL;
+    else
+		return -EINVAL;
+
+	return c;
 }
 
 
@@ -258,7 +269,9 @@ s16 mc68681_putc(dev_t *dev, ku16 channel, const char c)
 */
 s16 mc68681_channel_a_getc(dev_t *dev)
 {
-    while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY))) ;
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
+		;
+
     return MC68681_REG(dev->base_addr, MC68681_RHRA);
 }
 
@@ -268,7 +281,9 @@ s16 mc68681_channel_a_getc(dev_t *dev)
 */
 s16 mc68681_channel_b_getc(dev_t *dev)
 {
-    while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY))) ;
+    while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
+		;
+
     return MC68681_REG(dev->base_addr, MC68681_RHRB);
 }
 
@@ -280,15 +295,20 @@ s16 mc68681_getc(dev_t *dev, ku16 channel)
 {
     if(channel == 0)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY))) ;
+        while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
+			;
+
         return MC68681_REG(dev->base_addr, MC68681_RHRA);
     }
     else if(channel == 1)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY))) ;
+        while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
+			;
+
         return MC68681_REG(dev->base_addr, MC68681_RHRB);
     }
-    else return -EINVAL;
+    else
+		return -EINVAL;
 }
 
 
@@ -317,3 +337,4 @@ void mc68681_stop_counter(dev_t *dev)
     u8 dummy = MC68681_REG(dev->base_addr, MC68681_STOP_CC);
     dummy += 0;     /* silence the "var set but not used" compiler warning */
 }
+
