@@ -7,13 +7,15 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include "errno.h"
-#include "stdio.h"        /* FIXME - remove */
-#include "string.h"
-#include "strings.h"
+#include <errno.h>
+#include <stdio.h>        /* FIXME - remove */
+#include <string.h>
+#include <strings.h>
 
-#include "kutil/kutil.h"
-#include "device/device.h"
+#include <kutil/kutil.h>
+#include <device/device.h>
+#include <platform/platform.h>
+
 
 /* Characters used to identify "sub-devices", e.g. partitions of devices.  The first sub-device
  * of device xxx will be xxx1, the second xxx2, ..., the 61st xxxZ */
@@ -44,7 +46,7 @@ s32 dev_enumerate()
     root_dev = CHECKED_KCALLOC(1, sizeof(dev_t));
 
     /* Populating the device tree is a board-specific operation */
-    return b_dev_enumerate(&(root_dev->first_child));
+    return plat_dev_enumerate(root_dev);
 }
 
 
@@ -56,16 +58,40 @@ dev_t *dev_get_root()
 
 dev_t *dev_add_child(dev_t *parent, dev_t *child)
 {
-    dev_t *p;
+	child->parent = parent;
 
-    /* TODO - should use list_head stuff here */
-    for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
-        ;
+	if(parent->first_child == NULL)
+		parent->first_child = child;
+	else
+	{
+    	dev_t *p;
 
-    p->next_sibling = child;
-    child->prev_sibling = p;
+    	for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
+        	;
+
+	    p->next_sibling = child;
+    	child->prev_sibling = p;
+	}
 
     return parent;
+}
+
+
+/*
+	dev_create() - create a new device
+*/
+s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, ku32 irql,
+				void *base_addr, dev_t **dev)
+{
+	*dev = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
+	(*dev)->type		= type;
+	(*dev)->subtype		= subtype;
+	(*dev)->irql		= irql;
+	(*dev)->base_addr	= base_addr;
+
+	strcpy((*dev)->name, name);
+
+	return SUCCESS;
 }
 
 

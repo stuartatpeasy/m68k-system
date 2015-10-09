@@ -12,6 +12,6 @@
 #include <include/defs.h>
 #include <include/types.h>
 
-s32 b_dev_enumerate(dev_t *first_dev);
+s32 plat_dev_enumerate(dev_t *root_dev);
 
 #endif

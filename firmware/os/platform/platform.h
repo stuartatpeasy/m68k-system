@@ -11,6 +11,7 @@
 	NOTE: this is currently just a collection of thoughts.  It is not yet ready for use!
 */
 
+#include <device/device.h>
 #include <include/defs.h>
 #include <memory/extents.h>
 #include <include/types.h>
@@ -28,6 +29,8 @@ void plat_get_serial_number(u8 sn[8]);
 
 void plat_stop_quantum();       /* Stop the currently-running quantum (task time-slice)         */
 void plat_start_quantum();      /* Start a new quantum                                          */
+
+s32 plat_dev_enumerate(dev_t *first_dev);
 
 /*
 	Base

@@ -33,17 +33,6 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 };
 
 
-s32 mc68681_enumerate()
-{
-    /*
-        MC68681 contains these devices:
-
-        ser[0..1]
-        ctr[0..4]
-        iopin[...]
-    */
-}
-
 s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
 {
     const mc68681_baud_rate_entry *p;

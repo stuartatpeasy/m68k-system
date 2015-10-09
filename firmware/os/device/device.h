@@ -10,8 +10,9 @@
 */
 
 #include "device/devctl.h"
-#include "klibc/errno.h"
 #include "include/types.h"
+#include "klibc/errno.h"
+
 
 #define DEVICE_NAME_LEN			(8)		/* Max length of device name, including terminating \0 	*/
 // FIXME REMOVE
@@ -35,7 +36,8 @@ typedef enum
     DEV_TYPE_NONE               = 0x00,
 	DEV_TYPE_BLOCK              = 0x01,
 	DEV_TYPE_CHARACTER          = 0x02,
-	DEV_TYPE_NET                = 0x03
+	DEV_TYPE_NET                = 0x03,
+	DEV_TYPE_SERIAL				= 0x04
 } dev_type_t;
 
 
@@ -70,7 +72,7 @@ typedef struct dev
     dev_driver_t *      driver;
     char                name[DEVICE_NAME_LEN];
     void *              data;
-    u32                 irq;
+    u32                 irql;
     void *              base_addr;
 
     struct dev *        parent;
@@ -93,6 +95,13 @@ dev_t * g_devices[MAX_DEVICES];      // FIXME REMOVE
 */
 u32 driver_init();
 void driver_shut_down();
+
+dev_t *dev_add_child(dev_t *parent, dev_t *child);
+
+s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, ku32 irql,
+				void *base_addr, dev_t **dev);
+
+// FIXME REMOVE
 s32 create_device(const dev_type_t type, const dev_subtype_t class, dev_driver_t * const driver,
                   const char *name, void * const data);
 
