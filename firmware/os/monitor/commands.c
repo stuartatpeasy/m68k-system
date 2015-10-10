@@ -841,16 +841,21 @@ MONITOR_CMD_HANDLER(test)
     }
 */
 
-    expansion_root_t exp =
+#if 0
+    dev_t dev =
     {
-        .base = (void *) 0xb00000,
+        .base_addr = (void *) 0xb00000,
         .len = 0x100000,
         .irql = 29          /* IRQ 5 */
     };
 
-    s32 ret = encx24j600_init(&exp);
+    s32 ret = encx24j600_init(&dev);
 
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
+#endif
+
+    s32 ret = dev_enumerate();
+    printf("dev_enumerate() returned %s\n", kstrerror(ret));
 
 
     return MON_E_OK;

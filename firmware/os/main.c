@@ -11,7 +11,6 @@
 #include <device/device.h>
 #include <device/ds17485.h>
 #include <device/duart.h>
-#include <device/expansion.h>
 #include <device/led.h>
 #include <fs/vfs.h>
 #include <include/defs.h>
@@ -72,16 +71,15 @@ void _main()
 	cpu_init_interrupt_handlers();
 
     /* === Initialise peripherals - phase 1 === */
-    plat_init();
+//    plat_init();
 
     /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
-//	duart_init();
+	duart_init();
 
     /* Activate red LED while the boot process continues */
 	led_off(LED_RED | LED_GREEN);
 	led_on(LED_RED);
 
-//  plat_init();            /* Call the platform initialisation hook */
     plat_mem_detect();      /* Detect installed RAM */
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
@@ -120,9 +118,6 @@ void _main()
 	/* Register drivers and initialise devices */
 	puts("Initialising devices and drivers");
 	driver_init();
-
-	/* Enumerate expansion cards */
-	expansion_init();
 
 	printf("%u bytes of kernel heap memory available\n"
            "%u bytes of user memory available\n", kfreemem(),

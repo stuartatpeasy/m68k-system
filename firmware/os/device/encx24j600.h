@@ -12,12 +12,11 @@
 */
 
 #include <cpu/cpu.h>
-#include "device/device.h"
-#include "device/expansion.h"
-#include "include/byteorder.h"
-#include "include/defs.h"
-#include "include/error.h"
-#include "include/types.h"
+#include <device/device.h>
+#include <include/byteorder.h>
+#include <include/defs.h>
+#include <include/error.h>
+#include <include/types.h>
 
 
 #define ENCX24_SFR_BASE         (0x7e00)	/* Base address of special-function registers		*/
@@ -33,12 +32,12 @@
 
 const dev_driver_t g_encx24j600_device;
 
-s32 encx24j600_reset(expansion_root_t *root);
-s32 encx24j600_init(expansion_root_t *root);
-s32 encx24j600_shut_down(expansion_root_t *root);
-s32 encx24j600_read(expansion_root_t *root);
-s32 encx24j600_write(expansion_root_t *root);
-s32 encx24j600_control(expansion_root_t *root);
+s32 encx24j600_reset(dev_t *dev);
+s32 encx24j600_init(dev_t *dev);
+s32 encx24j600_shut_down(dev_t *dev);
+s32 encx24j600_read(dev_t *dev);
+s32 encx24j600_write(dev_t *dev);
+s32 encx24j600_control(dev_t *dev);
 void encx24j600_irq(u16 irql, void *data, const regs_t regs);
 
 /*

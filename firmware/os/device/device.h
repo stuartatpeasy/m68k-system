@@ -74,6 +74,7 @@ typedef struct dev
     void *              data;
     u32                 irql;
     void *              base_addr;
+    u32                 len;
 
     struct dev *        parent;
     struct dev *        first_child;
