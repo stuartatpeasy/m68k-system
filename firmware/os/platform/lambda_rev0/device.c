@@ -79,14 +79,18 @@ void expansion_init()
         printf("slot %d (0x%08x-0x%08x irq %u): ", i, base_addr, base_addr + EXP_ADDR_LEN - 1,
                irql);
 
-        if(EXP_PRESENT(i))
+        if(!(mc68681_read_ip(g_lambda_console) & EXP_PD_MASK(i)))
         {
             /* A card is present; read its identity from the first byte of its address space */
             u8 id;
 
-            EXP_ID_ASSERT();        /* Assert EID line to ask peripherals to identify themselves */
+            /* Assert nEID to ask peripherals to identify themselves */
+            mc68681_reset_op_bits(g_lambda_console, BIT(EXP_ID));
+
             id = *((u8 *) EXP_BASE(i));
-            EXP_ID_NEGATE();
+
+            /* Negate nEID */
+            mc68681_set_op_bits(g_lambda_console, BIT(EXP_ID));
 
             switch(id)
             {

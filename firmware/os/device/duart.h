@@ -105,8 +105,4 @@
 #define DUART_SR_FFULL				(1)
 #define DUART_SR_RXRDY				(0)
 
-
-void duart_start_counter(void);
-void duart_stop_counter(void);
-
 #endif

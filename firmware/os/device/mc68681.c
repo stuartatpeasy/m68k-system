@@ -360,15 +360,15 @@ s16 mc68681_getc(dev_t *dev, ku16 channel)
 
 
 /*
-    duart_start_counter() - start the DUART counter
+    mc68681_start_counter() - start the MC68681 counter/timer.
 */
-void mc68681_start_counter(dev_t *dev)
+void mc68681_start_counter(dev_t *dev, ku16 init_count)
 {
     u8 dummy;
 
     /* Set CTUR/CTLR - the counter/timer upper/lower timeout counts */
-    MC68681_REG(dev->base_addr, MC68681_CTUR) = (((MC68681_CLK_HZ / 16) / TICK_RATE) & 0xff00) >> 8;
-    MC68681_REG(dev->base_addr, MC68681_CTLR) = ((MC68681_CLK_HZ / 16) / TICK_RATE) & 0xff;
+    MC68681_REG(dev->base_addr, MC68681_CTUR) = (init_count >> 8) & 0xff;
+    MC68681_REG(dev->base_addr, MC68681_CTLR) = init_count & 0xff;
 
     dummy = MC68681_REG(dev->base_addr, MC68681_START_CC);
     dummy += 0;     /* silence the "var set but not used" compiler warning */
@@ -376,12 +376,37 @@ void mc68681_start_counter(dev_t *dev)
 
 
 /*
-    duart_stop_counter() - stop the DUART counter
+    mc68681_stop_counter() - stop the MC68681 counter/timer.
     Check the MC68681 data sheet - there may be some oddness related to this.
 */
 void mc68681_stop_counter(dev_t *dev)
 {
     u8 dummy = MC68681_REG(dev->base_addr, MC68681_STOP_CC);
     dummy += 0;     /* silence the "var set but not used" compiler warning */
+}
+
+
+/*
+    mc68681_read_ip() - read the levels of the input pins IP6-0.
+*/
+u8 mc68681_read_ip(dev_t *dev)
+{
+    return MC68681_REG(dev->base_addr, MC68681_IP);
+}
+
+
+/*
+    mc68681_set_op_bits() - set the specified output pins OP7-0 to logic 1.
+    Note: this function only sets bits; it does not clear them.
+*/
+void mc68681_set_op_bits(dev_t *dev, ku8 bits)
+{
+    MC68681_REG(dev->base_addr, MC68681_ROPR) = bits;
+}
+
+
+void mc68681_reset_op_bits(dev_t *dev, ku8 bits)
+{
+    MC68681_REG(dev->base_addr, MC68681_SOPR) = bits;
 }
 

@@ -706,7 +706,7 @@ MONITOR_CMD_HANDLER(rootfs)
 */
 MONITOR_CMD_HANDLER(schedule)
 {
-    duart_start_counter();
+    plat_start_quantum();
     return MON_E_OK;
 }
 

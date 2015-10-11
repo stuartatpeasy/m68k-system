@@ -102,3 +102,15 @@ s16 plat_console_getc()
 {
     return mc68681_channel_a_getc(g_lambda_console);
 }
+
+
+void plat_start_quantum()
+{
+    mc68681_start_counter(g_lambda_console, (MC68681_CLK_HZ / 16) / TICK_RATE);
+}
+
+
+void plat_stop_quantum()
+{
+    mc68681_stop_counter(g_lambda_console);
+}

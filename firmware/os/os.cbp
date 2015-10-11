@@ -56,18 +56,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/ds17485.h" />
-		<Unit filename="device/duart.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/duart.h" />
 		<Unit filename="device/encx24j600.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/encx24j600.h" />
-		<Unit filename="device/expansion.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/expansion.h" />
 		<Unit filename="device/led.c">
 			<Option compilerVar="CC" />
 		</Unit>

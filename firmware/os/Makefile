@@ -11,8 +11,8 @@ FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=main.c \
 		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
-		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
-		 device/led.c device/mc68681.c device/block/ata/ata.c device/block/partition/partition.c \
+		 device/bbram.c device/device.c device/ds17485.c device/encx24j600.c device/led.c \
+		 device/mc68681.c device/block/ata/ata.c device/block/partition/partition.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 		 kernel/elf.c kernel/ksym.c kernel/sched.c kernel/syscalls.c \
 		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
@@ -95,9 +95,9 @@ $(TOOLS):
 #
 
 main.o: \
-	main.c device/devctl.h device/device.h device/led.h device/ds17485.h device/duart.h fs/vfs.h \
-	include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h memory/extents.o memory/kmalloc.h \
-	memory/slab.h monitor/monitor.h device/duart.o device/device.o kernel/sched.h
+	main.c device/devctl.h device/device.h device/led.h device/ds17485.h fs/vfs.h include/defs.h \
+	klibc/stdio.h klibc/strings.h kutil/kutil.h memory/extents.o memory/kmalloc.h memory/slab.h \
+	monitor/monitor.h device/device.o kernel/sched.h
 
 cpu/cpu.o: \
 	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
@@ -123,11 +123,8 @@ device/encx24j600.o: \
 	device/encx24j600.c device/encx24j600.h cpu/cpu.h device/device.h include/byteorder.h \
 	include/defs.h include/error.h include/types.h
 
-device/duart.o: \
-	device/duart.c device/duart.h include/defs.h include/types.h
-
 device/led.o: \
-	device/led.c device/led.h device/duart.h include/defs.h include/types.h
+	device/led.c device/led.h include/defs.h include/types.h
 
 device/mc68681.o: \
 	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
@@ -171,6 +168,9 @@ kernel/elf.o: \
 kernel/ksym.o: \
 	kernel/ksym.c kernel/ksym.h include/defs.h include/types.h
 
+kernel/sched.o: \
+	kernel/sched.c kernel/sched.h cpu/cpu.h include/defs.h include/types.h klibc/strings.h
+
 kernel/syscalls.o: \
 	kernel/syscalls.c kernel/syscall.h
 
@@ -188,7 +188,3 @@ memory/kmalloc.o: \
 
 memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
-
-kernel/sched.o: \
-	kernel/sched.c kernel/sched.h cpu/cpu.h device/duart.h include/defs.h include/types.h \
-	klibc/strings.h

@@ -288,7 +288,11 @@ s16 mc68681_channel_a_getc(dev_t *dev);
 s16 mc68681_channel_b_getc(dev_t *dev);
 s16 mc68681_getc(dev_t *dev, ku16 channel);
 
-void mc68681_start_counter(dev_t *dev);
+void mc68681_start_counter(dev_t *dev, ku16 init_count);
 void mc68681_stop_counter(dev_t *dev);
+
+u8 mc68681_read_ip(dev_t *dev);
+void mc68681_set_op_bits(dev_t *dev, ku8 bits);
+void mc68681_reset_op_bits(dev_t *dev, ku8 bits);
 
 #endif

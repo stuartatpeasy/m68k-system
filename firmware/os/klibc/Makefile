@@ -32,10 +32,10 @@ errno.o: \
 
 printf.o: \
 	printf.c stdio.h string.h ../memory/kmalloc.h ../include/limits.h ../include/types.h \
-	../device/duart.h
+	../platform/platform.h
 
 stdio.o: \
-	stdio.c ../include/limits.h ../include/types.h ../device/duart.h
+	stdio.c ../include/limits.h ../include/types.h ../platform/platform.h
 
 stdlib.o: \
 	stdlib.c stdlib.h ../include/limits.h ../include/types.h ../memory/kmalloc.h
