@@ -33,8 +33,8 @@ history.o: \
 
 monitor.o: \
 	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../device/bbram.h \
-	../device/ds17485.h ../fs/mount.h ../include/defs.h ../include/version.h ../kutil/kutil.h \
-	../memory/kmalloc.h ../memory/slab.h
+	../fs/mount.h ../include/defs.h ../include/version.h ../kutil/kutil.h ../memory/kmalloc.h \
+	../memory/slab.h
 
 readline.o: \
 	readline.c readline.h ../platform/platform.h

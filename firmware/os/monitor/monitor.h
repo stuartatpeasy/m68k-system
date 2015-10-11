@@ -11,7 +11,6 @@
 
 #include <platform/lambda_rev0/dfu.h>
 #include <device/bbram.h>
-#include <device/ds17485.h>
 #include <fs/mount.h>
 #include <fs/vfs.h>
 #include <include/defs.h>

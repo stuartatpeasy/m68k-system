@@ -47,7 +47,7 @@ MONITOR_CMD_HANDLER(date)
         if(rtc_time_from_str(args[0], &tm) == FAIL)
             return EINVAL;
 
-        ((rtc_ops_t *) dev->driver)->set_time(dev, &tm);
+        return ((rtc_ops_t *) dev->driver)->set_time(dev, &tm);
     }
     else
         return EINVAL;
