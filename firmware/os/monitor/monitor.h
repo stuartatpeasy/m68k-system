@@ -40,17 +40,6 @@
 #define MONITOR_CMD_HANDLER(name)    \
     s32 cmd_ ## name(ks32 num_args, s8 ** args)
 
-/*
-	Return / error codes for commands
-*/
-#define MON_E_OK				(0)
-#define MON_E_SYNTAX			(1)
-#define MON_E_INVALID_ARG		(2)
-#define MON_E_NOT_IMPLEMENTED	(3)
-#define MON_E_INTERNAL_ERROR	(4)
-#define MON_E_OUT_OF_MEMORY		(5)
-#define MON_E_BAD_CHECKSUM      (6)
-
 
 struct command
 {

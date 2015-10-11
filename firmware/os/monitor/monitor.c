@@ -88,6 +88,7 @@ void dispatch_command(char *cmdline)
 	unsigned char c = 0, num_args = 0;
 	char command[MON_VERB_MAX_LENGTH + 1];
 	s8 *args[MON_MAX_ARGS + 1];
+	s32 ret;
 	u32 u;
 
 	/* trim leading space */
@@ -172,35 +173,9 @@ void dispatch_command(char *cmdline)
 		}
 	}
 
-	switch(pcommand->handler(num_args, args))
-	{
-		case MON_E_SYNTAX:
-			puts("Syntax error");
-			break;
-
-		case MON_E_INVALID_ARG:
-			puts("Invalid argument");
-			break;
-
-		case MON_E_NOT_IMPLEMENTED:
-			puts("Not implemented");
-			break;
-
-		case MON_E_INTERNAL_ERROR:
-			puts("Internal error");
-			break;
-
-		case MON_E_OUT_OF_MEMORY:
-			puts("Out of memory");
-			break;
-
-        case MON_E_BAD_CHECKSUM:
-            puts("Bad checksum");
-            break;
-
-		case MON_E_OK:
-			break;
-	}
+    ret = pcommand->handler(num_args, args);
+    if(ret != SUCCESS)
+        puts(kstrerror(ret));
 
 	for(c = 0; c < num_args; ++c)
 		kfree(args[c]);

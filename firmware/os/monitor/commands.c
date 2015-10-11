@@ -21,17 +21,16 @@ MONITOR_CMD_HANDLER(date)
     dev_t *dev;
 
     if(num_args > 1)
-        return MON_E_SYNTAX;
+        return EINVAL;
 
+    /* Find an RTC */
     dev = dev_find("rtc0");
     if(dev == NULL)
-        return MON_E_NOT_IMPLEMENTED;
+        return ENOSYS;
 
     if(num_args  == 0)
     {
         char timebuf[12], datebuf[32];
-
-        /* Find an RTC */
 
         ((rtc_ops_t *) dev->driver)->get_time(dev, &tm);
 
@@ -46,14 +45,14 @@ MONITOR_CMD_HANDLER(date)
                 date YYYYMMDDHHMMSS
         */
         if(rtc_time_from_str(args[0], &tm) == FAIL)
-            return MON_E_SYNTAX;
+            return EINVAL;
 
         ((rtc_ops_t *) dev->driver)->set_time(dev, &tm);
     }
     else
-        return MON_E_SYNTAX;
+        return EINVAL;
 
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -68,15 +67,15 @@ MONITOR_CMD_HANDLER(dfu)
 	s8 *data, *endptr;
 
 	if(num_args != 2)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	len = strtoul(args[0], &endptr, 0);
 	if(*endptr || !len)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
     cksum_sent = strtoul(args[1], &endptr, 0);
     if(*endptr || !len)
-        return MON_E_INVALID_ARG;
+        return EINVAL;
 
     /*
         The dfu() function requires an even number of bytes, so - if the new firmware image is an
@@ -86,7 +85,7 @@ MONITOR_CMD_HANDLER(dfu)
     buffer_len = (len & 1) ? len + 1 : len;
 
 	if((data = umalloc(buffer_len)) == NULL)
-		return MON_E_OUT_OF_MEMORY;
+		return ENOMEM;
 
     printf("Send %u bytes\n", len);
 	for(i = 0; i < len; i++)
@@ -97,14 +96,14 @@ MONITOR_CMD_HANDLER(dfu)
 
     cksum_calculated = fletcher16(data, len);
     if(cksum_calculated != cksum_sent)
-        return MON_E_BAD_CHECKSUM;
+        return ECKSUM;
 
 	if((ret = dfu((ku16 *) data, buffer_len)))
 		printf("Firmware update failed: %s\n", kstrerror(ret));
 
     ufree(data);
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -121,17 +120,17 @@ MONITOR_CMD_HANDLER(disassemble)
 	s8 line[80], instr_printed;
 
 	if(!num_args || (num_args > 2))
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	start = strtoul(args[0], &endptr, 0);
 	if(*endptr || (start & 1))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	if(num_args == 2)
 	{
 		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || (num_bytes < 2) || (num_bytes & 1))
-			return MON_E_INVALID_ARG;
+			return EINVAL;
 	}
 	else num_bytes = 256;
 
@@ -163,26 +162,16 @@ MONITOR_CMD_HANDLER(disassemble)
 		}
 	}
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
+/*
+    dump_mem() - helper for dump[h|w] commands
+*/
 s32 dump_mem(ks32 start, ks32 num_bytes, ks8 word_size)
 {
-    s32 ret = dump_hex((void *) start, word_size, 0, num_bytes);
-
-    switch(ret)
-    {
-        case EINVAL:
-        default:
-            return MON_E_INTERNAL_ERROR;
-
-        case ENOMEM:
-            return MON_E_OUT_OF_MEMORY;
-
-        case 0:
-            return MON_E_OK;
-    }
+    return dump_hex((void *) start, word_size, 0, num_bytes);
 }
 
 
@@ -197,17 +186,17 @@ MONITOR_CMD_HANDLER(dump)
 	s8 *endptr;
 
 	if(!num_args || (num_args > 2))
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	start = strtoul(args[0], &endptr, 0);
 	if(*endptr)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	if(num_args == 2)
 	{
 		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || (num_bytes < 1))
-			return MON_E_INVALID_ARG;
+			return EINVAL;
 	}
 	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
@@ -226,20 +215,20 @@ MONITOR_CMD_HANDLER(dumph)
 	s8 *endptr;
 
 	if(!num_args || (num_args > 2))
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	start = strtoul(args[0], &endptr, 0);
 	if(*endptr)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	if(start & 1)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	if(num_args == 2)
 	{
 		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || !num_bytes || (num_bytes & 1))
-			return MON_E_INVALID_ARG;
+			return EINVAL;
 	}
 	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
@@ -259,20 +248,20 @@ MONITOR_CMD_HANDLER(dumpw)
 	s8 *endptr;
 
 	if(!num_args || (num_args > 2))
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	start = strtoul(args[0], &endptr, 0);
 	if(*endptr)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	if(start & 3)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	if(num_args == 2)
 	{
 		num_bytes = strtoul(args[1], &endptr, 0);
 		if(*endptr || !num_bytes || (num_bytes & 3))
-			return MON_E_INVALID_ARG;
+			return EINVAL;
 	}
 	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
@@ -298,7 +287,7 @@ MONITOR_CMD_HANDLER(echo)
     if(num_args)
         puts("");
 
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -309,24 +298,24 @@ MONITOR_CMD_HANDLER(fill)
 	s8 *endptr;
 
 	if(num_args != 3)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	start = (u8 *) strtoul(args[0], &endptr, 0);
 	if(*endptr)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	count = strtoul(args[1], &endptr, 0);
 	if(*endptr | !count)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	data = strtoul(args[2], &endptr, 0);
 	if((*endptr) || (data > 0xff))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	while(count--)
 		*((u8 *) start++) = (u8) data;
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -337,24 +326,24 @@ MONITOR_CMD_HANDLER(fillh)
 	s8 *endptr;
 
 	if(num_args != 3)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	start = (u16 *) strtoul(args[0], &endptr, 0);
 	if(*endptr || ((u32) start & 0x1))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	count = strtoul(args[1], &endptr, 0);
 	if(*endptr || !count)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	data = strtoul(args[2], &endptr, 0);
 	if((*endptr) || (data > 0xffff))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	while(count--)
 		*start++ = (u16) data;
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -364,24 +353,24 @@ MONITOR_CMD_HANDLER(fillw)
 	s8 *endptr;
 
 	if(num_args != 3)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	start = (u32 *) strtoul(args[0], &endptr, 0);
 	if(*endptr || ((u32) start & 0x3))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	count = strtoul(args[1], &endptr, 0);
 	if(*endptr | !count)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	data = strtoul(args[2], &endptr, 0);
 	if(*endptr)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	while(count--)
 		*start++ = data;
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -389,7 +378,7 @@ MONITOR_CMD_HANDLER(free)
 {
 	printf("kernel: %9d bytes free\n"
            "  user: %9d bytes free\n", kfreemem(), ufreemem());
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -404,15 +393,15 @@ MONITOR_CMD_HANDLER(go)
 	void (*addr)();
 
 	if(num_args != 1)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	addr = (void (*)()) strtoul(args[0], &endptr, 0);
 	if(*endptr || ((u32) addr & 1))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	addr();
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -476,7 +465,7 @@ MONITOR_CMD_HANDLER(help)
 		  "write[h|w] <address> <data>\n"
 		  "    Write <data> to to memory at <address>\n\n"
 		);
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -499,7 +488,7 @@ MONITOR_CMD_HANDLER(history)
         printf("%3i: %s\n", i, cmd == NULL ? "" : cmd);
     }
 
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -511,7 +500,7 @@ MONITOR_CMD_HANDLER(history)
 MONITOR_CMD_HANDLER(id)
 {
     puts(OS_NAME " v" OS_VERSION_STR " on " CPU_NAME ", build date " __DATE__ " " __TIME__);
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -536,7 +525,7 @@ MONITOR_CMD_HANDLER(ls)
         if(ret != SUCCESS)
         {
             puts(kstrerror(ret));
-            return MON_E_OK;
+            return SUCCESS;
         }
 
         if(dirent.type == FSNODE_TYPE_DIR)
@@ -548,7 +537,7 @@ MONITOR_CMD_HANDLER(ls)
             if(ret != SUCCESS)
             {
                 puts(kstrerror(ret));
-                return MON_E_OK;
+                return SUCCESS;
             }
 
             while((ret = vfs_read_dir(&ctx, &dirent, NULL)) != ENOENT)
@@ -570,9 +559,9 @@ MONITOR_CMD_HANDLER(ls)
         }
     }
     else
-        return MON_E_SYNTAX;
+        return EINVAL;
 
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -603,7 +592,7 @@ MONITOR_CMD_HANDLER(map)
            USER_RAM_START, g_ram_top, g_ram_top - USER_RAM_START,
            &_stext, &_etext, &_etext - &_stext);
 */
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -630,12 +619,12 @@ MONITOR_CMD_HANDLER(mount)
     else if(num_args == 3)
     {
         /* Mount filesystem */
-        return MON_E_NOT_IMPLEMENTED;
+        return ENOSYS;
     }
     else
-        return MON_E_SYNTAX;
+        return EINVAL;
 
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -657,7 +646,7 @@ MONITOR_CMD_HANDLER(raw)
 	}
 
 	puts("\n");
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -668,7 +657,7 @@ MONITOR_CMD_HANDLER(raw)
 */
 MONITOR_CMD_HANDLER(rootfs)
 {
-    return MON_E_NOT_IMPLEMENTED;
+    return ENOSYS;
 #if 0
 /* FIXME - reinstate this code */
     struct bbram_param_block bpb;
@@ -698,7 +687,7 @@ MONITOR_CMD_HANDLER(rootfs)
 
         if((strlen(args[0]) > sizeof(bpb.rootfs)) || (strlen(args[1]) > sizeof(bpb.fstype))
            || !vfs_get_driver_by_name(args[1]))
-            return MON_E_INVALID_ARG;
+            return EINVAL;
 
         bbram_param_block_read(&bpb);
         strncpy(bpb.rootfs, args[0], sizeof(bpb.rootfs));
@@ -707,9 +696,9 @@ MONITOR_CMD_HANDLER(rootfs)
         bbram_param_block_write(&bpb);
     }
     else
-        return MON_E_SYNTAX;
+        return EINVAL;
 
-    return MON_E_OK;
+    return SUCCESS;
 #endif
 }
 
@@ -722,7 +711,7 @@ MONITOR_CMD_HANDLER(rootfs)
 MONITOR_CMD_HANDLER(schedule)
 {
     plat_start_quantum();
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -741,17 +730,17 @@ MONITOR_CMD_HANDLER(serial)
             if(!strcmp(args[1], "on"))
             {
                 g_echo = 1;
-                return MON_E_OK;
+                return SUCCESS;
             }
             else if(!strcmp(args[1], "off"))
             {
                 g_echo = 0;
-                return MON_E_OK;
+                return SUCCESS;
             }
         }
     }
 
-    return MON_E_SYNTAX;
+    return EINVAL;
 }
 
 
@@ -775,7 +764,7 @@ MONITOR_CMD_HANDLER(slabs)
     }
     puts("-------------------------------------");
 
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -787,20 +776,20 @@ MONITOR_CMD_HANDLER(slabs)
 MONITOR_CMD_HANDLER(srec)
 {
 	if(num_args)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	struct srec_data s;
 
 	if(srec(&s))
 	{
 		printf("S-record error at line %u: %s\n", s.line, srec_strerror(s.error));
-		return MON_E_OK;	/* FIXME: find a way of returning an already-reported error */
+		return SUCCESS;	/* FIXME: find a way of returning an already-reported error */
 	}
 
 	printf("Uploaded %u bytes at address %p\nStart address %x\n",
 				s.data_len, s.data, s.start_address);
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -870,7 +859,7 @@ MONITOR_CMD_HANDLER(test)
 #endif
 
     if(num_args != 1)
-        return MON_E_SYNTAX;
+        return EINVAL;
 
     dev_t * dev = dev_find(args[0]);
     if(dev == NULL)
@@ -878,7 +867,7 @@ MONITOR_CMD_HANDLER(test)
     else
         printf("%s: found; base_addr=%p irql=%d\n", args[0], dev->base_addr, dev->irql);
 
-    return MON_E_OK;
+    return SUCCESS;
 }
 
 
@@ -893,21 +882,21 @@ MONITOR_CMD_HANDLER(upload)
 	s8 *data, *data_, *endptr;
 
 	if(num_args != 1)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	len = strtoul(args[0], &endptr, 0);
 	if(*endptr || !len)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	if((data = kmalloc(len)) == NULL)
-		return MON_E_OUT_OF_MEMORY;
+		return ENOMEM;
 
 	for(data_ = data; len--;)
 		*data_++ = plat_console_getc();
 
 	printf("Uploaded %li bytes at %p\n", data_ - data, data);
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -922,19 +911,19 @@ MONITOR_CMD_HANDLER(write)
 	s8 *endptr;
 
 	if(num_args != 2)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	addr = strtoul(args[0], &endptr, 0);
 	if(*endptr)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	data = strtoul(args[1], &endptr, 0);
 	if((*endptr) || (data > 0xff))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	*((u8 *) addr) = (u8) data;
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -949,19 +938,19 @@ MONITOR_CMD_HANDLER(writeh)
 	s8 *endptr;
 
 	if(num_args != 2)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	addr = strtoul(args[0], &endptr, 0);
 	if((*endptr) || (addr & 0x1))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	data = strtoul(args[1], &endptr, 0);
 	if((*endptr) || (data > 0xffff))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	*((u16 *) addr) = (u16) data;
 
-	return MON_E_OK;
+	return SUCCESS;
 }
 
 
@@ -976,17 +965,17 @@ MONITOR_CMD_HANDLER(writew)
 	s8 *endptr;
 
 	if(num_args != 2)
-		return MON_E_SYNTAX;
+		return EINVAL;
 
 	addr = strtoul(args[0], &endptr, 0);
 	if((*endptr) || (addr & 0x3))
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	data = strtoul(args[1], &endptr, 0);
 	if(*endptr)
-		return MON_E_INVALID_ARG;
+		return EINVAL;
 
 	*((u32 *) addr) = data;
 
-	return MON_E_OK;
+	return SUCCESS;
 }
