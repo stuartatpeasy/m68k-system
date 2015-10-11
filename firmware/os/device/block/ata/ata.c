@@ -15,7 +15,7 @@
 static ata_device_t g_ata_devices[ATA_MAX_DEVICES];
 blockdev_stats_t g_ata_stats;
 
-dev_driver_t g_ata_driver =
+block_driver_t g_ata_driver =
 {
     .name       = "ata",
     .version    = 0x00000100,

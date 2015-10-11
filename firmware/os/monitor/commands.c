@@ -17,16 +17,24 @@
 */
 MONITOR_CMD_HANDLER(date)
 {
-    return MON_E_NOT_IMPLEMENTED;
-#if 0
-/* FIXME - reinstate this code */
     rtc_time_t tm;
+    dev_t *dev;
 
-    if(num_args == 0)
+    if(num_args > 1)
+        return MON_E_SYNTAX;
+
+    dev = dev_find("rtc0");
+    if(dev == NULL)
+        return MON_E_NOT_IMPLEMENTED;
+
+    if(num_args  == 0)
     {
         char timebuf[12], datebuf[32];
 
-        ds17485_get_time(&tm);
+        /* Find an RTC */
+
+        ((rtc_ops_t *) dev->driver)->get_time(dev, &tm);
+
         time_iso8601(&tm, timebuf, sizeof(timebuf));
         date_long(&tm, datebuf, sizeof(datebuf));
         printf("%s %s\n", timebuf, datebuf);
@@ -40,13 +48,12 @@ MONITOR_CMD_HANDLER(date)
         if(rtc_time_from_str(args[0], &tm) == FAIL)
             return MON_E_SYNTAX;
 
-        ds17485_set_time(&tm);
+        ((rtc_ops_t *) dev->driver)->set_time(dev, &tm);
     }
     else
         return MON_E_SYNTAX;
 
     return MON_E_OK;
-#endif
 }
 
 

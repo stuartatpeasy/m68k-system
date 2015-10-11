@@ -39,6 +39,92 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 
 
 /*
+    mc68681_init() - initialise the MC68681 DUART
+*/
+s32 mc68681_init(dev_t *dev)
+{
+    serial_ops_t *ops;
+
+    dev->data = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
+
+    dev->driver = kcalloc(1, sizeof(serial_ops_t));
+    if(!dev->driver)
+    {
+        kfree(dev->data);
+        return ENOMEM;
+    }
+
+    ops = (serial_ops_t *) dev->driver;
+    ops->getc = mc68681_channel_a_getc;
+    ops->putc = mc68681_channel_a_putc;
+
+    mc68681_reset(dev);
+
+    MC68681_REG(dev->base_addr, MC68681_IMR) = 0x00;    /* Disable all interrupts               */
+
+	/* Set mode register 1A */
+	MC68681_REG(dev->base_addr, MC68681_MRA) = /* 0xd3 */
+        BIT(MC68681_MR1_RXRTS) |                                        /* Enable RX RTS        */
+        BIT(MC68681_MR1_RXIRQ) |                                        /* RXINT: IRQ on FFULL  */
+        (MC68681_PARITY_MODE_NONE << MC68681_MR1_PARITY_MODE_SHIFT) |   /* No parity            */
+        (MC68681_BPC_8 << MC68681_MR1_BPC_SHIFT);                       /* 8 bits per character */
+
+	/*
+        Set mode register 2A
+
+        Note: the MC68681 uses  the same address for MR1A and MR2A.  Having written to MR1A (above),
+        an internal pointer in the IC switches such that the next access will address MR2A.
+    */
+	MC68681_REG(dev->base_addr, MC68681_MRA) = /* 0x17 */
+        (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
+        BIT(MC68681_MR2_CTS) |
+        (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
+
+    /* Set baud rate generator clock source to the external crystal clock divided by 16 */
+    mc68681_set_ct_mode(dev, MC68681_CT_MODE_C_XTAL16);             /* BRG source = xtal/16 */
+
+	/* Enable the channel A transmitter and receiver */
+	MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x05 */
+        (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
+        (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
+
+	/* Enable the channel B transmitter and receiver */
+	MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x05 */
+        (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
+        (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
+
+	/*
+		Set OPCR - output port function select
+			bit		val		desc
+		----------------------------------------------------------------------
+			7		0		OP7 - 0: complement of OPR7; 1: TxRDYB interrupt
+			6		0		OP6 - 0: complement of OPR6; 1: TxRDYA interrupt
+			5		0		OP5 - 0: complement of OPR5; 1: TxB interrupt
+			4		0		OP4 - 0: complement of OPR4; 1: TxA interrupt
+			3		0		} OP3 - 00: complement of OPR3; 01: C/T output
+			2		1		}       10: ch B Tx clk; 11: ch B Rx clk
+			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
+			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
+	*/
+    /////////////// FIXME - platform-specific code (sets OP3 to timer interrupt output) //////////
+	////////////////// TODO ////////////////////
+	MC68681_REG(dev->base_addr, MC68681_OPCR) = 0x04;
+
+	/*
+		Set OPR - output port bits
+		Each bit in the OPR must be set to the complement of the required output pin level.
+	*/
+	MC68681_REG(dev->base_addr, MC68681_SOPR) = 0xff;
+	MC68681_REG(dev->base_addr, MC68681_ROPR) = 0x00;
+
+	/* Set channel A baud rate to 115200 */
+	s32 ret = mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, 115200);
+
+    return ret;
+}
+
+
+/*
     mc68681_set_brg() - select a baud-rate generator.  brg_set specifies which of baud-rate sets 0
     and 1 should be used; a nonzero brg_test arg specifies that the "test" baud rates should be
     used.
@@ -185,75 +271,22 @@ void mc68681_reset(dev_t *dev)
 
 
 /*
-    mc68681_init() - initialise the MC68681 DUART
+    mc68681_channel_a_set_baud_rate() - set the baud rate for serial channel A.
+    Note: see the notes for mc68681_set_baud_rate(), above.
 */
-s32 mc68681_init(dev_t *dev)
+s32 mc68681_channel_a_set_baud_rate(dev_t *dev, ku32 rate)
 {
-    dev->data = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
+    return mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, rate);
+}
 
-    mc68681_reset(dev);
 
-    MC68681_REG(dev->base_addr, MC68681_IMR) = 0x00;    /* Disable all interrupts               */
-
-	/* Set mode register 1A */
-	MC68681_REG(dev->base_addr, MC68681_MRA) = /* 0xd3 */
-        BIT(MC68681_MR1_RXRTS) |                                        /* Enable RX RTS        */
-        BIT(MC68681_MR1_RXIRQ) |                                        /* RXINT: IRQ on FFULL  */
-        (MC68681_PARITY_MODE_NONE << MC68681_MR1_PARITY_MODE_SHIFT) |   /* No parity            */
-        (MC68681_BPC_8 << MC68681_MR1_BPC_SHIFT);                       /* 8 bits per character */
-
-	/*
-        Set mode register 2A
-
-        Note: the MC68681 uses  the same address for MR1A and MR2A.  Having written to MR1A (above),
-        an internal pointer in the IC switches such that the next access will address MR2A.
-    */
-	MC68681_REG(dev->base_addr, MC68681_MRA) = /* 0x17 */
-        (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
-        BIT(MC68681_MR2_CTS) |
-        (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
-
-    /* Set baud rate generator clock source to the external crystal clock divided by 16 */
-    mc68681_set_ct_mode(dev, MC68681_CT_MODE_C_XTAL16);             /* BRG source = xtal/16 */
-
-	/* Enable the channel A transmitter and receiver */
-	MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x05 */
-        (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
-        (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
-
-	/* Enable the channel B transmitter and receiver */
-	MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x05 */
-        (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
-        (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
-
-	/*
-		Set OPCR - output port function select
-			bit		val		desc
-		----------------------------------------------------------------------
-			7		0		OP7 - 0: complement of OPR7; 1: TxRDYB interrupt
-			6		0		OP6 - 0: complement of OPR6; 1: TxRDYA interrupt
-			5		0		OP5 - 0: complement of OPR5; 1: TxB interrupt
-			4		0		OP4 - 0: complement of OPR4; 1: TxA interrupt
-			3		0		} OP3 - 00: complement of OPR3; 01: C/T output
-			2		1		}       10: ch B Tx clk; 11: ch B Rx clk
-			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
-			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
-	*/
-    /////////////// FIXME - platform-specific code (sets OP3 to timer interrupt output) //////////
-	////////////////// TODO ////////////////////
-	MC68681_REG(dev->base_addr, MC68681_OPCR) = 0x04;
-
-	/*
-		Set OPR - output port bits
-		Each bit in the OPR must be set to the complement of the required output pin level.
-	*/
-	MC68681_REG(dev->base_addr, MC68681_SOPR) = 0xff;
-	MC68681_REG(dev->base_addr, MC68681_ROPR) = 0x00;
-
-	/* Set channel A baud rate to 38400 */
-	s32 ret = mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, 115200);
-
-    return ret;
+/*
+    mc68681_channel_b_set_baud_rate() - set the baud rate for serial channel B.
+    Note: see the notes for mc68681_set_baud_rate(), above.
+*/
+s32 mc68681_channel_b_set_baud_rate(dev_t *dev, ku32 rate)
+{
+    return mc68681_set_baud_rate(dev, MC68681_CHANNEL_B, rate);
 }
 
 
@@ -397,7 +430,7 @@ u8 mc68681_read_ip(dev_t *dev)
 
 /*
     mc68681_set_op_bits() - set the specified output pins OP7-0 to logic 1.
-    Note: this function only sets bits; it does not clear them.
+    Note: this function only sets bits; it does not reset them.
 */
 void mc68681_set_op_bits(dev_t *dev, ku8 bits)
 {
@@ -405,8 +438,11 @@ void mc68681_set_op_bits(dev_t *dev, ku8 bits)
 }
 
 
+/*
+    mc68681_reset_op_bits() - set the specified output pins OP7-0 to logic 0.
+    Note: this function only resets bits; it does not set them.
+*/
 void mc68681_reset_op_bits(dev_t *dev, ku8 bits)
 {
     MC68681_REG(dev->base_addr, MC68681_SOPR) = bits;
 }
-

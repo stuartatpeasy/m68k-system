@@ -25,7 +25,7 @@
 
 blockdev_stats_t g_ata_stats;
 
-dev_driver_t g_ata_driver;
+block_driver_t g_ata_driver;
 
 s32 ata_init(void);
 s32 ata_shut_down(void);

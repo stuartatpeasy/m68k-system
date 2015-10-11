@@ -30,7 +30,7 @@ dev_t *g_devices[MAX_DEVICES];
 #include "device/block/ata/ata.h"
 #include "device/block/partition/partition.h"
 
-dev_driver_t *g_drivers[] =
+block_driver_t *g_drivers[] =
 {
     &g_ata_driver,
     &g_partition_driver
@@ -158,7 +158,7 @@ u32 driver_init()
     u32 x;
 	for(x = 0; x < (sizeof(g_drivers) / sizeof(g_drivers[0])); ++x)
 	{
-	    dev_driver_t * const drv = g_drivers[x];
+	    block_driver_t * const drv = g_drivers[x];
 
 		if(drv->init() != SUCCESS)	/* init() will create devices */
 		{
@@ -228,7 +228,7 @@ dev_t *get_device_by_name(const char * const name)
 
 /* Create (i.e. register) a new device.  This function is called by each driver's init() function
  * during device enumeration. */
-s32 create_device(const dev_type_t type, const dev_subtype_t subtype, dev_driver_t * const driver,
+s32 create_device(const dev_type_t type, const dev_subtype_t subtype, void * const driver,
                   const char *name, void * const data)
 {
     u32 u;
@@ -263,18 +263,18 @@ s32 create_device(const dev_type_t type, const dev_subtype_t subtype, dev_driver
 
 s32 device_read(const dev_t * const dev, ku32 offset, u32 len, void *buf)
 {
-	return dev->driver->read(dev->data, offset, len, buf);
+	return ((block_driver_t *) dev->driver)->read(dev->data, offset, len, buf);
 }
 
 
 s32 device_write(const dev_t * const dev, ku32 offset, u32 len, const void *buf)
 {
-	return dev->driver->write(dev->data, offset, len, buf);
+	return ((block_driver_t *) dev->driver)->write(dev->data, offset, len, buf);
 }
 
 
 s32 device_control(const dev_t * const dev, ku32 function, void *in, void *out)
 {
-	return dev->driver->control(dev->data, function, in, out);
+	return ((block_driver_t *) dev->driver)->control(dev->data, function, in, out);
 }
 

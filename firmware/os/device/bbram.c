@@ -10,7 +10,7 @@
 #include "device/bbram.h"
 
 
-s32 bbram_param_block_read(const dev_t * const dev, bbram_param_block_t *pparam_block)
+s32 bbram_param_block_read(dev_t * const dev, bbram_param_block_t *pparam_block)
 {
     u16 checksum;
 
@@ -31,7 +31,7 @@ s32 bbram_param_block_read(const dev_t * const dev, bbram_param_block_t *pparam_
 }
 
 
-s32 bbram_param_block_write(const dev_t * const dev, bbram_param_block_t *pparam_block)
+s32 bbram_param_block_write(dev_t * const dev, bbram_param_block_t *pparam_block)
 {
     rtc_time_t tm;
 

@@ -30,7 +30,7 @@ struct bbram_param_block
 
 typedef struct bbram_param_block bbram_param_block_t;
 
-s32 bbram_param_block_read(const dev_t * const dev, bbram_param_block_t *pparam_block);
-s32 bbram_param_block_write(const dev_t * const dev, bbram_param_block_t *pparam_block);
+s32 bbram_param_block_read(dev_t * const dev, bbram_param_block_t *pparam_block);
+s32 bbram_param_block_write(dev_t * const dev, bbram_param_block_t *pparam_block);
 
 #endif

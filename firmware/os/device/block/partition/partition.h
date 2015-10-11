@@ -43,7 +43,7 @@ struct partition_data
 	partition_status status;	/* status field from partition table							*/
 };
 
-dev_driver_t g_partition_driver;
+block_driver_t g_partition_driver;
 
 s32 partition_init();
 s32 partition_shut_down();

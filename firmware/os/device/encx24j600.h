@@ -30,7 +30,7 @@
 /* This macro is an accessor for register x, given a controller at address "base" */
 #define ENCX24_REG(base, x)         *((vu16 *) ENCX24_SFR_ADDR((base), (x)))
 
-const dev_driver_t g_encx24j600_device;
+// const dev_driver_t g_encx24j600_device;
 
 s32 encx24j600_reset(dev_t *dev);
 s32 encx24j600_init(dev_t *dev);

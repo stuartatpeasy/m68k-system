@@ -14,8 +14,16 @@
 /*
     ds17485_init() - initialise a DS17485 RTC.
 */
-s32 ds17485_init(const dev_t * const dev)
+s32 ds17485_init(dev_t * const dev)
 {
+    rtc_ops_t *ops;
+
+    dev->driver = CHECKED_KCALLOC(1, sizeof(rtc_ops_t));
+
+    ops = (rtc_ops_t *) dev->driver;
+    ops->get_time = ds17485_get_time;
+    ops->set_time = ds17485_set_time;
+
     /*
         Write register A:
             UIP   = 0       (ignored; read only)
@@ -66,7 +74,7 @@ s32 ds17485_init(const dev_t * const dev)
 /*
     ds17485_get_time() - read the current time and populate a struct rtc_time_t.
 */
-void ds17485_get_time(const dev_t * const dev, rtc_time_t * const tm)
+s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm)
 {
     /* Set the "SET" bit in register B, to prevent updates while we read */
     DS17485_REG_SET_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
@@ -92,13 +100,15 @@ void ds17485_get_time(const dev_t * const dev, rtc_time_t * const tm)
 
     /* Clear the "SET" bit in register B, as we have finished reading data */
     DS17485_REG_CLEAR_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
+
+    return SUCCESS;
 }
 
 
 /*
     ds17485_set_time() - set the time stored in a DS17485 to the time specified by tm.
 */
-void ds17485_set_time(const dev_t * const dev, const rtc_time_t * const tm)
+s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm)
 {
     /* Set the "SET" bit in register B, to prevent updates while we write */
     DS17485_REG_SET_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
@@ -125,6 +135,8 @@ void ds17485_set_time(const dev_t * const dev, const rtc_time_t * const tm)
 
     /* Clear the "SET" bit in register B, as we have finished writing data */
     DS17485_REG_CLEAR_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
+
+    return SUCCESS;
 }
 
 

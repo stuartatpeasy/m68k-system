@@ -16,7 +16,7 @@
 static struct partition_data g_partitions[MAX_PARTITIONS];
 static u32 g_next_partition;
 
-dev_driver_t g_partition_driver =
+block_driver_t g_partition_driver =
 {
     .name       = "part",
     .version    = 0x00000100,
@@ -48,7 +48,7 @@ s32 partition_init()
 			u16 part;
 			char name[DEVICE_NAME_LEN], *pn;
 
-			if(dev->driver->read(dev->data, 0, 1, (u8 *) &m) != SUCCESS)
+			if(((block_driver_t *) dev->driver)->read(dev->data, 0, 1, (u8 *) &m) != SUCCESS)
 				continue;		/* Failed to read sector TODO: report error */
 
 			if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)
@@ -150,7 +150,8 @@ s32 partition_read(void *data, ku32 offset, ku32 len, void* buf)
 	if((offset + len) > part->len)
 		return EINVAL;
 
-	return part->device->driver->read(part->device->data, part->offset + offset, len, buf);
+	return ((block_driver_t *) part->device->driver)
+                ->read(part->device->data, part->offset + offset, len, buf);
 }
 
 
@@ -161,7 +162,8 @@ s32 partition_write(void *data, ku32 offset, ku32 len, const void* buf)
 	if((offset + len) > part->len)
 		return EINVAL;
 
-	return part->device->driver->write(part->device->data, part->offset + offset, len, buf);
+	return ((block_driver_t *) part->device->driver)
+                ->write(part->device->data, part->offset + offset, len, buf);
 }
 
 

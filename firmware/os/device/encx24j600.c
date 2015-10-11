@@ -11,7 +11,7 @@
 
 #include "device/encx24j600.h"
 
-
+/*
 const dev_driver_t g_encx24j600_device =
 {
     .name       = "eth",
@@ -23,6 +23,7 @@ const dev_driver_t g_encx24j600_device =
     .write      = encx24j600_write,
     .control    = encx24j600_control
 };
+*/
 
 s32 encx24j600_reset(dev_t *dev)
 {
@@ -68,7 +69,7 @@ s32 encx24j600_reset(dev_t *dev)
 
 void encx24j600_irq(ku32 irql, void *data, const regs_t regs)
 {
-    dev_t *dev = (dev_t *) data;
+//    dev_t *dev = (dev_t *) data;
 
     /* Disable interrupts on the ENCX24 while we process this one */
 //    ENCX24_REG(dev->base_addr, )

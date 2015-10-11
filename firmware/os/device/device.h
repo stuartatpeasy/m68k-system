@@ -52,27 +52,12 @@ typedef enum
 } dev_subtype_t;
 
 
-typedef struct
-{
-	const char *name;
-	u32 version;
-
-	s32 (*init)();
-	s32 (*shut_down)();
-
-	s32 (*read)(void *data, ku32 offset, ku32 len, void *buf);
-	s32 (*write)(void *data, ku32 offset, ku32 len, const void *buf);
-
-	s32 (*control)(void *data, ku32 function, void *in, void *out);
-} dev_driver_t;
-
-
 struct dev;
 typedef struct dev
 {
     dev_type_t          type;
     dev_subtype_t       subtype;
-    dev_driver_t *      driver;
+    void *              driver;
     char                name[DEVICE_NAME_LEN];
     void *              data;
     u32                 irql;
@@ -85,6 +70,38 @@ typedef struct dev
     struct dev *        next_sibling;
     dev_state_t         state;
 } dev_t;
+
+
+// FIXME replace all these void* ptrs with dev_t * ?
+typedef struct
+{
+	const char *name;
+	u32 version;
+
+	s32 (*init)();
+	s32 (*shut_down)();
+
+	s32 (*read)(void *data, ku32 offset, ku32 len, void *buf);
+	s32 (*write)(void *data, ku32 offset, ku32 len, const void *buf);
+
+	s32 (*control)(void *data, ku32 function, void *in, void *out);
+} block_driver_t;
+
+
+typedef struct
+{
+    s16 (*getc)(dev_t *dev);
+    s16 (*putc)(dev_t *dev, const char c);
+    s32 (*set_baud_rate)(dev_t *dev, ku32 baud_rate);
+    ku32 (*get_baud_rate)(dev_t *dev);
+} serial_ops_t;
+
+
+typedef struct
+{
+    s32 (*get_time)(dev_t *dev, rtc_time_t *tm);
+    s32 (*set_time)(dev_t *dev, const rtc_time_t *tm);
+} rtc_ops_t;
 
 
 /*
@@ -113,7 +130,7 @@ dev_t *dev_find_subtree(const char * const name, dev_t *node);
 s32 dev_add_suffix(char * const name);
 
 // FIXME REMOVE
-s32 create_device(const dev_type_t type, const dev_subtype_t class, dev_driver_t * const driver,
+s32 create_device(const dev_type_t type, const dev_subtype_t class, void * const driver,
                   const char *name, void * const data);
 
 s32 driver_method_not_implemented();

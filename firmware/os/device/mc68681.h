@@ -279,14 +279,18 @@ s32 mc68681_reset_tx(dev_t *dev, ku16 channel);
 s32 mc68681_reset_rx(dev_t *dev, ku16 channel);
 
 s32 mc68681_init(dev_t *dev);
+
+s16 mc68681_getc(dev_t *dev, ku16 channel);
+s16 mc68681_putc(dev_t *dev, ku16 channel, const char c);
 s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate);
 
-s16 mc68681_channel_a_putc(dev_t *dev, const char c);
-s16 mc68681_channel_b_putc(dev_t *dev, const char c);
-s16 mc68681_putc(dev_t *dev, ku16 channel, const char c);
 s16 mc68681_channel_a_getc(dev_t *dev);
+s16 mc68681_channel_a_putc(dev_t *dev, const char c);
+s32 mc68681_channel_a_set_baud_rate(dev_t *dev, ku32 rate);
+
 s16 mc68681_channel_b_getc(dev_t *dev);
-s16 mc68681_getc(dev_t *dev, ku16 channel);
+s16 mc68681_channel_b_putc(dev_t *dev, const char c);
+s32 mc68681_channel_b_set_baud_rate(dev_t *dev, ku32 rate);
 
 void mc68681_start_counter(dev_t *dev, ku16 init_count);
 void mc68681_stop_counter(dev_t *dev);
