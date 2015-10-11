@@ -31,7 +31,7 @@
 
     We need to call the interrupt handler in this way:
 
-        some_handler(u16 irql, void *data, regs_t regs);
+        some_handler(u32 irql, void *data, regs_t regs);
 
     Hence the stack needs to end up looking like this, immediately before we jsr to some_handler():
     (note that the top two elements in the regs_t struct are SR and PC, and we "borrow" these from
@@ -40,23 +40,24 @@
                     15                     0
                     | ..other junk, maybe..|  .
                     +------+---------------+  .
-       SP +76       |format| vector offset |  |    Interrupt stack frame
+       SP +78       |format| vector offset |  |    Interrupt stack frame
                     +------+---------------+  |  \
-          +74       | program counter low  |  |  |
-          +72       | program counter high |  |  |
+          +76       | program counter low  |  |  |
+          +74       | program counter high |  |  |
                     +----------------------+  |  |
-          +70       |    status register   |  |  |
+          +72       |    status register   |  |  |
                     +----------------------+  /  |
                     |                      |     |
                     .       rest of        .     |  Args for interrupt handler function
                     .    regs_t struct     .     |  (regs_t is also used to save/restore CPU state)
                     .                      .     |
-           +6       |                      |     |
+           +8       |                      |     |
                     +----------------------+     |
-           +4       |       data low       |     |
-           +2       |       data high      |     |
+           +6       |       data low       |     |
+           +4       |       data high      |     |
                     +----------------------+     |
-        SP +0       |         irql         |     |
+           +2       |       irql low       |     |
+        SP +0       |       irql high      |     |
                     +----------------------+     /
 
     When some_handler() returns, we need to restore CPU state and issue an RTE to resume normal
@@ -82,12 +83,12 @@ irq_handler:
     movel       %a0@(4), %sp@-
 
     asrl        #3, %d0
-    movew       %d0, %sp@-
+    movel       %d0, %sp@-
 
     movel       %a0@, %a0
     jsr         %a0@
 
-    addql       #6, %sp
+    addql       #8, %sp
 
     movel       %sp@(60), %a0
     movel       %a0, %usp
