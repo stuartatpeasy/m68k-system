@@ -87,6 +87,8 @@ s32 vfs_init()
     if(ret != SUCCESS)
         return ret;
 
+#if 0
+/* FIXME - reinstate this code */
 	/* Find rootfs device */
 	ret = bbram_param_block_read(&bpb);
 	if(ret == SUCCESS)
@@ -119,6 +121,7 @@ s32 vfs_init()
     }
     else
         puts("vfs: rootfs not set in BPB");
+#endif
 
 	return SUCCESS;
 }

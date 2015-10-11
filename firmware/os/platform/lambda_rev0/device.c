@@ -42,6 +42,20 @@ s32 plat_dev_enumerate(dev_t *root_dev)
     if(ret == SUCCESS)
         dev_add_child(root_dev, g_lambda_console);
 
+    /* DS17485 RTC */
+    ret = dev_create(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", IRQL_NONE, (void *) 0xe10000, &d);
+    if(ret == SUCCESS)
+    {
+        ret = ds17485_init(d);
+        if(ret == SUCCESS)
+            dev_add_child(root_dev, d);
+        else
+            printf("rtc: DS17485 init failed: %s\n", kstrerror(ret));
+    }
+    else
+        printf("rtc: DS17485 device creation failed: %s\n", kstrerror(ret));
+
+
     /* ATA interface */
 	ret = dev_create(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", 26, (void *) 0xe20000, &d);
 	if(ret == SUCCESS)
@@ -50,8 +64,6 @@ s32 plat_dev_enumerate(dev_t *root_dev)
 	}
 	else
 		printf("ata: device creation failed: %s\n", kstrerror(ret));
-
-    /* DS17485 RTC */
 
     /* Memory device */
 

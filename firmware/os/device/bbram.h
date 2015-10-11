@@ -9,11 +9,12 @@
 	(c) Stuart Wallace, August 2015.
 */
 
-#include "device/ds17485.h"
-#include "include/defs.h"
-#include "include/error.h"
-#include "include/types.h"
-#include "kutil/kutil.h"
+#include <device/device.h>
+#include <device/ds17485.h>
+#include <include/defs.h>
+#include <include/error.h>
+#include <include/types.h>
+#include <kutil/kutil.h>
 
 
 #define BBRAM_PARAM_BLOCK_MAGIC     (0xfea51b1e)
@@ -29,7 +30,7 @@ struct bbram_param_block
 
 typedef struct bbram_param_block bbram_param_block_t;
 
-s32 bbram_param_block_read(bbram_param_block_t *pparam_block);
-s32 bbram_param_block_write(bbram_param_block_t *pparam_block);
+s32 bbram_param_block_read(const dev_t * const dev, bbram_param_block_t *pparam_block);
+s32 bbram_param_block_write(const dev_t * const dev, bbram_param_block_t *pparam_block);
 
 #endif

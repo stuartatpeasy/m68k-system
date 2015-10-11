@@ -17,6 +17,9 @@
 */
 MONITOR_CMD_HANDLER(date)
 {
+    return MON_E_NOT_IMPLEMENTED;
+#if 0
+/* FIXME - reinstate this code */
     rtc_time_t tm;
 
     if(num_args == 0)
@@ -43,6 +46,7 @@ MONITOR_CMD_HANDLER(date)
         return MON_E_SYNTAX;
 
     return MON_E_OK;
+#endif
 }
 
 
@@ -657,6 +661,9 @@ MONITOR_CMD_HANDLER(raw)
 */
 MONITOR_CMD_HANDLER(rootfs)
 {
+    return MON_E_NOT_IMPLEMENTED;
+#if 0
+/* FIXME - reinstate this code */
     struct bbram_param_block bpb;
 
     if(num_args == 0)
@@ -696,6 +703,7 @@ MONITOR_CMD_HANDLER(rootfs)
         return MON_E_SYNTAX;
 
     return MON_E_OK;
+#endif
 }
 
 
@@ -854,9 +862,14 @@ MONITOR_CMD_HANDLER(test)
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
 #endif
 
-    s32 ret = dev_enumerate();
-    printf("dev_enumerate() returned %s\n", kstrerror(ret));
+    if(num_args != 1)
+        return MON_E_SYNTAX;
 
+    dev_t * dev = dev_find(args[0]);
+    if(dev == NULL)
+        printf("%s: not found\n", args[0]);
+    else
+        printf("%s: found; base_addr=%p irql=%d\n", args[0], dev->base_addr, dev->irql);
 
     return MON_E_OK;
 }

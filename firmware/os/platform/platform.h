@@ -26,8 +26,8 @@ typedef struct hwinfo hwinfo_t;
 extern mem_extent_t *g_mem_extents;
 extern mem_extent_t *g_mem_extents_end;
 
-void plat_init(void);		    /* Perform any post-reset platform init tasks   	            */
-void plat_mem_detect();			/* Populate g_mem_extents with type & location of memory 		*/
+s32 plat_init(void);		    /* Perform any post-reset platform init tasks   	            */
+s32 plat_mem_detect();			/* Populate g_mem_extents with type & location of memory 		*/
 								/* Place an eight-byte hardware serial number in sn				*/
 void plat_get_serial_number(u8 sn[8]);
 

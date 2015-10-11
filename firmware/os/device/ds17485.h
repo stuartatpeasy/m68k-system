@@ -9,69 +9,67 @@
     (c) Stuart Wallace, June 2015.
 */
 
-#include "include/types.h"
+#include <device/device.h>
+#include <include/defs.h>
+#include <include/types.h>
 
-/*
-    Base address of DS17485 IC
-*/
-#define DS17485_BASE        ((u8 *) 0x00e10000)
 
 /* Yields pointer to DS17485 address register   */
-#define DS17485_ADDR        *((vu8 *) (DS17485_BASE + 3))
+#define DS17485_ADDR(base)      *((vu8 *) (((u32) (base)) + 3))
 
 /* Yields pointer to DS17485 data register      */
-#define DS17485_DATA        *((vu8 *) (DS17485_BASE + 1))
+#define DS17485_DATA(base)      *((vu8 *) (((u32) (base)) + 1))
 
 /* Read from register r */
-#define DS17485_REG_READ(r)             \
-    ({                                  \
-        DS17485_ADDR = r;               \
-        DS17485_DATA;                   \
+#define DS17485_REG_READ(base, r)           \
+    ({                                      \
+        DS17485_ADDR(base) = r;             \
+        DS17485_DATA(base);                 \
     })
 
 /* Write data to register r */
-#define DS17485_REG_WRITE(r, data)      \
-    ({                                  \
-        DS17485_ADDR = r;               \
-        DS17485_DATA = data;            \
+#define DS17485_REG_WRITE(base, r, data)    \
+    ({                                      \
+        DS17485_ADDR(base) = r;             \
+        DS17485_DATA(base) = data;          \
     })
 
 /* Set bits b in register r */
-#define DS17485_REG_SET_BITS(r, b)      \
-    ({                                  \
-        DS17485_ADDR = r;               \
-        DS17485_DATA |= b;              \
+#define DS17485_REG_SET_BITS(base, r, b)    \
+    ({                                      \
+        DS17485_ADDR(base) = r;             \
+        DS17485_DATA(base) |= b;            \
     })
 
 /* Clear bits b in register r */
-#define DS17485_REG_CLEAR_BITS(r, b)    \
-    ({                                  \
-        DS17485_ADDR = r;               \
-        DS17485_DATA &= ~b;             \
+#define DS17485_REG_CLEAR_BITS(base, r, b)  \
+    ({                                      \
+        DS17485_ADDR(base) = r;             \
+        DS17485_DATA(base) &= ~b;           \
     })
 
 /* Switch to the DS17485 extended register set */
-#define DS17485_SELECT_EXT_REG()        \
-    DS17485_REG_SET_BITS(DS17485_REG_A, DS17485_DV0)
+#define DS17485_SELECT_EXT_REG(base)        \
+    DS17485_REG_SET_BITS(base, DS17485_REG_A, DS17485_DV0)
 
 /* Switch to the DS17485 standard register set */
-#define DS17485_SELECT_STD_REG()        \
-    DS17485_REG_CLEAR_BITS(DS17485_REG_A, DS17485_DV0)
+#define DS17485_SELECT_STD_REG(base)        \
+    DS17485_REG_CLEAR_BITS(base, DS17485_REG_A, DS17485_DV0)
 
 
 /*
     Function declarations
 */
-void ds17485_init();
-void ds17485_get_time(rtc_time_t * const tm);
-void ds17485_set_time(const rtc_time_t * const tm);
-void ds17485_force_valid_time();
-void ds17485_user_ram_read(u32 addr, u32 len, void * buffer);
-void ds17485_user_ram_write(u32 addr, u32 len, const void * buffer);
-void ds17485_ext_ram_read(u32 addr, u32 len, u8* buffer);
-void ds17485_ext_ram_write(u32 addr, u32 len, const u8* buffer);
-u8 ds17485_get_model_number();
-void ds17485_get_serial_number(u8 sn[6]);
+s32 ds17485_init(const dev_t * const dev);
+void ds17485_get_time(const dev_t * const dev, rtc_time_t * const tm);
+void ds17485_set_time(const dev_t * const dev, const rtc_time_t * const tm);
+void ds17485_force_valid_time(const dev_t * const dev);
+void ds17485_user_ram_read(const dev_t * const dev, u32 addr, u32 len, void * buffer);
+void ds17485_user_ram_write(const dev_t * const dev, u32 addr, u32 len, const void * buffer);
+void ds17485_ext_ram_read(const dev_t * const dev, u32 addr, u32 len, u8* buffer);
+void ds17485_ext_ram_write(const dev_t * const dev, u32 addr, u32 len, const u8* buffer);
+u8 ds17485_get_model_number(const dev_t * const dev);
+void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6]);
 
 /*
     DS17485 register numbers

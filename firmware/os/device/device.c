@@ -18,8 +18,8 @@
 
 
 /* Characters used to identify "sub-devices", e.g. partitions of devices.  The first sub-device
- * of device xxx will be xxx1, the second xxx2, ..., the 61st xxxZ */
-const char * const g_device_sub_names = "123456789abcdefghijklmnopqrstuv"
+ * of device xxx will be xxx1, the second xxx2, ..., the 62nd xxxZ */
+const char * const g_device_sub_names = "0123456789abcdefghijklmnopqrstuv"
                                         "wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 dev_t *g_devices[MAX_DEVICES];
@@ -56,8 +56,14 @@ dev_t *dev_get_root()
 }
 
 
-dev_t *dev_add_child(dev_t *parent, dev_t *child)
+s32 dev_add_child(dev_t *parent, dev_t *child)
 {
+    /* TODO - mutex */
+
+    /* Check that no device with a matching name exists */
+    if(dev_find(child->name) != NULL)
+        return EEXIST;
+
 	child->parent = parent;
 
 	if(parent->first_child == NULL)
@@ -73,7 +79,59 @@ dev_t *dev_add_child(dev_t *parent, dev_t *child)
     	child->prev_sibling = p;
 	}
 
-    return parent;
+    return SUCCESS;
+}
+
+
+/*
+    dev_find() - find a device by name
+*/
+dev_t *dev_find(const char * const name)
+{
+    return dev_find_subtree(name, root_dev);
+}
+
+
+/*
+    dev_find_subtree() - find a device by name, starting at a particular point in the device tree
+*/
+dev_t *dev_find_subtree(const char * const name, dev_t *node)
+{
+    /* TODO - mutex */
+    /* Walk the device tree looking for a device with the specified name */
+
+    if(node == NULL)
+        return NULL;
+    else if(!strcmp(node->name, name))
+        return node;
+    else if(node->first_child)
+        return dev_find_subtree(name, node->first_child);
+    else if(node->next_sibling)
+        return dev_find_subtree(name, node->next_sibling);
+    else
+        return NULL;
+}
+
+
+/*
+    dev_add_suffix() - given a device name prefix, e.g. "ata", obtain the next-available complete
+    device name, e.g. "ata1".  "name" must point to a writeable buffer of at least DEVICE_NAME_LEN
+    chars.
+*/
+s32 dev_add_suffix(char * const name)
+{
+    u32 i;
+    ku32 len = strlen(name);
+    name[len + 1] = '\0';
+
+    for(i = 0; i < strlen(g_device_sub_names); ++i)
+    {
+        name[len] = g_device_sub_names[i];
+        if(dev_find(name) == NULL)
+            return SUCCESS;
+    }
+
+    return EMFILE;
 }
 
 
@@ -91,7 +149,7 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, 
 
 	strcpy((*dev)->name, name);
 
-	return SUCCESS;
+    return dev_add_suffix((*dev)->name);
 }
 
 

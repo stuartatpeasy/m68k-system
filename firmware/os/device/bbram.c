@@ -10,12 +10,12 @@
 #include "device/bbram.h"
 
 
-s32 bbram_param_block_read(bbram_param_block_t *pparam_block)
+s32 bbram_param_block_read(const dev_t * const dev, bbram_param_block_t *pparam_block)
 {
     u16 checksum;
 
     /* Read the parameter block from battery-backed RAM */
-    ds17485_user_ram_read(0, sizeof(bbram_param_block_t), pparam_block);
+    ds17485_user_ram_read(dev, 0, sizeof(bbram_param_block_t), pparam_block);
 
     /*
         Verify checksum by computing the checksum of all fields in bbrpb with the exception of the
@@ -31,17 +31,17 @@ s32 bbram_param_block_read(bbram_param_block_t *pparam_block)
 }
 
 
-s32 bbram_param_block_write(bbram_param_block_t *pparam_block)
+s32 bbram_param_block_write(const dev_t * const dev, bbram_param_block_t *pparam_block)
 {
     rtc_time_t tm;
 
-    ds17485_get_time(&tm);
+    ds17485_get_time(dev, &tm);
     rtc_time_to_timestamp(&tm, &pparam_block->mdate);
 
     pparam_block->magic = BBRAM_PARAM_BLOCK_MAGIC;
     pparam_block->checksum = CHECKSUM16(pparam_block, sizeof(bbram_param_block_t) - sizeof(u16));
 
-    ds17485_user_ram_write(0, sizeof(bbram_param_block_t), pparam_block);
+    ds17485_user_ram_write(dev, 0, sizeof(bbram_param_block_t), pparam_block);
 
     return SUCCESS;
 }

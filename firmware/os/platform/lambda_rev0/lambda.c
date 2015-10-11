@@ -25,13 +25,14 @@ mem_extent_t g_lambda_mem_extents[] =
 };
 
 
-void plat_init(void)
+s32 plat_init(void)
 {
     /* Nothing to do here */
+    return SUCCESS;
 }
 
 
-void plat_mem_detect()
+s32 plat_mem_detect()
 {
     /*
         The system supports between 1MB and 8MB of RAM, in units of 1MB.  At least 1MB must be
@@ -56,6 +57,8 @@ void plat_mem_detect()
 
     g_mem_extents = g_lambda_mem_extents;
     g_mem_extents_end = &g_lambda_mem_extents[2];   /* ptr to first non-existent extent */
+
+    return SUCCESS;
 }
 
 
