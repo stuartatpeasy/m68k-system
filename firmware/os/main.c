@@ -70,7 +70,7 @@ void _main()
 	cpu_init_interrupt_handlers();
 
     /* === Initialise peripherals - phase 1 === */
-//    plat_init();
+    plat_init();
 
     /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
     plat_console_init();

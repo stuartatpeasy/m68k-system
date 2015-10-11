@@ -27,10 +27,7 @@ mem_extent_t g_lambda_mem_extents[] =
 
 void plat_init(void)
 {
-    /* Initialise the DUART early, in order to shut up the beeper */
-    dev_t duart;
-    duart.base_addr = (void *) 0xe00000;
-    mc68681_init(&duart);
+    /* Nothing to do here */
 }
 
 
@@ -62,6 +59,12 @@ void plat_mem_detect()
 }
 
 
+/*
+    plat_console_init() - initialise the boot console.  This happens early in the boot process -
+    before the main hardware-enumeration step.  This code therefore builds a dev_t object in a
+    global variable (g_lambda_console) which is later added to the device tree in
+    plat_dev_enumerate().
+*/
 s32 plat_console_init(void)
 {
     s32 ret;
@@ -80,4 +83,22 @@ s32 plat_console_init(void)
 	}
 
 	return ret;
+}
+
+
+/*
+    plat_console_putc() - write a character to the console.
+*/
+s16 plat_console_putc(const char c)
+{
+    return mc68681_channel_a_putc(g_lambda_console, c);
+}
+
+
+/*
+    plat_console_getc() - read a character from the console.
+*/
+s16 plat_console_getc()
+{
+    return mc68681_channel_a_getc(g_lambda_console);
 }

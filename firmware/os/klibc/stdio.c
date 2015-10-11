@@ -15,7 +15,7 @@
 */
 s32 putchar(s32 c)
 {
-	duarta_putc(c);
+	plat_console_putc(c);
 
 	return c;
 }
@@ -27,7 +27,7 @@ s32 putchar(s32 c)
 s32 put(ks8 *s)
 {
 	while(*s)
-		duarta_putc(*s++);
+		plat_console_putc(*s++);
 
 	return SUCCESS;
 }
@@ -39,8 +39,8 @@ s32 put(ks8 *s)
 s32 puts(ks8 *s)
 {
 	while(*s)
-		duarta_putc(*s++);
-	duarta_putc('\n');
+		plat_console_putc(*s++);
+	plat_console_putc('\n');
 
 	return SUCCESS;
 }

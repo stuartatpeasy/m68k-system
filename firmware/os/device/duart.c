@@ -9,21 +9,6 @@
 #include "device/duart.h"
 
 
-int duarta_putc(const char c)
-{
-	while(!(DUART_SRA & (1 << DUART_SR_TXEMT))) ;
-	DUART_THRA = c;
-	return c;
-}
-
-
-int duarta_getc(void)
-{
-	while(!(DUART_SRA & (1 << DUART_SR_RXRDY))) ;
-	return DUART_RHRA;
-}
-
-
 /*
     duart_start_counter() - start the DUART counter
 */

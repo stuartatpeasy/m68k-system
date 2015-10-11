@@ -10,7 +10,8 @@
 	TODO: get rid of "echo" stuff; implement separate length-limited read function.
 */
 
-#include "readline.h"
+#include <monitor/readline.h>
+#include <platform/platform.h>
 
 
 #define MAX_LINE_LENGTH 	(255)
@@ -28,8 +29,8 @@
 #define KEY_CTRL_u			(0x15)		/* Kill from start of line to cursor pos	*/
 #define KEY_CTRL_w			(0x17)		/* Kill word backwards						*/
 
-#define READLINE_GETC()			duarta_getc()
-#define READLINE_PUTC(x, echo)	{ if(echo) duarta_putc(x); }
+#define READLINE_GETC()			plat_console_getc()
+#define READLINE_PUTC(x, echo)	{ if(echo) plat_console_putc(x); }
 
 
 void readline(char *buffer, ku32 buffer_len, ku32 echo)
