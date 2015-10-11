@@ -104,13 +104,45 @@ s16 plat_console_getc()
 }
 
 
-void plat_start_quantum()
+/*
+    plat_start_quantum() - start the quantum timer, i.e. begin a new process time-slice.
+
+    Note: this function will be called in interrupt context.
+*/
+s32 plat_start_quantum()
 {
     mc68681_start_counter(g_lambda_console, (MC68681_CLK_HZ / 16) / TICK_RATE);
+    return SUCCESS;
 }
 
 
-void plat_stop_quantum()
+/*
+    plat_stop_quantum() - take any action necessary to finish the previous process time-slice.
+
+    Note: this function will be called in interrupt context.
+*/
+s32 plat_stop_quantum()
 {
     mc68681_stop_counter(g_lambda_console);
+    return SUCCESS;
+}
+
+
+/*
+    plat_led_on() - switch on one or more of the motherboard LEDs.
+*/
+s32 plat_led_on(ku8 leds)
+{
+    mc68681_reset_op_bits(g_lambda_console, leds & (LED_RED | LED_GREEN));
+    return SUCCESS;
+}
+
+
+/*
+    plat_led_off() - switch off one or more of the motherboard LEDs.
+*/
+s32 plat_led_off(ku8 leds)
+{
+    mc68681_set_op_bits(g_lambda_console, leds & (LED_RED | LED_GREEN));
+    return SUCCESS;
 }

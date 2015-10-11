@@ -16,6 +16,10 @@
 #include <memory/extents.h>
 #include <include/types.h>
 
+#define LED_RED             (0x80)
+#define LED_GREEN           (0x40)
+#define LED_ALL             (0xff)
+
 struct hwinfo;	/* FIXME - declare this, or ditch it, or whatever. */
 typedef struct hwinfo hwinfo_t;
 
@@ -27,8 +31,8 @@ void plat_mem_detect();			/* Populate g_mem_extents with type & location of memo
 								/* Place an eight-byte hardware serial number in sn				*/
 void plat_get_serial_number(u8 sn[8]);
 
-void plat_stop_quantum();       /* Stop the currently-running quantum (task time-slice)         */
-void plat_start_quantum();      /* Start a new quantum                                          */
+s32 plat_stop_quantum();        /* Stop the currently-running quantum (task time-slice)         */
+s32 plat_start_quantum();       /* Start a new quantum                                          */
 
 s32 plat_dev_enumerate(dev_t *first_dev);
 
@@ -39,10 +43,9 @@ s32 plat_dev_enumerate(dev_t *first_dev);
 	and one green LED, to be used as status indicators.  It must be provide a means of estimating
 	the system clock frequency.
 */
-s32 base_led_on(u32 leds);
-s32 base_led_off(u32 leds);
-s32 base_clockfreq_detect();
-s32 base_hwinfo(hwinfo_t *);
+s32 plat_led_on(ku8 leds);
+s32 plat_led_off(ku8 leds);
+s32 plat_clockfreq_detect();
 
 
 /*

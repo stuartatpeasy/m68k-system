@@ -10,7 +10,6 @@
 #include <device/devctl.h>
 #include <device/device.h>
 #include <device/ds17485.h>
-#include <device/led.h>
 #include <fs/vfs.h>
 #include <include/defs.h>
 #include <kutil/kutil.h>
@@ -76,8 +75,8 @@ void _main()
     plat_console_init();
 
     /* Activate red LED while the boot process continues */
-	led_off(LED_RED | LED_GREEN);
-	led_on(LED_RED);
+	plat_led_off(LED_ALL);
+	plat_led_on(LED_RED);
 
     plat_mem_detect();      /* Detect installed RAM */
 
@@ -129,8 +128,8 @@ void _main()
     cpu_enable_interrupts();
 
     /* Startup complete - activate green LED */
-	led_off(LED_RED);
-	led_on(LED_GREEN);
+	plat_led_off(LED_RED);
+	plat_led_on(LED_GREEN);
 
 	monitor();      /* start interactive "shell" thing */
 

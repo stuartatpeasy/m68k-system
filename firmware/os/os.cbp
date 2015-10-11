@@ -60,10 +60,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/encx24j600.h" />
-		<Unit filename="device/led.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/led.h" />
 		<Unit filename="device/mc68681.c">
 			<Option compilerVar="CC" />
 		</Unit>
