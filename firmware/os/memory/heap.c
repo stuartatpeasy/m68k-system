@@ -127,6 +127,8 @@ void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
 	void *p = heap_malloc(heap, n);
 
 	if(p)
+    {
+        n += (1 << MEMBLOCK_ALIGN) - 1;
 #if(MEMBLOCK_ALIGN == 2)
 		for(n >>= MEMBLOCK_ALIGN; n--; ((u32 *) p)[n] = 0) ;
 #elif(MEMBLOCK_ALIGN == 1)
@@ -134,6 +136,8 @@ void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
 #else
 		for(; n--; ((u8 *) p)[n] = 0) ;
 #endif
+    }
+
 	return p;
 }
 
