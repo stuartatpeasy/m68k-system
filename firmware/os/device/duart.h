@@ -106,8 +106,6 @@
 #define DUART_SR_RXRDY				(0)
 
 
-void duart_init(void);
-
 int duarta_putc(const char c);
 int duarta_getc(void);
 

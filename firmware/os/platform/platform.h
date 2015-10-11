@@ -58,7 +58,7 @@ s32 base_hwinfo(hwinfo_t *);
 
 */
 
-s32 console_init();					/* Initialise console										*/
+s32 plat_console_init();			/* Initialise console										*/
 s32 console_putchar(s32 c);			/* Write a character to the console.  May block.			*/
 s32 console_getchar(void);			/* Read a character from the console.  Blocking.			*/
 s32 console_hwinfo(hwinfo_t *);

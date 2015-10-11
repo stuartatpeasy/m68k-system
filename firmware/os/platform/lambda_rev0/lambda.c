@@ -5,6 +5,8 @@
 */
 
 #include <platform/lambda_rev0/lambda.h>
+#include <platform/lambda_rev0/device.h>
+#include <device/device.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =
@@ -60,7 +62,22 @@ void plat_mem_detect()
 }
 
 
-void plat_console_init(void)
+s32 plat_console_init(void)
 {
+    s32 ret;
+
     /* Initialise the console */
+	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", 27, (void *) 0xe00000,
+                        &g_lambda_console);
+	if(ret == SUCCESS)
+	{
+		ret = mc68681_init(g_lambda_console);
+		if(ret != SUCCESS)
+		{
+			kfree(g_lambda_console);
+			g_lambda_console = NULL;
+		}
+	}
+
+	return ret;
 }

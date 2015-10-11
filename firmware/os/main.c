@@ -10,7 +10,6 @@
 #include <device/devctl.h>
 #include <device/device.h>
 #include <device/ds17485.h>
-#include <device/duart.h>
 #include <device/led.h>
 #include <fs/vfs.h>
 #include <include/defs.h>
@@ -74,7 +73,7 @@ void _main()
 //    plat_init();
 
     /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
-	duart_init();
+    plat_console_init();
 
     /* Activate red LED while the boot process continues */
 	led_off(LED_RED | LED_GREEN);

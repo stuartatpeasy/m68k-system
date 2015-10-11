@@ -7,7 +7,6 @@
 */
 
 #include <cpu/mc68000/exceptions.h>
-#include <platform/lambda_rev0/device.h>
 
 #include <device/device.h>
 #include <device/duart.h>           /* FIXME remove */
@@ -48,6 +47,8 @@
 #define EXP_ID_ASSERT()             (DUART_SOPR = (EXP_ID_MASK))
 #define EXP_ID_NEGATE()             (DUART_ROPR = (EXP_ID_MASK))
 
+
+dev_t *g_lambda_console;
 
 void expansion_init();
 

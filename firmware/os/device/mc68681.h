@@ -14,6 +14,7 @@
 #include <include/error.h>
 #include <include/types.h>
 
+
 /*
 	Base address of MC68681 DUART
 */
@@ -107,7 +108,7 @@
 /* MC68681_ACR - auxiliary control register */
 #define MC68681_ACR_BRG_SELECT          (7)     /* Baud rate gen select: 0 = set 1, 1 = set 2   */
 
-#define MC68681_ACR_CT_MODE_MASK        (0x70)  /* Counter/timer mode and source                */
+#define MC68681_ACR_CT_MODE_MASK        (0x03)  /* Counter/timer mode and source                */
 #define MC68681_ACR_CT_MODE_SHIFT       (4)
 
 #define MC68681_ACR_DELTA_IP3_INT       (3)     /* Interrupt on change of IP3                   */
@@ -263,8 +264,15 @@ typedef struct
 #define MC68681_CHANNEL_A               (0)
 #define MC68681_CHANNEL_B               (1)
 
-const mc68681_baud_rate_entry g_mc68681_baud_rates[22];
 
+typedef struct
+{
+    u8 acr;         /* ACR is write-only, so we store its current val here              */
+    u8 opcr;        /* ditto OPCR                                                       */
+    u8 brg_test;    /* BRG test mode is toggled with each read of the corresponding reg */
+} mc68681_state_t;
+
+const mc68681_baud_rate_entry g_mc68681_baud_rates[22];
 
 void mc68681_reset(dev_t *dev);
 s32 mc68681_reset_tx(dev_t *dev, ku16 channel);
