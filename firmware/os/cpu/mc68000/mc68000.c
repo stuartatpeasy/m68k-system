@@ -54,7 +54,7 @@ void cpu_init_interrupt_handlers(void)
 }
 
 
-void mc68000_exc_bus_error(ku16 irql, void *data, const regs_t regs)
+void mc68000_exc_bus_error(ku32 irql, void *data, const regs_t regs)
 {
     cpu_disable_interrupts();
 	puts("\nException: Bus error");
@@ -68,7 +68,7 @@ void mc68000_exc_bus_error(ku16 irql, void *data, const regs_t regs)
 }
 
 
-void mc68000_exc_address_error(ku16 irql, void *data, const regs_t regs)
+void mc68000_exc_address_error(ku32 irql, void *data, const regs_t regs)
 {
     cpu_disable_interrupts();
 	puts("\nException: Address error");
@@ -82,7 +82,7 @@ void mc68000_exc_address_error(ku16 irql, void *data, const regs_t regs)
 }
 
 
-void mc68000_exc_generic(u16 irql, void *data, const regs_t regs)
+void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 {
     cpu_disable_interrupts();
 	printf("\nUnhandled exception: ");
@@ -139,97 +139,97 @@ void mc68000_exc_generic(u16 irql, void *data, const regs_t regs)
 }
 
 
-void mc68000_trap_0_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_0_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 0");
 }
 
 
-void mc68000_trap_1_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_1_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 1");
 }
 
 
-void mc68000_trap_2_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_2_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 2");
 }
 
 
-void mc68000_trap_3_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_3_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 3");
 }
 
 
-void mc68000_trap_4_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_4_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 4");
 }
 
 
-void mc68000_trap_5_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_5_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 5");
 }
 
 
-void mc68000_trap_6_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_6_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 6");
 }
 
 
-void mc68000_trap_7_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_7_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 7");
 }
 
 
-void mc68000_trap_8_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_8_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 8");
 }
 
 
-void mc68000_trap_9_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_9_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 9");
 }
 
 
-void mc68000_trap_10_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_10_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 10");
 }
 
 
-void mc68000_trap_11_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_11_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 11");
 }
 
 
-void mc68000_trap_12_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_12_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 12");
 }
 
 
-void mc68000_trap_13_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_13_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 13");
 }
 
 
-void mc68000_trap_14_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_14_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 14");
 }
 
 
-void mc68000_trap_15_handler(u16 irql, void *data, const regs_t regs)
+void mc68000_trap_15_handler(ku32 irql, void *data, const regs_t regs)
 {
 	puts("TRAP 15");
 }
@@ -338,7 +338,7 @@ const char * const mc68000_dump_status_register(ku16 sr)
 
 	TODO: remove the dependency on printf()
 */
-void mc68010_dump_exc_frame(ku16 irql, const regs_t * const regs)
+void mc68010_dump_exc_frame(ku32 irql, const regs_t * const regs)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
@@ -356,7 +356,7 @@ void mc68010_dump_exc_frame(ku16 irql, const regs_t * const regs)
 
 	TODO: remove the dependency on printf()
 */
-void mc68010_dump_address_exc_frame(ku16 irql, const regs_t * const regs)
+void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"

@@ -12,7 +12,7 @@
 interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
 
 
-void cpu_set_interrupt_handler(u16 irql, void *data, interrupt_handler handler)
+void cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler)
 {
     if(irql < CPU_MAX_IRQL)
     {

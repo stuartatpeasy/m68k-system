@@ -159,33 +159,33 @@ extern void irq_handler(void);      /* defined in irq.S */
 	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
 	this table and descriptions of each exception.
 */
-void mc68000_exc_bus_error(ku16 irql, void *data, const regs_t regs);
-void mc68000_exc_address_error(ku16 irql, void *data, const regs_t regs);
+void mc68000_exc_bus_error(ku32 irql, void *data, const regs_t regs);
+void mc68000_exc_address_error(ku32 irql, void *data, const regs_t regs);
 
-void mc68000_exc_generic(u16 irql, void *data, const regs_t regs);
+void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs);
 
 
-void mc68000_trap_0_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_1_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_2_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_3_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_4_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_5_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_6_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_7_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_8_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_9_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_10_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_11_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_12_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_13_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_14_handler(u16 irql, void *data, const regs_t regs);
-void mc68000_trap_15_handler(u16 irql, void *data, const regs_t regs);
+void mc68000_trap_0_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_1_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_2_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_3_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_4_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_5_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_6_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_7_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_8_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_9_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_10_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_11_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_12_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_13_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_14_handler(ku32 irql, void *data, const regs_t regs);
+void mc68000_trap_15_handler(ku32 irql, void *data, const regs_t regs);
 
 
 const char * const mc68000_dump_status_register(ku16 sr);
 void mc68000_dump_regs(const regs_t *regs);
-void mc68010_dump_exc_frame(ku16 irql, const regs_t * const regs);
-void mc68010_dump_address_exc_frame(ku16 irql, const regs_t * const regs);
+void mc68010_dump_exc_frame(ku32 irql, const regs_t * const regs);
+void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs);
 
 #endif

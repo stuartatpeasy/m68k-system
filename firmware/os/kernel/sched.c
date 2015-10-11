@@ -82,15 +82,14 @@ printf("stack top = %p\n", process_stack_top);
 }
 
 
-void irq_schedule(u16 irql, void *data, regs_t regs)
+void irq_schedule(ku32 irql, void *data, regs_t regs)
 {
     /*
         This is the interrupt handler for the system timer interrupt, which triggers a context
         switch.  This function performs the context switch.
     */
 
-    // plat_stop_quantum();
-    duart_stop_counter();
+    plat_stop_quantum();
     cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 
     /* Store the outgoing process's state in *g_current_proc. */
@@ -107,8 +106,7 @@ void irq_schedule(u16 irql, void *data, regs_t regs)
         because the function call might interfere with register values.  This means that the next
         timeslice starts before the corresponding task is actually ready to run.
     */
-//    plat_start_quantum();
-    duart_start_counter();
+    plat_start_quantum();
 
     /* Restore the incoming task's state from g_current_task. */
 

@@ -66,7 +66,7 @@ s32 encx24j600_reset(dev_t *dev)
 }
 
 
-void encx24j600_irq(u16 irql, void *data, const regs_t regs)
+void encx24j600_irq(ku32 irql, void *data, const regs_t regs)
 {
     dev_t *dev = (dev_t *) data;
 

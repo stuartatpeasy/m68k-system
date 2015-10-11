@@ -11,9 +11,8 @@
 
 #include <cpu/cpu.h>
 #include <cpu/mc68000/exceptions.h> /* FIXME - arch-specific - need this for V_level_1_autovector */
-#include "device/duart.h"           /* FIXME - platform-specific - DUART generates the scheduler interrupt */
-#include "include/defs.h"
-#include "include/types.h"
+#include <include/defs.h>
+#include <include/types.h>
 #include <strings.h>
 
 
@@ -58,7 +57,7 @@ typedef struct proc_struct proc_t;
 proc_t *g_current_proc;
 u32 g_ncontext_switches;
 
-void irq_schedule(u16 irql, void *data, regs_t regs);
+void irq_schedule(ku32 irql, void *data, regs_t regs);
 void sched_init(void);
 
 pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags);

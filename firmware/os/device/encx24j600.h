@@ -38,7 +38,7 @@ s32 encx24j600_shut_down(dev_t *dev);
 s32 encx24j600_read(dev_t *dev);
 s32 encx24j600_write(dev_t *dev);
 s32 encx24j600_control(dev_t *dev);
-void encx24j600_irq(u16 irql, void *data, const regs_t regs);
+void encx24j600_irq(ku32 irql, void *data, const regs_t regs);
 
 /*
     Cryptographic data memory map

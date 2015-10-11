@@ -42,7 +42,7 @@ inline u32 wswap_32(u32 x);
 void cpu_init_interrupt_handlers(void);
 
 /* Set a handler for a particular IRQ level */
-typedef void(*interrupt_handler)(u16 irql, void *data, const regs_t regs);
+typedef void(*interrupt_handler)(ku32 irql, void *data, const regs_t regs);
 
 /*
     An entry in the IRQ indirection table.  Consists of a ptr to a handler fn, and an arbitrary
@@ -58,7 +58,7 @@ typedef struct
 /* The IRQ indirection table */
 interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
 
-void cpu_set_interrupt_handler(u16 irql, void *data, interrupt_handler handler);
+void cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler);
 
 #undef IN_CPU_H
 
