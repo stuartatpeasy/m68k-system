@@ -9,15 +9,10 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include "include/byteorder.h"
-#include "include/types.h"
-#include "device/block/block.h"
-#include "device/device.h"
-#include "kutil/kutil.h"
+#include <device/block/block.h>
+#include <device/device.h>
+#include <include/types.h>
 
-#include <stdio.h>			/* FIXME: remove this */
-#include <string.h>
-#include <strings.h>
 
 /*
 	"Driver" functions

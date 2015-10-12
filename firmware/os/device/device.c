@@ -8,7 +8,7 @@
 */
 
 #include <errno.h>
-#include <stdio.h>        /* FIXME - remove */
+#include <stdio.h>
 #include <string.h>
 #include <strings.h>
 

@@ -7,6 +7,7 @@
 #include <platform/lambda_rev0/lambda.h>
 #include <platform/lambda_rev0/device.h>
 #include <device/device.h>
+#include <device/ds17485.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =
@@ -148,4 +149,23 @@ s32 plat_led_off(ku8 leds)
 {
     mc68681_set_op_bits(g_lambda_console, leds & (LED_RED | LED_GREEN));
     return SUCCESS;
+}
+
+
+/*
+    plat_get_serial_number() - write a unique serial number into sn[8].
+*/
+s32 plat_get_serial_number(u8 sn[8])
+{
+    dev_t *dev = dev_find("rtc0");
+    if(dev)
+    {
+        sn[0] = 0;
+        sn[1] = 0;
+        ds17485_get_serial_number(dev, sn + 2);
+
+        return SUCCESS;
+    }
+
+    return ENOSYS;
 }

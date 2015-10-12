@@ -771,7 +771,7 @@ MONITOR_CMD_HANDLER(slabs)
 /*
 	srec
 
-	Receive data in S-record format and put it in memory somwhere
+	Receive data in S-record format and put it in memory somewhere
 */
 MONITOR_CMD_HANDLER(srec)
 {
@@ -783,7 +783,7 @@ MONITOR_CMD_HANDLER(srec)
 	if(srec(&s))
 	{
 		printf("S-record error at line %u: %s\n", s.line, srec_strerror(s.error));
-		return SUCCESS;	/* FIXME: find a way of returning an already-reported error */
+		return SUCCESS;
 	}
 
 	printf("Uploaded %u bytes at address %p\nStart address %x\n",

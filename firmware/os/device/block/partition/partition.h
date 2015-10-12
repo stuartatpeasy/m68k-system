@@ -9,9 +9,9 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include "device/device.h"
-#include "device/devctl.h"
-#include "mbr.h"
+#include <device/device.h>
+#include <device/devctl.h>
+#include <include/mbr.h>
 
 #include <strings.h>
 

@@ -7,11 +7,12 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include "partition.h"
-#include "kutil/kutil.h"
-#include "include/byteorder.h"
+#include <device/block/partition/partition.h>
+#include <include/byteorder.h>
+#include <kutil/kutil.h>
 
-#include "stdio.h"			/* FIXME: remove */
+#include <stdio.h>
+
 
 static struct partition_data g_partitions[MAX_PARTITIONS];
 static u32 g_next_partition;

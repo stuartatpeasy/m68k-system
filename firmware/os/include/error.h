@@ -15,7 +15,7 @@
     appropriate error code.  No counterpart to the "errno" global var exists in the kernel.
 
 */
-#include "klibc/errno.h"
+#include <klibc/errno.h>
 
 #define KERNEL_MIN_ERRNO    (500)    /* First error num reserved for custom error messages */
 

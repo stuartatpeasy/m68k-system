@@ -10,8 +10,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-07-01.
 */
 
+#include <include/types.h>
 
-#include "../include/types.h"
 
 #define EPERM				(1)		/* Operation not permitted							*/
 #define ENOENT				(2)		/* No such file or directory						*/

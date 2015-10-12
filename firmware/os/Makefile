@@ -128,13 +128,13 @@ device/mc68681.o: \
 
 device/block/ata/ata.o: \
 	device/block/ata/ata.c device/block/ata/ata.h device/block/ata/ata-internal.h \
-	device/block/block.h device/block/partition/mbr.h device/devctl.h device/device.h \
-	include/byteorder.h include/defs.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
+	device/block/block.h device/devctl.h device/device.h include/byteorder.h include/defs.h \
+	include/mbr.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
 
 device/block/partition/partition.o: \
 	device/block/partition/partition.c device/block/partition/partition.h \
-	device/block/partition/mbr.h device/device.h include/byteorder.h include/defs.h \
-	include/types.h klibc/stdio.h kutil/kutil.h cpu/cpu.h device/devctl.h
+	device/device.h include/byteorder.h include/defs.h include/mbr.h include/types.h \
+	klibc/stdio.h kutil/kutil.h cpu/cpu.h device/devctl.h
 
 fs/ext2/ext2.o: \
 	fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h klibc/string.h \

@@ -11,7 +11,6 @@
 
 #include <device/devctl.h>
 #include <device/device.h>
-#include <device/ds17485.h>     /* FIXME - platform specific; remove */
 #include <fs/vfs.h>
 #include <include/defs.h>
 #include <kutil/kutil.h>
@@ -87,8 +86,7 @@ void early_boot_fail(ku32 code)
 void _main()
 {
     mem_extent_t *ramext;
-    rtc_time_t tm;
-    char timebuf[12], datebuf[32];
+    dev_t *dev;
     u8 sn[6];
 
 	/* === Initialise CPU === */
@@ -125,10 +123,6 @@ void _main()
     printf("%uMB RAM detected\n", (mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM)
             + mem_get_total_size(MEM_EXTENT_KERN | MEM_EXTENT_RAM)) >> 20);
 
-    /* Enumerate devices */
-    if(dev_enumerate() != SUCCESS)
-        early_boot_fail(4);
-
     /* Activate red LED while the boot process continues */
 	plat_led_off(LED_ALL);
 	plat_led_on(LED_RED);
@@ -142,20 +136,16 @@ void _main()
     ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     umeminit(ramext->base, ramext->base + ramext->len);
 
+    /* Enumerate devices */
+    if(dev_enumerate() != SUCCESS)
+        early_boot_fail(4);
 
-    /* Initialise RTC */
+    if(plat_get_serial_number(sn) == SUCCESS)
+    {
+        printf("Hardware serial number %02X%02X%02X%02X%02X%02X\n",
+                sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);
+    }
 /*
-	ds17485_init();
-    ds17485_get_serial_number(sn);
-
-    printf("DS17485 RTC [model %02X, serial %02X%02X%02X%02X%02X%02X]\n",
-           ds17485_get_model_number(), sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);
-
-    ds17485_get_time(&tm);
-    time_iso8601(&tm, timebuf, sizeof(timebuf));
-    date_long(&tm, datebuf, sizeof(datebuf));
-    printf("%s %s\n", timebuf, datebuf);
-
     detect_clock_freq();
 */
 	/* Register drivers and initialise devices */
@@ -168,6 +158,22 @@ void _main()
 
 	if(vfs_init() != SUCCESS)
 		puts("VFS failed to initialise");
+
+    /* Display the current date and time */
+    dev = dev_find("rtc0");
+    if(dev)
+    {
+        rtc_time_t tm;
+
+        if(((rtc_ops_t *) dev->driver)->get_time(dev, &tm) == SUCCESS)
+        {
+            char timebuf[12], datebuf[32];
+
+            time_iso8601(&tm, timebuf, sizeof(timebuf));
+            date_long(&tm, datebuf, sizeof(datebuf));
+            printf("%s %s\n", timebuf, datebuf);
+        }
+    }
 
     sched_init();
     cpu_enable_interrupts();

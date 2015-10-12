@@ -1,7 +1,7 @@
-#ifndef DEVICE_BLOCK_PARTITION_MBR_H_INC
-#define DEVICE_BLOCK_PARTITION_MBR_H_INC
+#ifndef INCLUDE_MBR_H_INC
+#define INCLUDE_MBR_H_INC
 /*
-	Master boot record (MBR) handling functions and type definitions
+	Declarations relating to master boot records (MBR)
 
 	Part of the as-yet-unnamed MC68010 operating system
 
@@ -10,8 +10,8 @@
 */
 
 
-#include "include/defs.h"
-#include "include/types.h"
+#include <include/defs.h>
+#include <include/types.h>
 
 #define MBR_SECTOR_LEN		(512)
 #define MBR_SIGNATURE		(0xaa55)		/* validation signature in bytes 510-511 of a MBR	*/
@@ -54,7 +54,4 @@ struct mbr
 } __attribute__((packed));
 
 
-int mbr_read();
-
 #endif
-

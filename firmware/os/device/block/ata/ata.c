@@ -7,9 +7,15 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include "ata-internal.h"
-#include "ata.h"
-#include "include/error.h"
+#include <device/block/ata/ata-internal.h>
+#include <device/block/ata/ata.h>
+#include <kutil/kutil.h>
+#include <include/byteorder.h>
+#include <include/error.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
 
 
 static ata_device_t g_ata_devices[ATA_MAX_DEVICES];

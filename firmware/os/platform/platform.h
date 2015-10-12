@@ -20,16 +20,13 @@
 #define LED_GREEN           (0x40)
 #define LED_ALL             (0xff)
 
-struct hwinfo;	/* FIXME - declare this, or ditch it, or whatever. */
-typedef struct hwinfo hwinfo_t;
-
 extern mem_extent_t *g_mem_extents;
 extern mem_extent_t *g_mem_extents_end;
 
 s32 plat_init(void);		    /* Perform any post-reset platform init tasks   	            */
 s32 plat_mem_detect();			/* Populate g_mem_extents with type & location of memory 		*/
 								/* Place an eight-byte hardware serial number in sn				*/
-void plat_get_serial_number(u8 sn[8]);
+s32 plat_get_serial_number(u8 sn[8]);
 
 s32 plat_stop_quantum();        /* Stop the currently-running quantum (task time-slice)         */
 s32 plat_start_quantum();       /* Start a new quantum                                          */
@@ -77,7 +74,6 @@ s16 plat_console_getc(void);		    /* Read a character from the console.  Must bl
 s32 nvram_init();
 s32 nvram_read(u32 addr, u32 len, void *buffer);		/* Read len bytes from offset addr 		*/
 u32 nvram_write(u32 addr, u32 len, const void *buffer);	/* Write len bytes at offset addr		*/
-s32 nvram_hwinfo(hwinfo_t *);
 
 
 /*
@@ -90,7 +86,6 @@ s32 nvram_hwinfo(hwinfo_t *);
 s32 rtc_init();
 s32 rtc_get_time(rtc_time_t * const tm);
 s32 rtc_set_time(const rtc_time_t * const tm);
-s32 rtc_hwinfo(hwinfo_t *);
 
 
 /*
@@ -104,6 +99,5 @@ s32 rtc_hwinfo(hwinfo_t *);
 s32 ata_init();
 s32 ata_read(void *data, u32 first_sector, u32 nsectors, void *buffer);
 s32 ata_write(void *data, u32 first_sector, u32 nsectors, const void *buffer);
-s32 ata_hwinfo(hwinfo_t *);
 
 #endif
