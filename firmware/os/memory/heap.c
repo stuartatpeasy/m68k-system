@@ -129,13 +129,18 @@ void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
 	if(p)
     {
         n += (1 << MEMBLOCK_ALIGN) - 1;
+        for(n >>= MEMBLOCK_ALIGN; n--;)
+        {
 #if(MEMBLOCK_ALIGN == 2)
-		for(n >>= MEMBLOCK_ALIGN; n--; ((u32 *) p)[n] = 0) ;
+            ((u32 *) p)[n] = 0;
 #elif(MEMBLOCK_ALIGN == 1)
-		for(n >>= MEMBLOCK_ALIGN; n--; ((u16 *) p)[n] = 0) ;
+            ((u16 *) p)[n] = 0;
+#elif(MEMBLOCK_ALIGN == 0)
+            ((u8 *) p)[n] = 0;
 #else
-		for(; n--; ((u8 *) p)[n] = 0) ;
+#error "Invalid MEMBLOCK_ALIGN constant value"
 #endif
+        }
     }
 
 	return p;
@@ -172,16 +177,21 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 		if(size > p->size)
 			size = p->size;
 
+        size += (1 << MEMBLOCK_ALIGN) - 1;
+
+		for(size >>= MEMBLOCK_ALIGN; size--;)
+        {
 #if(MEMBLOCK_ALIGN == 2)
-		for(size >>= MEMBLOCK_ALIGN; size--;)
-			((u32 *) pnew)[size] = ((u16 *) ptr)[size];
+			((u32 *) pnew)[size] = ((u32 *) ptr)[size];
 #elif(MEMBLOCK_ALIGN == 1)
-		for(size >>= MEMBLOCK_ALIGN; size--;)
 			((u16 *) pnew)[size] = ((u16 *) ptr)[size];
-#else
-		for(; size--;)
+#elif(MEMBLOCK_ALIGN == 0)
 			((u8 *) pnew)[size] = ((u8 *) ptr)[size];
+#else
+#error "Invalid MEMBLOCK_ALIGN constant value"
 #endif
+        }
+
 		heap_free(heap, ptr);
 		return pnew;
 	}
