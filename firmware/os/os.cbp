@@ -42,7 +42,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/block/ata/ata.h" />
-		<Unit filename="device/block/partition/mbr.h" />
 		<Unit filename="device/block/partition/partition.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -92,6 +91,7 @@
 		<Unit filename="include/error.h" />
 		<Unit filename="include/limits.h" />
 		<Unit filename="include/list.h" />
+		<Unit filename="include/mbr.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
 		<Unit filename="kernel/elf.c">
@@ -216,7 +216,6 @@
 		</Unit>
 		<Unit filename="monitor/srec.h" />
 		<Unit filename="platform/lambda_rev0/Makefile" />
-		<Unit filename="platform/lambda_rev0/ata.h" />
 		<Unit filename="platform/lambda_rev0/device.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -225,7 +224,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="platform/lambda_rev0/dfu.h" />
-		<Unit filename="platform/lambda_rev0/exp16.h" />
 		<Unit filename="platform/lambda_rev0/kernel.ld" />
 		<Unit filename="platform/lambda_rev0/lambda.c">
 			<Option compilerVar="CC" />

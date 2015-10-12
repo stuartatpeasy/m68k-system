@@ -89,12 +89,10 @@ void _main()
     dev_t *dev;
     u8 sn[6];
 
-	/* === Initialise CPU === */
 
     cpu_disable_interrupts();   /* Just in case we were called manually */
 
     /* === Initialise memory === */
-
     memcpy(&_sdata, &_etext, &_edata - &_sdata);        /* Copy .data section to kernel RAM */
     bzero(&_sbss, &_ebss - &_sbss);                     /* Initialise .bss section          */
     slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
@@ -136,15 +134,9 @@ void _main()
     ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     umeminit(ramext->base, ramext->base + ramext->len);
 
-    /* Enumerate devices */
+    /* === Initialise peripherals - phase 2 === */
     if(dev_enumerate() != SUCCESS)
         early_boot_fail(4);
-
-    if(plat_get_serial_number(sn) == SUCCESS)
-    {
-        printf("Hardware serial number %02X%02X%02X%02X%02X%02X\n",
-                sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);
-    }
 /*
     detect_clock_freq();
 */
@@ -152,12 +144,20 @@ void _main()
 	puts("Initialising devices and drivers");
 	driver_init();
 
-	printf("%u bytes of kernel heap memory available\n"
+	if(vfs_init() != SUCCESS)
+		puts("VFS failed to initialise");
+
+    /* Display memory information */
+	printf("\n%u bytes of kernel heap memory available\n"
            "%u bytes of user memory available\n", kfreemem(),
                 mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM));
 
-	if(vfs_init() != SUCCESS)
-		puts("VFS failed to initialise");
+    /* Display platform serial number */
+    if(plat_get_serial_number(sn) == SUCCESS)
+    {
+        printf("Hardware serial number %02X%02X%02X%02X%02X%02X\n",
+                sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);
+    }
 
     /* Display the current date and time */
     dev = dev_find("rtc0");
