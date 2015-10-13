@@ -11,7 +11,7 @@ FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES=main.c \
 		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
-		 device/bbram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
+		 device/nvram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
 		 device/block/ata/ata.c device/block/partition/partition.c \
 		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 		 kernel/elf.c kernel/ksym.c kernel/sched.c kernel/syscalls.c \
@@ -108,8 +108,8 @@ cpu/$(CPU)/$(CPU).o: \
 startup.o: \
 	cpu/$(CPU)/startup.S memory/memorymap.h
 
-device/bbram.o: \
-	device/bbram.c device/bbram.h device/ds17485.h include/defs.h include/error.h include/types.h \
+device/nvram.o: \
+	device/nvram.c device/nvram.h device/ds17485.h include/defs.h include/error.h include/types.h \
 	kutil/kutil.h
 
 device/device.o: \
@@ -152,7 +152,7 @@ fs/mount.o: \
 	klibc/errno.h kutil/kutil.h memory/kmalloc.h
 
 fs/vfs.o: \
-	fs/vfs.c fs/vfs.h fs/mount.h device/bbram.h device/devctl.h device/device.h include/defs.h \
+	fs/vfs.c fs/vfs.h fs/mount.h device/nvram.h device/devctl.h device/device.h include/defs.h \
 	include/types.h klibc/stdio.h
 
 include/byteorder.h: \

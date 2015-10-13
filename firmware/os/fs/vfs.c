@@ -7,11 +7,11 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include "fs/vfs.h"
-#include "fs/mount.h"
-#include "device/bbram.h"
-#include "device/device.h"
-#include "device/devctl.h"
+#include <fs/vfs.h>
+#include <fs/mount.h>
+#include <device/nvram.h>
+#include <device/device.h>
+#include <device/devctl.h>
 
 
 vfs_t *g_filesystems[MAX_FILESYSTEMS];
@@ -56,7 +56,7 @@ dev_t *find_boot_device()
 
 s32 vfs_init()
 {
-	bbram_param_block_t bpb;
+	nvram_bpb_t bpb;
 	s32 ret, i;
 
 	/* Init file system drivers */
@@ -87,10 +87,8 @@ s32 vfs_init()
     if(ret != SUCCESS)
         return ret;
 
-#if 0
-/* FIXME - reinstate this code */
 	/* Find rootfs device */
-	ret = bbram_param_block_read(&bpb);
+	ret = nvram_bpb_read(&bpb);
 	if(ret == SUCCESS)
     {
         /* Iterate over partition devices, looking for one whose name matches the BPB rootfs */
@@ -120,8 +118,7 @@ s32 vfs_init()
         printf("vfs: rootfs partition '%s' not found\n", bpb.rootfs);
     }
     else
-        puts("vfs: rootfs not set in BPB");
-#endif
+        printf("vfs: failed to read rootfs from BPB: %s\n", kstrerror(ret));
 
 	return SUCCESS;
 }

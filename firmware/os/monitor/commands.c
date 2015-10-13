@@ -657,49 +657,51 @@ MONITOR_CMD_HANDLER(raw)
 */
 MONITOR_CMD_HANDLER(rootfs)
 {
-    return ENOSYS;
-#if 0
-/* FIXME - reinstate this code */
-    struct bbram_param_block bpb;
+    nvram_bpb_t bpb;
+    s32 ret;
+
+    if((num_args != 0) && (num_args != 2))
+        return EINVAL;
 
     if(num_args == 0)
     {
         /* Read and display current root filesystem setting from BPB */
-        if(bbram_param_block_read(&bpb) == SUCCESS)
-        {
-            s32 i;
-            for(i = 0; bpb.rootfs[i] && (i < sizeof(bpb.rootfs)); ++i)
-                putchar(bpb.rootfs[i]);
+        ret = nvram_bpb_read(&bpb);
+        if(ret != SUCCESS)
+            return ret;
 
-            putchar(' ');
+        s32 i;
+        for(i = 0; bpb.rootfs[i] && (i < sizeof(bpb.rootfs)); ++i)
+            putchar(bpb.rootfs[i]);
 
-            for(i = 0; bpb.fstype[i] && (i < sizeof(bpb.fstype)); ++i)
-                putchar(bpb.fstype[i]);
+        putchar(' ');
 
-            putchar('\n');
-        }
-        else
-            puts("Incorrect checksum in BIOS parameter block");
+        for(i = 0; bpb.fstype[i] && (i < sizeof(bpb.fstype)); ++i)
+            putchar(bpb.fstype[i]);
+
+        putchar('\n');
     }
-    else if(num_args == 2)
+    else
     {
         /* Set root filesystem in BPB */
-
         if((strlen(args[0]) > sizeof(bpb.rootfs)) || (strlen(args[1]) > sizeof(bpb.fstype))
            || !vfs_get_driver_by_name(args[1]))
             return EINVAL;
 
-        bbram_param_block_read(&bpb);
+        /*
+            Optimistically ignore errors here.  If there's a checksum error,
+            bbram_param_block_write() will fix it for us.  This doesn't mean there won't be
+            corruption elsewhere in the BPB, though.
+        */
+        nvram_bpb_read(&bpb);
+
         strncpy(bpb.rootfs, args[0], sizeof(bpb.rootfs));
         strncpy(bpb.fstype, args[1], sizeof(bpb.fstype));
 
-        bbram_param_block_write(&bpb);
+        return nvram_bpb_write(&bpb);
     }
-    else
-        return EINVAL;
 
     return SUCCESS;
-#endif
 }
 
 

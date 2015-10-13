@@ -33,10 +33,6 @@
 		<Unit filename="cpu/mc68000/mc68000.h" />
 		<Unit filename="cpu/mc68000/startup.S" />
 		<Unit filename="cpu/mc68000/syscall.S" />
-		<Unit filename="device/bbram.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/bbram.h" />
 		<Unit filename="device/block/ata/ata-internal.h" />
 		<Unit filename="device/block/ata/ata.c">
 			<Option compilerVar="CC" />
@@ -63,6 +59,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/mc68681.h" />
+		<Unit filename="device/nvram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/nvram.h" />
 		<Unit filename="fs/ext2/ext2.c">
 			<Option compilerVar="CC" />
 		</Unit>

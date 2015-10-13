@@ -7,8 +7,8 @@
     (c) Stuart Wallace, June 2015.
 */
 
-#include "ds17485.h"
-#include "kutil/kutil.h"
+#include <device/ds17485.h>
+#include <kutil/kutil.h>
 
 
 /*
