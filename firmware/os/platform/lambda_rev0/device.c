@@ -37,7 +37,7 @@ s32 plat_dev_enumerate(dev_t *root_dev)
     if(g_lambda_duart == NULL)
     {
         ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", LAMBDA_MC68681_IRQL,
-                            LAMBDA_MC68681_BASE, &g_lambda_duart);
+                         LAMBDA_MC68681_BASE, &g_lambda_duart);
         if(ret == SUCCESS)
             ret = mc68681_init(g_lambda_duart);
         else
@@ -53,7 +53,7 @@ s32 plat_dev_enumerate(dev_t *root_dev)
         if(g_lambda_console == NULL)
         {
             ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", LAMBDA_MC68681_IRQL,
-                                LAMBDA_MC68681_BASE, &g_lambda_console);
+                             LAMBDA_MC68681_BASE, &g_lambda_console);
             if(ret == SUCCESS)
                 ret = mc68681_serial_a_init(g_lambda_console);
             else
@@ -65,7 +65,7 @@ s32 plat_dev_enumerate(dev_t *root_dev)
 
         /* Child device: serial channel B */
         ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", LAMBDA_MC68681_IRQL,
-                            LAMBDA_MC68681_BASE, &dev);
+                         LAMBDA_MC68681_BASE, &dev);
         if(ret == SUCCESS)
         {
             ret = mc68681_serial_b_init(dev);
@@ -80,15 +80,21 @@ s32 plat_dev_enumerate(dev_t *root_dev)
     */
     /* DEV_TYPE_MULTI device representing the whole chip */
     if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "nvrtc", LAMBDA_DS17485_IRQL,
-                        LAMBDA_DS17485_BASE, &dev, "DS17485", root_dev, ds17485_init) == SUCCESS)
+                    LAMBDA_DS17485_BASE, &dev, "DS17485", root_dev, ds17485_init) == SUCCESS)
     {
         /* Child device: RTC */
         dev_register(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", LAMBDA_DS17485_IRQL,
-                        LAMBDA_DS17485_BASE, &sub_dev, "DS17485 RTC", dev, ds17485_rtc_init);
+                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 RTC", dev, ds17485_rtc_init);
 
-        /* Child device: NVRAM */
+        /* Child device: user NVRAM */
         dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", LAMBDA_DS17485_IRQL,
-                        LAMBDA_DS17485_BASE, &sub_dev, "DS17485 NVRAM", dev, ds17485_nvram_init);
+                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 user NVRAM", dev,
+                     ds17485_user_ram_init);
+
+        /* Child device: extendd NVRAM */
+        dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", LAMBDA_DS17485_IRQL,
+                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 extended NVRAM", dev,
+                     ds17485_ext_ram_init);
     }
 
 
@@ -98,15 +104,15 @@ s32 plat_dev_enumerate(dev_t *root_dev)
 #if 0
     /* DEV_TYPE_MULTI device representing the whole interface */
     if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "ataif", LAMBDA_ATA_IRQL, LAMBDA_ATA_BASE,
-                        &dev, "ATA interface", root_dev, ata_init) == SUCCESS)
+                    &dev, "ATA interface", root_dev, ata_init) == SUCCESS)
     {
         /* Child device: primary ATA channel */
         dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", LAMBDA_ATA_IRQL,
-                        LAMBDA_ATA_BASE, &sub_dev, "ATA channel 0", dev, ata_channel_0_init);
+                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 0", dev, ata_channel_0_init);
 
         /* Child device: secondary ATA channel */
         dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", LAMBDA_ATA_IRQL,
-                        LAMBDA_ATA_BASE, &sub_dev, "ATA channel 1", dev, ata_channel_1_init);
+                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 1", dev, ata_channel_1_init);
     }
 #endif
 

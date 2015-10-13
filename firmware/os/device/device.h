@@ -108,7 +108,9 @@ typedef struct
 
 typedef struct
 {
-
+    s32 (*read)(dev_t *dev, u32 addr, u32 len, void *buffer);
+    s32 (*write)(dev_t *dev, u32 addr, u32 len, const void *buffer);
+    u32 (*get_length)();
 } nvram_ops_t;
 
 /*

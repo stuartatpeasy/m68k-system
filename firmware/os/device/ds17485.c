@@ -31,15 +31,37 @@ s32 ds17485_rtc_init(dev_t * const dev)
 
 
 /*
-    ds17485_nvram_init() - device initialiser for the NVRAM in a DS17485.
+    ds17485_user_ram_init() - device initialiser for the user NVRAM in a DS17485.
 */
-s32 ds17485_nvram_init(dev_t * const dev)
+s32 ds17485_user_ram_init(dev_t * const dev)
 {
     nvram_ops_t *ops;
 
     ops = (nvram_ops_t *) CHECKED_KCALLOC(1, sizeof(nvram_ops_t));
 
-    /* TODO: fill in driver functions here */
+    ops->read = ds17485_user_ram_read;
+    ops->write = ds17485_user_ram_write;
+    ops->get_length = ds17485_user_ram_get_length;
+
+    dev->driver = ops;
+    dev->data = dev->parent->data;
+
+    return SUCCESS;
+}
+
+
+/*
+    ds17485_ext_ram_init() - device initialiser for the extended NVRAM in a DS17485.
+*/
+s32 ds17485_ext_ram_init(dev_t * const dev)
+{
+    nvram_ops_t *ops;
+
+    ops = (nvram_ops_t *) CHECKED_KCALLOC(1, sizeof(nvram_ops_t));
+
+    ops->read = ds17485_ext_ram_read;
+    ops->write = ds17485_ext_ram_write;
+    ops->get_length = ds17485_ext_ram_get_length;
 
     dev->driver = ops;
     dev->data = dev->parent->data;
@@ -194,24 +216,55 @@ void ds17485_force_valid_time(const dev_t * const dev)
 }
 
 
-void ds17485_user_ram_read(const dev_t * const dev, u32 addr, u32 len, void* buffer)
+/*
+    ds17485_user_ram_read() - read len bytes of user NVRAM from offset addr into buffer
+*/
+s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 {
+    if((addr + len) > DS17485_USER_RAM_LEN)
+        return EINVAL;
+
     DS17485_SELECT_STD_REG(dev->base_addr);
-    for(addr += 14; len && (addr < 128); --len, ++addr)
+    for(addr += DS17485_USER_RAM_START; len; --len, ++addr)
         *((u8 *) buffer++) = DS17485_REG_READ(dev->base_addr, addr);
+
+    return SUCCESS;
 }
 
 
-void ds17485_user_ram_write(const dev_t * const dev, u32 addr, u32 len, const void* buffer)
+/*
+    ds17485_user_ram_write() - write len bytes from buffer into user NVRAM at offset addr
+*/
+s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
 {
+    if((addr + len) > DS17485_USER_RAM_LEN)
+        return EINVAL;
+
     DS17485_SELECT_STD_REG(dev->base_addr);
     for(addr += 14; len && (addr < 128); --len, ++addr)
         DS17485_REG_WRITE(dev->base_addr, addr, *((u8 *) buffer++));
+
+    return SUCCESS;
 }
 
 
-void ds17485_ext_ram_read(const dev_t * const dev, u32 addr, u32 len, u8* buffer)
+/*
+    ds17485_user_ram_get_length() - get the length of the user NVRAM area, in bytes.
+*/
+u32 ds17485_user_ram_get_length(dev_t * const dev)
 {
+    return DS17485_USER_RAM_LEN;
+}
+
+
+/*
+    ds17485_ext_ram_read() - read len bytes of extended NVRAM from offset addr into buffer
+*/
+s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
+{
+    if((addr + len) > DS17485_EXT_RAM_LEN)
+        return EINVAL;
+
     /* Switch to the extended register set in order to read the extended RAM area */
     DS17485_SELECT_EXT_REG(dev->base_addr);
 
@@ -219,12 +272,20 @@ void ds17485_ext_ram_read(const dev_t * const dev, u32 addr, u32 len, u8* buffer
     DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
     while(len-- & (addr++ < 0xfff))
-        *(buffer++) = DS17485_REG_READ(dev->base_addr, DS17485_EXTRAM_DATA);
+        *((u8 *) buffer++) = DS17485_REG_READ(dev->base_addr, DS17485_EXTRAM_DATA);
+
+    return SUCCESS;
 }
 
 
-void ds17485_ext_ram_write(const dev_t * const dev, u32 addr, u32 len, const u8* buffer)
+/*
+    ds17485_ext_ram_write() - write len bytes from buffer into extended NVRAM at offset addr
+*/
+s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
 {
+    if((addr + len) > DS17485_EXT_RAM_LEN)
+        return EINVAL;
+
     /* Switch to the extended register set in order to read the extended RAM area */
     DS17485_SELECT_EXT_REG(dev->base_addr);
 
@@ -232,10 +293,24 @@ void ds17485_ext_ram_write(const dev_t * const dev, u32 addr, u32 len, const u8*
     DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
     while(len-- & (addr++ < 0xfff))
-        DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_DATA, *(buffer++));
+        DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_DATA, *((u8 *) buffer++));
+
+    return SUCCESS;
 }
 
 
+/*
+    ds17485_ext_ram_get_length() - get the length of the extended NVRAM area, in bytes.
+*/
+u32 ds17485_ext_ram_get_length(dev_t * const dev)
+{
+    return DS17485_EXT_RAM_LEN;
+}
+
+
+/*
+    ds17485_get_model_number() - get the eight-bit model number for this RTC
+*/
 u8 ds17485_get_model_number(const dev_t * const dev)
 {
     /* Switch to the extended register set in order to read the model number */
@@ -245,6 +320,9 @@ u8 ds17485_get_model_number(const dev_t * const dev)
 }
 
 
+/*
+    ds17485_get_serial_number() - get the hardware serial number from the RTC
+*/
 void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6])
 {
     /* Switch to the extended register set in order to read the serial number */

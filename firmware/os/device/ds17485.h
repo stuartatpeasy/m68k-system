@@ -56,26 +56,6 @@
 #define DS17485_SELECT_STD_REG(base)        \
     DS17485_REG_CLEAR_BITS(base, DS17485_REG_A, DS17485_DV0)
 
-
-/*
-    Function declarations
-*/
-s32 ds17485_init(dev_t * const dev);
-s32 ds17485_rtc_init(dev_t * const dev);
-s32 ds17485_nvram_init(dev_t * const dev);
-
-s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm);
-s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm);
-void ds17485_force_valid_time(const dev_t * const dev);
-
-void ds17485_user_ram_read(const dev_t * const dev, u32 addr, u32 len, void * buffer);
-void ds17485_user_ram_write(const dev_t * const dev, u32 addr, u32 len, const void * buffer);
-void ds17485_ext_ram_read(const dev_t * const dev, u32 addr, u32 len, u8* buffer);
-void ds17485_ext_ram_write(const dev_t * const dev, u32 addr, u32 len, const u8* buffer);
-
-u8 ds17485_get_model_number(const dev_t * const dev);
-void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6]);
-
 /*
     DS17485 register numbers
 */
@@ -116,52 +96,81 @@ void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6]);
 
 
 /* Register A bits */
-#define DS17485_UIP                     (1 << 7)
-#define DS17485_DV2                     (1 << 6)
-#define DS17485_DV1                     (1 << 5)
-#define DS17485_DV0                     (1 << 4)
-#define DS17485_RS3                     (1 << 3)
-#define DS17485_RS2                     (1 << 2)
-#define DS17485_RS1                     (1 << 1)
-#define DS17485_RS0                     (1 << 0)
+#define DS17485_UIP             BIT(7)  /* Update in progress                           */
+#define DS17485_DV2             BIT(6)  /* 0 = enable countdown chain; 1 = reset if DV1 */
+#define DS17485_DV1             BIT(5)  /* Oscillator enable                            */
+#define DS17485_DV0             BIT(4)  /* Register bank select: 0 = original, 1 = ext. */
+#define DS17485_RS3             BIT(3)  /* } Square-wave output rate select             */
+#define DS17485_RS2             BIT(2)  /* } see data sheet for frequencies             */
+#define DS17485_RS1             BIT(1)  /* }                                            */
+#define DS17485_RS0             BIT(0)  /* }                                            */
 
 /* Register B bits */
-#define DS17485_SET                     (1 << 7)
-#define DS17485_PIE                     (1 << 6)
-#define DS17485_AIE                     (1 << 5)
-#define DS17485_UIE                     (1 << 4)
-#define DS17485_SQWE                    (1 << 3)
-#define DS17485_DM                      (1 << 2)
-#define DS17485_2412                    (1 << 1)
-#define DS17485_DSE                     (1 << 0)
+#define DS17485_SET             BIT(7)  /* 1 = Inhibit update transfers during init.    */
+#define DS17485_PIE             BIT(6)  /* Periodic interrupt enable                    */
+#define DS17485_AIE             BIT(5)  /* Alarm interrupt enable                       */
+#define DS17485_UIE             BIT(4)  /* Update-ended interrupt enable                */
+#define DS17485_SQWE            BIT(3)  /* Square-wave output enable                    */
+#define DS17485_DM              BIT(2)  /* Data mode: 1 = binary, 0 = BCD               */
+#define DS17485_2412            BIT(1)  /* 1 = 24-hour mode, 0 = 12-hour mode           */
+#define DS17485_DSE             BIT(0)  /* Daylight savings enable                      */
 
 /* Register C bits */
-#define DS17485_IRQF                    (1 << 7)
-#define DS17485_PF                      (1 << 6)
-#define DS17485_AF                      (1 << 5)
-#define DS17485_UF                      (1 << 4)
+#define DS17485_IRQF            BIT(7)  /* Interrupt request flag                       */
+#define DS17485_PF              BIT(6)  /* Periodic interrupt flag                      */
+#define DS17485_AF              BIT(5)  /* Alarm interrupt flag                         */
+#define DS17485_UF              BIT(4)  /* Update ended interrupt flag                  */
 
 /* Register D bits */
-#define DS17485_VRT                     (1 << 7)
+#define DS17485_VRT             BIT(7)  /* Valid RAM and time (Vbat and Vbaux good)     */
 
 /* Register 4A bits */
-#define DS17485_VRT2                    (1 << 7)
-#define DS17485_INCR                    (1 << 6)
-#define DS17485_BME                     (1 << 5)
-#define DS17485_PAB                     (1 << 3)
-#define DS17485_RF                      (1 << 2)
-#define DS17485_WF                      (1 << 1)
-#define DS17485_KF                      (1 << 0)
+#define DS17485_VRT2            BIT(7)  /* Valid RAM and time (Vbaux good only)         */
+#define DS17485_INCR            BIT(6)  /* Increment in progress                        */
+#define DS17485_BME             BIT(5)  /* Burst mode enable                            */
+#define DS17485_PAB             BIT(3)  /* Power-active-bar control                     */
+#define DS17485_RF              BIT(2)  /* Ram clear flag                               */
+#define DS17485_WF              BIT(1)  /* Wake-up alarm flag                           */
+#define DS17485_KF              BIT(0)  /* Kickstart flag                               */
 
 /* Register 4B bits */
-#define DS17485_ABE                     (1 << 7)
-#define DS17485_E32K                    (1 << 6)
-#define DS17485_CS                      (1 << 5)
-#define DS17485_RCE                     (1 << 4)
-#define DS17485_PRS                     (1 << 3)
-#define DS17485_RIE                     (1 << 2)
-#define DS17485_WIE                     (1 << 1)
-#define DS17485_KSE                     (1 << 0)
+#define DS17485_ABE             BIT(7)  /* Auxiliary battery enable                     */
+#define DS17485_E32K            BIT(6)  /* Enable 32.768kHz output on SQW pin           */
+#define DS17485_CS              BIT(5)  /* Crystal select: 0 = 6pF, 1 = 12pF load cap   */
+#define DS17485_RCE             BIT(4)  /* RAM clear enable                             */
+#define DS17485_PRS             BIT(3)  /* PAB reset select                             */
+#define DS17485_RIE             BIT(2)  /* RAM clear interrupt enable                   */
+#define DS17485_WIE             BIT(1)  /* Wake-up alarm interrupt enable               */
+#define DS17485_KSE             BIT(0)  /* Kickstart interrupt enable                   */
+
+
+#define DS17485_USER_RAM_LEN    (114)   /* Length of user RAM area, in bytes            */
+#define DS17485_USER_RAM_START  (14)    /* Address of first byte of user RAM            */
+
+#define DS17485_EXT_RAM_LEN     (4096)  /* Length of extended RAM area, in bytes        */
+
+/*
+    Function declarations
+*/
+s32 ds17485_init(dev_t * const dev);
+s32 ds17485_rtc_init(dev_t * const dev);
+s32 ds17485_user_ram_init(dev_t * const dev);
+s32 ds17485_ext_ram_init(dev_t * const dev);
+
+s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm);
+s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm);
+void ds17485_force_valid_time(const dev_t * const dev);
+
+s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer);
+s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer);
+u32 ds17485_user_ram_get_length(dev_t * const dev);
+
+s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer);
+s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer);
+u32 ds17485_ext_ram_get_length(dev_t * const dev);
+
+u8 ds17485_get_model_number(const dev_t * const dev);
+void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6]);
 
 
 #endif // DS17485_H_INCLUDED
