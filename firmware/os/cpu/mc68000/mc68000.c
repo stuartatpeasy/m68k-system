@@ -20,11 +20,11 @@ void cpu_init_interrupt_handlers(void)
 	u16 u;
 
     /* Initialise the generic IRQ handler's jump table */
-    for(u = 0; u < CPU_MAX_IRQL; ++u)
+    for(u = 0; u <= CPU_MAX_IRQL; ++u)
         cpu_set_interrupt_handler(u, NULL, mc68000_exc_generic);
 
 	/* Point all exception vectors at the generic IRQ handler code initially */
-	for(u = 0; u < CPU_MAX_IRQL; ++u)
+	for(u = 0; u <= CPU_MAX_IRQL; ++u)
         CPU_EXC_VPTR_SET(u, irq_handler);
 
 	/* Now set specific handlers */
