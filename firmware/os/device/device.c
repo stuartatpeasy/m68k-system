@@ -153,6 +153,36 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, 
 }
 
 
+/*
+    dev_register() - create and initialise a new device
+*/
+s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
+                 ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
+                 dev_t *parent_dev, s32 (*init_fn)(dev_t *))
+{
+    s32 ret;
+
+    ret = dev_create(type, subtype, dev_name, irql, base_addr, dev);
+    if(ret != SUCCESS)
+    {
+        printf("%s: %s device creation failed: %s\n", dev_name, human_name, kstrerror(ret));
+        return ret;
+    }
+
+    ret = init_fn(*dev);
+    if(ret != SUCCESS)
+    {
+        kfree(*dev);
+        printf("%s: %s device init failed: %s\n", dev_name, human_name, kstrerror(ret));
+        return ret;
+    }
+
+    dev_add_child(parent_dev, *dev);
+
+    return SUCCESS;
+}
+
+
 u32 driver_init()
 {
     u32 x;

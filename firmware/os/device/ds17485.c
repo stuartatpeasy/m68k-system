@@ -12,17 +12,48 @@
 
 
 /*
+    ds17485_rtc_init() - device initialiser for the RTC in a DS17485.
+*/
+s32 ds17485_rtc_init(dev_t * const dev)
+{
+    rtc_ops_t *ops;
+
+    ops = (rtc_ops_t *) CHECKED_KCALLOC(1, sizeof(rtc_ops_t));
+
+    ops->get_time = ds17485_get_time;
+    ops->set_time = ds17485_set_time;
+
+    dev->driver = ops;
+    dev->data = dev->parent->data;
+
+    return SUCCESS;
+}
+
+
+/*
+    ds17485_nvram_init() - device initialiser for the NVRAM in a DS17485.
+*/
+s32 ds17485_nvram_init(dev_t * const dev)
+{
+    nvram_ops_t *ops;
+
+    ops = (nvram_ops_t *) CHECKED_KCALLOC(1, sizeof(nvram_ops_t));
+
+    /* TODO: fill in driver functions here */
+
+    dev->driver = ops;
+    dev->data = dev->parent->data;
+
+    return SUCCESS;
+}
+
+
+/*
     ds17485_init() - initialise a DS17485 RTC.
 */
 s32 ds17485_init(dev_t * const dev)
 {
-    rtc_ops_t *ops;
-
-    dev->driver = CHECKED_KCALLOC(1, sizeof(rtc_ops_t));
-
-    ops = (rtc_ops_t *) dev->driver;
-    ops->get_time = ds17485_get_time;
-    ops->set_time = ds17485_set_time;
+    dev->driver = NULL; /* FIXME - should at least support common ops here */
 
     /*
         Write register A:

@@ -41,7 +41,8 @@ typedef enum
 	DEV_TYPE_NET            = 0x03,
 	DEV_TYPE_SERIAL			= 0x04,
 	DEV_TYPE_RTC            = 0x05,
-	DEV_TYPE_MULTI          = 0x06,
+	DEV_TYPE_NVRAM          = 0x06,
+	DEV_TYPE_MULTI          = 0x07,
 } dev_type_t;
 
 
@@ -105,6 +106,11 @@ typedef struct
 } rtc_ops_t;
 
 
+typedef struct
+{
+
+} nvram_ops_t;
+
 /*
     Variable declarations
 */
@@ -124,6 +130,11 @@ s32 dev_add_child(dev_t *parent, dev_t *child);
 
 s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, ku32 irql,
 				void *base_addr, dev_t **dev);
+
+s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
+                 ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
+                 dev_t *parent_dev, s32 (*init_fn)(dev_t *));
+
 
 dev_t *dev_find(const char * const name);
 dev_t *dev_find_subtree(const char * const name, dev_t *node);

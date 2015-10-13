@@ -38,46 +38,13 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 };
 
 
-s32 mc68681_serial_a_init(dev_t *dev)
-{
-    serial_ops_t *ops;
-
-    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
-
-    ops->getc = mc68681_channel_a_getc;
-    ops->putc = mc68681_channel_a_putc;
-    ops->set_baud_rate = mc68681_channel_a_set_baud_rate;
-
-    dev->data = dev->parent->data;
-    dev->driver = ops;
-
-    return SUCCESS;
-}
-
-
-s32 mc68681_serial_b_init(dev_t *dev)
-{
-    serial_ops_t *ops;
-
-    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
-
-    ops->getc = mc68681_channel_b_getc;
-    ops->putc = mc68681_channel_b_putc;
-    ops->set_baud_rate = mc68681_channel_b_set_baud_rate;
-
-    dev->data = dev->parent->data;
-    dev->driver = ops;
-
-    return SUCCESS;
-}
-
-
 /*
     mc68681_init() - initialise the MC68681 DUART
 */
 s32 mc68681_init(dev_t *dev)
 {
     dev->data = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
+    dev->driver = NULL; /* FIXME - should at least support common ops here */
 
     mc68681_reset(dev);
 
@@ -142,6 +109,46 @@ s32 mc68681_init(dev_t *dev)
 	s32 ret = mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, 115200);
 
     return ret;
+}
+
+
+/*
+    mc68681_serial_a_init() - device initialiser for serial channel A.
+*/
+s32 mc68681_serial_a_init(dev_t *dev)
+{
+    serial_ops_t *ops;
+
+    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
+
+    ops->getc = mc68681_channel_a_getc;
+    ops->putc = mc68681_channel_a_putc;
+    ops->set_baud_rate = mc68681_channel_a_set_baud_rate;
+
+    dev->data = dev->parent->data;
+    dev->driver = ops;
+
+    return SUCCESS;
+}
+
+
+/*
+    mc68681_serial_b_init() - device initialiser for serial channel B.
+*/
+s32 mc68681_serial_b_init(dev_t *dev)
+{
+    serial_ops_t *ops;
+
+    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
+
+    ops->getc = mc68681_channel_b_getc;
+    ops->putc = mc68681_channel_b_putc;
+    ops->set_baud_rate = mc68681_channel_b_set_baud_rate;
+
+    dev->data = dev->parent->data;
+    dev->driver = ops;
+
+    return SUCCESS;
 }
 
 

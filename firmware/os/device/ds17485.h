@@ -61,13 +61,18 @@
     Function declarations
 */
 s32 ds17485_init(dev_t * const dev);
+s32 ds17485_rtc_init(dev_t * const dev);
+s32 ds17485_nvram_init(dev_t * const dev);
+
 s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm);
 s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm);
 void ds17485_force_valid_time(const dev_t * const dev);
+
 void ds17485_user_ram_read(const dev_t * const dev, u32 addr, u32 len, void * buffer);
 void ds17485_user_ram_write(const dev_t * const dev, u32 addr, u32 len, const void * buffer);
 void ds17485_ext_ram_read(const dev_t * const dev, u32 addr, u32 len, u8* buffer);
 void ds17485_ext_ram_write(const dev_t * const dev, u32 addr, u32 len, const u8* buffer);
+
 u8 ds17485_get_model_number(const dev_t * const dev);
 void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6]);
 
