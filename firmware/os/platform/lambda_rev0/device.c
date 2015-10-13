@@ -16,30 +16,58 @@
 #include <device/block/ata/ata.h>           /* ATA interface    */
 
 
-dev_t *g_lambda_console;    /* Console device - stored separately for early init */
+dev_t *g_lambda_duart;      /* DUART device - stored separately for early console init  */
+dev_t *g_lambda_console;    /* Console device - stored separately for early init        */
 
 
+/*
+    plat_dev_enumerate() - enumerate built-in peripherals.
+    On this board, built-in peripherals occupy the memory range e00000-efffff.
+*/
 s32 plat_dev_enumerate(dev_t *root_dev)
 {
 	dev_t *d;
 	s32 ret;
 
     /*
-        Enumerate on-board devices (address range 0xe000000-0xefffff)
+        MC68681 DUART
     */
+    /* Main DEV_TYPE_MULTI device, representing the whole chip */
+    ret = SUCCESS;
+    if(g_lambda_duart == NULL)
+    {
+        ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", 0, (void *) 0xe00000,
+                            &g_lambda_duart);
+        if(ret == SUCCESS)
+            ret = mc68681_init(g_lambda_duart);
+    }
 
-    /* MC68681 DUART */
+    if(ret == SUCCESS)
+        dev_add_child(root_dev, g_lambda_duart);
+
+    /* Child device: serial channel A */
     ret = SUCCESS;
     if(g_lambda_console == NULL)
     {
         ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", 27, (void *) 0xe00000,
                             &g_lambda_console);
         if(ret == SUCCESS)
-            ret = mc68681_init(g_lambda_console);
+            ret = mc68681_serial_a_init(g_lambda_console);
     }
 
     if(ret == SUCCESS)
-        dev_add_child(root_dev, g_lambda_console);
+        dev_add_child(g_lambda_duart, g_lambda_console);
+
+    /* Child device: serial channel B */
+    ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", 27, (void *) 0xe00000,
+                        &d);
+    if(ret == SUCCESS)
+    {
+        ret = mc68681_serial_b_init(d);
+        if(ret == SUCCESS)
+            dev_add_child(g_lambda_duart, d);
+    }
+
 
     /* DS17485 RTC */
     ret = dev_create(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", IRQL_NONE, (void *) 0xe10000, &d);

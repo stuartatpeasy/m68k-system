@@ -38,25 +38,46 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 };
 
 
+s32 mc68681_serial_a_init(dev_t *dev)
+{
+    serial_ops_t *ops;
+
+    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
+
+    ops->getc = mc68681_channel_a_getc;
+    ops->putc = mc68681_channel_a_putc;
+    ops->set_baud_rate = mc68681_channel_a_set_baud_rate;
+
+    dev->data = dev->parent->data;
+    dev->driver = ops;
+
+    return SUCCESS;
+}
+
+
+s32 mc68681_serial_b_init(dev_t *dev)
+{
+    serial_ops_t *ops;
+
+    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
+
+    ops->getc = mc68681_channel_b_getc;
+    ops->putc = mc68681_channel_b_putc;
+    ops->set_baud_rate = mc68681_channel_b_set_baud_rate;
+
+    dev->data = dev->parent->data;
+    dev->driver = ops;
+
+    return SUCCESS;
+}
+
+
 /*
     mc68681_init() - initialise the MC68681 DUART
 */
 s32 mc68681_init(dev_t *dev)
 {
-    serial_ops_t *ops;
-
     dev->data = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
-
-    dev->driver = kcalloc(1, sizeof(serial_ops_t));
-    if(!dev->driver)
-    {
-        kfree(dev->data);
-        return ENOMEM;
-    }
-
-    ops = (serial_ops_t *) dev->driver;
-    ops->getc = mc68681_channel_a_getc;
-    ops->putc = mc68681_channel_a_putc;
 
     mc68681_reset(dev);
 
@@ -177,6 +198,7 @@ static void mc68681_set_ct_mode(dev_t *dev, ku8 mode)
 s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
 {
     const mc68681_baud_rate_entry *p;
+    mc68681_state_t *state = (mc68681_state_t *) dev->data;
 
     if(channel > MC68681_CHANNEL_B)
         return EINVAL;  /* 0 = channel A; 1 = channel B; anything else = invalid */
@@ -193,12 +215,14 @@ s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
                 MC68681_REG(dev->base_addr, MC68681_CSRA) =
                     ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_RXCLK_SHIFT) |
                     ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_TXCLK_SHIFT);
+                state->baud_a = rate;
             }
             else                                /* Channel B */
             {
                 MC68681_REG(dev->base_addr, MC68681_CSRB) =
                     ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_RXCLK_SHIFT) |
                     ((p->csr & MC68681_BRE_CSR_MASK) << MC68681_CSR_TXCLK_SHIFT);
+                state->baud_b = rate;
             }
 
             return SUCCESS;
@@ -206,6 +230,20 @@ s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
     }
 
     return EINVAL;      /* No such baud rate */
+}
+
+
+/*
+    mc68681_get_baud_rate() - get the current baud rate for the specified serial channel.
+*/
+u32 mc68681_get_baud_rate(dev_t *dev, ku16 channel)
+{
+    if(channel == MC68681_CHANNEL_A)
+        return ((mc68681_state_t *) dev->data)->baud_a;
+    else if(channel == MC68681_CHANNEL_B)
+        return ((mc68681_state_t *) dev->data)->baud_b;
+    else
+        return 0;
 }
 
 
@@ -281,12 +319,30 @@ s32 mc68681_channel_a_set_baud_rate(dev_t *dev, ku32 rate)
 
 
 /*
+    mc68681_channel_a_get_baud_rate() - get the current baud rate for serial channel A.
+*/
+u32 mc68681_channel_a_get_baud_rate(dev_t *dev)
+{
+    return mc68681_get_baud_rate(dev, MC68681_CHANNEL_A);
+}
+
+
+/*
     mc68681_channel_b_set_baud_rate() - set the baud rate for serial channel B.
     Note: see the notes for mc68681_set_baud_rate(), above.
 */
 s32 mc68681_channel_b_set_baud_rate(dev_t *dev, ku32 rate)
 {
     return mc68681_set_baud_rate(dev, MC68681_CHANNEL_B, rate);
+}
+
+
+/*
+    mc68681_channel_b_get_baud_rate() - get the current baud rate for serial channel B.
+*/
+u32 mc68681_channel_b_get_baud_rate(dev_t *dev)
+{
+    return mc68681_get_baud_rate(dev, MC68681_CHANNEL_B);
 }
 
 

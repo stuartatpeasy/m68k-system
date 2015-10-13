@@ -41,6 +41,7 @@
 #define EXP_ID                      (2)
 
 
+dev_t *g_lambda_duart;
 dev_t *g_lambda_console;
 
 void expansion_init();

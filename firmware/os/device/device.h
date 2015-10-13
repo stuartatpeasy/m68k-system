@@ -35,12 +35,13 @@ typedef enum
 
 typedef enum
 {
-    DEV_TYPE_NONE               = 0x00,
-	DEV_TYPE_BLOCK              = 0x01,
-	DEV_TYPE_CHARACTER          = 0x02,
-	DEV_TYPE_NET                = 0x03,
-	DEV_TYPE_SERIAL				= 0x04,
-	DEV_TYPE_RTC                = 0x05
+    DEV_TYPE_NONE           = 0x00,
+	DEV_TYPE_BLOCK          = 0x01,
+	DEV_TYPE_CHARACTER      = 0x02,
+	DEV_TYPE_NET            = 0x03,
+	DEV_TYPE_SERIAL			= 0x04,
+	DEV_TYPE_RTC            = 0x05,
+	DEV_TYPE_MULTI          = 0x06,
 } dev_type_t;
 
 

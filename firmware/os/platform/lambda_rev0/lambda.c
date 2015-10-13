@@ -65,8 +65,8 @@ s32 plat_mem_detect()
 
 /*
     plat_console_init() - initialise the boot console.  This happens early in the boot process -
-    before the main hardware-enumeration step.  This code therefore builds a dev_t object in a
-    global variable (g_lambda_console) which is later added to the device tree in
+    before the main hardware-enumeration step.  This code therefore builds two dev_t objects in
+    global variables (g_lambda_duart, g_lambda_console); these are later added to the device tree in
     plat_dev_enumerate().
 */
 s32 plat_console_init(void)
@@ -74,11 +74,25 @@ s32 plat_console_init(void)
     s32 ret;
 
     /* Initialise the console */
+    ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", 0, (void *) 0xe00000,
+                        &g_lambda_duart);
+    if(ret != SUCCESS)
+        return ret;
+
+    ret = mc68681_init(g_lambda_duart);
+    if(ret != SUCCESS)
+    {
+        kfree(g_lambda_duart);
+        g_lambda_duart = NULL;
+        return ret;
+    }
+
 	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", 27, (void *) 0xe00000,
                         &g_lambda_console);
 	if(ret == SUCCESS)
 	{
-		ret = mc68681_init(g_lambda_console);
+	    g_lambda_console->parent = g_lambda_duart;
+		ret = mc68681_serial_a_init(g_lambda_console);
 		if(ret != SUCCESS)
 		{
 			kfree(g_lambda_console);
