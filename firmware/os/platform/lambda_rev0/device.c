@@ -26,7 +26,7 @@ dev_t *g_lambda_console;    /* Console device - stored separately for early init
 */
 s32 plat_dev_enumerate(dev_t *root_dev)
 {
-	dev_t *d;
+	dev_t *dev, *sub_dev;
 	s32 ret;
 
     /*
@@ -36,8 +36,8 @@ s32 plat_dev_enumerate(dev_t *root_dev)
     ret = SUCCESS;
     if(g_lambda_duart == NULL)
     {
-        ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", IRQL_NONE, (void *) 0xe00000,
-                            &g_lambda_duart);
+        ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", LAMBDA_MC68681_IRQL,
+                            LAMBDA_MC68681_BASE, &g_lambda_duart);
         if(ret == SUCCESS)
             ret = mc68681_init(g_lambda_duart);
         else
@@ -52,8 +52,8 @@ s32 plat_dev_enumerate(dev_t *root_dev)
         ret = SUCCESS;
         if(g_lambda_console == NULL)
         {
-            ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", 27, (void *) 0xe00000,
-                                &g_lambda_console);
+            ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", LAMBDA_MC68681_IRQL,
+                                LAMBDA_MC68681_BASE, &g_lambda_console);
             if(ret == SUCCESS)
                 ret = mc68681_serial_a_init(g_lambda_console);
             else
@@ -64,12 +64,13 @@ s32 plat_dev_enumerate(dev_t *root_dev)
             dev_add_child(g_lambda_duart, g_lambda_console);
 
         /* Child device: serial channel B */
-        ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", 27, (void *) 0xe00000, &d);
+        ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", LAMBDA_MC68681_IRQL,
+                            LAMBDA_MC68681_BASE, &dev);
         if(ret == SUCCESS)
         {
-            ret = mc68681_serial_b_init(d);
+            ret = mc68681_serial_b_init(dev);
             if(ret == SUCCESS)
-                dev_add_child(g_lambda_duart, d);
+                dev_add_child(g_lambda_duart, dev);
         }
     }
 
@@ -78,18 +79,16 @@ s32 plat_dev_enumerate(dev_t *root_dev)
         DS17485 RTC
     */
     /* DEV_TYPE_MULTI device representing the whole chip */
-    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "nvrtc", IRQL_NONE, (void *) 0xe10000, &d,
-                        "DS17485", root_dev, ds17485_init) == SUCCESS)
+    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "nvrtc", LAMBDA_DS17485_IRQL,
+                        LAMBDA_DS17485_BASE, &dev, "DS17485", root_dev, ds17485_init) == SUCCESS)
     {
-        dev_t *sub_dev;
-
         /* Child device: RTC */
-        dev_register(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", IRQL_NONE, (void *) 0xe10000, &sub_dev,
-                        "DS17485 RTC", d, ds17485_rtc_init);
+        dev_register(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", LAMBDA_DS17485_IRQL,
+                        LAMBDA_DS17485_BASE, &sub_dev, "DS17485 RTC", dev, ds17485_rtc_init);
 
         /* Child device: NVRAM */
-        dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE, (void *) 0xe10000,
-                        &sub_dev, "DS17485 NVRAM", d, ds17485_nvram_init);
+        dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", LAMBDA_DS17485_IRQL,
+                        LAMBDA_DS17485_BASE, &sub_dev, "DS17485 NVRAM", dev, ds17485_nvram_init);
     }
 
 
@@ -98,18 +97,16 @@ s32 plat_dev_enumerate(dev_t *root_dev)
     */
 #if 0
     /* DEV_TYPE_MULTI device representing the whole interface */
-    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "ataif", IRQL_NONE, (void *) 0xe20000, &d,
-                        "ATA interface", root_dev, ata_init) == SUCCESS)
+    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "ataif", LAMBDA_ATA_IRQL, LAMBDA_ATA_BASE,
+                        &dev, "ATA interface", root_dev, ata_init) == SUCCESS)
     {
-        dev_t *sub_dev;
-
         /* Child device: primary ATA channel */
-        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE, (void *) 0xe20000,
-                        &sub_dev, "ATA channel 0", d, ata_channel_0_init);
+        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", LAMBDA_ATA_IRQL,
+                        LAMBDA_ATA_BASE, &sub_dev, "ATA channel 0", dev, ata_channel_0_init);
 
         /* Child device: secondary ATA channel */
-        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE, (void *) 0xe20000,
-                        &sub_dev, "ATA channel 1", d, ata_channel_1_init);
+        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", LAMBDA_ATA_IRQL,
+                        LAMBDA_ATA_BASE, &sub_dev, "ATA channel 1", dev, ata_channel_1_init);
     }
 #endif
 

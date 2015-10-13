@@ -14,6 +14,22 @@
 #include <stdio.h>
 
 
+/*
+    Hardware base addresses and IRQ levels
+*/
+#define LAMBDA_MC68681_BASE         ((void *) 0xe00000)
+#define LAMBDA_MC68681_IRQL         (27)
+
+#define LAMBDA_DS17485_BASE         ((void *) 0xe10000)
+#define LAMBDA_DS17485_IRQL         (IRQL_NONE)
+
+#define LAMBDA_ATA_BASE             ((void *) 0xe20000)
+#define LAMBDA_ATA_IRQL             (26)
+
+
+/*
+    Expansion slot base addresses and IRQ levels
+*/
 #define EXP_BASE_ADDR               ((void *) (0xa00000))   /* Base addr of first expansion slot  */
 #define EXP_ADDR_LEN                (0x100000)              /* Memory range assigned to each slot */
 

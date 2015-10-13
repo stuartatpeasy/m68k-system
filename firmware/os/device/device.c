@@ -177,7 +177,14 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
         return ret;
     }
 
-    dev_add_child(parent_dev, *dev);
+    ret = dev_add_child(parent_dev, *dev);
+    if(ret != SUCCESS)
+    {
+        /* FIXME: de-init device */
+        kfree(*dev);
+        printf("%s: failed to add %s to device tree: %s\n", dev_name, human_name, kstrerror(ret));
+        return ret;
+    }
 
     return SUCCESS;
 }
