@@ -26,7 +26,7 @@ MONITOR_CMD_HANDLER(date)
     /* Find an RTC */
     dev = dev_find("rtc0");
     if(dev == NULL)
-        return ENOSYS;
+        return ENODEV;
 
     if(num_args  == 0)
     {

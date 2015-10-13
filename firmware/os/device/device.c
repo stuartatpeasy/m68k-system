@@ -59,7 +59,6 @@ dev_t *dev_get_root()
 s32 dev_add_child(dev_t *parent, dev_t *child)
 {
     /* TODO - mutex */
-
     /* Check that no device with a matching name exists */
     if(dev_find(child->name) != NULL)
         return EEXIST;
@@ -99,17 +98,29 @@ dev_t *dev_find_subtree(const char * const name, dev_t *node)
 {
     /* TODO - mutex */
     /* Walk the device tree looking for a device with the specified name */
+    dev_t *ret;
 
     if(node == NULL)
         return NULL;
-    else if(!strcmp(node->name, name))
+
+    if(!strcmp(node->name, name))
         return node;
-    else if(node->first_child)
-        return dev_find_subtree(name, node->first_child);
-    else if(node->next_sibling)
-        return dev_find_subtree(name, node->next_sibling);
-    else
-        return NULL;
+
+    if(node->first_child)
+    {
+        ret = dev_find_subtree(name, node->first_child);
+        if(ret != NULL)
+            return ret;
+    }
+
+    for(; (node = node->next_sibling) != NULL;)
+    {
+        ret = dev_find_subtree(name, node);
+        if(ret != NULL)
+            return ret;
+    }
+
+    return NULL;
 }
 
 
@@ -173,7 +184,7 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
     if(ret != SUCCESS)
     {
         kfree(*dev);
-        printf("%s: %s device init failed: %s\n", dev_name, human_name, kstrerror(ret));
+        printf("%s: %s device init failed: %s\n", (*dev)->name, human_name, kstrerror(ret));
         return ret;
     }
 
@@ -182,9 +193,12 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
     {
         /* FIXME: de-init device */
         kfree(*dev);
-        printf("%s: failed to add %s to device tree: %s\n", dev_name, human_name, kstrerror(ret));
+        printf("%s: failed to add %s to device tree: %s\n", (*dev)->name, human_name,
+                kstrerror(ret));
         return ret;
     }
+
+    printf("%s: registered %s\n", (*dev)->name, human_name);
 
     return SUCCESS;
 }
