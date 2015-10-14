@@ -23,15 +23,17 @@
 extern mem_extent_t *g_mem_extents;
 extern mem_extent_t *g_mem_extents_end;
 
-s32 plat_init(void);		    /* Perform any post-reset platform init tasks   	            */
-s32 plat_mem_detect();			/* Populate g_mem_extents with type & location of memory 		*/
-								/* Place an eight-byte hardware serial number in sn				*/
+s32 plat_init(void);		        /* Perform any post-reset platform init tasks   	        */
+s32 plat_mem_detect();			    /* Populate g_mem_extents with type & location of memory    */
+                                    /* Place an eight-byte hardware serial number in sn			*/
 s32 plat_get_serial_number(u8 sn[8]);
 
-s32 plat_stop_quantum();        /* Stop the currently-running quantum (task time-slice)         */
-s32 plat_start_quantum();       /* Start a new quantum                                          */
+s32 plat_stop_quantum();            /* Stop the currently-running quantum (task time-slice)     */
+s32 plat_start_quantum();           /* Start a new quantum                                      */
 
-s32 plat_dev_enumerate(dev_t *first_dev);
+s32 plat_dev_enumerate(dev_t *root_dev);
+
+s32 plat_get_cpu_clock(u32 *clk);   /* Get CPU clock frequency in Hz                            */
 
 /*
 	Base
@@ -61,43 +63,5 @@ s32 plat_clockfreq_detect();
 s32 plat_console_init();			    /* Initialise console									*/
 s16 plat_console_putc(const char c);    /* Write a character to the console.  May block.		*/
 s16 plat_console_getc(void);		    /* Read a character from the console.  Must block.  	*/
-
-
-/*
-	NVRAM
-
-	The platform must support at least 64 bytes of non-volatile (i.e. battery-backed) RAM, in
-	which configuration data may be stored.
-
-*/
-
-s32 nvram_init();
-s32 nvram_read(u32 addr, u32 len, void *buffer);		/* Read len bytes from offset addr 		*/
-u32 nvram_write(u32 addr, u32 len, const void *buffer);	/* Write len bytes at offset addr		*/
-
-
-/*
-	RTC
-
-	The platform must expose a real-time clock with resolution of at least one second.  This clock
-	must be readable and settable via a struct rtc_time.
-*/
-
-s32 rtc_init();
-s32 rtc_get_time(rtc_time_t * const tm);
-s32 rtc_set_time(const rtc_time_t * const tm);
-
-
-/*
-	ATA
-
-	The platform must expose at least one dual-channel ATA interface.
-
-	TODO: work out what to do about the anonymous "data" var in read/write fns.
-*/
-
-s32 ata_init();
-s32 ata_read(void *data, u32 first_sector, u32 nsectors, void *buffer);
-s32 ata_write(void *data, u32 first_sector, u32 nsectors, const void *buffer);
 
 #endif

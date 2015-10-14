@@ -75,6 +75,7 @@ s32 ds17485_ext_ram_init(dev_t * const dev)
 */
 s32 ds17485_init(dev_t * const dev)
 {
+    const void * const base_addr = dev->base_addr;
     dev->driver = NULL; /* FIXME - should at least support common ops here */
 
     /*
@@ -88,16 +89,16 @@ s32 ds17485_init(dev_t * const dev)
             RS1   = 0       } disable square-wave output
             RS0   = 0       }
     */
-    DS17485_REG_WRITE(dev->base_addr, DS17485_REG_A, DS17485_DV1 | DS17485_DV0);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_A, DS17485_DV1 | DS17485_DV0);
 
     /* Write register 4A: enable extended RAM burst mode */
-    DS17485_REG_WRITE(dev->base_addr, DS17485_REG_4A, DS17485_BME);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_4A, DS17485_BME);
 
     /* Write register 4B: enable RAM clear input pin; select 12.5pF crystal load capacitance */
-    DS17485_REG_WRITE(dev->base_addr, DS17485_REG_4B, DS17485_RCE | DS17485_CS);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_4B, DS17485_RCE | DS17485_CS);
 
     /* Write register A: select standard registers */
-    DS17485_REG_WRITE(dev->base_addr, DS17485_REG_A, DS17485_DV1);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_A, DS17485_DV1);
 
     /*
         Write register B.  We may end up changing the data format with this write, so it's
@@ -113,10 +114,10 @@ s32 ds17485_init(dev_t * const dev)
             24/12 = 1       Use 24h format
             DSE   = 0       Disable daylight saving time
     */
-    DS17485_REG_WRITE(dev->base_addr, DS17485_REG_B, DS17485_DM | DS17485_2412 | DS17485_SET);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_B, DS17485_DM | DS17485_2412 | DS17485_SET);
 
     /* Second write - same as first, but with SET bit negated. */
-    DS17485_REG_WRITE(dev->base_addr, DS17485_REG_B, DS17485_DM | DS17485_2412);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_B, DS17485_DM | DS17485_2412);
 
     ds17485_force_valid_time(dev);
 
@@ -129,30 +130,32 @@ s32 ds17485_init(dev_t * const dev)
 */
 s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm)
 {
+    const void * const base_addr = dev->base_addr;
+
     /* Set the "SET" bit in register B, to prevent updates while we read */
-    DS17485_REG_SET_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
+    DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
 
     /* Need to switch to extended register set in order to read the century */
-    DS17485_SELECT_EXT_REG(dev->base_addr);
+    DS17485_SELECT_EXT_REG(base_addr);
 
-    tm->year = 100 * DS17485_REG_READ(dev->base_addr, DS17485_CENTURY);
+    tm->year = 100 * DS17485_REG_READ(base_addr, DS17485_CENTURY);
 
     /* Switch back to the standard register set to read the rest of the date/time */
-    DS17485_SELECT_STD_REG(dev->base_addr);
+    DS17485_SELECT_STD_REG(base_addr);
 
-    tm->hour = DS17485_REG_READ(dev->base_addr, DS17485_HOURS);
-    tm->minute = DS17485_REG_READ(dev->base_addr, DS17485_MINUTES);
-    tm->second = DS17485_REG_READ(dev->base_addr, DS17485_SECONDS);
+    tm->hour = DS17485_REG_READ(base_addr, DS17485_HOURS);
+    tm->minute = DS17485_REG_READ(base_addr, DS17485_MINUTES);
+    tm->second = DS17485_REG_READ(base_addr, DS17485_SECONDS);
 
-    tm->day_of_week = DS17485_REG_READ(dev->base_addr, DS17485_DAY_OF_WEEK);
-    tm->day = DS17485_REG_READ(dev->base_addr, DS17485_DAY);
-    tm->month = DS17485_REG_READ(dev->base_addr, DS17485_MONTH);
-    tm->year += DS17485_REG_READ(dev->base_addr, DS17485_YEAR);
+    tm->day_of_week = DS17485_REG_READ(base_addr, DS17485_DAY_OF_WEEK);
+    tm->day = DS17485_REG_READ(base_addr, DS17485_DAY);
+    tm->month = DS17485_REG_READ(base_addr, DS17485_MONTH);
+    tm->year += DS17485_REG_READ(base_addr, DS17485_YEAR);
 
-    tm->dst = DS17485_REG_READ(dev->base_addr, DS17485_REG_B) & DS17485_DSE;
+    tm->dst = DS17485_REG_READ(base_addr, DS17485_REG_B) & DS17485_DSE;
 
     /* Clear the "SET" bit in register B, as we have finished reading data */
-    DS17485_REG_CLEAR_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
+    DS17485_REG_CLEAR_BITS(base_addr, DS17485_REG_B, DS17485_SET);
 
     return SUCCESS;
 }
@@ -163,31 +166,33 @@ s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm)
 */
 s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm)
 {
+    const void * const base_addr = dev->base_addr;
+
     /* Set the "SET" bit in register B, to prevent updates while we write */
-    DS17485_REG_SET_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
+    DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
 
     /* Need to switch to extended register set in order to write the century */
-    DS17485_SELECT_EXT_REG(dev->base_addr);
+    DS17485_SELECT_EXT_REG(base_addr);
 
-    DS17485_REG_WRITE(dev->base_addr, DS17485_CENTURY, tm->year / 100);
+    DS17485_REG_WRITE(base_addr, DS17485_CENTURY, tm->year / 100);
 
     /* Switch back to the standard register set to read the rest of the date/time */
-    DS17485_SELECT_STD_REG(dev->base_addr);
+    DS17485_SELECT_STD_REG(base_addr);
 
-    DS17485_REG_WRITE(dev->base_addr, DS17485_YEAR, tm->year % 100);
+    DS17485_REG_WRITE(base_addr, DS17485_YEAR, tm->year % 100);
 
-    DS17485_REG_WRITE(dev->base_addr, DS17485_MONTH, tm->month);
-    DS17485_REG_WRITE(dev->base_addr, DS17485_DAY, tm->day);
-    DS17485_REG_WRITE(dev->base_addr, DS17485_HOURS, tm->hour);
-    DS17485_REG_WRITE(dev->base_addr, DS17485_MINUTES, tm->minute);
-    DS17485_REG_WRITE(dev->base_addr, DS17485_SECONDS, tm->second);
+    DS17485_REG_WRITE(base_addr, DS17485_MONTH, tm->month);
+    DS17485_REG_WRITE(base_addr, DS17485_DAY, tm->day);
+    DS17485_REG_WRITE(base_addr, DS17485_HOURS, tm->hour);
+    DS17485_REG_WRITE(base_addr, DS17485_MINUTES, tm->minute);
+    DS17485_REG_WRITE(base_addr, DS17485_SECONDS, tm->second);
 
-    DS17485_REG_WRITE(dev->base_addr, DS17485_DAY_OF_WEEK, tm->day_of_week);
+    DS17485_REG_WRITE(base_addr, DS17485_DAY_OF_WEEK, tm->day_of_week);
 
-    DS17485_REG_SET_BITS(dev->base_addr, DS17485_REG_B, (tm->dst > 0));
+    DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, (tm->dst > 0));
 
     /* Clear the "SET" bit in register B, as we have finished writing data */
-    DS17485_REG_CLEAR_BITS(dev->base_addr, DS17485_REG_B, DS17485_SET);
+    DS17485_REG_CLEAR_BITS(base_addr, DS17485_REG_B, DS17485_SET);
 
     return SUCCESS;
 }
@@ -221,12 +226,14 @@ void ds17485_force_valid_time(const dev_t * const dev)
 */
 s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 {
+    const void * const base_addr = dev->base_addr;
+
     if((addr + len) > DS17485_USER_RAM_LEN)
         return EINVAL;
 
-    DS17485_SELECT_STD_REG(dev->base_addr);
+    DS17485_SELECT_STD_REG(base_addr);
     for(addr += DS17485_USER_RAM_START; len; --len, ++addr)
-        *((u8 *) buffer++) = DS17485_REG_READ(dev->base_addr, addr);
+        *((u8 *) buffer++) = DS17485_REG_READ(base_addr, addr);
 
     return SUCCESS;
 }
@@ -237,12 +244,14 @@ s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 */
 s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
 {
+    const void * const base_addr = dev->base_addr;
+
     if((addr + len) > DS17485_USER_RAM_LEN)
         return EINVAL;
 
-    DS17485_SELECT_STD_REG(dev->base_addr);
+    DS17485_SELECT_STD_REG(base_addr);
     for(addr += 14; len && (addr < 128); --len, ++addr)
-        DS17485_REG_WRITE(dev->base_addr, addr, *((u8 *) buffer++));
+        DS17485_REG_WRITE(base_addr, addr, *((u8 *) buffer++));
 
     return SUCCESS;
 }
@@ -262,17 +271,19 @@ u32 ds17485_user_ram_get_length(dev_t * const dev)
 */
 s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 {
+    const void * const base_addr = dev->base_addr;
+
     if((addr + len) > DS17485_EXT_RAM_LEN)
         return EINVAL;
 
     /* Switch to the extended register set in order to read the extended RAM area */
-    DS17485_SELECT_EXT_REG(dev->base_addr);
+    DS17485_SELECT_EXT_REG(base_addr);
 
-    DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_MSB, (addr & 0xf00) >> 8);
-    DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
+    DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_MSB, (addr & 0xf00) >> 8);
+    DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
     while(len-- & (addr++ < 0xfff))
-        *((u8 *) buffer++) = DS17485_REG_READ(dev->base_addr, DS17485_EXTRAM_DATA);
+        *((u8 *) buffer++) = DS17485_REG_READ(base_addr, DS17485_EXTRAM_DATA);
 
     return SUCCESS;
 }
@@ -283,17 +294,19 @@ s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 */
 s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
 {
+    const void * const base_addr = dev->base_addr;
+
     if((addr + len) > DS17485_EXT_RAM_LEN)
         return EINVAL;
 
     /* Switch to the extended register set in order to read the extended RAM area */
-    DS17485_SELECT_EXT_REG(dev->base_addr);
+    DS17485_SELECT_EXT_REG(base_addr);
 
-    DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_MSB, (addr & 0xf00) >> 8);
-    DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
+    DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_MSB, (addr & 0xf00) >> 8);
+    DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
     while(len-- & (addr++ < 0xfff))
-        DS17485_REG_WRITE(dev->base_addr, DS17485_EXTRAM_DATA, *((u8 *) buffer++));
+        DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_DATA, *((u8 *) buffer++));
 
     return SUCCESS;
 }
@@ -313,10 +326,12 @@ u32 ds17485_ext_ram_get_length(dev_t * const dev)
 */
 u8 ds17485_get_model_number(const dev_t * const dev)
 {
-    /* Switch to the extended register set in order to read the model number */
-    DS17485_SELECT_EXT_REG(dev->base_addr);
+    const void * const base_addr = dev->base_addr;
 
-    return DS17485_REG_READ(dev->base_addr, DS17485_MODEL_NUMBER);
+    /* Switch to the extended register set in order to read the model number */
+    DS17485_SELECT_EXT_REG(base_addr);
+
+    return DS17485_REG_READ(base_addr, DS17485_MODEL_NUMBER);
 }
 
 
@@ -325,13 +340,15 @@ u8 ds17485_get_model_number(const dev_t * const dev)
 */
 void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6])
 {
-    /* Switch to the extended register set in order to read the serial number */
-    DS17485_SELECT_EXT_REG(dev->base_addr);
+    const void * const base_addr = dev->base_addr;
 
-    sn[0] = DS17485_REG_READ(dev->base_addr, DS17485_SERIAL_NUM_1);
-    sn[1] = DS17485_REG_READ(dev->base_addr, DS17485_SERIAL_NUM_2);
-    sn[2] = DS17485_REG_READ(dev->base_addr, DS17485_SERIAL_NUM_3);
-    sn[3] = DS17485_REG_READ(dev->base_addr, DS17485_SERIAL_NUM_4);
-    sn[4] = DS17485_REG_READ(dev->base_addr, DS17485_SERIAL_NUM_5);
-    sn[5] = DS17485_REG_READ(dev->base_addr, DS17485_SERIAL_NUM_6);
+    /* Switch to the extended register set in order to read the serial number */
+    DS17485_SELECT_EXT_REG(base_addr);
+
+    sn[0] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_1);
+    sn[1] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_2);
+    sn[2] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_3);
+    sn[3] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_4);
+    sn[4] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_5);
+    sn[5] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_6);
 }

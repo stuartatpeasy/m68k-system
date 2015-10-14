@@ -183,3 +183,42 @@ s32 plat_get_serial_number(u8 sn[8])
 
     return ENOSYS;
 }
+
+
+/*
+    plat_get_cpu_clock() - estimate the CPU clock frequency in Hz
+*/
+s32 plat_get_cpu_clock(u32 *clk)
+{
+    /* Ensure that interrupts are disabled before entering this section */
+    rtc_time_t tm;
+    u32 loops;
+    u8 curr_second;
+    dev_t *rtc;
+    s32 (*rtc_get_time)(dev_t *, rtc_time_t *);
+    s32 ret;
+
+    /* Find the first RTC */
+    rtc = dev_find("rtc0");
+    if(rtc == NULL)
+        return ENOSYS;
+
+    rtc_get_time = ((rtc_ops_t *) rtc->driver)->get_time;
+
+    /* Wait for the next second to start */
+    ret = rtc_get_time(rtc, &tm);
+    if(ret != SUCCESS)
+        return ret;
+
+    for(curr_second = tm.second; curr_second == tm.second;)
+        rtc_get_time(rtc, &tm);
+
+    curr_second = tm.second;
+
+    for(loops = 0; curr_second == tm.second; ++loops)
+        rtc_get_time(rtc, &tm);
+
+    *clk = 716 * loops;
+
+    return SUCCESS;
+}

@@ -13,12 +13,26 @@
 #include <include/defs.h>
 #include <include/types.h>
 
+/*
+    OFFSET and SHIFT are used to deal with the situations where the DS17485 (an 8-bit device) is
+    connected to one byte's worth of a wider data bus.  On the MC68000/010, with a 16-bit data bus,
+    the device's registers will appear at every other address (requiring DS17485_SHIFT = 1).  If
+    the device is connected to the upper half of the bus, its registers will appear at even
+    addresses (DS17485_OFFSET = 0); if connected to the lower half of the bus, its registers will
+    appear at odd addresses (DS17485_OFFSET = 1).
+*/
+#define DS17485_OFFSET                      (1)
+#define DS17485_SHIFT                       (1)
+
+/* Data register is at DS17485 "address" 0; address register is at "address" 1. */
+#define DS17485_D_REG                       ((0 << DS17485_SHIFT) + DS17485_OFFSET)
+#define DS17485_A_REG                       ((1 << DS17485_SHIFT) + DS17485_OFFSET)
 
 /* Yields pointer to DS17485 address register   */
-#define DS17485_ADDR(base)      *((vu8 *) (((u32) (base)) + 3))
+#define DS17485_ADDR(base)      *((vu8 *) (((u32) (base)) + DS17485_A_REG))
 
 /* Yields pointer to DS17485 data register      */
-#define DS17485_DATA(base)      *((vu8 *) (((u32) (base)) + 1))
+#define DS17485_DATA(base)      *((vu8 *) (((u32) (base)) + DS17485_D_REG))
 
 /* Read from register r */
 #define DS17485_REG_READ(base, r)           \

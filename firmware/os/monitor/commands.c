@@ -847,7 +847,6 @@ MONITOR_CMD_HANDLER(test)
     }
 */
 
-#if 0
     dev_t dev =
     {
         .base_addr = (void *) 0xb00000,
@@ -858,16 +857,6 @@ MONITOR_CMD_HANDLER(test)
     s32 ret = encx24j600_init(&dev);
 
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
-#endif
-
-    if(num_args != 1)
-        return EINVAL;
-
-    dev_t * dev = dev_find(args[0]);
-    if(dev == NULL)
-        printf("%s: not found\n", args[0]);
-    else
-        printf("%s: found; base_addr=%p irql=%d\n", args[0], dev->base_addr, dev->irql);
 
     return SUCCESS;
 }

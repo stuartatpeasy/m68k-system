@@ -23,31 +23,6 @@
 const char * const g_warmup_message = "\n  \\   { ayumos }"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";
 
-/* TODO - put this elsewhere */
-void detect_clock_freq()
-{
-#if 0
-    /* Ensure that interrupts are disabled before entering this section */
-    rtc_time_t tm;
-    u32 loops, freq;
-    u8 curr_second;
-
-    /* Wait for the next second to start */
-    ds17485_get_time(&tm);
-    for(curr_second = tm.second; curr_second == tm.second;)
-        ds17485_get_time(&tm);
-    curr_second = tm.second;
-
-    for(loops = 0; curr_second == tm.second; ++loops)
-        ds17485_get_time(&tm);
-
-    freq = loops / 147;     /* freq in hundreds of kHz */
-    printf("CPU fclk ~%2u.%uMHz (tc=%u)\n", freq / 10, freq - ((freq / 10) * 10), loops);
-
-    // CPU fclk/MHz ~= loops/1470
-    // CPU fclk/Hz ~= 680 * loops
-#endif
-}
 
 
 /*
@@ -86,9 +61,9 @@ void early_boot_fail(ku32 code)
 void _main()
 {
     mem_extent_t *ramext;
-    dev_t *dev;
     u8 sn[6];
-
+    u32 cpu_clk_hz = 0;
+    rtc_time_t tm;
 
     cpu_disable_interrupts();   /* Just in case we were called manually */
 
@@ -137,9 +112,7 @@ void _main()
     /* === Initialise peripherals - phase 2 === */
     if(dev_enumerate() != SUCCESS)
         early_boot_fail(4);
-/*
-    detect_clock_freq();
-*/
+
 	/* Register drivers and initialise devices */
 	puts("Initialising devices and drivers");
 	driver_init();
@@ -147,8 +120,12 @@ void _main()
 	if(vfs_init() != SUCCESS)
 		puts("VFS failed to initialise");
 
+    /* Display approximate CPU clock speed */
+    if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)
+        printf("\nCPU fclk ~%2u.%uMHz\n", cpu_clk_hz / 1000000, (cpu_clk_hz % 1000000) / 100000);
+
     /* Display memory information */
-	printf("\n%u bytes of kernel heap memory available\n"
+	printf("%u bytes of kernel heap memory available\n"
            "%u bytes of user memory available\n", kfreemem(),
                 mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM));
 
@@ -160,19 +137,13 @@ void _main()
     }
 
     /* Display the current date and time */
-    dev = dev_find("rtc0");
-    if(dev)
+    if(get_time(&tm) == SUCCESS)
     {
-        rtc_time_t tm;
+        char timebuf[12], datebuf[32];
 
-        if(((rtc_ops_t *) dev->driver)->get_time(dev, &tm) == SUCCESS)
-        {
-            char timebuf[12], datebuf[32];
-
-            time_iso8601(&tm, timebuf, sizeof(timebuf));
-            date_long(&tm, datebuf, sizeof(datebuf));
-            printf("%s %s\n", timebuf, datebuf);
-        }
+        time_iso8601(&tm, timebuf, sizeof(timebuf));
+        date_long(&tm, datebuf, sizeof(datebuf));
+        printf("%s %s\n", timebuf, datebuf);
     }
 
     sched_init();
