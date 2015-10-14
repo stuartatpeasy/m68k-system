@@ -75,7 +75,7 @@ s32 ds17485_ext_ram_init(dev_t * const dev)
 */
 s32 ds17485_init(dev_t * const dev)
 {
-    const void * const base_addr = dev->base_addr;
+    void * const base_addr = dev->base_addr;
     dev->driver = NULL; /* FIXME - should at least support common ops here */
 
     /*
@@ -130,7 +130,7 @@ s32 ds17485_init(dev_t * const dev)
 */
 s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm)
 {
-    const void * const base_addr = dev->base_addr;
+    void * const base_addr = dev->base_addr;
 
     /* Set the "SET" bit in register B, to prevent updates while we read */
     DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
@@ -166,7 +166,7 @@ s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm)
 */
 s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm)
 {
-    const void * const base_addr = dev->base_addr;
+    void * const base_addr = dev->base_addr;
 
     /* Set the "SET" bit in register B, to prevent updates while we write */
     DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
@@ -200,9 +200,10 @@ s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm)
 
 void ds17485_force_valid_time(const dev_t * const dev)
 {
+    void * const base_addr = dev->base_addr;
     rtc_time_t ts;
 
-    ds17485_get_time(dev->base_addr, &ts);
+    ds17485_get_time(base_addr, &ts);
 
     if(!VALID_RTC_DATE(&ts))
     {
@@ -216,7 +217,7 @@ void ds17485_force_valid_time(const dev_t * const dev)
         ts.day_of_week = 7;
         ts.dst = 0;
 
-        ds17485_set_time(dev->base_addr, &ts);
+        ds17485_set_time(base_addr, &ts);
     }
 }
 

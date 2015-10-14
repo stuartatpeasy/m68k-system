@@ -276,18 +276,21 @@ typedef struct
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22];
 
-void mc68681_reset(dev_t *dev);
-s32 mc68681_reset_tx(dev_t *dev, ku16 channel);
-s32 mc68681_reset_rx(dev_t *dev, ku16 channel);
+void mc68681_reset(void * const base_addr);
+s32 mc68681_reset_tx(void * const base_addr, ku16 channel);
+s32 mc68681_reset_rx(void * const base_addr, ku16 channel);
+
+s16 mc68681_getc(void * const base_addr, ku16 channel);
+s16 mc68681_putc(void * const base_addr, ku16 channel, const char c);
+s32 mc68681_set_baud_rate(dev_t * dev, ku16 channel, ku32 rate);
+u32 mc68681_get_baud_rate(dev_t * dev, ku16 channel);
+
+void mc68681_start_counter(dev_t *dev, ku16 init_count);
+void mc68681_stop_counter(dev_t *dev);
 
 s32 mc68681_init(dev_t *dev);
 s32 mc68681_serial_a_init(dev_t *dev);
 s32 mc68681_serial_b_init(dev_t *dev);
-
-s16 mc68681_getc(dev_t *dev, ku16 channel);
-s16 mc68681_putc(dev_t *dev, ku16 channel, const char c);
-s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate);
-u32 mc68681_get_baud_rate(dev_t *dev, ku16 channel);
 
 s16 mc68681_channel_a_getc(dev_t *dev);
 s16 mc68681_channel_a_putc(dev_t *dev, const char c);
@@ -298,9 +301,6 @@ s16 mc68681_channel_b_getc(dev_t *dev);
 s16 mc68681_channel_b_putc(dev_t *dev, const char c);
 s32 mc68681_channel_b_set_baud_rate(dev_t *dev, ku32 rate);
 u32 mc68681_channel_b_get_baud_rate(dev_t *dev);
-
-void mc68681_start_counter(dev_t *dev, ku16 init_count);
-void mc68681_stop_counter(dev_t *dev);
 
 u8 mc68681_read_ip(dev_t *dev);
 void mc68681_set_op_bits(dev_t *dev, ku8 bits);

@@ -43,15 +43,17 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 */
 s32 mc68681_init(dev_t *dev)
 {
+    void * const base_addr = dev->base_addr;
+
     dev->data = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
     dev->driver = NULL; /* FIXME - should at least support common ops here */
 
-    mc68681_reset(dev);
+    mc68681_reset(base_addr);
 
-    MC68681_REG(dev->base_addr, MC68681_IMR) = 0x00;    /* Disable all interrupts               */
+    MC68681_REG(base_addr, MC68681_IMR) = 0x00;    /* Disable all interrupts               */
 
 	/* Set mode register 1A */
-	MC68681_REG(dev->base_addr, MC68681_MRA) = /* 0xd3 */
+	MC68681_REG(base_addr, MC68681_MRA) = /* 0xd3 */
         BIT(MC68681_MR1_RXRTS) |                                        /* Enable RX RTS        */
         BIT(MC68681_MR1_RXIRQ) |                                        /* RXINT: IRQ on FFULL  */
         (MC68681_PARITY_MODE_NONE << MC68681_MR1_PARITY_MODE_SHIFT) |   /* No parity            */
@@ -63,7 +65,7 @@ s32 mc68681_init(dev_t *dev)
         Note: the MC68681 uses  the same address for MR1A and MR2A.  Having written to MR1A (above),
         an internal pointer in the IC switches such that the next access will address MR2A.
     */
-	MC68681_REG(dev->base_addr, MC68681_MRA) = /* 0x17 */
+	MC68681_REG(base_addr, MC68681_MRA) = /* 0x17 */
         (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
         BIT(MC68681_MR2_CTS) |
         (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
@@ -72,12 +74,12 @@ s32 mc68681_init(dev_t *dev)
     mc68681_set_ct_mode(dev, MC68681_CT_MODE_C_XTAL16);             /* BRG source = xtal/16 */
 
 	/* Enable the channel A transmitter and receiver */
-	MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x05 */
+	MC68681_REG(base_addr, MC68681_CRA) = /* 0x05 */
         (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
         (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
 	/* Enable the channel B transmitter and receiver */
-	MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x05 */
+	MC68681_REG(base_addr, MC68681_CRB) = /* 0x05 */
         (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
         (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
@@ -96,14 +98,14 @@ s32 mc68681_init(dev_t *dev)
 	*/
     /////////////// FIXME - platform-specific code (sets OP3 to timer interrupt output) //////////
 	////////////////// TODO ////////////////////
-	MC68681_REG(dev->base_addr, MC68681_OPCR) = 0x04;
+	MC68681_REG(base_addr, MC68681_OPCR) = 0x04;
 
 	/*
 		Set OPR - output port bits
 		Each bit in the OPR must be set to the complement of the required output pin level.
 	*/
-	MC68681_REG(dev->base_addr, MC68681_SOPR) = 0xff;
-	MC68681_REG(dev->base_addr, MC68681_ROPR) = 0x00;
+	MC68681_REG(base_addr, MC68681_SOPR) = 0xff;
+	MC68681_REG(base_addr, MC68681_ROPR) = 0x00;
 
 	/* Set channel A baud rate to 115200 */
 	s32 ret = mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, 115200);
@@ -160,6 +162,7 @@ s32 mc68681_serial_b_init(dev_t *dev)
 static void mc68681_set_brg(dev_t *dev, ku8 brg_set, ku8 brg_test)
 {
     /* TODO - mutex */
+    void * const base_addr = dev->base_addr;
     mc68681_state_t *s = (mc68681_state_t *) dev->data;
 
     if(brg_set)
@@ -167,11 +170,11 @@ static void mc68681_set_brg(dev_t *dev, ku8 brg_set, ku8 brg_test)
     else
         s->acr &= ~BIT(MC68681_ACR_BRG_SELECT);
 
-    MC68681_REG(dev->base_addr, MC68681_ACR) = s->acr;
+    MC68681_REG(base_addr, MC68681_ACR) = s->acr;
 
     if((brg_test && !s->brg_test) || (!brg_test && s->brg_test))
     {
-        u8 dummy = MC68681_REG(dev->base_addr, MC68681_BRG_TEST);
+        u8 dummy = MC68681_REG(base_addr, MC68681_BRG_TEST);
         dummy += 0;     /* silence "set but not used" compiler warning */
         s->brg_test = ~s->brg_test;
     }
@@ -257,16 +260,16 @@ u32 mc68681_get_baud_rate(dev_t *dev, ku16 channel)
 /*
     mc68681_reset_rx() - reset MC68681 receiver
 */
-s32 mc68681_reset_rx(dev_t *dev, ku16 channel)
+s32 mc68681_reset_rx(void * const base_addr, ku16 channel)
 {
     if(channel > MC68681_CHANNEL_B)
         return EINVAL;
 
     if(channel == MC68681_CHANNEL_A)        /* Channel A */
-        MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x20 */
+        MC68681_REG(base_addr, MC68681_CRA) = /* 0x20 */
             (MC68681_CMD_RESET_RX << MC68681_CR_MISC_CMD_SHIFT);
     else                                    /* Channel B */
-        MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x20 */
+        MC68681_REG(base_addr, MC68681_CRB) = /* 0x20 */
             (MC68681_CMD_RESET_RX << MC68681_CR_MISC_CMD_SHIFT);
 
     return SUCCESS;
@@ -276,16 +279,16 @@ s32 mc68681_reset_rx(dev_t *dev, ku16 channel)
 /*
     mc68681_reset_tx() - reset MC68681 transmitter
 */
-s32 mc68681_reset_tx(dev_t *dev, ku16 channel)
+s32 mc68681_reset_tx(void * const base_addr, ku16 channel)
 {
     if(channel > MC68681_CHANNEL_B)
         return EINVAL;
 
     if(channel == MC68681_CHANNEL_A)        /* Channel A */
-        MC68681_REG(dev->base_addr, MC68681_CRA) = /* 0x30 */
+        MC68681_REG(base_addr, MC68681_CRA) = /* 0x30 */
             (MC68681_CMD_RESET_TX << MC68681_CR_MISC_CMD_SHIFT);
     else
-        MC68681_REG(dev->base_addr, MC68681_CRB) = /* 0x30 */
+        MC68681_REG(base_addr, MC68681_CRB) = /* 0x30 */
             (MC68681_CMD_RESET_TX << MC68681_CR_MISC_CMD_SHIFT);
 
     return SUCCESS;
@@ -295,23 +298,23 @@ s32 mc68681_reset_tx(dev_t *dev, ku16 channel)
 /*
     mc68681_reset() - perform a device reset on the MC68681.  Note: does not reset RX or TX
 */
-void mc68681_reset(dev_t *dev)
+void mc68681_reset(void * const base_addr)
 {
     /* Send some initialisation commands to the MC68681 */
-    MC68681_REG(dev->base_addr, MC68681_CRA) =  /* 0x1a */
+    MC68681_REG(base_addr, MC68681_CRA) =  /* 0x1a */
         (MC68681_CMD_RESET_MR_PTR << MC68681_CR_MISC_CMD_SHIFT) |   /* Reset MRA pointer        */
         (MC68681_CMD_TX_DISABLE << MC68681_CR_TX_CMD_SHIFT) |       /* Disable channel A TX     */
         (MC68681_CMD_RX_DISABLE << MC68681_CR_RX_CMD_SHIFT);        /* Disable channel A RX     */
 
-    MC68681_REG(dev->base_addr, MC68681_CRB) =  /* 0x1a */
+    MC68681_REG(base_addr, MC68681_CRB) =  /* 0x1a */
         (MC68681_CMD_RESET_MR_PTR << MC68681_CR_MISC_CMD_SHIFT) |   /* Reset MRA pointer        */
         (MC68681_CMD_TX_DISABLE << MC68681_CR_TX_CMD_SHIFT) |       /* Disable channel B TX     */
         (MC68681_CMD_RX_DISABLE << MC68681_CR_RX_CMD_SHIFT);        /* Disable channel B RX     */
 
-    mc68681_reset_tx(dev, MC68681_CHANNEL_A);
-    mc68681_reset_tx(dev, MC68681_CHANNEL_B);
-    mc68681_reset_rx(dev, MC68681_CHANNEL_A);
-    mc68681_reset_rx(dev, MC68681_CHANNEL_B);
+    mc68681_reset_tx(base_addr, MC68681_CHANNEL_A);
+    mc68681_reset_tx(base_addr, MC68681_CHANNEL_B);
+    mc68681_reset_rx(base_addr, MC68681_CHANNEL_A);
+    mc68681_reset_rx(base_addr, MC68681_CHANNEL_B);
 }
 
 
@@ -384,21 +387,21 @@ s16 mc68681_channel_b_putc(dev_t *dev, const char c)
 /*
     mc68681_putc() - write a character to the specified serial channel, blocking until done.
 */
-s16 mc68681_putc(dev_t *dev, ku16 channel, const char c)
+s16 mc68681_putc(void * const base_addr, ku16 channel, const char c)
 {
     if(channel == 0)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT)))
+        while(!(MC68681_REG(base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT)))
 			;
 
-        MC68681_REG(dev->base_addr, MC68681_THRA) = c;
+        MC68681_REG(base_addr, MC68681_THRA) = c;
     }
     else if(channel == 1)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT)))
+        while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT)))
 			;
 
-		MC68681_REG(dev->base_addr, MC68681_THRB) = c;
+		MC68681_REG(base_addr, MC68681_THRB) = c;
     }
     else
 		return -EINVAL;
@@ -424,31 +427,33 @@ s16 mc68681_channel_a_getc(dev_t *dev)
 */
 s16 mc68681_channel_b_getc(dev_t *dev)
 {
-    while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
+    void * const base_addr = dev->base_addr;
+
+    while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
 		;
 
-    return MC68681_REG(dev->base_addr, MC68681_RHRB);
+    return MC68681_REG(base_addr, MC68681_RHRB);
 }
 
 
 /*
     mc68681_getc() - read a character from the specified serial channel, blocking until done.
 */
-s16 mc68681_getc(dev_t *dev, ku16 channel)
+s16 mc68681_getc(void * const base_addr, ku16 channel)
 {
-    if(channel == 0)
+   if(channel == 0)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
+        while(!(MC68681_REG(base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
 			;
 
-        return MC68681_REG(dev->base_addr, MC68681_RHRA);
+        return MC68681_REG(base_addr, MC68681_RHRA);
     }
     else if(channel == 1)
     {
-        while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
+        while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
 			;
 
-        return MC68681_REG(dev->base_addr, MC68681_RHRB);
+        return MC68681_REG(base_addr, MC68681_RHRB);
     }
     else
 		return -EINVAL;
@@ -460,13 +465,14 @@ s16 mc68681_getc(dev_t *dev, ku16 channel)
 */
 void mc68681_start_counter(dev_t *dev, ku16 init_count)
 {
+    void * const base_addr = dev->base_addr;
     u8 dummy;
 
     /* Set CTUR/CTLR - the counter/timer upper/lower timeout counts */
-    MC68681_REG(dev->base_addr, MC68681_CTUR) = (init_count >> 8) & 0xff;
-    MC68681_REG(dev->base_addr, MC68681_CTLR) = init_count & 0xff;
+    MC68681_REG(base_addr, MC68681_CTUR) = (init_count >> 8) & 0xff;
+    MC68681_REG(base_addr, MC68681_CTLR) = init_count & 0xff;
 
-    dummy = MC68681_REG(dev->base_addr, MC68681_START_CC);
+    dummy = MC68681_REG(base_addr, MC68681_START_CC);
     dummy += 0;     /* silence the "var set but not used" compiler warning */
 }
 
