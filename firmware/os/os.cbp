@@ -33,15 +33,11 @@
 		<Unit filename="cpu/mc68000/mc68000.h" />
 		<Unit filename="cpu/mc68000/startup.S" />
 		<Unit filename="cpu/mc68000/syscall.S" />
-		<Unit filename="device/block/ata/ata-internal.h" />
-		<Unit filename="device/block/ata/ata.c">
+		<Unit filename="device/ata.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/block/ata/ata.h" />
-		<Unit filename="device/block/partition/partition.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/block/partition/partition.h" />
+		<Unit filename="device/ata.h" />
+		<Unit filename="device/block.h" />
 		<Unit filename="device/devctl.h" />
 		<Unit filename="device/device.c">
 			<Option compilerVar="CC" />
@@ -63,6 +59,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/nvram.h" />
+		<Unit filename="device/partition.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/partition.h" />
 		<Unit filename="fs/ext2/ext2.c">
 			<Option compilerVar="CC" />
 		</Unit>
