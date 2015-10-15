@@ -11,6 +11,7 @@
 	NOTE: this is currently just a collection of thoughts.  It is not yet ready for use!
 */
 
+#include <cpu/cpu.h>
 #include <device/device.h>
 #include <include/defs.h>
 #include <memory/extents.h>
@@ -28,6 +29,7 @@ s32 plat_mem_detect();			    /* Populate g_mem_extents with type & location of m
                                     /* Place an eight-byte hardware serial number in sn			*/
 s32 plat_get_serial_number(u8 sn[8]);
 
+s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg);
 s32 plat_stop_quantum();            /* Stop the currently-running quantum (task time-slice)     */
 s32 plat_start_quantum();           /* Start a new quantum                                      */
 

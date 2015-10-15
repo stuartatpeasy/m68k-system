@@ -10,7 +10,6 @@
 */
 
 #include <cpu/cpu.h>
-#include <cpu/mc68000/exceptions.h> /* FIXME - arch-specific - need this for V_level_1_autovector */
 #include <include/defs.h>
 #include <include/types.h>
 #include <strings.h>

@@ -8,6 +8,7 @@
 */
 
 #include <cpu/mc68000/mc68000.h>
+#include <klibc/stdio.h>
 
 
 /*

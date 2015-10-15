@@ -8,15 +8,19 @@
 */
 
 #include <cpu/cpu.h>
+#include <include/defs.h>
+
 
 interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
 
 
-void cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler)
+s32 cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler)
 {
-    if(irql < CPU_MAX_IRQL)
-    {
-        g_interrupt_handlers[irql].handler  = handler;
-        g_interrupt_handlers[irql].data     = data;
-    }
+    if(irql > CPU_MAX_IRQL)
+		return EINVAL;
+
+    g_interrupt_handlers[irql].handler  = handler;
+    g_interrupt_handlers[irql].data     = data;
+
+	return SUCCESS;
 }

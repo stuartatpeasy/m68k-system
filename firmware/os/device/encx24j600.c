@@ -9,7 +9,8 @@
     This device has driver ID 0x81.
 */
 
-#include "device/encx24j600.h"
+#include <device/encx24j600.h>
+#include <klibc/stdio.h>			/* TODO remove */
 
 /*
 const dev_driver_t g_encx24j600_device =

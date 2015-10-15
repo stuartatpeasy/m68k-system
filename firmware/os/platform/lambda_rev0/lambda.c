@@ -123,6 +123,15 @@ s16 plat_console_getc()
 
 
 /*
+	plat_install_timer_irq_handler() - bind the timer IRQ to the appropriate handler in the OS.
+*/
+s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg)
+{
+    return cpu_set_interrupt_handler(V_level_1_autovector, arg, handler);
+}
+
+
+/*
     plat_start_quantum() - start the quantum timer, i.e. begin a new process time-slice.
 
     Note: this function will be called in interrupt context.

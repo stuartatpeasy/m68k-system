@@ -58,7 +58,7 @@ typedef struct
 /* The IRQ indirection table */
 interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
 
-void cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler);
+s32 cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler);
 
 #undef IN_CPU_H
 

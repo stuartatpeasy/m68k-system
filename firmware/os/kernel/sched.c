@@ -8,7 +8,8 @@
 */
 
 #include <kernel/sched.h>
-
+#include <platform/platform.h>
+#include <klibc/stdio.h>			/* TODO remove */
 
 proc_t g_ps[64];
 
@@ -26,8 +27,7 @@ void sched_init(void)
     proc_t *p;
 
     /* Install the scheduler IRQ handler */
-    /* FIXME: arch-specific vector number, V_level_1_autovector, below */
-    cpu_set_interrupt_handler(V_level_1_autovector, NULL, irq_schedule);
+	plat_install_timer_irq_handler(irq_schedule, NULL);
 
     for_each_proc_struct(p)
         p->state = ps_unborn;
@@ -64,8 +64,8 @@ printf("stack top = %p\n", process_stack_top);
             bzero(&(p->regs), sizeof(p->regs));
 
             /* Set up the process's initial stack */
-            *(--process_stack_top) = (u32) arg;
             *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
+            *(--process_stack_top) = (u32) arg;
 
             p->regs.a[7] = (u32) process_stack_top;
             p->regs.pc = (u32) main_fn;

@@ -12,9 +12,8 @@
 	always set to 0x00000000.
 */
 
-#include <stdio.h>
-#include "include/types.h"
-#include "kutil/kutil.h"
+#include <include/types.h>
+#include <kutil/kutil.h>
 
 
 /* CPU_EXC_VTBL: a vector table entry, i.e. the address in RAM of a particular exception vector. */
