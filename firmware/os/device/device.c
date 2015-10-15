@@ -32,8 +32,8 @@ dev_t *g_devices[MAX_DEVICES];
 
 block_driver_t *g_drivers[] =
 {
-    &g_ata_driver,
-    &g_partition_driver
+/*    &g_ata_driver, */
+/*    &g_partition_driver */
 };
 
 

@@ -90,7 +90,16 @@ typedef struct
 } block_driver_t;
 
 
-typedef struct
+typedef struct block_ops
+{
+	s32 (*read)(dev_t *data, ku32 offset, ku32 len, void *buf);
+	s32 (*write)(dev_t *data, ku32 offset, ku32 len, const void *buf);
+
+	s32 (*control)(dev_t *data, ku32 function, void *in, void *out);
+} block_ops_t;
+
+
+typedef struct serial_ops
 {
     s16 (*getc)(dev_t *dev);
     s16 (*putc)(dev_t *dev, const char c);
@@ -99,14 +108,14 @@ typedef struct
 } serial_ops_t;
 
 
-typedef struct
+typedef struct rtc_ops
 {
     s32 (*get_time)(dev_t *dev, rtc_time_t *tm);
     s32 (*set_time)(dev_t *dev, const rtc_time_t *tm);
 } rtc_ops_t;
 
 
-typedef struct
+typedef struct nvram_ops
 {
     s32 (*read)(dev_t *dev, u32 addr, u32 len, void *buffer);
     s32 (*write)(dev_t *dev, u32 addr, u32 len, const void *buffer);

@@ -127,9 +127,9 @@ device/mc68681.o: \
 	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
 
 device/block/ata/ata.o: \
-	device/block/ata/ata.c device/block/ata/ata.h device/block/ata/ata-internal.h \
-	device/block/block.h device/devctl.h device/device.h include/byteorder.h include/defs.h \
-	include/mbr.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
+	device/block/ata/ata.c device/block/ata/ata.h device/block/block.h device/devctl.h \
+	device/device.h include/byteorder.h include/defs.h include/mbr.h include/types.h \
+	klibc/stdio.h klibc/string.h klibc/strings.h
 
 device/block/partition/partition.o: \
 	device/block/partition/partition.c device/block/partition/partition.h \

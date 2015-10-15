@@ -7,7 +7,6 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include <device/block/ata/ata-internal.h>
 #include <device/block/ata/ata.h>
 #include <kutil/kutil.h>
 #include <include/byteorder.h>
@@ -18,182 +17,227 @@
 #include <strings.h>
 
 
-static ata_device_t g_ata_devices[ATA_MAX_DEVICES];
+/*
+	Internal functions (called by "driver" functions)
+*/
+s32 ata_send_command(void * const base_addr, const ata_bus_t bus, const ata_drive_t drive,
+                           const ata_command_t cmd);
+
+s32 ata_bus_init(dev_t *dev, const ata_bus_t bus, const ata_drive_t drive);
+s32 ata_drive_init(dev_t *dev, const ata_bus_t bus, const ata_drive_t drive);
+s32 ata_drive_do_init(dev_t *dev);
+
+void ata_read_data(const void * const base_addr, const ata_bus_t bus, void *buf);
+void ata_write_data(void * const base_addr, const ata_bus_t bus, const void *buf);
+
+s32 ata_control(dev_t *dev, ku32 function, void *in, void *out);
+s32 ata_drive_control(dev_t *dev, ku32 function, void *in, void *out);
+
+
 blockdev_stats_t g_ata_stats;
 
-block_driver_t g_ata_driver =
-{
-    .name       = "ata",
-    .version    = 0x00000100,
-
-    .init       = ata_init,
-    .shut_down  = ata_shut_down,
-    .read       = ata_read,
-    .write      = ata_write,
-    .control    = ata_control
-};
-
 
 /*
-	Initialise ATA interface
+    ata_init() - initialise an ATA interface
 */
-s32 ata_init()
+s32 ata_init(dev_t *dev)
 {
-	int bus;
-	char device_name[DEVICE_NAME_LEN], *dn;
+    /* Disable ATA interrupts */
+    ATA_REG(dev->base_addr, ata_bus_0, ATA_R_DEVICE_CONTROL) |= ATA_DEVICE_CONTROL_NIEN;
 
-	bzero(g_ata_devices, sizeof(g_ata_devices));
-	bzero(device_name, DEVICE_NAME_LEN);
+    /* TODO: re-enable ATA interrupts... */
+    /* TODO: provide a devctl allowing the platform code to specify the bus offset */
 
-	/* The first ATA device is called "ata1", the second "ata2", etc.  device_name will pass the
-	 * name of each device to the create_device().  device_name is initialised to "ata"; dn
-	 * points to the next char after "ata".  This makes it easy to form the proper device names */
-	strcpy(device_name, g_ata_driver.name);
-	for(dn = device_name; *dn; ++dn) ;
-
-	for(bus = 0; bus < ATA_NUM_BUSES; ++bus)
-	{
-		int device;
-
-        /* Ensure that the software reset flag is cleared for the bus, and disable interrupts */
-        ATA_REG(bus, ATA_R_DEVICE_CONTROL) |= ATA_DEVICE_CONTROL_NIEN;
-        ATA_REG(bus, ATA_R_DEVICE_CONTROL) &= ~ATA_DEVICE_CONTROL_SRST;
-
-		/* Attempt to detect the master device (device 0) first */
-		ATA_REG(bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
-		for(device = 0; device < ATA_DEVICES_PER_BUS;
-				++device, ATA_REG(bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV)
-		{
-			struct ata_identify_device_ret id;
-			ata_device_t * const devp = &g_ata_devices[(bus * ATA_DEVICES_PER_BUS) + device];
-			u16 *p;
-
-			/* Wait for BSY to become low */
-			if(!ATA_WAIT_NBSY(bus))
-			{
-				devp->status = timeout;
-				continue;
-			}
-
-			ATA_REG(bus, ATA_R_COMMAND) = ATA_CMD_IDENTIFY_DEVICE;
-
-			/* Wait for BSY to go high */
-			if(!ATA_WAIT_BSY(bus))
-				continue;	/* No response from device; presumably nothing plugged in to the port */
-
-			/* A device is present. Wait for BSY to go low */
-			if(!ATA_WAIT_NBSY(bus))
-			{
-				devp->status = timeout;
-				continue;	/* Device did not negate BSY in a timely fashion */
-			}
-
-			/* Did an error occur? */
-			if(ATA_REG(bus, ATA_R_STATUS) & ATA_STATUS_ERR)
-			{
-				/* Was the command aborted? */
-				if(ATA_REG(bus, ATA_R_ERROR) & ATA_ERROR_ABRT)
-				{
-					/* This might be a packet device. */
-					if((ATA_REG(bus, ATA_R_SECTOR_COUNT) == 0x01) &&		/* \ this is the	*/
-					   (ATA_REG(bus, ATA_R_SECTOR_NUMBER) == 0x01) &&		/* | PACKET command	*/
-					   (ATA_REG(bus, ATA_R_CYLINDER_LOW) == 0x14) &&		/* | feature set	*/
-					   (ATA_REG(bus, ATA_R_CYLINDER_HIGH) == 0xeb) &&		/* | signature		*/
-					   ((ATA_REG(bus, ATA_R_DEVICE_HEAD) & 0xef) == 0x00))	/* /				*/
-					{
-						/* This is a packet device; these are not supported. */
-						devp->status = unsupported;
-						continue;
-					}
-				}
-
-				/* Some other failure occurred; shouldn't happen during IDENTIFY DEVICE. Hey ho. */
-				devp->status = failed;
-				continue;
-			}
-
-			ata_read_data(devp->addr.bus, &id);
-
-			devp->addr.bus = bus;
-			devp->addr.device = device;
-
-            /*
-                For some reason, the strings returned in the IDENTIFY DEVICE structure are big-
-                endian.  All of the rest of the data in the response is little-endian.  Why not?
-            */
-            for(p = (u16 *) &id.model_number;
-                p < (u16 *) (&id.model_number[sizeof(id.model_number)]); ++p)
-                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
-
-            for(p = (u16 *) &id.serial_number;
-                p < (u16 *) (&id.serial_number[sizeof(id.serial_number)]); ++p)
-                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
-
-            for(p = (u16 *) &id.firmware_revision;
-                p < (u16 *) (&id.firmware_revision[sizeof(id.firmware_revision)]); ++p)
-                *p = LE2N16(*p);     /* FIXME - remove intrinsic */
-
-            strn_trim_cpy(devp->model, id.model_number, sizeof(id.model_number));
-            strn_trim_cpy(devp->serial, id.serial_number, sizeof(id.serial_number));
-            strn_trim_cpy(devp->firmware, id.firmware_revision, sizeof(id.firmware_revision));
-
-			devp->num_sectors = LE2N16(id.log_cyls) * LE2N16(id.log_heads)
-                                * LE2N16(id.log_sects_per_log_track);
-
-			*dn = g_device_sub_names[(bus * ATA_DEVICES_PER_BUS) + device];
-			devp->status = online;
-
-			if(create_device(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, &g_ata_driver, device_name,
-                             devp) == SUCCESS)
-                printf("%s: %s, %uMB [serial %s firmware %s]\n", device_name, devp->model,
-                       devp->num_sectors >> (20 - LOG_BLOCK_SIZE), devp->serial, devp->firmware);
-            else
-                printf("%s: failed to create device\n", device_name);
-		}
-	}
-
-	return SUCCESS;
-}
-
-
-s32 ata_shut_down(void)
-{
-	bzero(g_ata_devices, sizeof(g_ata_devices));
-
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
 /*
-	Send ATA command
+    ata_bus_0_master_init() - initialise the master device on the first ATA channel
 */
-ata_ret_t ata_send_command(const u32 devid, const ata_command_t cmd)
+s32 ata_bus_0_master_init(dev_t * dev)
 {
-	if((devid > ATA_MAX_DEVICES) || g_ata_devices[devid].status != online)
-		return ENODEV;
+    return ata_drive_init(dev, ata_bus_0, ata_drive_master);
+}
 
-	const ata_device_t *devp = &g_ata_devices[devid];
 
+/*
+    ata_channel_0_slave_init() - initialise the slave device on the first ATA bus
+*/
+s32 ata_bus_0_slave_init(dev_t * dev)
+{
+    return ata_drive_init(dev, ata_bus_0, ata_drive_slave);
+}
+
+
+/*
+    ata_drive_init() - set up control structures for a drive, try to init the drive
+*/
+s32 ata_drive_init(dev_t *dev, const ata_bus_t bus, const ata_drive_t drive)
+{
+    block_ops_t *ops;
+    ata_dev_data_t *dev_data;
+    s32 ret;
+
+    ops = (block_ops_t *) CHECKED_KCALLOC(1, sizeof(block_ops_t));
+    dev_data = (ata_dev_data_t *) kcalloc(1, sizeof(ata_dev_data_t));
+
+    if(dev_data == NULL)
+    {
+        free(ops);
+        return ENOMEM;
+    }
+
+    dev->driver = ops;
+    dev->data = dev_data;
+
+    ops->read = ata_read;
+    ops->write = ata_write;
+    ops->control = ata_drive_control;
+
+    dev_data->bus = bus;
+    dev_data->drive = drive;
+
+    ret = ata_drive_do_init(dev);
+
+    if(ret != SUCCESS)
+    {
+        kfree(ops);
+        kfree(dev_data);
+    }
+
+    return ret;
+}
+
+
+/*
+    ata_drive_do_init() - initialise a drive on the specified ATA bus
+*/
+s32 ata_drive_do_init(dev_t *dev)
+{
+    void * const base_addr = dev->base_addr;
+    ata_dev_data_t * const dev_data = (ata_dev_data_t *) dev->data;
+    const ata_bus_t bus = dev_data->bus;
+    const ata_drive_t drive = dev_data->drive;
+    u16 *p;
+    ata_identify_device_ret_t id;
+
+    /* Ensure that the software reset flag is cleared for the bus */
+    ATA_REG(base_addr, bus, ATA_R_DEVICE_CONTROL) &= ~ATA_DEVICE_CONTROL_SRST;
+
+    /* Select the master or slave device */
+    if(drive == ata_drive_master)
+        ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
+    else if(drive == ata_drive_slave)
+        ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) |= ~ATA_DH_DEV;
+    else
+        return EINVAL;
+
+    /* Wait for BSY to become low */
+    if(!ATA_WAIT_NBSY(base_addr, bus))
+        return ETIME;
+
+    ATA_REG(base_addr, bus, ATA_R_COMMAND) = ATA_CMD_IDENTIFY_DEVICE;
+
+        /* Wait for BSY to go high */
+    if(!ATA_WAIT_BSY(base_addr, bus))
+        return ENOMEDIUM;   /* No response from device; presumably nothing plugged in to the port */
+
+    /* A device is present. Wait for BSY to go low */
+    if(!ATA_WAIT_NBSY(base_addr, bus))
+        return ETIME;	/* Device did not negate BSY in a timely fashion */
+
+    /* Did an error occur? */
+    if(ATA_REG(base_addr, bus, ATA_R_STATUS) & ATA_STATUS_ERR)
+    {
+        /* Was the command aborted? */
+        if(ATA_REG(base_addr, bus, ATA_R_ERROR) & ATA_ERROR_ABRT)
+        {
+            /* This might be a packet device. */
+            if((ATA_REG(base_addr, bus, ATA_R_SECTOR_COUNT) == 0x01) &&		    /* \ this is the */
+               (ATA_REG(base_addr, bus, ATA_R_SECTOR_NUMBER) == 0x01) &&		/* | PACKET cmd  */
+               (ATA_REG(base_addr, bus, ATA_R_CYLINDER_LOW) == 0x14) &&		    /* | feature set */
+               (ATA_REG(base_addr, bus, ATA_R_CYLINDER_HIGH) == 0xeb) &&		/* | signature	 */
+               ((ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) & 0xef) == 0x00))   /* /			 */
+            {
+                /* This is a packet device; these are not supported. */
+                return EMEDIUMTYPE;
+            }
+        }
+
+        /* Some other failure occurred; shouldn't happen during IDENTIFY DEVICE. Hey ho. */
+        return EUNKNOWN;
+    }
+
+    ata_read_data(base_addr, bus, &id);
+
+    /*
+        For some reason, the strings returned in the IDENTIFY DEVICE structure are big-
+        endian.  All of the rest of the data in the response is little-endian.  Why not?
+    */
+    for(p = (u16 *) &id.model_number;
+        p < (u16 *) (&id.model_number[sizeof(id.model_number)]); ++p)
+        *p = LE2N16(*p);
+
+    for(p = (u16 *) &id.serial_number;
+        p < (u16 *) (&id.serial_number[sizeof(id.serial_number)]); ++p)
+        *p = LE2N16(*p);
+
+    for(p = (u16 *) &id.firmware_revision;
+        p < (u16 *) (&id.firmware_revision[sizeof(id.firmware_revision)]); ++p)
+        *p = LE2N16(*p);
+
+    strn_trim_cpy(dev_data->model, id.model_number, sizeof(id.model_number));
+    strn_trim_cpy(dev_data->serial, id.serial_number, sizeof(id.serial_number));
+    strn_trim_cpy(dev_data->firmware, id.firmware_revision, sizeof(id.firmware_revision));
+
+    dev_data->num_sectors = LE2N16(id.log_cyls) * LE2N16(id.log_heads)
+                            * LE2N16(id.log_sects_per_log_track);
+
+    /* FIXME - report this somewhere else, e.g. when device is registered? */
+    printf("%s: %s, %uMB [serial %s firmware %s]\n", dev_data->model,
+            dev_data->num_sectors >> (20 - LOG_BLOCK_SIZE), dev_data->serial, dev_data->firmware);
+
+    return SUCCESS;
+}
+
+
+/*
+    ata_shut_down() - shut down an ATA interface
+*/
+s32 ata_shut_down(dev_t *dev)
+{
+    /* TODO: shut down ATA devices */
+	return SUCCESS;
+}
+
+
+/*
+	ata_send_command() - Send ATA command
+*/
+s32 ata_send_command(void * const base_addr, const ata_bus_t bus, const ata_drive_t drive,
+                           const ata_command_t cmd)
+{
 	/* Select bus master / slave device */
-	if(devp->addr.device == 0)
-		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
-	else if(devp->addr.device == 1)
-		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
+	if(drive == ata_drive_master)
+		ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
+	else if(drive == ata_drive_slave)
+		ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
 	else
 		return ENODEV;
 
 	/* Wait for the device to become ready */
-	if(!ATA_WAIT_NBSY(devp->addr.bus))
+	if(!ATA_WAIT_NBSY(base_addr, bus))
 		return ETIME;
 
-	ATA_REG(devp->addr.bus, ATA_R_COMMAND) = cmd;
+	ATA_REG(base_addr, bus, ATA_R_COMMAND) = cmd;
 
 	/* Wait for the command to complete */
-	if(!ATA_WAIT_NBSY(devp->addr.bus))
+	if(!ATA_WAIT_NBSY(base_addr, bus))
 		return ETIME;
 
 	/* Did an error occur? */
-	if(ATA_REG(devp->addr.bus, ATA_R_STATUS) & ATA_STATUS_ERR)
+	if(ATA_REG(base_addr, bus, ATA_R_STATUS) & ATA_STATUS_ERR)
 	{
 		/* FIXME: correctly report the error */
 		return EUNKNOWN;
@@ -203,54 +247,54 @@ ata_ret_t ata_send_command(const u32 devid, const ata_command_t cmd)
 }
 
 
-s32 ata_read(void *data, ku32 offset, u32 len, void * buf)
+/*
+    ata_read() - read sectors from an ATA device
+*/
+s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 {
-	const ata_device_t * const devp = (const ata_device_t * const) data;
-
-	if(devp->status != online)
-		return ENODEV;
+    void * const base_addr = dev->base_addr;
+    ata_dev_data_t * const dev_data = (ata_dev_data_t *) dev->data;
+    const ata_bus_t bus = dev_data->bus;
+    const ata_drive_t drive = dev_data->drive;
 
 	/* Select bus master / slave device */
-	if(devp->addr.device == 0)
-		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
-	else if(devp->addr.device == 1)
-		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
+	if(drive == ata_drive_master)
+		ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
+	else if(drive == ata_drive_slave)
+		ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
 	else
 		return ENODEV;
 
-	if(!ATA_WAIT_NBSY(devp->addr.bus))
+	if(!ATA_WAIT_NBSY(base_addr, bus))
 		return ETIME;
 
 	if((offset + len < offset)
-	   || (offset + len > devp->num_sectors))
+	   || (offset + len > ((ata_dev_data_t *) dev->data)->num_sectors))
 	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
-	ATA_REG(devp->addr.bus, ATA_R_SECTOR_COUNT)		= len;
+	ATA_REG(base_addr, bus, ATA_R_SECTOR_COUNT)		= len;
 
-	ATA_REG(devp->addr.bus, ATA_R_SECTOR_NUMBER)	= offset & 0xff;
-	ATA_REG(devp->addr.bus, ATA_R_CYLINDER_LOW)		= (offset >> 8) & 0xff;
-	ATA_REG(devp->addr.bus, ATA_R_CYLINDER_HIGH)	= (offset >> 16) & 0xff;
-	ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD)	   |= ATA_DH_LBA | ((offset >> 24) & 0xf);
+	ATA_REG(base_addr, bus, ATA_R_SECTOR_NUMBER)	= offset & 0xff;
+	ATA_REG(base_addr, bus, ATA_R_CYLINDER_LOW)		= (offset >> 8) & 0xff;
+	ATA_REG(base_addr, bus, ATA_R_CYLINDER_HIGH)	= (offset >> 16) & 0xff;
+	ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD)	   |= ATA_DH_LBA | ((offset >> 24) & 0xf);
 
 	/* Issue the command */
-	ATA_REG(devp->addr.bus, ATA_R_COMMAND) = ATA_CMD_READ_SECTORS;
+	ATA_REG(base_addr, bus, ATA_R_COMMAND) = ATA_CMD_READ_SECTORS;
 
-	if(!ATA_WAIT_NBSY(devp->addr.bus))
+	if(!ATA_WAIT_NBSY(base_addr, bus))
 		return ETIME;
 
-	if(ATA_REG(devp->addr.bus, ATA_R_STATUS) & ATA_STATUS_ERR)
+	if(ATA_REG(base_addr, bus, ATA_R_STATUS) & ATA_STATUS_ERR)
 	{
 		/* FIXME: correctly report the error */
 		return EUNKNOWN;
 	}
 
-	while(len--)
-	{
-		ata_read_data(devp->addr.bus, buf);
-		buf += ATA_SECTOR_SIZE;
-	}
+	for(; len--; buf += ATA_SECTOR_SIZE)
+		ata_read_data(base_addr, bus, buf);
 
 	g_ata_stats.blocks_read += len;
 
@@ -258,51 +302,51 @@ s32 ata_read(void *data, ku32 offset, u32 len, void * buf)
 }
 
 
-s32 ata_write(void *data, ku32 offset, u32 len, const void * buf)
+/*
+    ata_write() - write sectors to an ATA device
+*/
+s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 {
-	const ata_device_t * const devp = (const ata_device_t * const) data;
-
-	if(devp->status != online)
-		return ENODEV;
+    void * const base_addr = dev->base_addr;
+    ata_dev_data_t * const dev_data = (ata_dev_data_t *) dev->data;
+    const ata_bus_t bus = dev_data->bus;
+    const ata_drive_t drive = dev_data->drive;
 
 	/* Select bus master / slave device */
-	if(devp->addr.device == 0)
-		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
-	else if(devp->addr.device == 1)
-		ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
+	if(drive == ata_drive_master)
+		ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
+	else if(drive == ata_drive_slave)
+		ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
 	else
 		return ENODEV;
 
-	if(!ATA_WAIT_NBSY(devp->addr.bus))
+	if(!ATA_WAIT_NBSY(base_addr, bus))
 		return ETIME;
 
 	if((offset + len < offset)
-	   || (offset + len > devp->num_sectors))
+	   || (offset + len > ((ata_dev_data_t *) dev->data)->num_sectors))
 	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
-	ATA_REG(devp->addr.bus, ATA_R_SECTOR_COUNT)		= len;
+	ATA_REG(base_addr, bus, ATA_R_SECTOR_COUNT)		= len;
 
-	ATA_REG(devp->addr.bus, ATA_R_SECTOR_NUMBER)	= offset & 0xff;
-	ATA_REG(devp->addr.bus, ATA_R_CYLINDER_LOW)		= (offset >> 8) & 0xff;
-	ATA_REG(devp->addr.bus, ATA_R_CYLINDER_HIGH)	= (offset >> 16) & 0xff;
-	ATA_REG(devp->addr.bus, ATA_R_DEVICE_HEAD)	   |= ATA_DH_LBA | ((offset >> 24) & 0xf);
+	ATA_REG(base_addr, bus, ATA_R_SECTOR_NUMBER)	= offset & 0xff;
+	ATA_REG(base_addr, bus, ATA_R_CYLINDER_LOW)		= (offset >> 8) & 0xff;
+	ATA_REG(base_addr, bus, ATA_R_CYLINDER_HIGH)	= (offset >> 16) & 0xff;
+	ATA_REG(base_addr, bus, ATA_R_DEVICE_HEAD)	   |= ATA_DH_LBA | ((offset >> 24) & 0xf);
 
 	/* Issue the command */
-	ATA_REG(devp->addr.bus, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
+	ATA_REG(base_addr, bus, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
 
-	while(len--)
-	{
-		ata_write_data(devp->addr.bus, buf);
-		buf += ATA_SECTOR_SIZE;
-	}
+	for(; len--; buf += ATA_SECTOR_SIZE)
+		ata_write_data(base_addr, bus, buf);
 
-	if(!ATA_WAIT_NBSY(devp->addr.bus))
+	if(!ATA_WAIT_NBSY(base_addr, bus))
 		return ETIME;
 
 	/* Did an error occur? */
-	if(ATA_REG(devp->addr.bus, ATA_R_STATUS) & ATA_STATUS_ERR)
+	if(ATA_REG(base_addr, bus, ATA_R_STATUS) & ATA_STATUS_ERR)
 	{
 		/* FIXME: correctly report the error */
 		return EUNKNOWN;
@@ -315,9 +359,9 @@ s32 ata_write(void *data, ku32 offset, u32 len, const void * buf)
 
 
 /*
-	Read data buffer
+	ata_read_data() - read from the ATA data buffer
 */
-void ata_read_data(ku32 bus, void *buf)
+void ata_read_data(const void * const base_addr, const ata_bus_t bus, void *buf)
 {
 	u16 *buf_ = buf;
 	u32 count = (ATA_SECTOR_SIZE / sizeof(u16));
@@ -345,20 +389,20 @@ void ata_read_data(ku32 bus, void *buf)
            If the BUG_ATA_BYTE_SWAP constant is defined, we therefore swap the bytes in each 16-bit
            datum read/written in order to work round the incorrect board design.
         */
-        u16 data = ATA_REG_DATA(bus);
+        u16 data = ATA_REG_DATA(base_addr, bus);
         bswap_16(data);
         *buf_++ = data;
 #else
-		*buf_++ = ATA_REG_DATA(bus);
+		*buf_++ = ATA_REG_DATA(base_addr, bus);
 #endif
     }
 }
 
 
 /*
-	Write data buffer
+	ata_write_data() - write to the ATA data buffer
 */
-void ata_write_data(ku32 bus, const void *buf)
+void ata_write_data(void * const base_addr, const ata_bus_t bus, const void *buf)
 {
 	const u16 *buf_ = buf;
 	u32 count = (ATA_SECTOR_SIZE / sizeof(u16));
@@ -388,25 +432,33 @@ void ata_write_data(ku32 bus, const void *buf)
         */
         u16 data = *buf_++;
         bswap_16(data);
-		ATA_REG_DATA(bus) = data;
+		ATA_REG_DATA(base_addr, bus) = data;
 #else
-		ATA_REG_DATA(bus) = *buf_++;
+		ATA_REG_DATA(base_addr, bus) = *buf_++;
 #endif
     }
 }
 
 
 /*
-	Device control
+    ata_control() - ATA devctl implementation for the interface device
 */
-s32 ata_control(void *data, ku32 function, void *in, void *out)
-{
-	ata_device_t * const devp = (ata_device_t * const) data;
 
+s32 ata_control(dev_t *dev, ku32 function, void *in, void *out)
+{
+    return ENOSYS;
+}
+
+
+/*
+	ata_drive_control() - ATA devctl implementation for attached drives
+*/
+s32 ata_drive_control(dev_t *dev, ku32 function, void *in, void *out)
+{
 	switch(function)
 	{
 		case DEVCTL_EXTENT:
-			*((u32 *) out) = devp->num_sectors;
+			*((u32 *) out) = ((ata_dev_data_t *) dev->data)->num_sectors;
 			break;
 
 		case DEVCTL_BLOCK_SIZE:
@@ -418,15 +470,15 @@ s32 ata_control(void *data, ku32 function, void *in, void *out)
 			break;
 
         case DEVCTL_MODEL:
-            *((s8 **) out) = devp->model;
+            *((s8 **) out) = ((ata_dev_data_t *) dev->data)->model;
             break;
 
         case DEVCTL_SERIAL:
-            *((s8 **) out) = devp->serial;
+            *((s8 **) out) = ((ata_dev_data_t *) dev->data)->serial;
             break;
 
         case DEVCTL_FIRMWARE_VER:
-            *((s8 **) out) = devp->firmware;
+            *((s8 **) out) = ((ata_dev_data_t *) dev->data)->firmware;
             break;
 
 		default:
