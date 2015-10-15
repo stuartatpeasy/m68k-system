@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include <device/block/ata/ata.h>
+#include <device/ata.h>
 #include <kutil/kutil.h>
 #include <include/byteorder.h>
 #include <include/error.h>

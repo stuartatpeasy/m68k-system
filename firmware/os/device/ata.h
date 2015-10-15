@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include <device/block/block.h>
+#include <device/block.h>
 #include <device/device.h>
 #include <include/types.h>
 

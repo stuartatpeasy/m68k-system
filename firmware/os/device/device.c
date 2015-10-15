@@ -27,9 +27,11 @@ dev_t *g_devices[MAX_DEVICES];
 /*
     #include driver registration function declarations here
 */
-#include "device/block/ata/ata.h"
-#include "device/block/partition/partition.h"
+// FIXME remove
+#include "device/ata.h"
+#include "device/partition.h"
 
+// FIXME remove
 block_driver_t *g_drivers[] =
 {
 /*    &g_ata_driver, */

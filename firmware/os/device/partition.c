@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include <device/block/partition/partition.h>
+#include <device/partition.h>
 #include <include/byteorder.h>
 #include <kutil/kutil.h>
 

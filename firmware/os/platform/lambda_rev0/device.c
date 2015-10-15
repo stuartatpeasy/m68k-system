@@ -13,7 +13,7 @@
 #include <platform/lambda_rev0/device.h>
 #include <device/mc68681.h>                 /* DUART            */
 #include <device/ds17485.h>                 /* RTC              */
-#include <device/block/ata/ata.h>           /* ATA interface    */
+#include <device/ata.h>                     /* ATA interface    */
 
 
 dev_t *g_lambda_duart;      /* DUART device - stored separately for early console init  */
