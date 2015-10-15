@@ -14,13 +14,6 @@
 #include <include/types.h>
 
 
-typedef enum ata_bus
-{
-    ata_bus_0   = 0,
-    ata_bus_1   = 1
-} ata_bus_t;
-
-
 typedef enum ata_drive
 {
     ata_drive_master    = 0,
@@ -30,7 +23,6 @@ typedef enum ata_drive
 
 typedef struct ata_dev_data
 {
-    ata_bus_t bus;
     ata_drive_t drive;
 
 	char model[48];
@@ -48,17 +40,14 @@ typedef struct ata_dev_data
 s32 ata_init(dev_t *dev);
 s32 ata_bus_shut_down(dev_t *dev);
 
-s32 ata_bus_0_master_init(dev_t * dev);
-s32 ata_bus_0_slave_init(dev_t * dev);
+s32 ata_master_init(dev_t * dev);
+s32 ata_slave_init(dev_t * dev);
 
 s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf);
 s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf);
 
 blockdev_stats_t g_ata_stats;
 
-
-// FIXME remove
-#define ATA_OFFSET			(0x1000)	/* Offset of bus 1 from bus 0 registers */
 
 #define ATA_SECTOR_SIZE		(512)		/* Sector size - constant for all ATA devices	*/
 #define ATA_LOG_SECTOR_SIZE	(9)			/* = log2(ATA_SECTOR_SIZE)						*/
@@ -70,20 +59,20 @@ blockdev_stats_t g_ata_stats;
 	Macros which wait for the ATA device's BSY flag to be asserted (ATA_WAIT_BSY()) or negated
 	(ATA_WAIT_NBSY).
 */
-#define ATA_WAIT_BSY(base_addr, bus)												\
-    (__extension__ ({														        \
-        u32 t_ = ATA_TIMEOUT_VAL;											        \
-        for(; !(ATA_REG(base_addr, bus, ATA_R_STATUS) & ATA_STATUS_BSY) && --t_;)   \
-            ;	                                                                    \
-        t_;																            \
+#define ATA_WAIT_BSY(base_addr)													\
+    (__extension__ ({														    \
+        u32 t_ = ATA_TIMEOUT_VAL;											    \
+        for(; !(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_BSY) && --t_;)	\
+            ;	                                                                \
+        t_;																        \
     }))
 
-#define ATA_WAIT_NBSY(base_addr, bus)												\
-    (__extension__ ({														        \
-        u32 t_ = ATA_TIMEOUT_VAL;											        \
-        for(; (ATA_REG(base_addr, bus, ATA_R_STATUS) & ATA_STATUS_BSY) && --t_;)    \
-            ;	                                                                    \
-        t_;																            \
+#define ATA_WAIT_NBSY(base_addr)												\
+    (__extension__ ({														    \
+        u32 t_ = ATA_TIMEOUT_VAL;											    \
+        for(; (ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_BSY) && --t_;)		\
+            ;	                                                                \
+        t_;																        \
     }))
 
 
@@ -147,11 +136,11 @@ blockdev_stats_t g_ata_stats;
 #define ATA_R_DEVICE_CONTROL	(0x1d)
 
 
-#define ATA_REG_DATA(base_addr, bus)    \
- 	*((volatile u16 *) ((u16 *) ((base_addr) + (bus * ATA_OFFSET) + ATA_R_DATA)))
+#define ATA_REG_DATA(base_addr)    \
+ 	*((volatile u16 *) ((u16 *) ((base_addr) + ATA_R_DATA)))
 
-#define ATA_REG(base_addr, bus, off)	\
-    *((volatile u8 *) ((base_addr) + (bus * ATA_OFFSET) + off))
+#define ATA_REG(base_addr, off)	\
+    *((volatile u8 *) ((base_addr) + off))
 
 
 /*
@@ -223,29 +212,29 @@ typedef enum ata_command
 */
 
 /* Status register																				*/
-#define ATA_STATUS_BSY					(0x80)
-#define ATA_STATUS_DRDY					(0x40)
-#define ATA_STATUS_DRQ					(0x08)
-#define ATA_STATUS_ERR					(0x01)
+#define ATA_STATUS_BSY				BIT(7)
+#define ATA_STATUS_DRDY				BIT(6)
+#define ATA_STATUS_DRQ				BIT(3)
+#define ATA_STATUS_ERR				BIT(0)
 
 /* Device control register																		*/
-#define ATA_DEVICE_CONTROL_SRST			(0x04)
-#define ATA_DEVICE_CONTROL_NIEN			(0x02)
+#define ATA_DEVICE_CONTROL_SRST		BIT(2)
+#define ATA_DEVICE_CONTROL_NIEN		BIT(1)
 
 /* Device/head register																			*/
-#define ATA_DH_DEV						(0x10)
-#define ATA_DH_LBA						(0x40)
+#define ATA_DH_DEV					BIT(3)
+#define ATA_DH_LBA					BIT(6)
 
 /* Error register																				*/
-#define ATA_ERROR_MED					(0x01)	/* Media error									*/
-#define ATA_ERROR_NM					(0x02)	/* No media										*/
-#define ATA_ERROR_ABRT					(0x04)	/* Abort										*/
-#define ATA_ERROR_MCR					(0x08)	/* Media change request							*/
-#define ATA_ERROR_IDNF					(0x10)	/* ID not found (no device / bad sector num)	*/
-#define ATA_ERROR_MC					(0x20)	/* Media changed								*/
-#define ATA_ERROR_WP					(0x40)	/* Write protect enabled						*/
-#define ATA_ERROR_UNC					(0x40)	/* Uncorrectable data error						*/
-#define ATA_ERROR_ICRC					(0x80)	/* Interface CRC error							*/
+#define ATA_ERROR_MED				BIT(0)		/* Media error									*/
+#define ATA_ERROR_NM				BIT(1)		/* No media										*/
+#define ATA_ERROR_ABRT				BIT(2)		/* Abort										*/
+#define ATA_ERROR_MCR				BIT(3)		/* Media change request							*/
+#define ATA_ERROR_IDNF				BIT(4)		/* ID not found (no device / bad sector num)	*/
+#define ATA_ERROR_MC				BIT(5)		/* Media changed								*/
+#define ATA_ERROR_WP				BIT(6)		/* Write protect enabled						*/
+#define ATA_ERROR_UNC				BIT(6)		/* Uncorrectable data error						*/
+#define ATA_ERROR_ICRC				BIT(7)		/* Interface CRC error							*/
 
 
 /*
