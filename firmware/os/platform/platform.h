@@ -33,7 +33,7 @@ s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg);
 s32 plat_stop_quantum();            /* Stop the currently-running quantum (task time-slice)     */
 s32 plat_start_quantum();           /* Start a new quantum                                      */
 
-s32 plat_dev_enumerate(dev_t *root_dev);
+s32 plat_dev_enumerate();
 
 s32 plat_get_cpu_clock(u32 *clk);   /* Get CPU clock frequency in Hz                            */
 

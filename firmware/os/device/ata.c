@@ -191,7 +191,7 @@ s32 ata_drive_do_init(dev_t *dev)
                             * LE2N16(id.log_sects_per_log_track);
 
     /* FIXME - report this somewhere else, e.g. when device is registered? */
-    printf("%s: %s, %uMB [serial %s firmware %s]\n", dev_data->model,
+    printf("%s: %s, %uMB [serial %s firmware %s]\n", dev->name, dev_data->model,
             dev_data->num_sectors >> (20 - LOG_BLOCK_SIZE), dev_data->serial, dev_data->firmware);
 
     return SUCCESS;

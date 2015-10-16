@@ -74,7 +74,7 @@ typedef struct dev
 } dev_t;
 
 
-// FIXME replace all these void* ptrs with dev_t * ?
+// FIXME remove
 typedef struct
 {
 	const char *name;
@@ -146,9 +146,9 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
                  ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
                  dev_t *parent_dev, s32 (*init_fn)(dev_t *));
 
-
 dev_t *dev_find(const char * const name);
 dev_t *dev_find_subtree(const char * const name, dev_t *node);
+dev_t *dev_get_next(dev_t *node);
 
 s32 dev_add_suffix(char * const name);
 

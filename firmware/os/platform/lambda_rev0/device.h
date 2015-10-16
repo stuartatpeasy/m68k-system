@@ -62,6 +62,4 @@ dev_t *g_lambda_console;
 
 void expansion_init();
 
-s32 plat_dev_enumerate(dev_t *root_dev);
-
 #endif

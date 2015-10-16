@@ -24,7 +24,7 @@ dev_t *g_lambda_console;    /* Console device - stored separately for early init
     plat_dev_enumerate() - enumerate built-in peripherals.
     On this board, built-in peripherals occupy the memory range e00000-efffff.
 */
-s32 plat_dev_enumerate(dev_t *root_dev)
+s32 plat_dev_enumerate()
 {
 	dev_t *dev, *sub_dev;
 	s32 ret;
@@ -46,7 +46,7 @@ s32 plat_dev_enumerate(dev_t *root_dev)
 
     if(ret == SUCCESS)
     {
-        dev_add_child(root_dev, g_lambda_duart);
+        dev_add_child(NULL, g_lambda_duart);
 
         /* Child device: serial channel A */
         ret = SUCCESS;
@@ -79,20 +79,20 @@ s32 plat_dev_enumerate(dev_t *root_dev)
         DS17485 RTC
     */
     /* DEV_TYPE_MULTI device representing the whole chip */
-    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "nvrtc", LAMBDA_DS17485_IRQL,
-                    LAMBDA_DS17485_BASE, &dev, "DS17485", root_dev, ds17485_init) == SUCCESS)
+    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "nvrtc", IRQL_NONE,
+                    LAMBDA_DS17485_BASE, &dev, "DS17485", NULL, ds17485_init) == SUCCESS)
     {
         /* Child device: RTC */
         dev_register(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", LAMBDA_DS17485_IRQL,
                      LAMBDA_DS17485_BASE, &sub_dev, "DS17485 RTC", dev, ds17485_rtc_init);
 
         /* Child device: user NVRAM */
-        dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", LAMBDA_DS17485_IRQL,
+        dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE,
                      LAMBDA_DS17485_BASE, &sub_dev, "DS17485 user NVRAM", dev,
                      ds17485_user_ram_init);
 
         /* Child device: extendd NVRAM */
-        dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", LAMBDA_DS17485_IRQL,
+        dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE,
                      LAMBDA_DS17485_BASE, &sub_dev, "DS17485 extended NVRAM", dev,
                      ds17485_ext_ram_init);
     }
@@ -101,21 +101,18 @@ s32 plat_dev_enumerate(dev_t *root_dev)
     /*
         ATA interface
     */
-#if 0
     /* DEV_TYPE_MULTI device representing the whole interface */
     if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "ataif", LAMBDA_ATA_IRQL, LAMBDA_ATA_BASE,
-                    &dev, "ATA interface", root_dev, ata_init) == SUCCESS)
+                    &dev, "ATA interface", NULL, ata_init) == SUCCESS)
     {
         /* Child device: primary ATA channel */
-        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", LAMBDA_ATA_IRQL,
-                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 0", dev, ata_channel_0_init);
+        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE,
+                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 0", dev, ata_master_init);
 
         /* Child device: secondary ATA channel */
-        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", LAMBDA_ATA_IRQL,
-                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 1", dev, ata_channel_1_init);
+        dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE,
+                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 1", dev, ata_slave_init);
     }
-#endif
-
 
     /* Memory device */
 

@@ -74,8 +74,8 @@ s32 plat_console_init(void)
     s32 ret;
 
     /* Initialise the console */
-    ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", 0, (void *) 0xe00000,
-                        &g_lambda_duart);
+    ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", LAMBDA_MC68681_IRQL,
+                     LAMBDA_MC68681_BASE, &g_lambda_duart);
     if(ret != SUCCESS)
         return ret;
 
@@ -87,7 +87,7 @@ s32 plat_console_init(void)
         return ret;
     }
 
-	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", 27, (void *) 0xe00000,
+	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
                         &g_lambda_console);
 	if(ret == SUCCESS)
 	{

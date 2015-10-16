@@ -48,7 +48,7 @@ s32 dev_enumerate()
     root_dev = CHECKED_KCALLOC(1, sizeof(dev_t));
 
     /* Populating the device tree is a board-specific operation */
-    return plat_dev_enumerate(root_dev);
+    return plat_dev_enumerate();
 }
 
 
@@ -64,6 +64,9 @@ s32 dev_add_child(dev_t *parent, dev_t *child)
     /* Check that no device with a matching name exists */
     if(dev_find(child->name) != NULL)
         return EEXIST;
+
+    if(parent == NULL)
+        parent = root_dev;
 
 	child->parent = parent;
 
@@ -81,6 +84,34 @@ s32 dev_add_child(dev_t *parent, dev_t *child)
 	}
 
     return SUCCESS;
+}
+
+
+/*
+    dev_get_next() - used to iterate over all nodes in the device tree
+*/
+dev_t *dev_get_next(dev_t *node)
+{
+    if(node == NULL)
+        return root_dev;
+
+    if(node->first_child)
+        return node->first_child;
+
+    if(node->next_sibling)
+        return node->next_sibling;
+    else
+    {
+        while(node->prev_sibling)
+            node = node->prev_sibling;
+
+        do
+        {
+            node = node->parent;
+        } while(node && !node->next_sibling);
+
+        return node ? node->next_sibling : NULL;
+    }
 }
 
 
@@ -182,12 +213,15 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
         return ret;
     }
 
-    ret = init_fn(*dev);
-    if(ret != SUCCESS)
+    if(init_fn != NULL)
     {
-        kfree(*dev);
-        printf("%s: %s device init failed: %s\n", (*dev)->name, human_name, kstrerror(ret));
-        return ret;
+        ret = init_fn(*dev);
+        if(ret != SUCCESS)
+        {
+            kfree(*dev);
+            printf("%s: %s device init failed: %s\n", (*dev)->name, human_name, kstrerror(ret));
+            return ret;
+        }
     }
 
     ret = dev_add_child(parent_dev, *dev);

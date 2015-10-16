@@ -11,11 +11,7 @@
 
 #include <device/device.h>
 #include <device/devctl.h>
-#include <include/mbr.h>
 
-#include <strings.h>
-
-#define MAX_PARTITIONS	(16)		/* FIXME: remove this; use dynamic allocation */
 
 /* devctls */
 
@@ -24,24 +20,24 @@
 typedef enum
 {
 	PARTITION_TYPE_LINUX = 0x83
-} partition_type;
+} partition_type_t;
 
 typedef enum
 {
 	PARTITION_STATUS_ACTIVE = 0x00,
 	PARTITION_STATUS_BOOTABLE = 0x80
-} partition_status;
+} partition_status_t;
 
 
-struct partition_data
+typedef struct partition_data
 {
 	dev_t *device;			    /* the block device hosting this partition						*/
 	u32 sector_len;				/* number of bytes per sector									*/
 	u32 offset;					/* offset, in sectors, of partition from the start of device	*/
 	u32 len;					/* the length of this partition in sectors						*/
-	partition_type type;
-	partition_status status;	/* status field from partition table							*/
-};
+	partition_type_t type;
+	partition_status_t status;	/* status field from partition table							*/
+} partition_data_t;
 
 block_driver_t g_partition_driver;
 

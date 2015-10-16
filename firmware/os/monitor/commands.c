@@ -811,6 +811,7 @@ struct mydata
 
 
 #include "device/encx24j600.h"
+#include <device/partition.h>
 MONITOR_CMD_HANDLER(test)
 {
 /*
@@ -846,7 +847,7 @@ MONITOR_CMD_HANDLER(test)
         printf("foo is %d\n", p->foo);
     }
 */
-
+#if 0
     dev_t dev =
     {
         .base_addr = (void *) 0xb00000,
@@ -857,6 +858,9 @@ MONITOR_CMD_HANDLER(test)
     s32 ret = encx24j600_init(&dev);
 
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
+#endif
+
+    return partition_init();
 
     return SUCCESS;
 }

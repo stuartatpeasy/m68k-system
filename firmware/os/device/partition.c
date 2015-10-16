@@ -9,14 +9,14 @@
 
 #include <device/partition.h>
 #include <include/byteorder.h>
+#include <include/mbr.h>
 #include <kutil/kutil.h>
 
 #include <stdio.h>
+#include <strings.h>
 
 
-static struct partition_data g_partitions[MAX_PARTITIONS];
-static u32 g_next_partition;
-
+// FIXME remove
 block_driver_t g_partition_driver =
 {
     .name       = "part",
@@ -32,67 +32,76 @@ block_driver_t g_partition_driver =
 
 s32 partition_init()
 {
-	/* Scan all devices, enumerate partitions, create partition devices */
-	u32 device_id;
+    dev_t *dev = NULL;
 
-	g_next_partition = 0;
-
-	for(device_id = 0; device_id < MAX_DEVICES; ++device_id)
-	{
-		dev_t * const dev = g_devices[device_id];
-
-		if(dev && (dev->type == DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_MASS_STORAGE))
-		{
-			/* Read sector 0.  If it contains a master boot record (MBR), enumerate its partition
-			 * table and create partition devices. */
+    /* Find mass-storage devices */
+    while((dev = dev_get_next(dev)) != NULL)
+    {
+        if((dev->type == DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_MASS_STORAGE))
+        {
+			/*
+                Read sector 0.  If it contains a master boot record (MBR), enumerate its partition
+                table and create partition devices.
+            */
 			struct mbr m;
 			u16 part;
-			char name[DEVICE_NAME_LEN], *pn;
 
-			if(((block_driver_t *) dev->driver)->read(dev->data, 0, 1, (u8 *) &m) != SUCCESS)
+			if(((block_ops_t *) dev->driver)->read(dev, 0, 1, (u8 *) &m) != SUCCESS)
+            {
+                printf("part: %s sector 0 read failed\n", dev->name);
 				continue;		/* Failed to read sector TODO: report error */
+            }
 
 			if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)
+            {
+                printf("part: %s sector 0 is not an MBR\n", dev->name);
 				continue;		/* Sector is not a MBR */
-
-			bzero(name, sizeof(name));
-			strncpy(name, dev->name, sizeof(name) - 1);
-			for(pn = name; *pn; ++pn) ;
+            }
 
 			for(part = 0; part < MBR_NUM_PARTITIONS; ++part)
 			{
-				struct partition_data * const data = &g_partitions[g_next_partition++];
 				struct mbr_partition * const p = &m.partition[part];
 				u32 bytes_per_sector = 0;
+				partition_data_t * data;
+				dev_t *part_dev;
 
-				if((g_next_partition >= MAX_PARTITIONS) || (part > DEVICE_MAX_SUBDEVICES))
+				if(part > DEVICE_MAX_SUBDEVICES)
 					return ENFILE;
+
+                if(!p->num_sectors)
+                    continue;       /* Skip zero-length partitions */
 
 				if(device_control(dev, DEVCTL_BLOCK_SIZE, NULL,
 											&bytes_per_sector) != SUCCESS)
 					continue;		/* TODO: report error */
 
-				*pn = g_device_sub_names[part];
-
+                data = CHECKED_KCALLOC(1, sizeof(partition_data_t));
+/*
 				data->device		= dev;
 				data->sector_len	= bytes_per_sector;
 				data->offset 		= LE2N32(p->first_sector_lba);
 				data->len			= LE2N32(p->num_sectors);
 				data->type			= p->type;
 				data->status		= p->status;
-
-				if(data->len)   /* Skip zero-length "partitions" */
+*/
+                if(dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_PARTITION, dev->name, IRQL_NONE, NULL,
+                             &part_dev, "partition", dev, NULL) == SUCCESS)
                 {
-                    if(create_device(DEV_TYPE_BLOCK, DEV_SUBTYPE_PARTITION, &g_partition_driver,
-                                  name, data) == SUCCESS)
-                        printf("%s: %4uMB [%s, %s]\n", name, data->len >> (20 - LOG_BLOCK_SIZE),
-                               partition_type_name(p->type), partition_status_desc(p->status));
-                    else
-                        printf("%s: failed to create device\n", name);
+                    /* TODO : set up partition_ops structure */
+
+                    printf("%s: %4uMB [%s, %s]\n", part_dev->name,
+                           LE2N32(p->num_sectors) >> (20 - LOG_BLOCK_SIZE),
+                           partition_type_name(p->type), partition_status_desc(p->status));
+                }
+                else
+                {
+                    kfree(data);
+                    printf("%s: failed to create device for partition %u", dev->name, part);
                 }
 			}
-		}
-	}
+        }
+    }
+
 
 	return SUCCESS;
 }
@@ -151,8 +160,8 @@ s32 partition_read(void *data, ku32 offset, ku32 len, void* buf)
 	if((offset + len) > part->len)
 		return EINVAL;
 
-	return ((block_driver_t *) part->device->driver)
-                ->read(part->device->data, part->offset + offset, len, buf);
+	return ((block_ops_t *) part->device->driver)
+                ->read(part->device, part->offset + offset, len, buf);
 }
 
 
@@ -163,8 +172,8 @@ s32 partition_write(void *data, ku32 offset, ku32 len, const void* buf)
 	if((offset + len) > part->len)
 		return EINVAL;
 
-	return ((block_driver_t *) part->device->driver)
-                ->write(part->device->data, part->offset + offset, len, buf);
+	return ((block_ops_t *) part->device->driver)
+                ->write(part->device, part->offset + offset, len, buf);
 }
 
 
