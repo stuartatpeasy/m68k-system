@@ -4,7 +4,7 @@
 	Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 9th Febrary 2012.
+	(c) Stuart Wallace, 9th February 2012.
 */
 
 #include <device/partition.h>
@@ -14,20 +14,6 @@
 
 #include <stdio.h>
 #include <strings.h>
-
-
-// FIXME remove
-block_driver_t g_partition_driver =
-{
-    .name       = "part",
-    .version    = 0x00000100,
-
-    .init       = partition_init,
-    .shut_down  = partition_shut_down,
-    .read       = partition_read,
-    .write      = partition_write,
-    .control    = partition_control
-};
 
 
 s32 partition_init()
@@ -47,16 +33,10 @@ s32 partition_init()
 			u16 part;
 
 			if(((block_ops_t *) dev->driver)->read(dev, 0, 1, (u8 *) &m) != SUCCESS)
-            {
-                printf("part: %s sector 0 read failed\n", dev->name);
 				continue;		/* Failed to read sector TODO: report error */
-            }
 
 			if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)
-            {
-                printf("part: %s sector 0 is not an MBR\n", dev->name);
 				continue;		/* Sector is not a MBR */
-            }
 
 			for(part = 0; part < MBR_NUM_PARTITIONS; ++part)
 			{
