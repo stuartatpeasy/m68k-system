@@ -222,7 +222,7 @@ typedef enum ata_command
 #define ATA_DEVICE_CONTROL_NIEN		BIT(1)
 
 /* Device/head register																			*/
-#define ATA_DH_DEV					BIT(3)
+#define ATA_DH_DEV					BIT(4)
 #define ATA_DH_LBA					BIT(6)
 
 /* Error register																				*/

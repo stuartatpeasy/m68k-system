@@ -42,7 +42,7 @@ blockdev_stats_t g_ata_stats;
 s32 ata_init(dev_t *dev)
 {
     /* Disable ATA interrupts */
-    ATA_REG(dev->base_addr, ATA_R_DEVICE_CONTROL) |= ATA_DEVICE_CONTROL_NIEN;
+    ATA_REG(dev->base_addr, ATA_R_DEVICE_CONTROL) = ATA_DEVICE_CONTROL_NIEN;
 
     /* TODO: re-enable ATA interrupts... */
 
@@ -262,8 +262,7 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 	if(!ATA_WAIT_NBSY(base_addr))
 		return ETIME;
 
-	if((offset + len < offset)
-	   || (offset + len > ((ata_dev_data_t *) dev->data)->num_sectors))
+	if((offset + len < offset) || (offset + len > dev_data->num_sectors))
 	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
