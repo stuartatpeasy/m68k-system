@@ -73,35 +73,24 @@ s32 ata_slave_init(dev_t * dev)
 */
 s32 ata_drive_init(dev_t *dev, const ata_drive_t drive)
 {
-    block_ops_t *ops;
     ata_dev_data_t *dev_data;
     s32 ret;
 
-    ops = (block_ops_t *) CHECKED_KCALLOC(1, sizeof(block_ops_t));
-    dev_data = (ata_dev_data_t *) kcalloc(1, sizeof(ata_dev_data_t));
+    dev_data = (ata_dev_data_t *) CHECKED_KCALLOC(1, sizeof(ata_dev_data_t));
 
-    if(dev_data == NULL)
-    {
-        free(ops);
-        return ENOMEM;
-    }
-
-    dev->driver = ops;
     dev->data = dev_data;
 
-    ops->read = ata_read;
-    ops->write = ata_write;
-    ops->control = ata_drive_control;
+    dev->read = ata_read;
+    dev->write = ata_write;
+
+    dev->control = ata_drive_control;
 
     dev_data->drive = drive;
 
     ret = ata_drive_do_init(dev);
 
     if(ret != SUCCESS)
-    {
-        kfree(ops);
         kfree(dev_data);
-    }
 
     return ret;
 }

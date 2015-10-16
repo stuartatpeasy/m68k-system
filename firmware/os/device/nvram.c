@@ -24,7 +24,7 @@ s32 nvram_bpb_read(nvram_bpb_t *pbpb)
         return ENOSYS;
 
     /* Read the parameter block from battery-backed RAM */
-    ret = ((nvram_ops_t *) nvram->driver)->read(nvram, 0, sizeof(nvram_bpb_t), pbpb);
+    ret = nvram->read(nvram, 0, sizeof(nvram_bpb_t), pbpb);
     if(ret != SUCCESS)
         return ret;
 
@@ -65,5 +65,5 @@ s32 nvram_bpb_write(nvram_bpb_t *pbpb)
     pbpb->magic = NVRAM_BPB_MAGIC;
     pbpb->checksum = CHECKSUM16(pbpb, sizeof(nvram_bpb_t) - sizeof(u16));
 
-    return ((nvram_ops_t *) nvram->driver)->write(nvram, 0, sizeof(nvram_bpb_t), pbpb);
+    return nvram->write(nvram, 0, sizeof(nvram_bpb_t), pbpb);
 }

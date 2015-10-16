@@ -860,7 +860,10 @@ MONITOR_CMD_HANDLER(test)
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
 #endif
 
-    return vfs_init();
+    dev_t *dev = NULL;
+
+    while((dev = dev_get_next(dev)) != NULL)
+        puts(dev->name);
 
     return SUCCESS;
 }

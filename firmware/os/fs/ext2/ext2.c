@@ -90,7 +90,7 @@ s32 ext2_mount(vfs_t *vfs)
 
     printf("ext2: superblock size is %d\n", sizeof(ext2_superblock_t));
 
-    ret = device_read(vfs->dev, 1024 / BLOCK_SIZE, sizeof(ext2_superblock_t) / BLOCK_SIZE,
+    ret = vfs->dev->read(vfs->dev, 1024 / BLOCK_SIZE, sizeof(ext2_superblock_t) / BLOCK_SIZE,
                         fs->sblk);
 	if(ret != SUCCESS)
 	{
@@ -126,9 +126,9 @@ s32 ext2_mount(vfs_t *vfs)
 		return ENOMEM;
 	}
 
-    ret = device_read(vfs->dev, (fs->sblk->s_log_block_size ? 1 : 2) <<
+    ret = vfs->dev->read(vfs->dev, (fs->sblk->s_log_block_size ? 1 : 2) <<
                                     (10 + fs->sblk->s_log_block_size - LOG_BLOCK_SIZE),
-                      buf_size >> LOG_BLOCK_SIZE, buf);
+                         buf_size >> LOG_BLOCK_SIZE, buf);
 	if(ret)
 	{
 		kfree(fs->sblk);
@@ -259,7 +259,7 @@ u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf)
 	}
 
 printf("[read block %u]\n", block);
-	ret = device_read(vfs->dev, (block << (10 + fs->sblk->s_log_block_size)) >> LOG_BLOCK_SIZE,
+	ret = vfs->dev->read(vfs->dev, (block << (10 + fs->sblk->s_log_block_size)) >> LOG_BLOCK_SIZE,
 							(1024 << fs->sblk->s_log_block_size) >> LOG_BLOCK_SIZE, buf);
 	if(ret)
 	{
@@ -304,7 +304,7 @@ u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode)
 		/* inum_ = offset of this inode from the start of the block */
 		offset &= BLOCK_SIZE - 1;
 
-		ret = device_read(vfs->dev, block, 1, buf);
+		ret = vfs->dev->read(vfs->dev, block, 1, buf);
 		if(ret)
 			return ret;
 

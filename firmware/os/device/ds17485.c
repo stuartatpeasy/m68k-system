@@ -37,10 +37,11 @@ s32 ds17485_user_ram_init(dev_t * const dev)
 {
     nvram_ops_t *ops;
 
+    dev->read = ds17485_user_ram_read;
+    dev->write = ds17485_user_ram_write;
+
     ops = (nvram_ops_t *) CHECKED_KCALLOC(1, sizeof(nvram_ops_t));
 
-    ops->read = ds17485_user_ram_read;
-    ops->write = ds17485_user_ram_write;
     ops->get_length = ds17485_user_ram_get_length;
 
     dev->driver = ops;
@@ -57,10 +58,11 @@ s32 ds17485_ext_ram_init(dev_t * const dev)
 {
     nvram_ops_t *ops;
 
+    dev->read = ds17485_ext_ram_read;
+    dev->write = ds17485_ext_ram_write;
+
     ops = (nvram_ops_t *) CHECKED_KCALLOC(1, sizeof(nvram_ops_t));
 
-    ops->read = ds17485_ext_ram_read;
-    ops->write = ds17485_ext_ram_write;
     ops->get_length = ds17485_ext_ram_get_length;
 
     dev->driver = ops;

@@ -32,7 +32,7 @@ s32 partition_init()
 			struct mbr m;
 			u16 part;
 
-			if(((block_ops_t *) dev->driver)->read(dev, 0, 1, (u8 *) &m) != SUCCESS)
+			if(dev->read(dev, 0, 1, (u8 *) &m) != SUCCESS)
 				continue;		/* Failed to read sector TODO: report error */
 
 			if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)
@@ -51,8 +51,7 @@ s32 partition_init()
                 if(!p->num_sectors)
                     continue;       /* Skip zero-length partitions */
 
-				if(device_control(dev, DEVCTL_BLOCK_SIZE, NULL,
-                                    &bytes_per_sector) != SUCCESS)
+                if(dev->control(dev, DEVCTL_BLOCK_SIZE, NULL, &bytes_per_sector) != SUCCESS)
 					continue;		/* TODO: report error */
 
                 data = CHECKED_KCALLOC(1, sizeof(partition_data_t));
@@ -60,13 +59,9 @@ s32 partition_init()
                 if(dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_PARTITION, dev->name, IRQL_NONE, NULL,
                                 &part_dev, "partition", dev, NULL) == SUCCESS)
                 {
-                    block_ops_t *ops = kcalloc(1, sizeof(block_ops_t));
-
-                    ops->read = partition_read;
-                    ops->write = partition_write;
-                    ops->control = partition_control;
-
-                    part_dev->driver = ops;
+                    part_dev->read = partition_read;
+                    part_dev->write = partition_write;
+                    part_dev->control = partition_control;
 
                     data->device		= dev;
                     data->sector_len	= bytes_per_sector;
@@ -145,12 +140,11 @@ s32 partition_read(dev_t *dev, ku32 offset, ku32 len, void* buf)
 {
     partition_data_t * const part_data = (partition_data_t *) dev->data;
     dev_t * const block_dev = part_data->device;
-    block_ops_t *const ops = (block_ops_t *) block_dev->driver;
 
 	if((offset + len) > part_data->len)
 		return EINVAL;
 
-    return ops->read(block_dev, part_data->offset + offset, len, buf);
+    return block_dev->read(block_dev, part_data->offset + offset, len, buf);
 }
 
 
@@ -158,12 +152,11 @@ s32 partition_write(dev_t *dev, ku32 offset, ku32 len, const void* buf)
 {
     partition_data_t * const part_data = (partition_data_t *) dev->data;
     dev_t * const block_dev = part_data->device;
-    block_ops_t *const ops = (block_ops_t *) block_dev->driver;
 
 	if((offset + len) > part_data->len)
 		return EINVAL;
 
-    return ops->write(block_dev, part_data->offset + offset, len, buf);
+    return block_dev->write(block_dev, part_data->offset + offset, len, buf);
 }
 
 

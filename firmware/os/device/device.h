@@ -33,14 +33,14 @@ typedef enum
 
 typedef enum
 {
-    DEV_TYPE_NONE           = 0x00,
-	DEV_TYPE_BLOCK          = 0x01,
-	DEV_TYPE_CHARACTER      = 0x02,
-	DEV_TYPE_NET            = 0x03,
-	DEV_TYPE_SERIAL			= 0x04,
-	DEV_TYPE_RTC            = 0x05,
-	DEV_TYPE_NVRAM          = 0x06,
-	DEV_TYPE_MULTI          = 0x07,
+    DEV_TYPE_NONE               = 0x00,
+	DEV_TYPE_BLOCK              = 0x01,
+	DEV_TYPE_CHARACTER          = 0x02,
+	DEV_TYPE_NET                = 0x03,
+	DEV_TYPE_SERIAL			    = 0x04,
+	DEV_TYPE_RTC                = 0x05,
+	DEV_TYPE_NVRAM              = 0x06,
+	DEV_TYPE_MULTI              = 0x07,
 } dev_type_t;
 
 
@@ -53,48 +53,29 @@ typedef enum
 
 
 struct dev;
-typedef struct dev
+typedef struct dev dev_t;
+
+struct dev
 {
-    dev_type_t          type;
-    dev_subtype_t       subtype;
-    void *              driver;
-    char                name[DEVICE_NAME_LEN];
-    void *              data;
-    u32                 irql;
-    void *              base_addr;
-    u32                 len;
+    dev_type_t      type;
+    dev_subtype_t   subtype;
+    void *          driver;
+    char            name[DEVICE_NAME_LEN];
+    void *          data;
+    u32             irql;
+    void *          base_addr;
+    u32             len;
 
-    struct dev *        parent;
-    struct dev *        first_child;
-    struct dev *        prev_sibling;
-    struct dev *        next_sibling;
-    dev_state_t         state;
-} dev_t;
+    s32             (*control)(dev_t *dev, ku32 function, void *in, void *out);
+    s32             (*read)(dev_t *dev, ku32 offset, ku32 len, void *buf);
+    s32             (*write)(dev_t *dev, ku32 offset, ku32 len, const void *buf);
 
-
-// FIXME remove
-typedef struct
-{
-	const char *name;
-	u32 version;
-
-	s32 (*init)();
-	s32 (*shut_down)();
-
-	s32 (*read)(void *data, ku32 offset, ku32 len, void *buf);
-	s32 (*write)(void *data, ku32 offset, ku32 len, const void *buf);
-
-	s32 (*control)(void *data, ku32 function, void *in, void *out);
-} block_driver_t;
-
-
-typedef struct block_ops
-{
-	s32 (*read)(dev_t *dev, ku32 offset, ku32 len, void *buf);
-	s32 (*write)(dev_t *dev, ku32 offset, ku32 len, const void *buf);
-
-	s32 (*control)(dev_t *dev, ku32 function, void *in, void *out);
-} block_ops_t;
+    dev_t *         parent;
+    dev_t *         first_child;
+    dev_t *         prev_sibling;
+    dev_t *         next_sibling;
+    dev_state_t     state;
+};
 
 
 typedef struct serial_ops
@@ -115,8 +96,6 @@ typedef struct rtc_ops
 
 typedef struct nvram_ops
 {
-    s32 (*read)(dev_t *dev, u32 addr, u32 len, void *buffer);
-    s32 (*write)(dev_t *dev, u32 addr, u32 len, const void *buffer);
     u32 (*get_length)();
 } nvram_ops_t;
 
@@ -153,15 +132,10 @@ s32 dev_add_suffix(char * const name);
 s32 create_device(const dev_type_t type, const dev_subtype_t class, void * const driver,
                   const char *name, void * const data);
 
-s32 driver_method_not_implemented();
+s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf);
+s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void *buf);
 
-dev_t *get_device_by_name(const char * const name);
-
-s32 device_read(dev_t * const dev, ku32 offset, u32 len, void *buf);
-s32 device_write(dev_t * const dev, ku32 offset, u32 len, const void *buf);
-
-s32 device_control(dev_t * const dev, ku32 function, void *in, void *out);
-
+s32 dev_control_unimplemented(dev_t * const dev, ku32 function, void *in, void *out);
 
 #endif
 

@@ -27,32 +27,6 @@ vfs_driver_t *g_fs_drivers[] =
     &g_fat_ops
 };
 
-#if 0
-dev_t *find_boot_device()
-{
-	u32 i;
-
-	for(i = 0; i < MAX_DEVICES; ++i)
-	{
-        if(g_devices[i] != NULL)
-        {
-            dev_t * const dev = g_devices[i];
-            if(dev->type == DEV_TYPE_BLOCK)
-            {
-                u32 bootable = 0;
-
-                if(device_control(dev, DEVCTL_BOOTABLE, NULL, &bootable) == SUCCESS)
-                {
-                    if(bootable)
-                        return dev;
-                }
-            }
-        }
-	}
-
-	return NULL;
-}
-#endif
 
 s32 vfs_init()
 {

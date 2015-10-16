@@ -176,10 +176,15 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, 
 				void *base_addr, dev_t **dev)
 {
 	*dev = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
+
 	(*dev)->type		= type;
 	(*dev)->subtype		= subtype;
 	(*dev)->irql		= irql;
 	(*dev)->base_addr	= base_addr;
+
+	(*dev)->control     = dev_control_unimplemented;
+	(*dev)->read        = dev_read_unimplemented;
+	(*dev)->write       = dev_write_unimplemented;
 
 	strcpy((*dev)->name, name);
 
@@ -228,20 +233,28 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
 }
 
 
-s32 device_read(dev_t * const dev, ku32 offset, u32 len, void *buf)
+/*
+    dev_read_unimplemented() - default handler for dev->read() calls
+*/
+s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf)
 {
-	return ((block_ops_t *) dev->driver)->read(dev, offset, len, buf);
+    return ENOSYS;
 }
 
 
-s32 device_write(dev_t * const dev, ku32 offset, u32 len, const void *buf)
+/*
+    dev_write_unimplemented() - default handler for dev->write() calls
+*/
+s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void *buf)
 {
-	return ((block_ops_t *) dev->driver)->write(dev, offset, len, buf);
+    return ENOSYS;
 }
 
 
-s32 device_control(dev_t * const dev, ku32 function, void *in, void *out)
+/*
+    dev_control_unimplemented() - default handler for dev->control() calls
+*/
+s32 dev_control_unimplemented(dev_t * const dev, ku32 function, void *in, void *out)
 {
-	return ((block_ops_t *) dev->driver)->control(dev, function, in, out);
+    return ENOSYS;
 }
-

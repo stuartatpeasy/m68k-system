@@ -24,7 +24,6 @@ const char * const g_warmup_message = "\n  \\   { ayumos }"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";
 
 
-
 /*
     early_boot_fail() - report an "early failure" by flashing the motherboard LEDs.
 
@@ -64,6 +63,7 @@ void _main()
     u8 sn[6];
     u32 cpu_clk_hz = 0;
     rtc_time_t tm;
+    s32 ret;
 
     cpu_disable_interrupts();   /* Just in case we were called manually */
 
@@ -113,8 +113,9 @@ void _main()
     if(dev_enumerate() != SUCCESS)
         early_boot_fail(4);
 
-	if(vfs_init() != SUCCESS)
-		puts("VFS failed to initialise");
+    ret = vfs_init();
+	if(ret != SUCCESS)
+		printf("vfs: init failed: %s\n", kstrerror(ret));
 
     /* Display approximate CPU clock speed */
     if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)

@@ -39,7 +39,6 @@ typedef struct partition_data
 	partition_status_t status;	/* status field from partition table							*/
 } partition_data_t;
 
-block_driver_t g_partition_driver;
 
 s32 partition_init();
 s32 partition_shut_down();
