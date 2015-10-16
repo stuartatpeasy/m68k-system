@@ -41,7 +41,7 @@ blockdev_stats_t g_ata_stats;
 */
 s32 ata_init(dev_t *dev)
 {
-    /* Disable ATA interrupts */
+    /* Disable ATA interrupts, and ensure that SRST is cleared for the bus */
     ATA_REG(dev->base_addr, ATA_R_DEVICE_CONTROL) = ATA_DEVICE_CONTROL_NIEN;
 
     /* TODO: re-enable ATA interrupts... */
@@ -118,14 +118,10 @@ s32 ata_drive_do_init(dev_t *dev)
     u16 *p;
     ata_identify_device_ret_t id;
 
-    /* Ensure that the software reset flag is cleared for the bus */
-    ATA_REG(base_addr, ATA_R_DEVICE_CONTROL) &= ~ATA_DEVICE_CONTROL_SRST;
-
-    /* Select the master or slave device */
     if(drive == ata_drive_master)
         ATA_REG(base_addr, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
     else if(drive == ata_drive_slave)
-        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ~ATA_DH_DEV;
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
     else
         return EINVAL;
 

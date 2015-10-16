@@ -52,22 +52,30 @@ s32 partition_init()
                     continue;       /* Skip zero-length partitions */
 
 				if(device_control(dev, DEVCTL_BLOCK_SIZE, NULL,
-											&bytes_per_sector) != SUCCESS)
+                                    &bytes_per_sector) != SUCCESS)
 					continue;		/* TODO: report error */
 
                 data = CHECKED_KCALLOC(1, sizeof(partition_data_t));
-/*
-				data->device		= dev;
-				data->sector_len	= bytes_per_sector;
-				data->offset 		= LE2N32(p->first_sector_lba);
-				data->len			= LE2N32(p->num_sectors);
-				data->type			= p->type;
-				data->status		= p->status;
-*/
+
                 if(dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_PARTITION, dev->name, IRQL_NONE, NULL,
-                             &part_dev, "partition", dev, NULL) == SUCCESS)
+                                &part_dev, "partition", dev, NULL) == SUCCESS)
                 {
-                    /* TODO : set up partition_ops structure */
+                    block_ops_t *ops = kcalloc(1, sizeof(block_ops_t));
+
+                    ops->read = partition_read;
+                    ops->write = partition_write;
+                    ops->control = partition_control;
+
+                    part_dev->driver = ops;
+
+                    data->device		= dev;
+                    data->sector_len	= bytes_per_sector;
+                    data->offset 		= LE2N32(p->first_sector_lba);
+                    data->len			= LE2N32(p->num_sectors);
+                    data->type			= p->type;
+                    data->status		= p->status;
+
+                    part_dev->data = data;
 
                     printf("%s: %4uMB [%s, %s]\n", part_dev->name,
                            LE2N32(p->num_sectors) >> (20 - LOG_BLOCK_SIZE),
@@ -133,46 +141,48 @@ s32 partition_shut_down()
 }
 
 
-s32 partition_read(void *data, ku32 offset, ku32 len, void* buf)
+s32 partition_read(dev_t *dev, ku32 offset, ku32 len, void* buf)
 {
-	const struct partition_data * const part = (const struct partition_data * const) data;
+    partition_data_t * const part_data = (partition_data_t *) dev->data;
+    dev_t * const block_dev = part_data->device;
+    block_ops_t *const ops = (block_ops_t *) block_dev->driver;
 
-	if((offset + len) > part->len)
+	if((offset + len) > part_data->len)
 		return EINVAL;
 
-	return ((block_ops_t *) part->device->driver)
-                ->read(part->device, part->offset + offset, len, buf);
+    return ops->read(block_dev, part_data->offset + offset, len, buf);
 }
 
 
-s32 partition_write(void *data, ku32 offset, ku32 len, const void* buf)
+s32 partition_write(dev_t *dev, ku32 offset, ku32 len, const void* buf)
 {
-	const struct partition_data * const part = (const struct partition_data * const) data;
+    partition_data_t * const part_data = (partition_data_t *) dev->data;
+    dev_t * const block_dev = part_data->device;
+    block_ops_t *const ops = (block_ops_t *) block_dev->driver;
 
-	if((offset + len) > part->len)
+	if((offset + len) > part_data->len)
 		return EINVAL;
 
-	return ((block_ops_t *) part->device->driver)
-                ->write(part->device, part->offset + offset, len, buf);
+    return ops->write(block_dev, part_data->offset + offset, len, buf);
 }
 
 
-s32 partition_control(void *data, ku32 function, void *in, void *out)
+s32 partition_control(dev_t *dev, ku32 function, void *in, void *out)
 {
-	const struct partition_data * const part = (const struct partition_data * const) data;
+	const struct partition_data * const pdata = (const struct partition_data * const) dev->data;
 
 	switch(function)
 	{
 		case DEVCTL_EXTENT:
-			*((u32 *) out) = part->len;
+			*((u32 *) out) = pdata->len;
 			break;
 
 		case DEVCTL_BLOCK_SIZE:
-			*((u32 *) out) = part->sector_len;
+			*((u32 *) out) = pdata->sector_len;
 			break;
 
 		case DEVCTL_BOOTABLE:
-			*((u32 *) out) = (part->status == PARTITION_STATUS_BOOTABLE);
+			*((u32 *) out) = (pdata->status == PARTITION_STATUS_BOOTABLE);
 			break;
 
         case DEVCTL_MODEL:

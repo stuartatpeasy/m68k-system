@@ -860,7 +860,7 @@ MONITOR_CMD_HANDLER(test)
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
 #endif
 
-    return partition_init();
+    return vfs_init();
 
     return SUCCESS;
 }

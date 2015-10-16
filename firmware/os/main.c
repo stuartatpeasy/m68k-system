@@ -113,16 +113,9 @@ void _main()
     if(dev_enumerate() != SUCCESS)
         early_boot_fail(4);
 
-	/* Register drivers and initialise devices */
-/*
-    FIXME
-	puts("Initialising devices and drivers");
-	driver_init();
-*/
-/*
 	if(vfs_init() != SUCCESS)
 		puts("VFS failed to initialise");
-*/
+
     /* Display approximate CPU clock speed */
     if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)
         printf("\nCPU fclk ~%2u.%uMHz\n", cpu_clk_hz / 1000000, (cpu_clk_hz % 1000000) / 100000);

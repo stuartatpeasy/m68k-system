@@ -27,7 +27,7 @@ vfs_driver_t *g_fs_drivers[] =
     &g_fat_ops
 };
 
-
+#if 0
 dev_t *find_boot_device()
 {
 	u32 i;
@@ -52,12 +52,13 @@ dev_t *find_boot_device()
 
 	return NULL;
 }
-
+#endif
 
 s32 vfs_init()
 {
 	nvram_bpb_t bpb;
 	s32 ret, i;
+	dev_t *dev;
 
 	/* Init file system drivers */
 	for(i = 0; i < ARRAY_COUNT(g_fs_drivers); ++i)
@@ -89,38 +90,37 @@ s32 vfs_init()
 
 	/* Find rootfs device */
 	ret = nvram_bpb_read(&bpb);
-	if(ret == SUCCESS)
+	if(ret != SUCCESS)
     {
-        /* Iterate over partition devices, looking for one whose name matches the BPB rootfs */
-        for(i = 0; i < MAX_DEVICES; ++i)
-        {
-            if(g_devices[i] != NULL)
-            {
-                dev_t * const dev = g_devices[i];
-                if((dev->type == DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_PARTITION) &&
-                   !strcmp(dev->name, bpb.rootfs))
-                {
-                    /* Find FS driver corresponding to bpb.fstype */
-                    vfs_driver_t *driver = vfs_get_driver_by_name(bpb.fstype);
-                    if(driver)
-                    {
-                        /* Found fs driver */
-                        printf("vfs: rootfs: %s (%s)\n", bpb.rootfs, bpb.fstype);
-                        return mount_add("/", driver, dev);
-                    }
-
-                    printf("vfs: no driver for rootfs (%s) filesystem '%s'\n",
-                           bpb.rootfs, bpb.fstype);
-                }
-            }
-        }
-
-        printf("vfs: rootfs partition '%s' not found\n", bpb.rootfs);
-    }
-    else
         printf("vfs: failed to read rootfs from BPB: %s\n", kstrerror(ret));
+        return ret;
+    }
 
-	return SUCCESS;
+    dev = dev_find(bpb.rootfs);
+    if(dev == NULL)
+    {
+        printf("vfs: rootfs partition '%s' not found\n");
+        return ENODEV;
+    }
+
+    if((dev->type != DEV_TYPE_BLOCK) || (dev->subtype != DEV_SUBTYPE_PARTITION))
+    {
+        printf("vfs: rootfs '%s' is not a partition device\n");
+        return ENODEV;
+    }
+
+    /* Find FS driver corresponding to bpb.fstype */
+    vfs_driver_t *driver = vfs_get_driver_by_name(bpb.fstype);
+    if(!driver)
+    {
+        printf("vfs: unknown filesystem type '%s' specified\n", bpb.fstype);
+        return EINVAL;
+    }
+
+    /* Found fs driver */
+    printf("vfs: rootfs: %s (%s)\n", bpb.rootfs, bpb.fstype);
+
+    return mount_add("/", driver, dev);
 }
 
 

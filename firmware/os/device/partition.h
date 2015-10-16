@@ -44,10 +44,10 @@ block_driver_t g_partition_driver;
 s32 partition_init();
 s32 partition_shut_down();
 
-s32 partition_read(void *data, ku32 offset, ku32 len, void* buf);
-s32 partition_write(void *data, ku32 offset, ku32 len, const void* buf);
+s32 partition_read(dev_t *dev, ku32 offset, ku32 len, void* buf);
+s32 partition_write(dev_t *dev, ku32 offset, ku32 len, const void* buf);
 
-s32 partition_control(void *data, ku32 function, void *in, void *out);
+s32 partition_control(dev_t *dev, ku32 function, void *in, void *out);
 
 s8 *partition_type_name(ku8 type);
 s8 *partition_status_desc(ku8 status);

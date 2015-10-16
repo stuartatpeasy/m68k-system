@@ -15,8 +15,6 @@
 
 
 #define DEVICE_NAME_LEN			(8)		/* Max length of device name, including terminating \0 	*/
-// FIXME REMOVE
-#define MAX_DEVICES             (64)    /* Maximum number of devices allowed by the system      */
 
 #define DEVICE_MAX_SUBDEVICES	(61)	/* e.g. ataa1, ataa2, ataa3, ...ataaZ */
 
@@ -92,10 +90,10 @@ typedef struct
 
 typedef struct block_ops
 {
-	s32 (*read)(dev_t *data, ku32 offset, ku32 len, void *buf);
-	s32 (*write)(dev_t *data, ku32 offset, ku32 len, const void *buf);
+	s32 (*read)(dev_t *dev, ku32 offset, ku32 len, void *buf);
+	s32 (*write)(dev_t *dev, ku32 offset, ku32 len, const void *buf);
 
-	s32 (*control)(dev_t *data, ku32 function, void *in, void *out);
+	s32 (*control)(dev_t *dev, ku32 function, void *in, void *out);
 } block_ops_t;
 
 
@@ -126,7 +124,6 @@ typedef struct nvram_ops
     Variable declarations
 */
 const char * const g_device_sub_names;
-dev_t * g_devices[MAX_DEVICES];      // FIXME REMOVE
 
 
 /*
@@ -160,10 +157,10 @@ s32 driver_method_not_implemented();
 
 dev_t *get_device_by_name(const char * const name);
 
-s32 device_read(const dev_t * const dev, ku32 offset, u32 len, void *buf);
-s32 device_write(const dev_t * const dev, ku32 offset, u32 len, const void *buf);
+s32 device_read(dev_t * const dev, ku32 offset, u32 len, void *buf);
+s32 device_write(dev_t * const dev, ku32 offset, u32 len, const void *buf);
 
-s32 device_control(const dev_t * const dev, ku32 function, void *in, void *out);
+s32 device_control(dev_t * const dev, ku32 function, void *in, void *out);
 
 
 #endif

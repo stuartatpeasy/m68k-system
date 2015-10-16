@@ -14,6 +14,7 @@
 
 #include <kutil/kutil.h>
 #include <device/device.h>
+#include <device/partition.h>
 #include <platform/platform.h>
 
 
@@ -22,33 +23,22 @@
 const char * const g_device_sub_names = "0123456789abcdefghijklmnopqrstuv"
                                         "wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-dev_t *g_devices[MAX_DEVICES];
-
-/*
-    #include driver registration function declarations here
-*/
-// FIXME remove
-#include "device/ata.h"
-#include "device/partition.h"
-
-// FIXME remove
-block_driver_t *g_drivers[] =
-{
-/*    &g_ata_driver, */
-/*    &g_partition_driver */
-};
-
-
 static dev_t *root_dev = NULL;
 
 
 s32 dev_enumerate()
 {
+    s32 ret;
+
     /* Root device is implicit */
     root_dev = CHECKED_KCALLOC(1, sizeof(dev_t));
 
     /* Populating the device tree is a board-specific operation */
-    return plat_dev_enumerate();
+    ret = plat_dev_enumerate();
+    if(ret != SUCCESS)
+        printf("Platform device enumeration failed: %s\nContinuing boot...", kstrerror(ret));
+
+    return partition_init();
 }
 
 
@@ -234,134 +224,24 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
         return ret;
     }
 
-    printf("%s: registered %s\n", (*dev)->name, human_name);
-
     return SUCCESS;
 }
 
 
-u32 driver_init()
+s32 device_read(dev_t * const dev, ku32 offset, u32 len, void *buf)
 {
-    u32 x;
-	for(x = 0; x < (sizeof(g_drivers) / sizeof(g_drivers[0])); ++x)
-	{
-	    block_driver_t * const drv = g_drivers[x];
-
-		if(drv->init() != SUCCESS)	/* init() will create devices */
-		{
-			printf("%s: driver initialisation failed\n", drv->name);
-
-			/* Ensure that none of this driver's methods are callable */
-		    drv->read = driver_method_not_implemented;
-		    drv->write = driver_method_not_implemented;
-		    drv->shut_down = driver_method_not_implemented;
-		    drv->control = driver_method_not_implemented;
-		}
-	}
-
-	return SUCCESS;
+	return ((block_ops_t *) dev->driver)->read(dev, offset, len, buf);
 }
 
 
-/*
-    Generic function which can be used by drivers to indicate that a particular operation isn't
-    supported.  Also, if a driver fails to initialise, all of its operation funcptrs will be
-    replaced with a call to this fn.
-*/
-s32 driver_method_not_implemented()
+s32 device_write(dev_t * const dev, ku32 offset, u32 len, const void *buf)
 {
-    return ENOSYS;
+	return ((block_ops_t *) dev->driver)->write(dev, offset, len, buf);
 }
 
 
-void driver_shut_down()
+s32 device_control(dev_t * const dev, ku32 function, void *in, void *out)
 {
-	/* TODO: ensure all devices are stopped/flushed/etc */
-	u32 x;
-
-	const u32 num_drivers = sizeof(g_drivers) / sizeof(g_drivers[0]);
-	for(x = 0; x < num_drivers; ++x)
-	{
-		if(g_drivers[x]->shut_down() != SUCCESS)
-		{
-			/* TODO: error */
-			printf("Failed to shut down '%s' driver\n", g_drivers[x]->name);
-		}
-	}
-
-	for(x = 0; x < (sizeof(g_devices) / sizeof(g_devices[0])); ++x)
-    {
-        if(g_devices[x])
-            kfree(g_devices[x]);
-    }
-}
-
-
-dev_t *get_device_by_name(const char * const name)
-{
-	int i;
-	for(i = 0; i < (sizeof(g_devices) / sizeof(g_devices[0])); ++i)
-	{
-	    if(g_devices[i] != NULL)
-        {
-            if(!strcmp(g_devices[i]->name, name))
-                return g_devices[i];
-        }
-	}
-
-	return NULL;	/* No such device */
-}
-
-
-/* Create (i.e. register) a new device.  This function is called by each driver's init() function
- * during device enumeration. */
-s32 create_device(const dev_type_t type, const dev_subtype_t subtype, void * const driver,
-                  const char *name, void * const data)
-{
-    u32 u;
-    dev_t * dev;
-
-    /* Find a vacant device ID */
-    for(u = 0; u < MAX_DEVICES; ++u)
-    {
-        if(g_devices[u] == NULL)
-            break;
-    }
-
-    if(u == MAX_DEVICES)
-        return ENFILE;      /* Too many devices */
-
-    dev = (dev_t *) kmalloc(sizeof(dev_t));
-    if(dev == NULL)
-        return ENOMEM;
-
-	dev->type = type;
-	dev->subtype = subtype;
-	dev->driver = driver;
-	dev->data = data;
-
-	/* TODO: check that the name is not a duplicate */
-	strncpy(dev->name, name, sizeof(dev->name));
-    g_devices[u] = dev;
-
-	return SUCCESS;
-}
-
-
-s32 device_read(const dev_t * const dev, ku32 offset, u32 len, void *buf)
-{
-	return ((block_driver_t *) dev->driver)->read(dev->data, offset, len, buf);
-}
-
-
-s32 device_write(const dev_t * const dev, ku32 offset, u32 len, const void *buf)
-{
-	return ((block_driver_t *) dev->driver)->write(dev->data, offset, len, buf);
-}
-
-
-s32 device_control(const dev_t * const dev, ku32 function, void *in, void *out)
-{
-	return ((block_driver_t *) dev->driver)->control(dev->data, function, in, out);
+	return ((block_ops_t *) dev->driver)->control(dev, function, in, out);
 }
 
