@@ -109,7 +109,8 @@ s32 plat_console_init(void)
 */
 s16 plat_console_putc(const char c)
 {
-    return mc68681_channel_a_putc(g_lambda_console, c);
+    mc68681_channel_a_putc(g_lambda_console, c);
+    return c;
 }
 
 
@@ -118,7 +119,10 @@ s16 plat_console_putc(const char c)
 */
 s16 plat_console_getc()
 {
-    return mc68681_channel_a_getc(g_lambda_console);
+    char c;
+    mc68681_channel_a_getc(g_lambda_console, &c);
+
+    return c;
 }
 
 
@@ -127,6 +131,10 @@ s16 plat_console_getc()
 */
 s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg)
 {
+    ks32 ret = mc68681_set_output_pin_fn(g_lambda_duart, mc68681_pin_op3, mc68681_pin_fn_ct_output);
+    if(ret != SUCCESS)
+        return ret;
+
     return cpu_set_interrupt_handler(V_level_1_autovector, arg, handler);
 }
 
@@ -204,7 +212,7 @@ s32 plat_get_cpu_clock(u32 *clk)
     u32 loops;
     u8 curr_second;
     dev_t *rtc;
-    s32 (*rtc_get_time)(dev_t *, rtc_time_t *);
+    s32 (*rtc_get_time)(dev_t *, ku32 offset, ku32 len, void *);
     s32 ret;
 
     /* Find the first RTC */
@@ -212,20 +220,20 @@ s32 plat_get_cpu_clock(u32 *clk)
     if(rtc == NULL)
         return ENOSYS;
 
-    rtc_get_time = ((rtc_ops_t *) rtc->driver)->get_time;
+    rtc_get_time = rtc->read;
 
     /* Wait for the next second to start */
-    ret = rtc_get_time(rtc, &tm);
+    ret = rtc_get_time(rtc, 0, 1, &tm);
     if(ret != SUCCESS)
         return ret;
 
     for(curr_second = tm.second; curr_second == tm.second;)
-        rtc_get_time(rtc, &tm);
+        rtc_get_time(rtc, 0, 1, &tm);
 
     curr_second = tm.second;
 
     for(loops = 0; curr_second == tm.second; ++loops)
-        rtc_get_time(rtc, &tm);
+        rtc_get_time(rtc, 0, 1, &tm);
 
     *clk = 716 * loops;
 

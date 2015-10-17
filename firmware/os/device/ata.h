@@ -28,8 +28,6 @@ typedef struct ata_dev_data
 	char model[48];
 	char serial[24];
 	char firmware[12];
-
-	u32 num_sectors;
 } ata_dev_data_t;
 
 
@@ -38,13 +36,11 @@ typedef struct ata_dev_data
 */
 
 s32 ata_init(dev_t *dev);
-s32 ata_bus_shut_down(dev_t *dev);
 
 s32 ata_master_init(dev_t * dev);
 s32 ata_slave_init(dev_t * dev);
 
-s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf);
-s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf);
+s32 ata_bus_shut_down(dev_t *dev);
 
 blockdev_stats_t g_ata_stats;
 

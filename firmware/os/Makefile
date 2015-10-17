@@ -13,7 +13,7 @@ CSOURCES=main.c \
 		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
 		 device/nvram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
 		 device/ata.c device/partition.c fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
-		 kernel/elf.c kernel/ksym.c kernel/sched.c kernel/syscalls.c \
+		 kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/syscalls.c \
 		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
 
 ASMSOURCES=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
@@ -94,9 +94,8 @@ $(TOOLS):
 #
 
 main.o: \
-	main.c device/devctl.h device/device.h device/ds17485.h fs/vfs.h include/defs.h klibc/stdio.h \
-	klibc/strings.h kutil/kutil.h memory/extents.o memory/kmalloc.h memory/slab.h \
-	monitor/monitor.h device/device.o kernel/sched.h
+	main.c device/ds17485.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h \
+	memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h device/device.o kernel/sched.h
 
 cpu/cpu.o: \
 	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
@@ -155,6 +154,10 @@ fs/vfs.o: \
 include/byteorder.h: \
 	cpu/cpu.h
 
+kernel/boot.o: \
+	kernel/boot.c kernel/boot.h include/defs.h include/types.h device/devctl.h device/device.h \
+	klibc/stdio.h platform/platform.h
+
 kernel/elf.o: \
 	kernel/elf.c include/byteorder.h include/defs.h include/elf.h include/types.h klibc/errno.h \
 	klibc/stdio.h klibc/string.h klibc/strings.h
@@ -175,7 +178,7 @@ memory/extents.o: \
 	memory/extents.c memory/extents.h include/defs.h include/types.h klibc/strings.h
 
 memory/heap.o: \
-	memory/heap.c memory/heap.h include/types.h
+	memory/heap.c memory/heap.h include/types.h klibc/stdio.h
 
 memory/kmalloc.o: \
 	memory/kmalloc.c memory/kmalloc.h include/types.h memory/memorymap.h

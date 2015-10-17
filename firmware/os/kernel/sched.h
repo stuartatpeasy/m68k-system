@@ -57,7 +57,7 @@ proc_t *g_current_proc;
 u32 g_ncontext_switches;
 
 void irq_schedule(ku32 irql, void *data, regs_t regs);
-void sched_init(void);
+s32 sched_init(void);
 
 pid_t create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags);
 

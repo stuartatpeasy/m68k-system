@@ -42,12 +42,18 @@ s32 dev_enumerate()
 }
 
 
+/*
+    dev_get_root() - obtain a ptr to the root element in the device tree
+*/
 dev_t *dev_get_root()
 {
     return root_dev;
 }
 
 
+/*
+    dev_add_child() - add a node to the device tree
+*/
 s32 dev_add_child(dev_t *parent, dev_t *child)
 {
     /* TODO - mutex */
@@ -177,14 +183,17 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, 
 {
 	*dev = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
 
-	(*dev)->type		= type;
-	(*dev)->subtype		= subtype;
-	(*dev)->irql		= irql;
-	(*dev)->base_addr	= base_addr;
+	(*dev)->type		    = type;
+	(*dev)->subtype		    = subtype;
+	(*dev)->irql		    = irql;
+	(*dev)->base_addr	    = base_addr;
 
-	(*dev)->control     = dev_control_unimplemented;
-	(*dev)->read        = dev_read_unimplemented;
-	(*dev)->write       = dev_write_unimplemented;
+	(*dev)->control         = dev_control_unimplemented;
+	(*dev)->read            = dev_read_unimplemented;
+	(*dev)->write           = dev_write_unimplemented;
+	(*dev)->getc            = dev_getc_unimplemented;
+	(*dev)->putc            = dev_putc_unimplemented;
+	(*dev)->shut_down       = dev_shut_down_unimplemented;
 
 	strcpy((*dev)->name, name);
 
@@ -222,7 +231,7 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
     ret = dev_add_child(parent_dev, *dev);
     if(ret != SUCCESS)
     {
-        /* FIXME: de-init device */
+        (*dev)->shut_down(*dev);
         kfree(*dev);
         printf("%s: failed to add %s to device tree: %s\n", (*dev)->name, human_name,
                 kstrerror(ret));
@@ -254,7 +263,34 @@ s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void
 /*
     dev_control_unimplemented() - default handler for dev->control() calls
 */
-s32 dev_control_unimplemented(dev_t * const dev, ku32 function, void *in, void *out)
+s32 dev_control_unimplemented(dev_t * const dev, ku32 function, const void *in, void *out)
+{
+    return ENOSYS;
+}
+
+
+/*
+    dev_getc_unimplemented() - default handler for dev->getc() calls
+*/
+s32 dev_getc_unimplemented(dev_t * const dev, char *c)
+{
+    return ENOSYS;
+}
+
+
+/*
+    dev_putc_unimplemented() - default handler for dev->putc() calls
+*/
+s32 dev_putc_unimplemented(dev_t * const dev, const char c)
+{
+    return ENOSYS;
+}
+
+
+/*
+    dev_shut_down_unimplemented() - default handler for dev->shut_down() calls
+*/
+s32 dev_shut_down_unimplemented(dev_t * const dev)
 {
     return ENOSYS;
 }

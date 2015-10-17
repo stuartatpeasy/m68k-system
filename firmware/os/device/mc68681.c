@@ -46,7 +46,6 @@ s32 mc68681_init(dev_t *dev)
     void * const base_addr = dev->base_addr;
 
     dev->data = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
-    dev->driver = NULL; /* FIXME - should at least support common ops here */
 
     mc68681_reset(base_addr);
 
@@ -83,22 +82,8 @@ s32 mc68681_init(dev_t *dev)
         (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
         (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
-	/*
-		Set OPCR - output port function select
-			bit		val		desc
-		----------------------------------------------------------------------
-			7		0		OP7 - 0: complement of OPR7; 1: TxRDYB interrupt
-			6		0		OP6 - 0: complement of OPR6; 1: TxRDYA interrupt
-			5		0		OP5 - 0: complement of OPR5; 1: TxB interrupt
-			4		0		OP4 - 0: complement of OPR4; 1: TxA interrupt
-			3		0		} OP3 - 00: complement of OPR3; 01: C/T output
-			2		1		}       10: ch B Tx clk; 11: ch B Rx clk
-			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
-			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
-	*/
-    /////////////// FIXME - platform-specific code (sets OP3 to timer interrupt output) //////////
-	////////////////// TODO ////////////////////
-	MC68681_REG(base_addr, MC68681_OPCR) = 0x04;
+    /* Set output control register to defaults (all pins = general-purpose outputs) */
+	MC68681_REG(base_addr, MC68681_OPCR) = 0;
 
 	/*
 		Set OPR - output port bits
@@ -115,20 +100,92 @@ s32 mc68681_init(dev_t *dev)
 
 
 /*
+    mc68681_set_output_pin_fn() - configure output pin functions
+*/
+s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const mc68681_pin_fn_t fn)
+{
+    u8 *opcr = &(((mc68681_state_t *) dev->data)->opcr);
+
+	/*
+		Set OPCR - output port function select
+			bit		val		desc
+		----------------------------------------------------------------------
+			7		0		OP7 - 0: complement of OPR7; 1: TxRDYB interrupt
+			6		0		OP6 - 0: complement of OPR6; 1: TxRDYA interrupt
+			5		0		OP5 - 0: complement of OPR5; 1: TxB interrupt
+			4		0		OP4 - 0: complement of OPR4; 1: TxA interrupt
+			3		0		} OP3 - 00: complement of OPR3; 01: C/T output
+			2		1		}       10: ch B Tx clk; 11: ch B Rx clk
+			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
+			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
+	*/
+	if(fn == mc68681_pin_fn_gpio)
+    {
+        if(pin >= mc68681_pin_op4)
+            *opcr &= ~BIT(pin);
+        else if(pin == mc68681_pin_op3)
+            *opcr &= ~(BIT(3) | BIT(2));
+        else if(pin == mc68681_pin_op2)
+            *opcr &= ~(BIT(1) | BIT(0));
+        else
+            return EINVAL;
+    }
+    else
+    {
+        if(pin == mc68681_pin_op3)
+        {
+            if(fn == mc68681_pin_fn_ct_output)      /* OP3 -> counter/timer output */
+            {
+                *opcr &= ~BIT(3);
+                *opcr |= BIT(2);
+            }
+            else if(fn == mc68681_pin_fn_txb_clk)   /* OP3 -> TxB clock             */
+            {
+                *opcr |= BIT(3);
+                *opcr &= ~BIT(2);
+            }
+            else if(fn == mc68681_pin_fn_rxb_clk)   /* OP3 -> RxB clock             */
+                *opcr |= BIT(3) | BIT(2);
+            else
+                return EINVAL;
+        }
+        else if(pin == mc68681_pin_op2)
+        {
+            if(fn == mc68681_pin_fn_txa16_clk)      /* OP2 -> TxA 16x clock         */
+            {
+                *opcr &= ~BIT(1);
+                *opcr |= BIT(0);
+            }
+            else if(fn == mc68681_pin_fn_txa_clk)   /* OP2 -> TxA clock             */
+            {
+                *opcr |= BIT(1);
+                *opcr &= ~BIT(0);
+            }
+            else if(fn == mc68681_pin_fn_rxa_clk)   /* OP2 -> RxA clock             */
+                *opcr |= BIT(1) | BIT(0);
+            else
+                return EINVAL;
+        }
+        else
+            return EINVAL;
+    }
+
+    MC68681_REG(dev->base_addr, MC68681_OPCR) = *opcr;
+    return SUCCESS;
+}
+
+
+/*
     mc68681_serial_a_init() - device initialiser for serial channel A.
 */
 s32 mc68681_serial_a_init(dev_t *dev)
 {
-    serial_ops_t *ops;
-
-    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
-
-    ops->getc = mc68681_channel_a_getc;
-    ops->putc = mc68681_channel_a_putc;
-    ops->set_baud_rate = mc68681_channel_a_set_baud_rate;
+    dev->getc = mc68681_channel_a_getc;
+    dev->putc = mc68681_channel_a_putc;
+    dev->block_size = 1;
+    dev->len = 1;
 
     dev->data = dev->parent->data;
-    dev->driver = ops;
 
     return SUCCESS;
 }
@@ -139,18 +196,45 @@ s32 mc68681_serial_a_init(dev_t *dev)
 */
 s32 mc68681_serial_b_init(dev_t *dev)
 {
-    serial_ops_t *ops;
-
-    ops = CHECKED_KCALLOC(1, sizeof(serial_ops_t));
-
-    ops->getc = mc68681_channel_b_getc;
-    ops->putc = mc68681_channel_b_putc;
-    ops->set_baud_rate = mc68681_channel_b_set_baud_rate;
+    dev->getc = mc68681_channel_b_getc;
+    dev->putc = mc68681_channel_b_putc;
+    dev->block_size = 1;
+    dev->len = 1;
 
     dev->data = dev->parent->data;
-    dev->driver = ops;
 
     return SUCCESS;
+}
+
+
+/*
+    mc68681_shut_down() - shut down the main MC68681 driver device.
+    NOTE: this will invalidate the child devices.
+*/
+s32 mc68681_shut_down(dev_t *dev)
+{
+    kfree(dev->data);
+    return SUCCESS;
+}
+
+
+/*
+    mc68681_control() - handler for device control requests
+*/
+s32 mc68681_control(dev_t *dev, ku32 channel, const devctl_fn_t fn, const void *in, void *out)
+{
+    switch(fn)
+    {
+        case dc_get_baud_rate:
+            *((u32 *) out) = mc68681_get_baud_rate(dev, channel);
+            return SUCCESS;
+
+        case dc_set_baud_rate:
+            return mc68681_set_baud_rate(dev, channel, *((u32 *) in));
+
+        default:
+            return ENOSYS;
+    }
 }
 
 
@@ -359,35 +443,35 @@ u32 mc68681_channel_b_get_baud_rate(dev_t *dev)
 /*
     mc68681_channel_a_putc() - write a character to serial channel A, blocking until done.
 */
-s16 mc68681_channel_a_putc(dev_t *dev, const char c)
+s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 {
     while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT)))
 		;
 
     MC68681_REG(dev->base_addr, MC68681_THRA) = c;
 
-    return c;
+    return SUCCESS;
 }
 
 
 /*
     mc68681_channel_b_putc() - write a character to serial channel B, blocking until done.
 */
-s16 mc68681_channel_b_putc(dev_t *dev, const char c)
+s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 {
     while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT)))
 		;
 
 	MC68681_REG(dev->base_addr, MC68681_THRB) = c;
 
-    return c;
+    return SUCCESS;
 }
 
 
 /*
     mc68681_putc() - write a character to the specified serial channel, blocking until done.
 */
-s16 mc68681_putc(void * const base_addr, ku16 channel, const char c)
+s32 mc68681_putc(void * const base_addr, ku16 channel, const char c)
 {
     if(channel == 0)
     {
@@ -406,57 +490,61 @@ s16 mc68681_putc(void * const base_addr, ku16 channel, const char c)
     else
 		return -EINVAL;
 
-	return c;
+	return SUCCESS;
 }
 
 
 /*
     mc68681_channel_a_getc() - read a character from serial channel A, blocking until done.
 */
-s16 mc68681_channel_a_getc(dev_t *dev)
+s32 mc68681_channel_a_getc(dev_t *dev, char *c)
 {
     while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
 		;
 
-    return MC68681_REG(dev->base_addr, MC68681_RHRA);
+    *c = MC68681_REG(dev->base_addr, MC68681_RHRA);
+    return SUCCESS;
 }
 
 
 /*
     mc68681_channel_b_getc() - read a character from serial channel B, blocking until done.
 */
-s16 mc68681_channel_b_getc(dev_t *dev)
+s32 mc68681_channel_b_getc(dev_t *dev, char *c)
 {
     void * const base_addr = dev->base_addr;
 
     while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
 		;
 
-    return MC68681_REG(base_addr, MC68681_RHRB);
+    *c = MC68681_REG(base_addr, MC68681_RHRB);
+    return SUCCESS;
 }
 
 
 /*
     mc68681_getc() - read a character from the specified serial channel, blocking until done.
 */
-s16 mc68681_getc(void * const base_addr, ku16 channel)
+s32 mc68681_getc(void * const base_addr, ku16 channel, char *c)
 {
    if(channel == 0)
     {
         while(!(MC68681_REG(base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
 			;
 
-        return MC68681_REG(base_addr, MC68681_RHRA);
+        *c = MC68681_REG(base_addr, MC68681_RHRA);
     }
     else if(channel == 1)
     {
         while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
 			;
 
-        return MC68681_REG(base_addr, MC68681_RHRB);
+        *c = MC68681_REG(base_addr, MC68681_RHRB);
     }
     else
 		return -EINVAL;
+
+    return SUCCESS;
 }
 
 

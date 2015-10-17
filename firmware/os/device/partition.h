@@ -32,21 +32,15 @@ typedef enum
 typedef struct partition_data
 {
 	dev_t *device;			    /* the block device hosting this partition						*/
-	u32 sector_len;				/* number of bytes per sector									*/
+	u32 block_size;				/* number of bytes per sector									*/
 	u32 offset;					/* offset, in sectors, of partition from the start of device	*/
-	u32 len;					/* the length of this partition in sectors						*/
 	partition_type_t type;
 	partition_status_t status;	/* status field from partition table							*/
 } partition_data_t;
 
 
 s32 partition_init();
-s32 partition_shut_down();
-
-s32 partition_read(dev_t *dev, ku32 offset, ku32 len, void* buf);
-s32 partition_write(dev_t *dev, ku32 offset, ku32 len, const void* buf);
-
-s32 partition_control(dev_t *dev, ku32 function, void *in, void *out);
+s32 partition_shut_down(dev_t *dev);
 
 s8 *partition_type_name(ku8 type);
 s8 *partition_status_desc(ku8 status);

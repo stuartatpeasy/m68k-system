@@ -256,6 +256,36 @@ typedef struct
     u8      csr;            /* CSR (clock select register) setting, and ACR[7] value    */
 } mc68681_baud_rate_entry;
 
+
+typedef enum mc68681_pin
+{
+    mc68681_pin_op0 = 0,
+    mc68681_pin_op1 = 1,
+    mc68681_pin_op2 = 2,
+    mc68681_pin_op3 = 3,
+    mc68681_pin_op4 = 4,
+    mc68681_pin_op5 = 5,
+    mc68681_pin_op6 = 6,
+    mc68681_pin_op7 = 7
+} mc68681_output_pin_t;
+
+
+typedef enum mc68681_pin_fn
+{
+    mc68681_pin_fn_gpio,
+    mc68681_pin_fn_txa_int,
+    mc68681_pin_fn_txb_int,
+    mc68681_pin_fn_txrdya_int,
+    mc68681_pin_fn_txrdyb_int,
+    mc68681_pin_fn_ct_output,
+    mc68681_pin_fn_txb_clk,
+    mc68681_pin_fn_rxb_clk,
+    mc68681_pin_fn_txa16_clk,
+    mc68681_pin_fn_txa_clk,
+    mc68681_pin_fn_rxa_clk
+} mc68681_pin_fn_t;
+
+
 /* Bits in mc68681_baud_rate_entry.csr */
 #define MC68681_BRE_ACR7                BIT(4)  /* Alternate rate gen needed (ACR[7] = 1)   */
 #define MC68681_BRE_TEST                BIT(5)  /* Entry requires "BRG test" mode           */
@@ -276,29 +306,33 @@ typedef struct
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22];
 
-void mc68681_reset(void * const base_addr);
-s32 mc68681_reset_tx(void * const base_addr, ku16 channel);
-s32 mc68681_reset_rx(void * const base_addr, ku16 channel);
-
-s16 mc68681_getc(void * const base_addr, ku16 channel);
-s16 mc68681_putc(void * const base_addr, ku16 channel, const char c);
-s32 mc68681_set_baud_rate(dev_t * dev, ku16 channel, ku32 rate);
-u32 mc68681_get_baud_rate(dev_t * dev, ku16 channel);
+s32 mc68681_init(dev_t *dev);
+s32 mc68681_serial_a_init(dev_t *dev);
+s32 mc68681_serial_b_init(dev_t *dev);
+s32 mc68681_shut_down(dev_t *dev);
+s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const mc68681_pin_fn_t fn);
 
 void mc68681_start_counter(dev_t *dev, ku16 init_count);
 void mc68681_stop_counter(dev_t *dev);
 
-s32 mc68681_init(dev_t *dev);
-s32 mc68681_serial_a_init(dev_t *dev);
-s32 mc68681_serial_b_init(dev_t *dev);
+void mc68681_reset(void * const base_addr);
+s32 mc68681_reset_tx(void * const base_addr, ku16 channel);
+s32 mc68681_reset_rx(void * const base_addr, ku16 channel);
 
-s16 mc68681_channel_a_getc(dev_t *dev);
-s16 mc68681_channel_a_putc(dev_t *dev, const char c);
+s32 mc68681_getc(void * const base_addr, ku16 channel, char *c);
+s32 mc68681_putc(void * const base_addr, ku16 channel, const char c);
+s32 mc68681_set_baud_rate(dev_t * dev, ku16 channel, ku32 rate);
+u32 mc68681_get_baud_rate(dev_t * dev, ku16 channel);
+s32 mc68681_control(dev_t *dev, ku32 channel, const devctl_fn_t fn, const void *in, void *out);
+
+s32 mc68681_channel_a_getc(dev_t *dev, char *c);
+s32 mc68681_channel_a_putc(dev_t *dev, const char c);
 s32 mc68681_channel_a_set_baud_rate(dev_t *dev, ku32 rate);
 u32 mc68681_channel_a_get_baud_rate(dev_t *dev);
+s32 mc68681_channel_a_control(dev_t *dev, ku32 function, const void *in, void *out);
 
-s16 mc68681_channel_b_getc(dev_t *dev);
-s16 mc68681_channel_b_putc(dev_t *dev, const char c);
+s32 mc68681_channel_b_getc(dev_t *dev, char *c);
+s32 mc68681_channel_b_putc(dev_t *dev, const char c);
 s32 mc68681_channel_b_set_baud_rate(dev_t *dev, ku32 rate);
 u32 mc68681_channel_b_get_baud_rate(dev_t *dev);
 

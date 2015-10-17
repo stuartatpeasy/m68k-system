@@ -32,7 +32,7 @@ MONITOR_CMD_HANDLER(date)
     {
         char timebuf[12], datebuf[32];
 
-        ((rtc_ops_t *) dev->driver)->get_time(dev, &tm);
+        dev->read(dev, 0, 1, &tm);
 
         time_iso8601(&tm, timebuf, sizeof(timebuf));
         date_long(&tm, datebuf, sizeof(datebuf));
@@ -47,7 +47,7 @@ MONITOR_CMD_HANDLER(date)
         if(rtc_time_from_str(args[0], &tm) == FAIL)
             return EINVAL;
 
-        return ((rtc_ops_t *) dev->driver)->set_time(dev, &tm);
+        return dev->write(dev, 0, 1, &tm);
     }
     else
         return EINVAL;
@@ -811,7 +811,6 @@ struct mydata
 
 
 #include "device/encx24j600.h"
-#include <device/partition.h>
 MONITOR_CMD_HANDLER(test)
 {
 /*

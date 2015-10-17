@@ -38,7 +38,9 @@
 	(c) Stuart Wallace, 13th August 2011.
 */
 
-#include "memory/heap.h"
+#include <memory/heap.h>
+#include <klibc/stdio.h>
+
 
 #define MEMBLOCK_HDR_MAGIC	(0xc91d58be)	/* meaningless number used as a signature to identify a
 											   memory block; important that the bottom bit isn't set
@@ -224,7 +226,8 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 		}
 		/* TODO: also merge this block into previous free blocks */
 	}
-	else ; /* FIXME: catch deallocation of invalid/unitialised block */
+	else
+        printf("heap_free(): warning: attempted to free unallocated block at %p\n", ptr);
 }
 
 

@@ -438,5 +438,5 @@ s32 get_time(rtc_time_t *tm)
     if(rtc == NULL)
         return ENOSYS;
 
-    return ((rtc_ops_t *) rtc->driver)->get_time(rtc, tm);
+    return rtc->read(rtc, 0, 1, tm);
 }

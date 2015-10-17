@@ -5,56 +5,22 @@
     FIXME - OS_STACK_BOTTOM is platform-specific and shouldn't be in here
 */
 
-#include <platform/platform.h>
-#include <stdio.h>
-#include <strings.h>
 
-#include <device/devctl.h>
-#include <device/device.h>
 #include <fs/vfs.h>
 #include <include/defs.h>
+#include <kernel/boot.h>
+#include <kernel/sched.h>
 #include <kutil/kutil.h>
 #include <memory/extents.h>
 #include <memory/kmalloc.h>
 #include <memory/slab.h>
 #include <monitor/monitor.h>
-#include <kernel/sched.h>
+#include <platform/platform.h>
+#include <stdio.h>
+#include <strings.h>
 
 const char * const g_warmup_message = "\n  \\   { ayumos }"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";
-
-
-/*
-    early_boot_fail() - report an "early failure" by flashing the motherboard LEDs.
-
-    This code assumes that interrupts have not yet been enabled.  This function does not return.
-
-    TODO: move this somewhere else.
-*/
-void early_boot_fail(ku32 code)
-{
-    /* TODO - remove hardwired loops */
-    while(1)
-    {
-        u32 i, j;
-
-        for(j = 250000; j; j--)
-            plat_led_off(LED_ALL);
-
-        for(i = 0; i < code; ++i)
-        {
-            u32 j;
-
-            plat_led_on(LED_RED);
-            for(j = 100000; j; j--)
-                ;
-
-            plat_led_off(LED_ALL);
-            for(j = 100000; j; j--)
-                ;
-        }
-    }
-}
 
 
 void _main()
@@ -78,14 +44,14 @@ void _main()
 
     /* === Initialise peripherals - phase 1 === */
     if(plat_init() != SUCCESS)
-        early_boot_fail(1);
+        boot_early_fail(1);
 
     if(plat_mem_detect() != SUCCESS)        /* Detect installed RAM */
-        early_boot_fail(2);
+        boot_early_fail(2);
 
     /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
     if(plat_console_init() != SUCCESS)
-        early_boot_fail(3);
+        boot_early_fail(3);
 
     /*
         At this point, minimal configuration has been done.  The scheduler is not yet running,
@@ -101,7 +67,7 @@ void _main()
 	plat_led_on(LED_RED);
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
-    put("Zeroing user RAM: ");
+    put("Clearing user RAM: ");
     mem_zero_extents(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     puts("done");
 
@@ -111,7 +77,10 @@ void _main()
 
     /* === Initialise peripherals - phase 2 === */
     if(dev_enumerate() != SUCCESS)
-        early_boot_fail(4);
+        boot_early_fail(4);
+
+    boot_list_mass_storage();
+    boot_list_partitions();
 
     ret = vfs_init();
 	if(ret != SUCCESS)
@@ -143,7 +112,10 @@ void _main()
         printf("%s %s\n", timebuf, datebuf);
     }
 
-    sched_init();
+    ret = sched_init();
+    if(ret != SUCCESS)
+        printf("sched: init failed: %s\n", kstrerror(ret));
+
     cpu_enable_interrupts();
 
     /* Startup complete - activate green LED */

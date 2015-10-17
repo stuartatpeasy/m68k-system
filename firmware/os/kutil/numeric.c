@@ -28,3 +28,40 @@ u16 log10(ku32 n)
     else if(n < 1000000000) return 8;
     else                    return 9;
 }
+
+
+/*
+    log2() - return the integer log to base 2 of n.
+
+    NOTE: log2(0) returns 0!
+*/
+u16 log2(u32 n)
+{
+    u16 ret = 0;
+
+    if(n >= 0x00010000)
+    {
+        ret = 16;
+        n >>= 16;
+    }
+
+    if(n >= 0x0100)
+    {
+        ret += 8;
+        n >>= 8;
+    }
+
+    if(n >= 0x10)
+    {
+        ret += 4;
+        n >>= 4;
+    }
+
+    if(n >= 0x04)
+    {
+        ret += 2;
+        n >>= 2;
+    }
+
+    return (n >= 2) ? ret + 1 : ret;
+}

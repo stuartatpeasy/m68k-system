@@ -12,7 +12,6 @@
 #include <include/byteorder.h>
 #include <include/error.h>
 
-#include <stdio.h>		/* FIXME remove */
 #include <string.h>
 #include <strings.h>
 
@@ -25,12 +24,16 @@ s32 ata_send_command(void * const base_addr, const ata_drive_t drive, const ata_
 s32 ata_bus_init(dev_t *dev, const ata_drive_t drive);
 s32 ata_drive_init(dev_t *dev, const ata_drive_t drive);
 s32 ata_drive_do_init(dev_t *dev);
+s32 ata_shut_down(dev_t *dev);
+
+s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf);
+s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf);
 
 void ata_read_data(const void * const base_addr, void *buf);
 void ata_write_data(void * const base_addr, const void *buf);
 
-s32 ata_control(dev_t *dev, ku32 function, void *in, void *out);
-s32 ata_drive_control(dev_t *dev, ku32 function, void *in, void *out);
+s32 ata_control(dev_t *dev, ku32 function, const void *in, void *out);
+s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
 
 
 blockdev_stats_t g_ata_stats;
@@ -78,14 +81,14 @@ s32 ata_drive_init(dev_t *dev, const ata_drive_t drive)
 
     dev_data = (ata_dev_data_t *) CHECKED_KCALLOC(1, sizeof(ata_dev_data_t));
 
-    dev->data = dev_data;
-
-    dev->read = ata_read;
-    dev->write = ata_write;
-
-    dev->control = ata_drive_control;
+    dev->read       = ata_read;
+    dev->write      = ata_write;
+    dev->control    = ata_drive_control;
+    dev->shut_down  = ata_shut_down;
+    dev->block_size = ATA_SECTOR_SIZE;
 
     dev_data->drive = drive;
+    dev->data = dev_data;
 
     ret = ata_drive_do_init(dev);
 
@@ -172,12 +175,7 @@ s32 ata_drive_do_init(dev_t *dev)
     strn_trim_cpy(dev_data->serial, id.serial_number, sizeof(id.serial_number));
     strn_trim_cpy(dev_data->firmware, id.firmware_revision, sizeof(id.firmware_revision));
 
-    dev_data->num_sectors = LE2N16(id.log_cyls) * LE2N16(id.log_heads)
-                            * LE2N16(id.log_sects_per_log_track);
-
-    /* FIXME - report this somewhere else, e.g. when device is registered? */
-    printf("%s: %s, %uMB [serial %s firmware %s]\n", dev->name, dev_data->model,
-            dev_data->num_sectors >> (20 - LOG_BLOCK_SIZE), dev_data->serial, dev_data->firmware);
+    dev->len = LE2N16(id.log_cyls) * LE2N16(id.log_heads) * LE2N16(id.log_sects_per_log_track);
 
     return SUCCESS;
 }
@@ -188,7 +186,7 @@ s32 ata_drive_do_init(dev_t *dev)
 */
 s32 ata_shut_down(dev_t *dev)
 {
-    /* TODO: shut down ATA devices */
+    kfree(dev->data);
 	return SUCCESS;
 }
 
@@ -233,8 +231,7 @@ s32 ata_send_command(void * const base_addr, const ata_drive_t drive, const ata_
 s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 {
     void * const base_addr = dev->base_addr;
-    ata_dev_data_t * const dev_data = (ata_dev_data_t *) dev->data;
-    const ata_drive_t drive = dev_data->drive;
+    const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
 
 	/* Select master / slave device */
 	if(drive == ata_drive_master)
@@ -247,7 +244,7 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 	if(!ATA_WAIT_NBSY(base_addr))
 		return ETIME;
 
-	if((offset + len < offset) || (offset + len > dev_data->num_sectors))
+	if((offset + len < offset) || (offset + len > dev->len))
 	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
@@ -295,8 +292,7 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 {
     void * const base_addr = dev->base_addr;
-    ata_dev_data_t * const dev_data = (ata_dev_data_t *) dev->data;
-    const ata_drive_t drive = dev_data->drive;
+    const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
 
 	/* Select master / slave device */
 	if(drive == ata_drive_master)
@@ -309,8 +305,7 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 	if(!ATA_WAIT_NBSY(base_addr))
 		return ETIME;
 
-	if((offset + len < offset)
-	   || (offset + len > ((ata_dev_data_t *) dev->data)->num_sectors))
+	if((offset + len < offset) || (offset + len > dev->len))
 	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
@@ -441,7 +436,7 @@ void ata_write_data(void * const base_addr, const void *buf)
     ata_control() - ATA devctl implementation for the interface device
 */
 
-s32 ata_control(dev_t *dev, ku32 function, void *in, void *out)
+s32 ata_control(dev_t *dev, ku32 function, const void *in, void *out)
 {
     return ENOSYS;
 }
@@ -450,31 +445,31 @@ s32 ata_control(dev_t *dev, ku32 function, void *in, void *out)
 /*
 	ata_drive_control() - ATA devctl implementation for attached drives
 */
-s32 ata_drive_control(dev_t *dev, ku32 function, void *in, void *out)
+s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
-	switch(function)
+	switch(fn)
 	{
-		case DEVCTL_EXTENT:
-			*((u32 *) out) = ((ata_dev_data_t *) dev->data)->num_sectors;
+		case dc_get_extent:
+			*((u32 *) out) = dev->len;
 			break;
 
-		case DEVCTL_BLOCK_SIZE:
-			*((u32 *) out) = ATA_SECTOR_SIZE;
+		case dc_get_block_size:
+			*((u32 *) out) = dev->block_size;
 			break;
 
-		case DEVCTL_BOOTABLE:
+		case dc_get_bootable:
 			*((u32 *) out) = 0;		/* partitions might be bootable; the device isn't */
 			break;
 
-        case DEVCTL_MODEL:
+        case dc_get_model:
             *((s8 **) out) = ((ata_dev_data_t *) dev->data)->model;
             break;
 
-        case DEVCTL_SERIAL:
+        case dc_get_serial:
             *((s8 **) out) = ((ata_dev_data_t *) dev->data)->serial;
             break;
 
-        case DEVCTL_FIRMWARE_VER:
+        case dc_get_firmware_ver:
             *((s8 **) out) = ((ata_dev_data_t *) dev->data)->firmware;
             break;
 

@@ -94,6 +94,10 @@
 		<Unit filename="include/mbr.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
+		<Unit filename="kernel/boot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/boot.h" />
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>

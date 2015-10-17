@@ -10,9 +10,9 @@
 */
 
 #include <stdarg.h>
-#include "include/error.h"
-#include "include/types.h"
-#include "klibc/string.h"
+#include <include/error.h>
+#include <include/types.h>
+#include <klibc/string.h>
 
 /*
     Checksum functions
@@ -52,6 +52,7 @@ s32     timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt);
     Numeric functions
 */
 u16 log10(ku32 n);
+u16 log2(u32 n);
 
 
 /*

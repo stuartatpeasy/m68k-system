@@ -16,14 +16,11 @@
 */
 s32 ds17485_rtc_init(dev_t * const dev)
 {
-    rtc_ops_t *ops;
+    dev->read = ds17485_rtc_read;
+    dev->write = ds17485_rtc_write;
+    dev->len = sizeof(rtc_time_t);
+    dev->block_size = 1;
 
-    ops = (rtc_ops_t *) CHECKED_KCALLOC(1, sizeof(rtc_ops_t));
-
-    ops->get_time = ds17485_get_time;
-    ops->set_time = ds17485_set_time;
-
-    dev->driver = ops;
     dev->data = dev->parent->data;
 
     return SUCCESS;
@@ -35,16 +32,11 @@ s32 ds17485_rtc_init(dev_t * const dev)
 */
 s32 ds17485_user_ram_init(dev_t * const dev)
 {
-    nvram_ops_t *ops;
-
     dev->read = ds17485_user_ram_read;
     dev->write = ds17485_user_ram_write;
+    dev->len = DS17485_USER_RAM_LEN;
+    dev->block_size = 1;
 
-    ops = (nvram_ops_t *) CHECKED_KCALLOC(1, sizeof(nvram_ops_t));
-
-    ops->get_length = ds17485_user_ram_get_length;
-
-    dev->driver = ops;
     dev->data = dev->parent->data;
 
     return SUCCESS;
@@ -56,16 +48,11 @@ s32 ds17485_user_ram_init(dev_t * const dev)
 */
 s32 ds17485_ext_ram_init(dev_t * const dev)
 {
-    nvram_ops_t *ops;
-
     dev->read = ds17485_ext_ram_read;
     dev->write = ds17485_ext_ram_write;
+    dev->len = DS17485_EXT_RAM_LEN;
+    dev->block_size = 1;
 
-    ops = (nvram_ops_t *) CHECKED_KCALLOC(1, sizeof(nvram_ops_t));
-
-    ops->get_length = ds17485_ext_ram_get_length;
-
-    dev->driver = ops;
     dev->data = dev->parent->data;
 
     return SUCCESS;
@@ -78,7 +65,6 @@ s32 ds17485_ext_ram_init(dev_t * const dev)
 s32 ds17485_init(dev_t * const dev)
 {
     void * const base_addr = dev->base_addr;
-    dev->driver = NULL; /* FIXME - should at least support common ops here */
 
     /*
         Write register A:
@@ -128,11 +114,15 @@ s32 ds17485_init(dev_t * const dev)
 
 
 /*
-    ds17485_get_time() - read the current time and populate a struct rtc_time_t.
+    ds17485_rtc_read() - read the current time and populate a struct rtc_time_t.
 */
-s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm)
+s32 ds17485_rtc_read(dev_t * const dev, ku32 offset, ku32 len, void *buffer)
 {
     void * const base_addr = dev->base_addr;
+    rtc_time_t * const tm = (rtc_time_t *) buffer;
+
+    if(offset || (len != 1))
+        return EINVAL;
 
     /* Set the "SET" bit in register B, to prevent updates while we read */
     DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
@@ -164,11 +154,15 @@ s32 ds17485_get_time(dev_t * const dev, rtc_time_t * const tm)
 
 
 /*
-    ds17485_set_time() - set the time stored in a DS17485 to the time specified by tm.
+    ds17485_rtc_write() - set the time stored in a DS17485 to the time specified by tm.
 */
-s32 ds17485_set_time(dev_t * const dev, const rtc_time_t * const tm)
+s32 ds17485_rtc_write(dev_t * const dev, ku32 offset, ku32 len, const void *buffer)
 {
     void * const base_addr = dev->base_addr;
+    const rtc_time_t * const tm = (const rtc_time_t *) buffer;
+
+    if(offset || (len != 1))
+        return EINVAL;
 
     /* Set the "SET" bit in register B, to prevent updates while we write */
     DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
@@ -205,7 +199,7 @@ void ds17485_force_valid_time(const dev_t * const dev)
     void * const base_addr = dev->base_addr;
     rtc_time_t ts;
 
-    ds17485_get_time(base_addr, &ts);
+    ds17485_rtc_read(base_addr, 0, 1, &ts);
 
     if(!VALID_RTC_DATE(&ts))
     {
@@ -219,7 +213,7 @@ void ds17485_force_valid_time(const dev_t * const dev)
         ts.day_of_week = 7;
         ts.dst = 0;
 
-        ds17485_set_time(base_addr, &ts);
+        ds17485_rtc_write(base_addr, 0, 1, &ts);
     }
 }
 
@@ -257,15 +251,6 @@ s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * bu
         DS17485_REG_WRITE(base_addr, addr, *((u8 *) buffer++));
 
     return SUCCESS;
-}
-
-
-/*
-    ds17485_user_ram_get_length() - get the length of the user NVRAM area, in bytes.
-*/
-u32 ds17485_user_ram_get_length(dev_t * const dev)
-{
-    return DS17485_USER_RAM_LEN;
 }
 
 
@@ -312,15 +297,6 @@ s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buf
         DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_DATA, *((u8 *) buffer++));
 
     return SUCCESS;
-}
-
-
-/*
-    ds17485_ext_ram_get_length() - get the length of the extended NVRAM area, in bytes.
-*/
-u32 ds17485_ext_ram_get_length(dev_t * const dev)
-{
-    return DS17485_EXT_RAM_LEN;
 }
 
 

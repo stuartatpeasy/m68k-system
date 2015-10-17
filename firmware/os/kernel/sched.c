@@ -22,18 +22,23 @@ pid_t g_next_pid;
 u32 g_ncontext_switches = 0;
 
 
-void sched_init(void)
+s32 sched_init(void)
 {
     proc_t *p;
+    s32 ret;
 
     /* Install the scheduler IRQ handler */
-	plat_install_timer_irq_handler(irq_schedule, NULL);
+	ret = plat_install_timer_irq_handler(irq_schedule, NULL);
+	if(ret != SUCCESS)
+        return ret;
 
     for_each_proc_struct(p)
         p->state = ps_unborn;
 
     g_current_proc = &(g_ps[0]);
     g_next_pid = 1;
+
+    return SUCCESS;
 }
 
 
