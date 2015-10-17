@@ -13,11 +13,14 @@
 #include "../include/types.h"
 #include "../memory/kmalloc.h"
 
+#define RAND_MAX (32767)
 
 void *calloc(ku32 nmemb, ku32 size);
 void free(void *ptr);
 void *malloc(u32 size);
+s32 rand();
 void *realloc(void *ptr, u32 size);
+void srand(ku32 seed);
 u32 strtoul(ks8 *nptr, s8 **endptr, s32 base);
 
 #endif

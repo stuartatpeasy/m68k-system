@@ -9,16 +9,16 @@ FLASHTOOL=/usr/local/bin/flashtool
 DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
-CSOURCES=dfu.c main.c \
-		 device/bbram.c device/device.c device/ds17485.c device/duart.c device/encx24j600.c \
-		 device/expansion.c device/led.c device/block/ata/ata.c device/block/partition/partition.c \
-		 cpu/exceptions.c cpu/utilities.c \
-		 fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
-		 kernel/elf.c kernel/ksym.c kernel/syscalls.c \
-		 memory/buddy.c memory/heap.c memory/kmalloc.c memory/ramdetect.c memory/slab.c \
-		 sched/sched.c
+CSOURCES=main.c \
+		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
+		 device/nvram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
+		 device/ata.c device/partition.c fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
+		 kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/syscalls.c \
+		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
 
-ASMSOURCES=kernel/syscall.S
+ASMSOURCES=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
+
+LDSCRIPT=platform/$(PLATFORM)/kernel.ld
 
 OBJLIBS=libc.a libkutil.a libmonitor.a
 
@@ -26,13 +26,11 @@ TOOLS=tools/bin/makemap
 
 MAPFILE=$(APPNAME).map
 
-LDFLAGS=-g -T rom.ld -nostdlib -static -L$(BASEDIR)/m68000 -L.
+LDFLAGS=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
-LIBS=-lgcc -lc -lkutil -lmonitor
+LIBS=-lgcc -lc -lkutil -lmonitor -lplatform
 
-LDSCRIPT=rom.ld
-
-VTABLE=startup.o
+VTABLE=cpu/$(CPU)/startup.o
 OBJECTS=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
 
 all: $(APPNAME)
@@ -44,6 +42,7 @@ all: $(APPNAME)
 	$(CC) $(CFLAGS) -o$@ $<
 
 $(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE) $(TOOLS)
+	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
 	$(NM) $(APPNAME) > $(MAPFILE)
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
@@ -70,6 +69,7 @@ dfu:
 
 clean:
 	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom $(MAPFILE)
+	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Cklibc clean
 	$(MAKE) $(MFLAGS) -Ckutil clean
 	$(MAKE) $(MFLAGS) -Cmonitor clean
@@ -94,60 +94,43 @@ $(TOOLS):
 #
 
 main.o: \
-	main.c cpu/utilities.h device/devctl.h device/device.h device/expansion.h device/led.h \
-	device/ds17485.h device/duart.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
-	kutil/kutil.h memory/kmalloc.h memory/ramdetect.h memory/slab.h monitor/monitor.h \
-	device/duart.o device/device.o sched/sched.h
+	main.c device/ds17485.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h \
+	memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h device/device.o kernel/sched.h
 
-dfu.o: \
-	dfu.c dfu.h asm/reset.h cpu/exceptions.h device/duart.h include/types.h include/error.h \
-	kutil/kutil.h memory/kmalloc.h memory/memorymap.h klibc/string.h
+cpu/cpu.o: \
+	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
+
+cpu/$(CPU)/$(CPU).o: \
+	cpu/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c include/defs.h include/types.h
 
 startup.o: \
-	startup.S memory/memorymap.h
+	cpu/$(CPU)/startup.S memory/memorymap.h
 
-cpu/exceptions.o: \
-    asm/rte.h cpu/exceptions.c cpu/exceptions.h cpu/utilities.o cpu/exceptionstackframes.h \
-	include/types.h kutil/kutil.h klibc/stdio.h sched/sched.h
-
-cpu/utilities.o: \
-    cpu/utilities.c cpu/utilities.h cpu/exceptionstackframes.h include/types.h \
-	klibc/stdio.h kutil/kutil.h
-
-device/bbram.o: \
-	device/bbram.c device/bbram.h device/ds17485.h include/defs.h include/error.h include/types.h \
+device/nvram.o: \
+	device/nvram.c device/nvram.h device/ds17485.h include/defs.h include/error.h include/types.h \
 	kutil/kutil.h
 
 device/device.o: \
-	device/device.c device/devctl.h device/device.h kutil/kutil.h device/block/ata/ata.h \
-	device/block/partition/partition.h include/types.h klibc/errno.h
+	device/device.c device/devctl.h device/device.h kutil/kutil.h device/ata.h device/partition.h \
+	include/types.h klibc/errno.h
 
 device/ds17485.o: \
 	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
 
 device/encx24j600.o: \
-	device/encx24j600.c device/encx24j600.h cpu/exceptions.h cpu/utilities.h device/device.h \
-	device/expansion.h include/byteorder.h include/defs.h include/error.h include/types.h
+	device/encx24j600.c device/encx24j600.h cpu/cpu.h device/device.h include/byteorder.h \
+	include/defs.h include/error.h include/types.h
 
-device/duart.o: \
-	device/duart.c device/duart.h include/defs.h include/types.h
+device/mc68681.o: \
+	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
 
-device/expansion.o: \
-	device/expansion.c device/expansion.h cpu/exceptions.h device/duart.h include/defs.h \
-	include/types.h klibc/stdio.h
+device/ata.o: \
+	device/ata.c device/ata.h device/block.h device/devctl.h device/device.h include/byteorder.h \
+	include/defs.h include/mbr.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
 
-device/led.o: \
-	device/led.c device/led.h device/duart.h include/defs.h include/types.h
-
-device/block/ata/ata.o: \
-	device/block/ata/ata.c device/block/ata/ata.h device/block/ata/ata-internal.h \
-	device/block/block.h device/block/partition/mbr.h device/devctl.h device/device.h \
-	include/byteorder.h include/defs.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
-
-device/block/partition/partition.o: \
-	device/block/partition/partition.c device/block/partition/partition.h \
-	device/block/partition/mbr.h device/device.h include/byteorder.h include/defs.h \
-	include/types.h klibc/stdio.h kutil/kutil.h asm/bswap.h device/devctl.h
+device/partition.o: \
+	device/partition.c device/partition.h device/device.h include/byteorder.h include/defs.h \
+	include/mbr.h include/types.h klibc/stdio.h kutil/kutil.h cpu/cpu.h device/devctl.h
 
 fs/ext2/ext2.o: \
 	fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h klibc/string.h \
@@ -165,11 +148,15 @@ fs/mount.o: \
 	klibc/errno.h kutil/kutil.h memory/kmalloc.h
 
 fs/vfs.o: \
-	fs/vfs.c fs/vfs.h fs/mount.h device/bbram.h device/devctl.h device/device.h include/defs.h \
+	fs/vfs.c fs/vfs.h fs/mount.h device/nvram.h device/devctl.h device/device.h include/defs.h \
 	include/types.h klibc/stdio.h
 
 include/byteorder.h: \
-	asm/bswap.h
+	cpu/cpu.h
+
+kernel/boot.o: \
+	kernel/boot.c kernel/boot.h include/defs.h include/types.h device/devctl.h device/device.h \
+	klibc/stdio.h platform/platform.h
 
 kernel/elf.o: \
 	kernel/elf.c include/byteorder.h include/defs.h include/elf.h include/types.h klibc/errno.h \
@@ -178,24 +165,23 @@ kernel/elf.o: \
 kernel/ksym.o: \
 	kernel/ksym.c kernel/ksym.h include/defs.h include/types.h
 
+kernel/sched.o: \
+	kernel/sched.c kernel/sched.h cpu/cpu.h include/defs.h include/types.h klibc/strings.h
+
 kernel/syscalls.o: \
 	kernel/syscalls.c kernel/syscall.h
 
 memory/buddy.o: \
 	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a
 
+memory/extents.o: \
+	memory/extents.c memory/extents.h include/defs.h include/types.h klibc/strings.h
+
 memory/heap.o: \
-	memory/heap.c memory/heap.h include/types.h
+	memory/heap.c memory/heap.h include/types.h klibc/stdio.h
 
 memory/kmalloc.o: \
 	memory/kmalloc.c memory/kmalloc.h include/types.h memory/memorymap.h
 
-memory/ramdetect.o: \
-	memory/memorymap.h memory/ramdetect.c memory/ramdetect.h include/defs.h include/types.h
-
 memory/slab.o: \
 	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
-
-sched/sched.o: \
-	sched/sched.c sched/sched.h cpu/exceptions.h cpu/utilities.h device/duart.h include/defs.h \
-	kernel/syscall.h include/types.h klibc/strings.h

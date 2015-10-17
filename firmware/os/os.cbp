@@ -20,35 +20,24 @@
 			</Target>
 		</Build>
 		<Unit filename="Makefile" />
-		<Unit filename="asm/bswap.h" />
-		<Unit filename="asm/reset.h" />
-		<Unit filename="asm/rte.h" />
-		<Unit filename="asm/stop.h" />
-		<Unit filename="asm/tas.h" />
-		<Unit filename="asm/trap.h" />
-		<Unit filename="cpu/exceptions.c">
+		<Unit filename="cpu/arch_specific.h" />
+		<Unit filename="cpu/cpu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="cpu/exceptions.h" />
-		<Unit filename="cpu/exceptionstackframes.h" />
-		<Unit filename="cpu/utilities.c">
+		<Unit filename="cpu/cpu.h" />
+		<Unit filename="cpu/mc68000/exceptions.h" />
+		<Unit filename="cpu/mc68000/irq.S" />
+		<Unit filename="cpu/mc68000/mc68000.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="cpu/utilities.h" />
-		<Unit filename="device/bbram.c">
+		<Unit filename="cpu/mc68000/mc68000.h" />
+		<Unit filename="cpu/mc68000/startup.S" />
+		<Unit filename="cpu/mc68000/syscall.S" />
+		<Unit filename="device/ata.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/bbram.h" />
-		<Unit filename="device/block/ata/ata-internal.h" />
-		<Unit filename="device/block/ata/ata.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/block/ata/ata.h" />
-		<Unit filename="device/block/partition/mbr.h" />
-		<Unit filename="device/block/partition/partition.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/block/partition/partition.h" />
+		<Unit filename="device/ata.h" />
+		<Unit filename="device/block.h" />
 		<Unit filename="device/devctl.h" />
 		<Unit filename="device/device.c">
 			<Option compilerVar="CC" />
@@ -58,22 +47,22 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/ds17485.h" />
-		<Unit filename="device/duart.c">
+		<Unit filename="device/encx24j600.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/duart.h" />
-		<Unit filename="device/expansion.c">
+		<Unit filename="device/encx24j600.h" />
+		<Unit filename="device/mc68681.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/expansion.h" />
-		<Unit filename="device/led.c">
+		<Unit filename="device/mc68681.h" />
+		<Unit filename="device/nvram.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/led.h" />
-		<Unit filename="dfu.c">
+		<Unit filename="device/nvram.h" />
+		<Unit filename="device/partition.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="dfu.h" />
+		<Unit filename="device/partition.h" />
 		<Unit filename="fs/ext2/ext2.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -102,8 +91,13 @@
 		<Unit filename="include/error.h" />
 		<Unit filename="include/limits.h" />
 		<Unit filename="include/list.h" />
+		<Unit filename="include/mbr.h" />
 		<Unit filename="include/types.h" />
 		<Unit filename="include/version.h" />
+		<Unit filename="kernel/boot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/boot.h" />
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -111,7 +105,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/ksym.h" />
-		<Unit filename="kernel/syscall.S" />
+		<Unit filename="kernel/sched.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/sched.h" />
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.c">
 			<Option compilerVar="CC" />
@@ -177,6 +174,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="memory/buddy.h" />
+		<Unit filename="memory/extents.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory/extents.h" />
 		<Unit filename="memory/heap.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -186,10 +187,6 @@
 		</Unit>
 		<Unit filename="memory/kmalloc.h" />
 		<Unit filename="memory/memorymap.h" />
-		<Unit filename="memory/ramdetect.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/ramdetect.h" />
 		<Unit filename="memory/slab.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -222,12 +219,21 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="monitor/srec.h" />
-		<Unit filename="rom.ld" />
-		<Unit filename="sched/sched.c">
+		<Unit filename="platform/lambda_rev0/Makefile" />
+		<Unit filename="platform/lambda_rev0/device.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="sched/sched.h" />
-		<Unit filename="startup.S" />
+		<Unit filename="platform/lambda_rev0/device.h" />
+		<Unit filename="platform/lambda_rev0/dfu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="platform/lambda_rev0/dfu.h" />
+		<Unit filename="platform/lambda_rev0/kernel.ld" />
+		<Unit filename="platform/lambda_rev0/lambda.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="platform/lambda_rev0/lambda.h" />
+		<Unit filename="platform/platform.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

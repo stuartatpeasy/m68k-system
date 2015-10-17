@@ -43,7 +43,7 @@ typedef u32 size_t;
 #endif
 
 /* Wall-clock time */
-struct rtc_time
+typedef struct rtc_time
 {
     u16     year;
     u8      month;          /* 1=Jan, ..., 12=Dec */
@@ -53,9 +53,7 @@ struct rtc_time
     u8      second;
     u8      day_of_week;
     u8      dst;
-};
-
-typedef struct rtc_time rtc_time_t;
+} rtc_time_t;
 
 /* Process ID */
 /* Test harnesses may already have defined pid_t, so define it conditionally here */
@@ -72,6 +70,11 @@ struct exe_img
 };
 
 typedef struct exe_img exe_img_t;
+
+/* CPU registers */
+typedef u16 reg16_t;
+typedef u32 reg32_t;
+typedef u64 reg64_t;
 
 
 /* This probably isn't the right place to define NULL, but I don't think it warrants its

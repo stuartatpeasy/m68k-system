@@ -105,13 +105,4 @@
 #define DUART_SR_FFULL				(1)
 #define DUART_SR_RXRDY				(0)
 
-
-void duart_init(void);
-
-int duarta_putc(const char c);
-int duarta_getc(void);
-
-void duart_start_counter(void);
-void duart_stop_counter(void);
-
 #endif

@@ -9,6 +9,8 @@
 
 #include "stdlib.h"
 
+static u32 g_rand_next = 1;
+
 
 /*
     calloc()
@@ -29,11 +31,21 @@ void free(void *ptr)
 
 
 /*
-    malloc()
+    malloc() - allocate *kernel* memory
 */
 void *malloc(u32 size)
 {
     return kmalloc(size);
+}
+
+
+/*
+    rand()
+*/
+s32 rand()
+{
+    g_rand_next = g_rand_next * 1103515245 + 12345;
+    return (g_rand_next >> 16) % (RAND_MAX + 1);
 }
 
 
@@ -43,6 +55,15 @@ void *malloc(u32 size)
 void *realloc(void *ptr, u32 size)
 {
     return krealloc(ptr, size);
+}
+
+
+/*
+    srand()
+*/
+void srand(ku32 seed)
+{
+    g_rand_next = seed;
 }
 
 

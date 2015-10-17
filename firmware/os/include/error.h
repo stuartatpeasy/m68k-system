@@ -15,9 +15,9 @@
     appropriate error code.  No counterpart to the "errno" global var exists in the kernel.
 
 */
-#include "klibc/errno.h"
+#include <klibc/errno.h>
 
-#define KERNEL_MIN_ERRNO    (500)    /* First error num reserved for custom error messages */
+#define KERNEL_MIN_ERRNO    (500)   /* First error num reserved for custom error messages */
 
 #define EUNKNOWN            (500)   /* Unknown error                                    */
 #define EMEDIA              (501)   /* Media error                                      */
@@ -26,5 +26,6 @@
 #define ECKSUM              (504)   /* Checksum error                                   */
 #define EBADSBLK            (505)   /* Bad superblock                                   */
 #define EDEVINITFAILED      (506)   /* Device initialisation failed                     */
+#define EDEVOPFAILED		(507)	/* Command sent to hardware device failed			*/
 
 #endif

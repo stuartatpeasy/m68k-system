@@ -38,7 +38,9 @@
 	(c) Stuart Wallace, 13th August 2011.
 */
 
-#include "memory/heap.h"
+#include <memory/heap.h>
+#include <klibc/stdio.h>
+
 
 #define MEMBLOCK_HDR_MAGIC	(0xc91d58be)	/* meaningless number used as a signature to identify a
 											   memory block; important that the bottom bit isn't set
@@ -127,13 +129,22 @@ void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
 	void *p = heap_malloc(heap, n);
 
 	if(p)
+    {
+        n += (1 << MEMBLOCK_ALIGN) - 1;
+        for(n >>= MEMBLOCK_ALIGN; n--;)
+        {
 #if(MEMBLOCK_ALIGN == 2)
-		for(n >>= MEMBLOCK_ALIGN; n--; ((u32 *) p)[n] = 0) ;
+            ((u32 *) p)[n] = 0;
 #elif(MEMBLOCK_ALIGN == 1)
-		for(n >>= MEMBLOCK_ALIGN; n--; ((u16 *) p)[n] = 0) ;
+            ((u16 *) p)[n] = 0;
+#elif(MEMBLOCK_ALIGN == 0)
+            ((u8 *) p)[n] = 0;
 #else
-		for(; n--; ((u8 *) p)[n] = 0) ;
+#error "Invalid MEMBLOCK_ALIGN constant value"
 #endif
+        }
+    }
+
 	return p;
 }
 
@@ -168,16 +179,21 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 		if(size > p->size)
 			size = p->size;
 
+        size += (1 << MEMBLOCK_ALIGN) - 1;
+
+		for(size >>= MEMBLOCK_ALIGN; size--;)
+        {
 #if(MEMBLOCK_ALIGN == 2)
-		for(size >>= MEMBLOCK_ALIGN; size--;)
-			((u32 *) pnew)[size] = ((u16 *) ptr)[size];
+			((u32 *) pnew)[size] = ((u32 *) ptr)[size];
 #elif(MEMBLOCK_ALIGN == 1)
-		for(size >>= MEMBLOCK_ALIGN; size--;)
 			((u16 *) pnew)[size] = ((u16 *) ptr)[size];
-#else
-		for(; size--;)
+#elif(MEMBLOCK_ALIGN == 0)
 			((u8 *) pnew)[size] = ((u8 *) ptr)[size];
+#else
+#error "Invalid MEMBLOCK_ALIGN constant value"
 #endif
+        }
+
 		heap_free(heap, ptr);
 		return pnew;
 	}
@@ -210,7 +226,8 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 		}
 		/* TODO: also merge this block into previous free blocks */
 	}
-	else ; /* FIXME: catch deallocation of invalid/unitialised block */
+	else
+        printf("heap_free(): warning: attempted to free unallocated block at %p\n", ptr);
 }
 
 

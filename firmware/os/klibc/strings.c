@@ -42,7 +42,7 @@ void bzero(void *s, u32 n)
 	u32 nwords;
 
 	/* Zero individual bytes until *s is word-aligned */
-	for(; n && ((u32) s_ & 3); n--)
+	for(; ((u32) s_ & 3) && n; n--)
 		*s_++ = 0;
 
 	/* Zero words until n < 4 */

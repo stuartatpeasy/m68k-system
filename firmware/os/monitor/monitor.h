@@ -9,16 +9,14 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <dfu.h>
-#include <device/bbram.h>
-#include <device/ds17485.h>
+#include <platform/lambda_rev0/dfu.h>
+#include <device/nvram.h>
 #include <fs/mount.h>
 #include <fs/vfs.h>
 #include <include/defs.h>
 #include <include/version.h>
 #include <kutil/kutil.h>
 #include <memory/kmalloc.h>
-#include <memory/ramdetect.h>
 #include <memory/slab.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>
@@ -40,17 +38,6 @@
 
 #define MONITOR_CMD_HANDLER(name)    \
     s32 cmd_ ## name(ks32 num_args, s8 ** args)
-
-/*
-	Return / error codes for commands
-*/
-#define MON_E_OK				(0)
-#define MON_E_SYNTAX			(1)
-#define MON_E_INVALID_ARG		(2)
-#define MON_E_NOT_IMPLEMENTED	(3)
-#define MON_E_INTERNAL_ERROR	(4)
-#define MON_E_OUT_OF_MEMORY		(5)
-#define MON_E_BAD_CHECKSUM      (6)
 
 
 struct command

@@ -13,11 +13,20 @@
 	Generic devctl codes.  All codes below 0x00010000 are considered generic.
 	They may be implemented by any driver.
 */
-#define DEVCTL_EXTENT		(0x0001)	/* # blocks in block device: *out = (u32) n				*/
-#define DEVCTL_BLOCK_SIZE	(0x0002)	/* Bytes per sector: *out = (u32) n						*/
-#define DEVCTL_BOOTABLE		(0x0003)	/* Is device bootable?	*out = (u32) 1:0				*/
-#define DEVCTL_MODEL        (0x0004)    /* Get device model name                                */
-#define DEVCTL_SERIAL       (0x0005)    /* Get device serial number                             */
-#define DEVCTL_FIRMWARE_VER (0x0006)    /* Get device firmware version                          */
+typedef enum devctl_fn
+{
+     dc_get_extent		        = 0x0001,	/* # addressable blocks in device: *out = = u32, n	*/
+     dc_get_block_size	        = 0x0002,	/* Bytes per block: *out = = u32, n					*/
+     dc_get_bootable		    = 0x0003,	/* Is device bootable?	*out = = u32, 1:0			*/
+     dc_get_model               = 0x0004,   /* Get device model name                            */
+     dc_get_serial              = 0x0005,   /* Get device serial number                         */
+     dc_get_firmware_ver        = 0x0006,   /* Get device firmware version                      */
+     dc_get_partition_type      = 0x0007,   /* Get partition type                               */
+     dc_get_partition_type_name = 0x0008,   /* Get partition type name                          */
+     dc_get_partition_active    = 0x0009,   /* Get partition active flag                        */
+
+     dc_get_baud_rate           = 0x0100,   /* Get device baud rate                             */
+     dc_set_baud_rate           = 0x0101,   /* Set device baud rate                             */
+} devctl_fn_t;
 
 #endif

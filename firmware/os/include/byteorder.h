@@ -29,7 +29,7 @@
 	items read from an ATA device.
 */
 
-#include "asm/bswap.h"
+#include <cpu/cpu.h>
 
 #if defined(TARGET_BIGENDIAN)
 

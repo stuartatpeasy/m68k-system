@@ -223,7 +223,7 @@ s32 rtc_time_from_str(const char * const str, rtc_time_t * const tm)
     day_number_suffix() - return a pointer to a string containing an appropriate suffix
     for a day number.  E.g. for daynum = 21, the returned suffix string will be "st".
 */
-ks8 * const day_number_suffix(const u8 daynum)
+ks8 * day_number_suffix(const u8 daynum)
 {
     if((daynum < 1) || (daynum > 31))
         return "";
@@ -424,4 +424,19 @@ s32 rtc_time_to_timestamp(const rtc_time_t *dt, s32 *timestamp)
     *timestamp = ts;
 
     return SUCCESS;
+}
+
+
+/*
+    get_time() - read the current wall-clock time from the first RTC in the system.
+*/
+s32 get_time(rtc_time_t *tm)
+{
+    dev_t *rtc;
+
+    rtc = dev_find("rtc0");
+    if(rtc == NULL)
+        return ENOSYS;
+
+    return rtc->read(rtc, 0, 1, tm);
 }

@@ -3,9 +3,8 @@
 
 	Part of the as-yet-unnamed MC68010 operating system
 
-	(c) Stuart Wallace <stuartw@atom.net>, 2012-07
 
-	FIXME - panic on allocation failure
+	(c) Stuart Wallace <stuartw@atom.net>, 2012-07
 */
 
 #include "memory/kmalloc.h"

@@ -74,7 +74,7 @@ typedef struct vfs_dir_ctx
 struct vfs
 {
     vfs_driver_t *driver;
-    device_t *dev;
+    dev_t *dev;
     u32 root_node;
     void *data;         /* fs-specific stuff */
 };

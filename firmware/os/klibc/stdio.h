@@ -11,11 +11,11 @@
 */
 
 #include <stdarg.h>
+#include <stdlib.h>
 
-#include "device/duart.h"
-#include "include/limits.h"
-#include "include/types.h"
-#include "stdlib.h"
+#include <platform/platform.h>
+#include <include/limits.h>
+#include <include/types.h>
 
 s32 printf(const char *format, ...);
 s32 putchar(s32 c);

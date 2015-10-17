@@ -7,157 +7,290 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include "errno.h"
-#include "stdio.h"        /* FIXME - remove */
-#include "string.h"
-#include "strings.h"
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
 
-#include "kutil/kutil.h"
-#include "device/device.h"
+#include <kutil/kutil.h>
+#include <device/device.h>
+#include <device/partition.h>
+#include <platform/platform.h>
+
 
 /* Characters used to identify "sub-devices", e.g. partitions of devices.  The first sub-device
- * of device xxx will be xxx1, the second xxx2, ..., the 61st xxxZ */
-const char * const g_device_sub_names = "123456789abcdefghijklmnopqrstuv"
+ * of device xxx will be xxx1, the second xxx2, ..., the 62nd xxxZ */
+const char * const g_device_sub_names = "0123456789abcdefghijklmnopqrstuv"
                                         "wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-device_t *g_devices[MAX_DEVICES];
+static dev_t *root_dev = NULL;
 
-/*
-    #include driver registration function declarations here
-*/
-#include "device/block/ata/ata.h"
-#include "device/block/partition/partition.h"
 
-device_driver_t *g_drivers[] =
+s32 dev_enumerate()
 {
-    &g_ata_driver,
-    &g_partition_driver
-};
+    s32 ret;
 
+    /* Root device is implicit */
+    root_dev = CHECKED_KCALLOC(1, sizeof(dev_t));
 
-u32 driver_init()
-{
-    u32 x;
-	for(x = 0; x < (sizeof(g_drivers) / sizeof(g_drivers[0])); ++x)
-	{
-	    device_driver_t * const drv = g_drivers[x];
+    /* Populating the device tree is a board-specific operation */
+    ret = plat_dev_enumerate();
+    if(ret != SUCCESS)
+        printf("Platform device enumeration failed: %s\nContinuing boot...", kstrerror(ret));
 
-		if(drv->init() != SUCCESS)	/* init() will create devices */
-		{
-			printf("%s: driver initialisation failed\n", drv->name);
-
-			/* Ensure that none of this driver's methods are callable */
-		    drv->read = driver_method_not_implemented;
-		    drv->write = driver_method_not_implemented;
-		    drv->shut_down = driver_method_not_implemented;
-		    drv->control = driver_method_not_implemented;
-		}
-	}
-
-	return SUCCESS;
+    return partition_init();
 }
 
 
 /*
-    Generic function which can be used by drivers to indicate that a particular operation isn't
-    supported.  Also, if a driver fails to initialise, all of its operation funcptrs will be
-    replaced with a call to this fn.
+    dev_get_root() - obtain a ptr to the root element in the device tree
 */
-s32 driver_method_not_implemented()
+dev_t *dev_get_root()
+{
+    return root_dev;
+}
+
+
+/*
+    dev_add_child() - add a node to the device tree
+*/
+s32 dev_add_child(dev_t *parent, dev_t *child)
+{
+    /* TODO - mutex */
+    /* Check that no device with a matching name exists */
+    if(dev_find(child->name) != NULL)
+        return EEXIST;
+
+    if(parent == NULL)
+        parent = root_dev;
+
+	child->parent = parent;
+
+	if(parent->first_child == NULL)
+		parent->first_child = child;
+	else
+	{
+    	dev_t *p;
+
+    	for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
+        	;
+
+	    p->next_sibling = child;
+    	child->prev_sibling = p;
+	}
+
+    return SUCCESS;
+}
+
+
+/*
+    dev_get_next() - used to iterate over all nodes in the device tree
+*/
+dev_t *dev_get_next(dev_t *node)
+{
+    if(node == NULL)
+        return root_dev;
+
+    if(node->first_child)
+        return node->first_child;
+
+    if(node->next_sibling)
+        return node->next_sibling;
+    else
+    {
+        while(node->prev_sibling)
+            node = node->prev_sibling;
+
+        do
+        {
+            node = node->parent;
+        } while(node && !node->next_sibling);
+
+        return node ? node->next_sibling : NULL;
+    }
+}
+
+
+/*
+    dev_find() - find a device by name
+*/
+dev_t *dev_find(const char * const name)
+{
+    return dev_find_subtree(name, root_dev);
+}
+
+
+/*
+    dev_find_subtree() - find a device by name, starting at a particular point in the device tree
+*/
+dev_t *dev_find_subtree(const char * const name, dev_t *node)
+{
+    /* TODO - mutex */
+    /* Walk the device tree looking for a device with the specified name */
+    dev_t *ret;
+
+    if(node == NULL)
+        return NULL;
+
+    if(!strcmp(node->name, name))
+        return node;
+
+    if(node->first_child)
+    {
+        ret = dev_find_subtree(name, node->first_child);
+        if(ret != NULL)
+            return ret;
+    }
+
+    for(; (node = node->next_sibling) != NULL;)
+    {
+        ret = dev_find_subtree(name, node);
+        if(ret != NULL)
+            return ret;
+    }
+
+    return NULL;
+}
+
+
+/*
+    dev_add_suffix() - given a device name prefix, e.g. "ata", obtain the next-available complete
+    device name, e.g. "ata1".  "name" must point to a writeable buffer of at least DEVICE_NAME_LEN
+    chars.
+*/
+s32 dev_add_suffix(char * const name)
+{
+    u32 i;
+    ku32 len = strlen(name);
+    name[len + 1] = '\0';
+
+    for(i = 0; i < strlen(g_device_sub_names); ++i)
+    {
+        name[len] = g_device_sub_names[i];
+        if(dev_find(name) == NULL)
+            return SUCCESS;
+    }
+
+    return EMFILE;
+}
+
+
+/*
+	dev_create() - create a new device
+*/
+s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, ku32 irql,
+				void *base_addr, dev_t **dev)
+{
+	*dev = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
+
+	(*dev)->type		    = type;
+	(*dev)->subtype		    = subtype;
+	(*dev)->irql		    = irql;
+	(*dev)->base_addr	    = base_addr;
+
+	(*dev)->control         = dev_control_unimplemented;
+	(*dev)->read            = dev_read_unimplemented;
+	(*dev)->write           = dev_write_unimplemented;
+	(*dev)->getc            = dev_getc_unimplemented;
+	(*dev)->putc            = dev_putc_unimplemented;
+	(*dev)->shut_down       = dev_shut_down_unimplemented;
+
+	strcpy((*dev)->name, name);
+
+    return dev_add_suffix((*dev)->name);
+}
+
+
+/*
+    dev_register() - create and initialise a new device
+*/
+s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
+                 ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
+                 dev_t *parent_dev, s32 (*init_fn)(dev_t *))
+{
+    s32 ret;
+
+    ret = dev_create(type, subtype, dev_name, irql, base_addr, dev);
+    if(ret != SUCCESS)
+    {
+        printf("%s: %s device creation failed: %s\n", dev_name, human_name, kstrerror(ret));
+        return ret;
+    }
+
+    if(init_fn != NULL)
+    {
+        ret = init_fn(*dev);
+        if(ret != SUCCESS)
+        {
+            kfree(*dev);
+            printf("%s: %s device init failed: %s\n", (*dev)->name, human_name, kstrerror(ret));
+            return ret;
+        }
+    }
+
+    ret = dev_add_child(parent_dev, *dev);
+    if(ret != SUCCESS)
+    {
+        (*dev)->shut_down(*dev);
+        kfree(*dev);
+        printf("%s: failed to add %s to device tree: %s\n", (*dev)->name, human_name,
+                kstrerror(ret));
+        return ret;
+    }
+
+    return SUCCESS;
+}
+
+
+/*
+    dev_read_unimplemented() - default handler for dev->read() calls
+*/
+s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf)
 {
     return ENOSYS;
 }
 
 
-void driver_shut_down()
+/*
+    dev_write_unimplemented() - default handler for dev->write() calls
+*/
+s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void *buf)
 {
-	/* TODO: ensure all devices are stopped/flushed/etc */
-	u32 x;
-
-	const u32 num_drivers = sizeof(g_drivers) / sizeof(g_drivers[0]);
-	for(x = 0; x < num_drivers; ++x)
-	{
-		if(g_drivers[x]->shut_down() != SUCCESS)
-		{
-			/* TODO: error */
-			printf("Failed to shut down '%s' driver\n", g_drivers[x]->name);
-		}
-	}
-
-	for(x = 0; x < (sizeof(g_devices) / sizeof(g_devices[0])); ++x)
-    {
-        if(g_devices[x])
-            kfree(g_devices[x]);
-    }
+    return ENOSYS;
 }
 
 
-device_t *get_device_by_name(const char * const name)
+/*
+    dev_control_unimplemented() - default handler for dev->control() calls
+*/
+s32 dev_control_unimplemented(dev_t * const dev, ku32 function, const void *in, void *out)
 {
-	int i;
-	for(i = 0; i < (sizeof(g_devices) / sizeof(g_devices[0])); ++i)
-	{
-	    if(g_devices[i] != NULL)
-        {
-            if(!strcmp(g_devices[i]->name, name))
-                return g_devices[i];
-        }
-	}
-
-	return NULL;	/* No such device */
+    return ENOSYS;
 }
 
 
-/* Create (i.e. register) a new device.  This function is called by each driver's init() function
- * during device enumeration. */
-s32 create_device(const device_type_t type, const device_class_t class,
-                         device_driver_t * const driver, const char *name, void * const data)
+/*
+    dev_getc_unimplemented() - default handler for dev->getc() calls
+*/
+s32 dev_getc_unimplemented(dev_t * const dev, char *c)
 {
-    u32 u;
-    device_t * dev;
-
-    /* Find a vacant device ID */
-    for(u = 0; u < MAX_DEVICES; ++u)
-    {
-        if(g_devices[u] == NULL)
-            break;
-    }
-
-    if(u == MAX_DEVICES)
-        return ENFILE;      /* Too many devices */
-
-    dev = (device_t *) kmalloc(sizeof(device_t));
-    if(dev == NULL)
-        return ENOMEM;
-
-	dev->type = type;
-	dev->class = class;
-	dev->driver = driver;
-	dev->data = data;
-
-	/* TODO: check that the name is not a duplicate */
-	strncpy(dev->name, name, sizeof(dev->name));
-
-    g_devices[u] = dev;
-
-	return SUCCESS;
+    return ENOSYS;
 }
 
 
-s32 device_read(const device_t * const dev, ku32 offset, u32 len, void *buf)
+/*
+    dev_putc_unimplemented() - default handler for dev->putc() calls
+*/
+s32 dev_putc_unimplemented(dev_t * const dev, const char c)
 {
-	return dev->driver->read(dev->data, offset, len, buf);
+    return ENOSYS;
 }
 
 
-s32 device_write(const device_t * const dev, ku32 offset, u32 len, const void *buf)
+/*
+    dev_shut_down_unimplemented() - default handler for dev->shut_down() calls
+*/
+s32 dev_shut_down_unimplemented(dev_t * const dev)
 {
-	return dev->driver->write(dev->data, offset, len, buf);
+    return ENOSYS;
 }
-
-
-s32 device_control(const device_t * const dev, ku32 function, void *in, void *out)
-{
-	return dev->driver->control(dev->data, function, in, out);
-}
-

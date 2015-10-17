@@ -45,7 +45,7 @@ void *memcpy(void *dest, const void *src, u32 n)
         /* src and dest can be aligned on a word boundary. */
         u32 nwords;
 
-        while(n-- & ((u32) src_ & 3))
+        while(((u32) src_ & 3) && n--)
             *dest_++ = *src_++;
 
         for(nwords = n >> 2; nwords--; src_ += 4, dest_ += 4)

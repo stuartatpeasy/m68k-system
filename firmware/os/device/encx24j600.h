@@ -11,14 +11,12 @@
     This device has driver ID 0x81.
 */
 
-#include "cpu/exceptions.h"
-#include "cpu/utilities.h"
-#include "device/device.h"
-#include "device/expansion.h"
-#include "include/byteorder.h"
-#include "include/defs.h"
-#include "include/error.h"
-#include "include/types.h"
+#include <cpu/cpu.h>
+#include <device/device.h>
+#include <include/byteorder.h>
+#include <include/defs.h>
+#include <include/error.h>
+#include <include/types.h>
 
 
 #define ENCX24_SFR_BASE         (0x7e00)	/* Base address of special-function registers		*/
@@ -30,17 +28,17 @@
 #define ENCX24_SFR_ADDR(base, x)    ((base) + ENCX24_SFR_OFFSET(x))
 
 /* This macro is an accessor for register x, given a controller at address "base" */
-#define ENCX24_REG(base, x)         *((vu16 *) ENCX24_SFR_ADDR(base, x))
+#define ENCX24_REG(base, x)         *((vu16 *) ENCX24_SFR_ADDR((base), (x)))
 
-const device_driver_t g_encx24j600_device;
+// const dev_driver_t g_encx24j600_device;
 
-s32 encx24j600_reset(expansion_root_t *root);
-s32 encx24j600_init(expansion_root_t *root);
-s32 encx24j600_shut_down(expansion_root_t *root);
-s32 encx24j600_read(expansion_root_t *root);
-s32 encx24j600_write(expansion_root_t *root);
-s32 encx24j600_control(expansion_root_t *root);
-IRQ_HANDLER_DECL(encx24j600_irq);
+s32 encx24j600_reset(dev_t *dev);
+s32 encx24j600_init(dev_t *dev);
+s32 encx24j600_shut_down(dev_t *dev);
+s32 encx24j600_read(dev_t *dev);
+s32 encx24j600_write(dev_t *dev);
+s32 encx24j600_control(dev_t *dev);
+void encx24j600_irq(ku32 irql, void *data, const regs_t regs);
 
 /*
     Cryptographic data memory map
