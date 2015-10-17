@@ -109,6 +109,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/sched.h" />
+		<Unit filename="kernel/semaphore.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/semaphore.h" />
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.c">
 			<Option compilerVar="CC" />

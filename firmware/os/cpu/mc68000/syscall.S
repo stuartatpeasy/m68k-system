@@ -1,31 +1,28 @@
-;#include "kernel/syscall.h"
-
-# FIXME
-#define MAX_SYSCALL 3
+#include <kernel/syscalls.h>
 
 .text
 
 /*
     On entry, the user stack will look like this:
 
-        |   other stuff     |
-        +-------------------+
-        | [syscall argument |
-        |         3]        |   <-- USP + 16
-        +-------------------+
-        | [syscall argument |
-        |         2]        |   <-- USP + 12
-        +-------------------+
-        |  syscall argument |
-        |         1         |   <-- USP + 8
-        +-------------------+
-        | requested syscall |
-        |      number       |   <-- USP + 4
-        +-------------------+
-        |   return address  |
-        |                   |   <-- USP + 0
-        +-------------------+
-
+                15                0
+                |   other stuff   |
+                +-----------------+
+                | [syscall arg 3] |
+           +16  |                 |
+                +-----------------+
+                | [syscall arg 2] |
+           +12  |                 |
+                +-----------------+
+                |  syscall arg 1  |
+            +8  |                 |
+                +-----------------+
+                |      syscall    |
+            +4  |        num      |
+                +-----------------+
+                |  return address |
+        USP +0  |                 |
+                +-----------------+
 */
 
 .globl syscall_dispatcher
@@ -41,9 +38,7 @@ syscall_dispatcher:
         bgt         syscall_handler_invalid_syscall
 
         # calculate address of entry in syscall_table corresponding to the requested call
-        # = syscall_table + (syscall_num * sizeof(syscall_table_entry))
-        # = syscall_table + (syscall_num * 8)
-        movea.l     syscall_table, %a1
+        movea.l     g_syscalls, %a1
         lsl.l       #3, %d0
         adda.l      %d0, %a1
 
@@ -68,7 +63,8 @@ sdL1:   move.l      %a0@-, %sp@-
         dbf.w       %d0, sdL1
 
         # do syscall
-sdL2:   jsr         %a1@(4)
+sdL2:   movel       %a1@(4), %a1
+        jsr         %a1@
 
         # deallocate syscall args and restore clobbered regs
         movea.l     %a2, %sp
@@ -80,24 +76,3 @@ sdL2:   jsr         %a1@(4)
 syscall_handler_invalid_syscall:
 		moveq.l	#-1, %d0
 		rte
-
-/*
-    System call pointer table
-
-    Format:
-
-        int32:  # args needed
-        int32:  ptr to handler function
-*/
-.section .rodata
-.align 4
-syscall_table:
-		.int 1
-		.int syscall_exit
-		.int 1
-		.int syscall_console_putchar
-		.int 0
-		.int syscall_console_getchar
-		.int 1
-		.int syscall_leds
-
