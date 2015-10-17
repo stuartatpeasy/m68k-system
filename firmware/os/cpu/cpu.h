@@ -21,7 +21,14 @@ typedef struct regs regs_t;     /* struct regs must hold a complete CPU context 
 void cpu_halt(void);                            /* Halt processing, pending an interrupt        */
 void cpu_reset(void) __attribute__((noreturn)); /* Reset the CPU                                */
 void cpu_swi();                                 /* Raise a software IRQ (=TRAP #x on the 680x0) */
-u32 cpu_tas(void *addr);                        /* Atomically test and set the value at addr    */
+
+/*
+    Atomically test and set the value at addr.  This is useful when implementing semaphores.  A
+    return value of zero indicates that the value at addr was zero before being set (i.e. its
+    value was changed by this operation); a nonzero retval indicates that the value at addr was
+    already nonzero (i.e. its value was not changed).
+*/
+u8 cpu_tas(u8 *addr);
 
 /*
     "Intrinsic" functions

@@ -288,19 +288,19 @@ void cpu_swi()
 }
 
 
-u32 cpu_tas(void *addr)
+u8 cpu_tas(u8 *addr)
 {
     register u32 ret = 0;
-    register u32 addr_ = (u32) addr;
 
     asm volatile
     (
-        "      tas      %[address]      \n"
-        "      bvc      L_%=            \n"
-        "      moveq    #1, %[output]   \n"
+        "      moveq    #0, %0          \n"
+        "      tas      %1              \n"
+        "      beq      L_%=            \n"
+        "      moveq    #1, %0          \n"
         "L_%=:                          \n"
-        : [output] "=&r" (ret)
-        : [address] "d" (addr_)
+        : "=&r" (ret)
+        : "m" (*addr)
         : "cc"
     );
 

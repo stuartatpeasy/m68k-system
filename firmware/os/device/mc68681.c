@@ -118,6 +118,8 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
 			2		1		}       10: ch B Tx clk; 11: ch B Rx clk
 			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
 			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
+
+        OP1 and OP0 are always GPIOs.
 	*/
 	if(fn == mc68681_pin_fn_gpio)
     {
@@ -127,8 +129,8 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
             *opcr &= ~(BIT(3) | BIT(2));
         else if(pin == mc68681_pin_op2)
             *opcr &= ~(BIT(1) | BIT(0));
-        else
-            return EINVAL;
+
+        /* Fall through for mc68681_pin_op[1|0] -- these pins are always GPIOs. */
     }
     else
     {

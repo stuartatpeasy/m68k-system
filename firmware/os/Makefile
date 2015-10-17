@@ -13,7 +13,8 @@ CSOURCES=main.c \
 		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
 		 device/nvram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
 		 device/ata.c device/partition.c fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
-		 kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/syscalls.c \
+		 kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/semaphore.c \
+		 kernel/syscalls.c \
 		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
 
 ASMSOURCES=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
@@ -167,6 +168,9 @@ kernel/ksym.o: \
 
 kernel/sched.o: \
 	kernel/sched.c kernel/sched.h cpu/cpu.h include/defs.h include/types.h klibc/strings.h
+
+kernel/semaphore.o: \
+	kernel/semaphore.c kernel/semaphore.h include/defs.h include/types.h cpu/cpu.h
 
 kernel/syscalls.o: \
 	kernel/syscalls.c kernel/syscall.h
