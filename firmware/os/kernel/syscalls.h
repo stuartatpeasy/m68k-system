@@ -16,12 +16,14 @@
 /*
 	System call numbers.  Numbers must start from zero and there must not be any gaps!
 */
-#define SYS_exit    	        0
-#define SYS_console_putchar     1
-#define SYS_console_getchar	    2
-#define SYS_leds                3
+#define SYS_exit    	        0       /* called by user process in order to terminate     */
+#define SYS_console_putchar     1       /* write a character to the console                 */
+#define SYS_console_getchar	    2       /* read a character from the console                */
+#define SYS_leds                3       /* switch on/off the motherboard LEDs               */
+#define SYS_yield               4       /* yield the remainder of the process quantum       */
+
 
 /* The highest system call number */
-#define MAX_SYSCALL             3
+#define MAX_SYSCALL             4
 
 #endif

@@ -105,7 +105,7 @@ typedef struct llitem list_t;
 /**
  * list_for_each_reverse - iterate over a list backwards
  * @pos: ptr to a list_t to use as a cursor
- * @head: head of the lsit
+ * @head: head of the list
  */
 #define list_for_each_reverse(pos, head) \
     for(pos = (head)->prev; pos != (head); pos = pos->prev)

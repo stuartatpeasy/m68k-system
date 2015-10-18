@@ -11,79 +11,77 @@
 #include <platform/platform.h>
 #include <klibc/stdio.h>			/* TODO remove */
 
-proc_t g_ps[64];
 
-#define NPROC_STRUCTS (sizeof(g_ps) / sizeof(g_ps[0]))
-#define for_each_proc_struct(p) \
-            for(p = g_ps; p < &(g_ps[NPROC_STRUCTS]); ++p)
+//list_t g_run_queue;
+//list_t g_wait_queue;
 
 proc_t *g_current_proc = NULL;
-pid_t g_next_pid;
+pid_t g_next_pid = 0;
 u32 g_ncontext_switches = 0;
 
 
-s32 sched_init(void)
+s32 sched_init(const char * const init_proc_name)
 {
     proc_t *p;
-    s32 ret;
+
+    p = CHECKED_KCALLOC(1, sizeof(proc_t));
+
+    p->id = g_next_pid++;
+    p->parent = NULL;
+    p->state = ps_runnable;
+    p->next = p;
+    p->prev = p;
+
+    p->flags |= PROC_TYPE_KERNEL;
+    strcpy(p->name, init_proc_name);
+
+    g_current_proc = p;
 
     /* Install the scheduler IRQ handler */
-	ret = plat_install_timer_irq_handler(irq_schedule, NULL);
-	if(ret != SUCCESS)
-        return ret;
-
-    for_each_proc_struct(p)
-        p->state = ps_unborn;
-
-    g_current_proc = &(g_ps[0]);
-    g_next_pid = 1;
-
-    return SUCCESS;
+	return plat_install_timer_irq_handler(irq_schedule, NULL);
 }
 
 
-pid_t create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags)
+s32 create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags,
+                     pid_t *newpid)
 {
     proc_t *p;
-    pid_t retval = -1;      /* -1 indicates failure */
+
+    p = CHECKED_KCALLOC(1, sizeof(proc_t));
+
+    u8 *process_stack = (u8 *) umalloc(stack_len);
+
+    u32 *process_stack_top = (u32 *) (process_stack + stack_len);
+
+    p->id = g_next_pid++;
+    p->parent = NULL;
+
+    /* Set up the process's initial stack */
+    *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
+    *(--process_stack_top) = (u32) arg;
+
+    p->regs.a[7] = (u32) process_stack_top;
+    p->regs.pc = (u32) main_fn;
+
+    if(flags & PROC_TYPE_KERNEL)
+        p->regs.sr |= 0x2000;       /* FIXME - arch-specific - force supervisor mode */
+
+    p->state = ps_runnable; /* Mark process as runnable so scheduler will pick it up. */
+
+    if(newpid != NULL)
+        *newpid = p->id;
 
     cpu_disable_interrupts();
 
-    for_each_proc_struct(p)
-    {
-        /* Find a vacant task_struct */
-        if(p->state == ps_unborn)
-        {
-            /* TODO: work out how best to store name */
-            u8 *process_stack = (u8 *) umalloc(stack_len);
+    p->prev = g_current_proc;
+    p->next = g_current_proc->next;
+    g_current_proc->next->prev = p;
+    g_current_proc->next = p;
 
-            u32 *process_stack_top = (u32 *) (process_stack + stack_len);
-
-printf("umalloc()ed process stack at %p\n", process_stack);
-printf("stack top = %p\n", process_stack_top);
-            p->id = g_next_pid++;
-            p->parent = NULL;
-            p->next = NULL;
-
-            /* Register arrays might still contain values from a previous process; clear them */
-            bzero(&(p->regs), sizeof(p->regs));
-
-            /* Set up the process's initial stack */
-            *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
-            *(--process_stack_top) = (u32) arg;
-
-            p->regs.a[7] = (u32) process_stack_top;
-            p->regs.pc = (u32) main_fn;
-
-            retval = p->id;
-            p->state = ps_runnable; /* Mark process as runnable so scheduler will pick it up. */
-            break;
-        }
-    }
-
+printf("created process; sp=%08x\n", p->regs.a[7]);
     cpu_enable_interrupts();
 
-    return retval;
+    return SUCCESS;
 }
 
 
@@ -104,6 +102,8 @@ void irq_schedule(ku32 irql, void *data, regs_t regs)
         TODO: Decide which process to run next, and update g_current_proc accordingly
     */
 
+    g_current_proc = g_current_proc->next;
+
     ++g_ncontext_switches;
 
     /*
@@ -114,8 +114,8 @@ void irq_schedule(ku32 irql, void *data, regs_t regs)
     plat_start_quantum();
 
     /* Restore the incoming task's state from g_current_task. */
-
     memcpy(&regs, &g_current_proc->regs, sizeof(regs_t));
+    ++g_current_proc->quanta;
 
     cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 }

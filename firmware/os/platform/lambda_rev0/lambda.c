@@ -235,7 +235,7 @@ s32 plat_get_cpu_clock(u32 *clk)
     for(loops = 0; curr_second == tm.second; ++loops)
         rtc_get_time(rtc, 0, 1, &tm);
 
-    *clk = 716 * loops;
+    *clk = 803 * loops;
 
     return SUCCESS;
 }

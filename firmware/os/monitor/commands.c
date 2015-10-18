@@ -811,6 +811,24 @@ struct mydata
 
 
 #include "device/encx24j600.h"
+#include <kernel/sched.h>
+#include <platform/platform.h>
+void myfn(void *arg)
+{
+    while(1)
+    {
+        ++*((vu32 *) 0x200000);
+    }
+}
+
+void myfn2(void *arg)
+{
+    while(1)
+    {
+        ++*((vu32 *) 0x200004);
+    }
+}
+
 MONITOR_CMD_HANDLER(test)
 {
 /*
@@ -858,6 +876,18 @@ MONITOR_CMD_HANDLER(test)
 
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
 #endif
+
+    pid_t pid = 0;
+
+    /* copy mainfns to userspace */
+    memcpy((void *) 0x100000, myfn, 0x100);
+    memcpy((void *) 0x100100, myfn2, 0x100);
+
+    s32 ret = create_process("test", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
+    printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+
+    ret = create_process("test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
+    printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
 
     return SUCCESS;
 }

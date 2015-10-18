@@ -15,7 +15,8 @@ const syscall_table_entry_t g_syscalls[] =
     {1,     syscall_exit},
     {1,     syscall_console_putchar},
     {0,     syscall_console_getchar},
-    {1,     syscall_leds}
+    {1,     syscall_leds},
+    {0,     syscall_yield}
 };
 
 
@@ -38,6 +39,12 @@ u32 syscall_console_getchar()
 
 
 u32 syscall_leds(u32 state)
+{
+    return 0;
+}
+
+
+u32 syscall_yield()
 {
     return 0;
 }

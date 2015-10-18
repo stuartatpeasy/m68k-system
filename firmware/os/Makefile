@@ -9,30 +9,30 @@ FLASHTOOL=/usr/local/bin/flashtool
 DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
-CSOURCES=main.c \
-		 cpu/cpu.c cpu/$(CPU)/$(CPU).c \
-		 device/nvram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
-		 device/ata.c device/partition.c fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
-		 kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/semaphore.c \
-		 kernel/syscall.c \
-		 memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
+CSOURCES:=	main.c \
+			cpu/cpu.c cpu/$(CPU)/$(CPU).c \
+			device/nvram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
+			device/ata.c device/partition.c fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
+			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/semaphore.c \
+			kernel/syscall.c \
+			memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
 
-ASMSOURCES=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
+ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
 
-LDSCRIPT=platform/$(PLATFORM)/kernel.ld
+LDSCRIPT:=platform/$(PLATFORM)/kernel.ld
 
-OBJLIBS=libc.a libkutil.a libmonitor.a
+OBJLIBS:=libc.a libkutil.a libmonitor.a
 
-TOOLS=tools/bin/makemap
+TOOLS:=tools/bin/makemap
 
-MAPFILE=$(APPNAME).map
+MAPFILE:=$(APPNAME).map
 
-LDFLAGS=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
+LDFLAGS:=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
-LIBS=-lgcc -lc -lkutil -lmonitor -lplatform
+LIBS:=-lgcc -lc -lkutil -lmonitor -lplatform
 
-VTABLE=cpu/$(CPU)/startup.o
-OBJECTS=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
+VTABLE:=cpu/$(CPU)/startup.o
+OBJECTS:=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
 
 all: $(APPNAME)
 

@@ -28,5 +28,6 @@ u32 syscall_exit();
 u32 syscall_console_putchar();
 u32 syscall_console_getchar();
 u32 syscall_leds();
+u32 syscall_yield();
 
 #endif

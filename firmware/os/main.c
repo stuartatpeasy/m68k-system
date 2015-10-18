@@ -112,7 +112,7 @@ void _main()
         printf("%s %s\n", timebuf, datebuf);
     }
 
-    ret = sched_init();
+    ret = sched_init("[sys]");      /* Init scheduler and create system process */
     if(ret != SUCCESS)
         printf("sched: init failed: %s\n", kstrerror(ret));
 
