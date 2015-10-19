@@ -79,18 +79,18 @@
                  +----------------------+  |
            +24   |    status register   |  |
                  +----------------------+  /
-                 |       A1 low         |
-           +20   |       A1 high        |
-                 +----------------------+
-                 |       A0 low         |
-           +16   |       A0 high        |
-                 +----------------------+
-                 |       D1 low         |
-           +12   |       D1 high        |
-                 +----------------------+
-                 |       D0 low         |
-           +8    |       D0 high        |
-                 +----------------------+
+                 |       A1 low         |  \
+           +20   |       A1 high        |  |
+                 +----------------------+  |
+                 |       A0 low         |  |
+           +16   |       A0 high        |  |
+                 +----------------------+  |  Saved CPU state
+                 |       D1 low         |  |
+           +12   |       D1 high        |  |
+                 +----------------------+  |
+                 |       D0 low         |  |
+           +8    |       D0 high        |  |
+                 +----------------------+  /
                  |       data low       |  \
            +4    |       data high      |  |  Args for interrupt handler function
                  +----------------------+  |  (regs_t is also used to save/restore CPU state)
@@ -98,10 +98,8 @@
         SP +0    |       irql high      |  |
                  +----------------------+  /
 
-
-
-    When some_handler() returns, we need to restore CPU state and issue an RTE to resume normal
-    processing.
+    When some_handler() or some_fast_handler() returns, we need to restore CPU state and issue an
+    RTE to resume normal processing.
 */
 
 .global irq_handler
