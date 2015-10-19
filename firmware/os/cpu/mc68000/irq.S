@@ -29,7 +29,8 @@
         SP +0    |    status register   |
                  +----------------------+
 
-    We need to call the interrupt handler in this way:
+    The standard IRQ handler, which stacks a complete CPU state, needs to call the handler function
+    in this way:
 
         some_handler(ku32 irql, void *data, regs_t regs);
 
@@ -40,12 +41,12 @@
                  15                     0
                  | ..other junk, maybe..|  .
                  +------+---------------+  .
-       SP +78    |format| vector offset |  |    Interrupt stack frame
+        SP +78   |format| vector offset |  |    Interrupt stack frame
                  +------+---------------+  |  \
-          +76    | program counter low  |  |  |
-          +74    | program counter high |  |  |
+                 | program counter low  |  |  |
+           +74   | program counter high |  |  |
                  +----------------------+  |  |
-          +72    |    status register   |  |  |
+           +72   |    status register   |  |  |
                  +----------------------+  /  |
                  |                      |     |
                  .       rest of        .     |  Args for interrupt handler function
@@ -53,12 +54,51 @@
                  .                      .     |
            +8    |                      |     |
                  +----------------------+     |
-           +6    |       data low       |     |
+                 |       data low       |     |
            +4    |       data high      |     |
                  +----------------------+     |
-           +2    |       irql low       |     |
+                 |       irql low       |     |
         SP +0    |       irql high      |     |
                  +----------------------+     /
+
+    The fast IRQ handler only stacks the parts of the state which are defined as "throwaway" by the
+    ABI, i.e. registers D0-D1 and A0-A1.  Any registers modified by the handler function will be
+    saved/restored by the function itself.  The handler function call looks like this:
+
+        some_fast_handler(ku32 irql, void *data);
+
+    The required stack frame is therefore:
+
+                 15                     0
+                 | ..other junk, maybe..|  .
+                 +------+---------------+  .
+        SP +30   |format| vector offset |  |  Interrupt stack frame
+                 +------+---------------+  |
+                 | program counter low  |  |
+           +26   | program counter high |  |
+                 +----------------------+  |
+           +24   |    status register   |  |
+                 +----------------------+  /
+                 |       A1 low         |
+           +20   |       A1 high        |
+                 +----------------------+
+                 |       A0 low         |
+           +16   |       A0 high        |
+                 +----------------------+
+                 |       D1 low         |
+           +12   |       D1 high        |
+                 +----------------------+
+                 |       D0 low         |
+           +8    |       D0 high        |
+                 +----------------------+
+                 |       data low       |  \
+           +4    |       data high      |  |  Args for interrupt handler function
+                 +----------------------+  |  (regs_t is also used to save/restore CPU state)
+                 |       irql low       |  |
+        SP +0    |       irql high      |  |
+                 +----------------------+  /
+
+
 
     When some_handler() returns, we need to restore CPU state and issue an RTE to resume normal
     processing.
@@ -66,6 +106,7 @@
 
 .global irq_handler
 
+/* Standard generic IRQ entry point: saves complete CPU state.  Allows for task-switching etc. */
 irq_handler:
     moveml      %d0-%d7/%a0-%a7, %sp@-
 
@@ -95,5 +136,31 @@ irq_handler:
     moveml      %sp@+, %d0-%d7/%a0-%a6
 
     addql       #4, %sp
+
+    rte
+
+
+fast_irq_handler:
+    moveml      %d0-%d1/%a0-%a1, %sp@-
+
+    clrl        %d0
+    movew       %sp@(22), %d0
+    andiw       #0x03ff, %d0
+
+    asll        #1, %d0
+    movel       %d0, %a0
+    addal       #g_interrupt_handlers, %a0
+
+    movel       %a0@(4), %sp@-
+
+    asrl        #3, %d0
+    movel       %d0, %sp@-
+
+    movel       %a0@, %a0
+    jsr         %a0@
+
+    addql       #8, %sp
+
+    moveml      %sp@+, %d0-%d1/%a0-%a1
 
     rte
