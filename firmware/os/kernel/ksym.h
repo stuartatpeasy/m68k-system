@@ -13,7 +13,7 @@
 #include <include/types.h>
 
 
-enum symtype
+typedef enum symtype
 {
 	EXT_BSS  = 'B', 	/* The symbol is in the uninitialized data section (known as BSS). */
 	INT_BSS  = 'b',
@@ -23,20 +23,20 @@ enum symtype
 	INT_RO   = 'r',
 	EXT_TEXT = 'T',		/* Text (code) section (.text) */
 	INT_TEXT = 't'
-};
-
-typedef enum symtype symtype_t;
+} symtype_t;
 
 /* This struct will be tail-padded with \0s so that its size is a multiple of four bytes */
-struct symentry
+typedef struct symentry
 {
-	u32	    addr;
+	void *  addr;
 	u8      type;
 	u8      len;
 	char    name;		/* First character of name, a zero-terminated string */
-} __attribute__((packed));
+} __attribute__((packed)) symentry_t;
 
-typedef struct symentry symentry_t;
 
+s32 ksym_find_by_name(const char * const name, symentry_t **ent);
+s32 ksym_find_nearest_prev(void *addr, symentry_t **ent);
+s32 ksym_format_nearest_prev(void *addr, char *buf, u32 buf_len);
 
 #endif

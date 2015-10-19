@@ -10,6 +10,7 @@
 */
 
 #include <include/types.h>
+#include <kernel/ksym.h>
 #include <cpu/mc68000/exceptions.h>
 
 #define CPU_MAX_IRQL        255

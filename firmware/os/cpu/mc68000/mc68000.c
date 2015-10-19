@@ -344,11 +344,14 @@ void mc68010_dump_exc_frame(ku32 irql, const regs_t * const regs)
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
+    char sym[128];
+
+    ksym_format_nearest_prev((void *) regs->pc, sym, sizeof(sym));
+
 	printf("Status register     = %04x [%s]\n"
-		   "Program counter     = 0x%08x\n"
+		   "Program counter     = 0x%08x    %s\n"
 		   "Vector number       = %u\n\n",
-			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc,
-			irql);
+			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc, sym, irql);
 }
 
 
@@ -365,8 +368,12 @@ void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
     const struct mc68010_address_exc_frame * const f =
         (const struct mc68010_address_exc_frame * const) &(regs[1]);
 
+    char sym[128];
+
+    ksym_format_nearest_prev((void *) regs->pc, sym, sizeof(sym));
+
 	printf("Status register     = %04x [%s]\n"
-		   "Program counter     = 0x%08x\n"
+		   "Program counter     = 0x%08x    %s\n"
 		/* "Frame format        = %x\n" */
 		   "Vector number       = %u\n"
 		   "Special status word = %04x\n"
@@ -375,7 +382,7 @@ void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
 		   "Data input buffer   = %04x\n"
 		   "Instr output buffer = %04x\n"
 		   "Version number      = %04x\n",
-			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc, irql,
+			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc, sym, irql,
             f->special_status_word, f->fault_addr, f->data_output_buffer, f->data_input_buffer,
             f->instr_output_buffer,	f->version_number);
 }

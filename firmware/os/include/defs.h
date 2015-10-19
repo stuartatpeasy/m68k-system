@@ -61,12 +61,13 @@
 #define BIT(x)          (1 << (x))
 
 
-extern u8 _sdata,       /* .data section start */
-          _edata,       /* .data section end   */
-          _sbss,        /* .bss  section start */
-          _ebss,        /* .bss  section end   */
-          _stext,       /* .text section start */
-          _etext;       /* .text section end   */
+extern u8 _sdata,       /* .data section start      */
+          _edata,       /* .data section end        */
+          _sbss,        /* .bss  section start      */
+          _ebss,        /* .bss  section end        */
+          _stext,       /* .text section start      */
+          _etext,       /* .text section end        */
+          _ssym;        /* Start of kernel symbols  */
 
 extern u32 g_ram_top;   /* Address of first byte past the end of RAM.  Set by ram_detect() */
 

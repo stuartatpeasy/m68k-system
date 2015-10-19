@@ -813,6 +813,7 @@ struct mydata
 #include "device/encx24j600.h"
 #include <kernel/sched.h>
 #include <platform/platform.h>
+#include <kernel/ksym.h>
 void myfn(void *arg)
 {
     while(1)
@@ -876,7 +877,7 @@ MONITOR_CMD_HANDLER(test)
 
     printf("encx24j600_init() returned %s\n", kstrerror(ret));
 #endif
-
+#if 0
     pid_t pid = 0;
 
     /* copy mainfns to userspace */
@@ -888,6 +889,16 @@ MONITOR_CMD_HANDLER(test)
 
     ret = create_process("test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
     printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+#endif // 0
+
+    if(num_args == 1)
+    {
+        void *addr = (void *) strtoul(args[0], NULL, 0);
+        char sym[128];
+
+        ksym_format_nearest_prev((void *) addr, sym, sizeof(sym));;
+        printf("%p: %s\n", addr, sym);
+    }
 
     return SUCCESS;
 }

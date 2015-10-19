@@ -46,6 +46,10 @@ SECTIONS
         *(.bss)
     }
     _ebss = .;
+
+	/* Symbol table */
+	. = _etext + (_edata - _sdata);
+	_ssym = ALIGN(4);
 }
 
 ENTRY(_main)
