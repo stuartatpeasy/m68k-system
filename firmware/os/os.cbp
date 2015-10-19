@@ -113,10 +113,11 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/semaphore.h" />
-		<Unit filename="kernel/syscall.h" />
-		<Unit filename="kernel/syscalls.c">
+		<Unit filename="kernel/syscall.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="kernel/syscall.h" />
+		<Unit filename="kernel/syscalls.h" />
 		<Unit filename="klibc/Makefile" />
 		<Unit filename="klibc/assert.c">
 			<Option compilerVar="CC" />
