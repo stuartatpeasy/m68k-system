@@ -33,8 +33,8 @@ s32 sched_init(const char * const init_proc_name)
     p->id = g_next_pid++;
     p->parent = NULL;
     p->state = ps_runnable;
-    p->uid = ROOT_USER;
-    p->gid = ROOT_GROUP;
+    p->uid = ROOT_UID;
+    p->gid = ROOT_GID;
     p->next = p;
     p->prev = p;
 

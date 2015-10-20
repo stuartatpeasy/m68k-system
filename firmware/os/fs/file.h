@@ -9,9 +9,11 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015.
 */
 
-#include "fs/vfs.h"
-#include "include/defs.h"
-#include "include/types.h"
+#include <fs/vfs.h>
+#include <include/defs.h>
+#include <include/types.h>
+#include <kernel/user.h>
+
 
 /* file_open() flags */
 #define O_RD            (0x01)      /* Open file for reading                                */
@@ -34,6 +36,7 @@ typedef struct file_info file_info_t;
 
 
 s32 file_open(ks8 * const path, u32 flags, file_info_t *fp);
+s32 file_check_perms(uid_t uid, const file_perm_t op, const vfs_dirent_t * const ent);
 
 
 #endif

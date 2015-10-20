@@ -16,6 +16,7 @@
 
 #define MAX_FILESYSTEMS         (16)
 
+typedef u16 file_perm_t;
 
 struct vfs;
 typedef struct vfs vfs_t;
@@ -35,18 +36,18 @@ typedef enum fsnode_type
 
 typedef struct vfs_dirent
 {
-    vfs_t *vfs;
-    enum fsnode_type type;      /* dir, file, etc. */
-    s8 name[NAME_MAX_LEN + 1];
-    u16 uid;
-    u16 gid;
-    u16 permissions;            /* e.g. rwxsrwxsrwx */
-    u16 flags;                  /* read-only, hidden, system, ... */
-    u32 size;
-    u32 ctime;
-    u32 mtime;
-    u32 atime;
-    u32 first_node;
+    vfs_t           *vfs;
+    fsnode_type_t   type;           /* dir, file, etc. */
+    s8              name[NAME_MAX_LEN + 1];
+    u16             uid;
+    u16             gid;
+    file_perm_t     permissions;    /* e.g. rwxsrwxsrwx */
+    u16             flags;          /* read-only, hidden, system, ... */
+    u32             size;
+    u32             ctime;
+    u32             mtime;
+    u32             atime;
+    u32             first_node;
     /* how to link to clusters? */
 } vfs_dirent_t;
 
@@ -94,6 +95,16 @@ struct vfs
 #define VFS_PERM_OW         (0x0004)        /* Other (world) write      */
 #define VFS_PERM_OX         (0x0002)        /* Other (world) execute    */
 #define VFS_PERM_OT         (0x0001)        /* Other (world) sticky     */
+
+/* Definitions used when testing permissions */
+#define VFS_PERM_R          (0x0008)        /* Generic read permission      */
+#define VFS_PERM_W          (0x0004)        /* Generic write permission     */
+#define VFS_PERM_X          (0x0002)        /* Generic execute permission   */
+
+#define VFS_PERM_MASK       (VFS_PERM_R | VFS_PERM_W | VFS_PERM_X)
+#define VFS_PERM_SHIFT_U    (8)
+#define VFS_PERM_SHIFT_G    (4)
+#define VFS_PERM_SHIFT_O    (0)
 
 /* Common combinations of perms */
 #define VFS_PERM_URWX       (VFS_PERM_UR | VFS_PERM_UW | VFS_PERM_UX)       /* rwx------ */

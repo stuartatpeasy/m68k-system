@@ -8,4 +8,11 @@
 */
 
 #include <kernel/user.h>
+#include <klibc/errno.h>
 
+
+s32 group_member(const uid_t uid, const gid_t gid)
+{
+    /* TODO */
+    return ENOENT;
+}

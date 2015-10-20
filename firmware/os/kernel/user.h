@@ -16,8 +16,10 @@
 typedef u16 uid_t;
 typedef u16 gid_t;
 
-#define ROOT_USER       ((uid_t) 0)
-#define ROOT_GROUP      ((gid_t) 0)
+#define ROOT_UID        ((uid_t) 0)
+#define ROOT_GID        ((gid_t) 0)
 
+
+s32 group_member(const uid_t uid, const gid_t gid);
 
 #endif

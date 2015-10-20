@@ -37,6 +37,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/ata.h" />
+		<Unit filename="device/auto.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device/auto.h" />
 		<Unit filename="device/block.h" />
 		<Unit filename="device/devctl.h" />
 		<Unit filename="device/device.c">
@@ -118,6 +122,10 @@
 		</Unit>
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.h" />
+		<Unit filename="kernel/user.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/user.h" />
 		<Unit filename="klibc/Makefile" />
 		<Unit filename="klibc/assert.c">
 			<Option compilerVar="CC" />
