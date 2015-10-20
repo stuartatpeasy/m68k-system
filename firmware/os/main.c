@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <strings.h>
 
-const char * const g_warmup_message = "\n  \\   { ayumos }"
+const char * const g_warmup_message = "\n  \\   ayumos"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";
 
 
@@ -107,9 +107,11 @@ void _main()
     {
         char timebuf[12], datebuf[32];
 
-        time_iso8601(&tm, timebuf, sizeof(timebuf));
-        date_long(&tm, datebuf, sizeof(datebuf));
-        printf("%s %s\n", timebuf, datebuf);
+        if((time_iso8601(&tm, timebuf, sizeof(timebuf)) == SUCCESS) &&
+            (date_long(&tm, datebuf, sizeof(datebuf)) == SUCCESS))
+            printf("%s %s\n", timebuf, datebuf);
+        else
+            puts("Date/time invalid - please set clock");
     }
 
     ret = sched_init("[sys]");      /* Init scheduler and create system process */

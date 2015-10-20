@@ -178,26 +178,29 @@ s32 dev_add_suffix(char * const name)
 /*
 	dev_create() - create a new device
 */
-s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name, ku32 irql,
-				void *base_addr, dev_t **dev)
+s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
+               const char * const human_name, ku32 irql, void *base_addr, dev_t **dev)
 {
-	*dev = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
+    dev_t *d = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
 
-	(*dev)->type		    = type;
-	(*dev)->subtype		    = subtype;
-	(*dev)->irql		    = irql;
-	(*dev)->base_addr	    = base_addr;
+	d->type		    = type;
+	d->subtype		= subtype;
+	d->irql		    = irql;
+	d->base_addr    = base_addr;
+	d->human_name   = human_name;
 
-	(*dev)->control         = dev_control_unimplemented;
-	(*dev)->read            = dev_read_unimplemented;
-	(*dev)->write           = dev_write_unimplemented;
-	(*dev)->getc            = dev_getc_unimplemented;
-	(*dev)->putc            = dev_putc_unimplemented;
-	(*dev)->shut_down       = dev_shut_down_unimplemented;
+	d->control      = dev_control_unimplemented;
+	d->read         = dev_read_unimplemented;
+	d->write        = dev_write_unimplemented;
+	d->getc         = dev_getc_unimplemented;
+	d->putc         = dev_putc_unimplemented;
+	d->shut_down    = dev_shut_down_unimplemented;
 
-	strcpy((*dev)->name, name);
+	strcpy(d->name, name);
 
-    return dev_add_suffix((*dev)->name);
+	*dev = d;
+
+    return dev_add_suffix(d->name);
 }
 
 
@@ -210,7 +213,7 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
 {
     s32 ret;
 
-    ret = dev_create(type, subtype, dev_name, irql, base_addr, dev);
+    ret = dev_create(type, subtype, dev_name, human_name, irql, base_addr, dev);
     if(ret != SUCCESS)
     {
         printf("%s: %s device creation failed: %s\n", dev_name, human_name, kstrerror(ret));

@@ -21,7 +21,6 @@
 
 /* API-like functions try to return zero on success and nonzero on failure */
 #define SUCCESS			(0)
-#define FAIL			(-1)
 
 /* Directory separator character used in file paths */
 #define DIR_SEPARATOR	('/')
@@ -49,6 +48,10 @@
 }
 
 #define ARRAY_COUNT(a)  (sizeof(a) / sizeof((a)[0]))
+
+#define FOR_EACH(p, a) \
+    for(p = (a); p < &a[ARRAY_COUNT(a)]; ++p)
+
 
 #define offsetof(st, m) ((size_t) (&((st *) 0)->m))
 

@@ -74,8 +74,8 @@ s32 plat_console_init(void)
     s32 ret;
 
     /* Initialise the console */
-    ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", LAMBDA_MC68681_IRQL,
-                     LAMBDA_MC68681_BASE, &g_lambda_duart);
+    ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", "MC68681 DUART",
+                     LAMBDA_MC68681_IRQL, LAMBDA_MC68681_BASE, &g_lambda_duart);
     if(ret != SUCCESS)
         return ret;
 
@@ -87,8 +87,8 @@ s32 plat_console_init(void)
         return ret;
     }
 
-	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
-                        &g_lambda_console);
+	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A", IRQL_NONE,
+                        LAMBDA_MC68681_BASE, &g_lambda_console);
 	if(ret == SUCCESS)
 	{
 	    g_lambda_console->parent = g_lambda_duart;

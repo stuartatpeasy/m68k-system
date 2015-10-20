@@ -130,7 +130,7 @@ static ks8 g_days_in_month_leap[] =
 s32 date_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return FAIL;
+        return EINVAL;
 
     return snprintf(buffer, len, "%04u-%02u-%02u %02u:%02u:%02u",
                         tm->year, tm->month, tm->day,
@@ -145,7 +145,7 @@ s32 date_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 s32 date_short(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return FAIL;
+        return EINVAL;
 
     return snprintf(buffer, len, "%s %u %s %u",
                         g_day_names_short[tm->day_of_week - 1], tm->day,
@@ -160,12 +160,13 @@ s32 date_short(const rtc_time_t * const tm, char * const buffer, ku32 len)
 s32 date_long(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return FAIL;
+        return EINVAL;
 
-    return snprintf(buffer, len, "%s %u%s %s %u",
-                        g_day_names_long[tm->day_of_week - 1], tm->day,
-                        day_number_suffix(tm->day),
-                        g_month_names_long[tm->month - 1], tm->year);
+    snprintf(buffer, len, "%s %u%s %s %u",
+                g_day_names_long[tm->day_of_week - 1], tm->day, day_number_suffix(tm->day),
+                g_month_names_long[tm->month - 1], tm->year);
+
+    return SUCCESS;
 }
 
 
@@ -176,10 +177,11 @@ s32 date_long(const rtc_time_t * const tm, char * const buffer, ku32 len)
 s32 time_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return FAIL;
+        return EINVAL;
 
-    return snprintf(buffer, len, "%02u:%02u:%02u",
-                        tm->hour, tm->minute, tm->second);
+    snprintf(buffer, len, "%02u:%02u:%02u", tm->hour, tm->minute, tm->second);
+
+    return SUCCESS;
 }
 
 
@@ -195,14 +197,14 @@ s32 rtc_time_from_str(const char * const str, rtc_time_t * const tm)
     // Set the date and time.  Acceptable format:
     //      date YYYYMMDDHHMMSS
     if(strlen(str) != 14)
-        return FAIL;
+        return EINVAL;
 
     for(i = 0; i < 14; i++)
     {
         if((str[i] >= '0') && (str[i] <= '9'))
             s[i] = str[i] - '0';
         else
-            return FAIL;
+            return EINVAL;
     }
 
     tm->year    = (s[0] * 1000) + (s[1] * 100) + (s[2] * 10) + s[3];
@@ -215,7 +217,7 @@ s32 rtc_time_from_str(const char * const str, rtc_time_t * const tm)
     // Day of week
     tm->day_of_week = day_of_week(tm->year, tm->month, tm->day);
 
-    return VALID_RTC_DATE(tm) ? SUCCESS : FAIL;
+    return VALID_RTC_DATE(tm) ? SUCCESS : EINVAL;
 }
 
 

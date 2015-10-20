@@ -44,8 +44,9 @@ MONITOR_CMD_HANDLER(date)
             Set the date and time.  Acceptable format:
                 date YYYYMMDDHHMMSS
         */
-        if(rtc_time_from_str(args[0], &tm) == FAIL)
-            return EINVAL;
+        s32 ret = rtc_time_from_str(args[0], &tm);
+        if(ret != SUCCESS)
+            return ret;
 
         return dev->write(dev, 0, 1, &tm);
     }
@@ -832,63 +833,76 @@ void myfn2(void *arg)
 
 MONITOR_CMD_HANDLER(test)
 {
-/*
-    struct mydata
-    x = {
-        .meh = 1,
-        .foo = 2,
-        .bar = 3,
-        .ll = LIST_INIT(x.ll)
-    },
-    y = {
-        .meh = 10,
-        .foo = 20,
-        .bar = 30,
-        .ll = LIST_INIT(y.ll)
-    },
-    z = {
-        .meh = 100,
-        .foo = 200,
-        .bar = 300,
-        .ll = LIST_INIT(z.ll)
-    },
-    *p;
+    if(num_args < 1)
+        return EINVAL;
 
-    LINKED_LIST(mylist);
+    ku32 testnum = strtoul(args[0], NULL, 0);
 
-    list_append(&x.ll, &mylist);
-    list_append(&y.ll, &mylist);
-    list_append(&z.ll, &mylist);
-
-    list_for_each_entry(p, &mylist, ll)
+    if(testnum == 1)
     {
-        printf("foo is %d\n", p->foo);
-    }
-*/
 #if 0
-    dev_t dev =
-    {
-        .base_addr = (void *) 0xb00000,
-        .len = 0x100000,
-        .irql = 29          /* IRQ 5 */
-    };
+        struct mydata
+        x = {
+            .meh = 1,
+            .foo = 2,
+            .bar = 3,
+            .ll = LIST_INIT(x.ll)
+        },
+        y = {
+            .meh = 10,
+            .foo = 20,
+            .bar = 30,
+            .ll = LIST_INIT(y.ll)
+        },
+        z = {
+            .meh = 100,
+            .foo = 200,
+            .bar = 300,
+            .ll = LIST_INIT(z.ll)
+        },
+        *p;
 
-    s32 ret = encx24j600_init(&dev);
+        LINKED_LIST(mylist);
 
-    printf("encx24j600_init() returned %s\n", kstrerror(ret));
+        list_append(&x.ll, &mylist);
+        list_append(&y.ll, &mylist);
+        list_append(&z.ll, &mylist);
+
+        list_for_each_entry(p, &mylist, ll)
+        {
+            printf("foo is %d\n", p->foo);
+        }
 #endif
+    }
+    else if(testnum == 2)
+    {
+#if 0
+        dev_t dev =
+        {
+            .base_addr = (void *) 0xb00000,
+            .len = 0x100000,
+            .irql = 29          /* IRQ 5 */
+        };
 
-    pid_t pid = 0;
+        s32 ret = encx24j600_init(&dev);
 
-    /* copy mainfns to userspace */
-    memcpy((void *) 0x100000, myfn, 0x100);
-    memcpy((void *) 0x100100, myfn2, 0x100);
+        printf("encx24j600_init() returned %s\n", kstrerror(ret));
+#endif
+    }
+    else if(testnum == 3)
+    {
+        pid_t pid = 0;
 
-    s32 ret = create_process("test", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
-    printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+        /* copy mainfns to userspace */
+        memcpy((void *) 0x100000, myfn, 0x100);
+        memcpy((void *) 0x100100, myfn2, 0x100);
 
-    ret = create_process("test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
-    printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+        s32 ret = create_process("test", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
+        printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+
+        ret = create_process("test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
+        printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+    }
 
     return SUCCESS;
 }

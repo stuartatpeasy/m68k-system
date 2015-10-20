@@ -11,8 +11,9 @@ FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES:=	main.c \
 			cpu/cpu.c cpu/$(CPU)/$(CPU).c \
-			device/nvram.c device/device.c device/ds17485.c device/encx24j600.c device/mc68681.c \
-			device/ata.c device/partition.c fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
+			device/ata.c device/auto.c device/device.c device/ds17485.c device/encx24j600.c \
+			device/mc68681.c device/nvram.c device/partition.c \
+			fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/semaphore.c \
 			kernel/syscall.c \
 			memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
@@ -107,9 +108,12 @@ cpu/$(CPU)/$(CPU).o: \
 startup.o: \
 	cpu/$(CPU)/startup.S memory/memorymap.h
 
-device/nvram.o: \
-	device/nvram.c device/nvram.h device/ds17485.h include/defs.h include/error.h include/types.h \
-	kutil/kutil.h
+device/ata.o: \
+	device/ata.c device/ata.h device/block.h device/devctl.h device/device.h include/byteorder.h \
+	include/defs.h include/mbr.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
+
+device/auto.o: \
+	device/auto.c device/auto.h include/defs.h include/types.h device/device.h
 
 device/device.o: \
 	device/device.c device/devctl.h device/device.h kutil/kutil.h device/ata.h device/partition.h \
@@ -125,9 +129,9 @@ device/encx24j600.o: \
 device/mc68681.o: \
 	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
 
-device/ata.o: \
-	device/ata.c device/ata.h device/block.h device/devctl.h device/device.h include/byteorder.h \
-	include/defs.h include/mbr.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
+device/nvram.o: \
+	device/nvram.c device/nvram.h device/ds17485.h include/defs.h include/error.h include/types.h \
+	kutil/kutil.h
 
 device/partition.o: \
 	device/partition.c device/partition.h device/device.h include/byteorder.h include/defs.h \
