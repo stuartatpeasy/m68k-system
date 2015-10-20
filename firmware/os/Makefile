@@ -15,7 +15,7 @@ CSOURCES:=	main.c \
 			device/mc68681.c device/nvram.c device/partition.c \
 			fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/sched.c kernel/semaphore.c \
-			kernel/syscall.c \
+			kernel/syscall.c kernel/user.c \
 			memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
 
 ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
@@ -171,13 +171,17 @@ kernel/ksym.o: \
 	kernel/ksym.c kernel/ksym.h include/defs.h include/types.h
 
 kernel/sched.o: \
-	kernel/sched.c kernel/sched.h cpu/cpu.h include/defs.h include/types.h klibc/strings.h
+	kernel/sched.c kernel/sched.h cpu/cpu.h include/defs.h include/types.h kernel/user.h \
+	klibc/strings.h
 
 kernel/semaphore.o: \
 	kernel/semaphore.c kernel/semaphore.h include/defs.h include/types.h cpu/cpu.h
 
 kernel/syscall.o: \
 	kernel/syscall.c kernel/syscall.h kernel/syscalls.h
+
+kernel/user.o: \
+	kernel/user.c kernel/user.h include/defs.h include/types.h
 
 memory/buddy.o: \
 	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a

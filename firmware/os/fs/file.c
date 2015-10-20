@@ -23,7 +23,7 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
         return ENOMEM;
 
     /* Check that the file exists */
-    ret = vfs_lookup(path, ent);
+    ret = vfs_lookup(path, ent);        /* TODO: do stat() instead */
     if(ret == SUCCESS)
     {
         /* File exists.  Was exclusive creation requested? */
@@ -33,6 +33,8 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
             return EEXIST;
         }
 
+        /* Check perms */
+
         fp->dirent = ent;
         fp->flags = flags;
         fp->offset = (flags & O_APPEND) ? ent->size : 0;
@@ -41,7 +43,7 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
     }
     else if(ret == ENOENT)
     {
-        /* File does not exists.  Was creation requested? */
+        /* File does not exist.  Was creation requested? */
         if(flags & O_CREATE)
         {
             /* Check perms; create file; set offset = 0 */

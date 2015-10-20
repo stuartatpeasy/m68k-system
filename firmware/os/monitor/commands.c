@@ -897,10 +897,10 @@ MONITOR_CMD_HANDLER(test)
         memcpy((void *) 0x100000, myfn, 0x100);
         memcpy((void *) 0x100100, myfn2, 0x100);
 
-        s32 ret = create_process("test", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
+        s32 ret = create_process(0, 0, "test", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
         printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
 
-        ret = create_process("test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
+        ret = create_process(0, 0, "test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
         printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
     }
 

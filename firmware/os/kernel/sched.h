@@ -12,6 +12,7 @@
 #include <cpu/cpu.h>
 #include <include/defs.h>
 #include <include/types.h>
+#include <kernel/user.h>
 #include <strings.h>
 
 
@@ -53,9 +54,12 @@ struct proc_struct
     u32 flags;
     u32 quanta;
 
+    uid_t uid;
+    gid_t gid;
+
     proc_t *next;
     proc_t *prev;
-}; /* sizeof(proc_t) = 128 */
+};
 
 
 proc_t *g_current_proc;
@@ -64,7 +68,7 @@ u32 g_ncontext_switches;
 void irq_schedule(ku32 irql, void *data, regs_t regs);
 s32 sched_init(const char * const init_proc_name);
 
-s32 create_process(const s8 *name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags,
-                   pid_t *newpid);
+s32 create_process(const uid_t uid, const gid_t gid, const s8 *name, proc_main_t main_fn, u32 *arg,
+                   ku32 stack_len, ku16 flags, pid_t *newpid);
 
 #endif

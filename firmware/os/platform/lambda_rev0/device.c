@@ -90,15 +90,13 @@ s32 plat_dev_enumerate()
 
 
 /*
-    expansion_init() - initialise expansion card slots
+    expansion_init() - identify and initialise devices in expansion card slots
 */
 void expansion_init()
 {
     u16 i;
     void *base_addr;
     u32 irql;
-
-	puts("Scanning expansion slots");
 
 	for(base_addr = EXP_BASE_ADDR, irql = EXP_BASE_IRQ, i = 0; i < EXP_NUM_SLOTS;
         ++i, base_addr += EXP_ADDR_LEN, ++irql)

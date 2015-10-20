@@ -20,6 +20,10 @@ pid_t g_next_pid = 0;
 u32 g_ncontext_switches = 0;
 
 
+/*
+    sched_init() - initialise the process scheduler, and convert the current thread of execution
+    into a kernel process.
+*/
 s32 sched_init(const char * const init_proc_name)
 {
     proc_t *p;
@@ -29,6 +33,8 @@ s32 sched_init(const char * const init_proc_name)
     p->id = g_next_pid++;
     p->parent = NULL;
     p->state = ps_runnable;
+    p->uid = ROOT_USER;
+    p->gid = ROOT_GROUP;
     p->next = p;
     p->prev = p;
 
@@ -42,8 +48,11 @@ s32 sched_init(const char * const init_proc_name)
 }
 
 
-s32 create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku32 stack_len, ku16 flags,
-                     pid_t *newpid)
+/*
+    create_process() - create a new process and add it to the run queue.
+*/
+s32 create_process(const uid_t uid, const gid_t gid, const s8* name, proc_main_t main_fn, u32 *arg,
+                   ku32 stack_len, ku16 flags, pid_t *newpid)
 {
     proc_t *p;
 
@@ -55,6 +64,8 @@ s32 create_process(const s8* name, proc_main_t main_fn, u32 *arg, ku32 stack_len
 
     p->id = g_next_pid++;
     p->parent = NULL;
+    p->uid = uid;
+    p->gid = gid;
 
     /* Set up the process's initial stack */
     *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
