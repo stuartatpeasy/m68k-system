@@ -7,7 +7,9 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
-#include "stdlib.h"
+#include <klibc/stdlib.h>
+#include <klibc/errno.h>
+
 
 static u32 g_rand_next = 1;
 
@@ -96,7 +98,7 @@ u32 strtoul(ks8 *nptr, s8 **endptr, s32 base)
 	/* check that base is valid, i.e. it lies between 2 and 36. */
 	if(base && ((base < 2) || (base > 36)))
 	{
-		/* TODO: errno = EINVAL */
+	    errno = EINVAL;
 		return 0;
 	}
 
@@ -170,7 +172,7 @@ u32 strtoul(ks8 *nptr, s8 **endptr, s32 base)
 
 	if(overflow)
 	{
-		/* TODO: errno = ERANGE; */
+	    errno = ERANGE;
 		return U32_MAX;;
 	}
 
