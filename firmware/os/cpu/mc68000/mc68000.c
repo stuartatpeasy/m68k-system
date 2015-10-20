@@ -288,6 +288,10 @@ void cpu_swi()
 }
 
 
+/*
+    cpu_tas() - atomically test and set a byte-sized memory location to 1, returning the previous
+    contents of the location.
+*/
 u8 cpu_tas(u8 *addr)
 {
     register u32 ret = 0;
@@ -308,7 +312,7 @@ u8 cpu_tas(u8 *addr)
 }
 
 /*
-	Write a string describing the contents of the status register
+	mc68000_dump_status_register() - write a string describing the contents of the status register
 */
 const char * const mc68000_dump_status_register(ku16 sr)
 {
@@ -335,9 +339,7 @@ const char * const mc68000_dump_status_register(ku16 sr)
 
 
 /*
-	Dump a MC68010 exception frame (short version)
-
-	TODO: remove the dependency on printf()
+	mc68010_dump_exc_frame() - dump a MC68010 exception frame (short version)
 */
 void mc68010_dump_exc_frame(ku32 irql, const regs_t * const regs)
 {
@@ -356,9 +358,7 @@ void mc68010_dump_exc_frame(ku32 irql, const regs_t * const regs)
 
 
 /*
-	Dump a MC68010 exception frame (address/bus error version)
-
-	TODO: remove the dependency on printf()
+	mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
 */
 void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
 {
