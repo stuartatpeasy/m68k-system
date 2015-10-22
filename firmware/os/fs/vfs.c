@@ -193,6 +193,9 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 
     node = vfs->root_node;
 
+    for(; *rel == DIR_SEPARATOR; ++rel)
+        ;                           /* Skip over empty path components */
+
     if(rel[0] == '\0')
         return vfs->driver->get_root_dirent(vfs, ent);  /* Special case: root directory */
 
@@ -205,11 +208,16 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
         for(; *rel == DIR_SEPARATOR; ++rel)
             ;                       /* Skip over empty path components */
 
-        for(i = 0; (*rel != DIR_SEPARATOR) && (*rel != '\0'); ++i)
+        for(i = 0; (*rel != DIR_SEPARATOR) && (*rel != '\0') && (i < NAME_MAX_LEN); ++i)
             path_component[i] = *rel++;
 
         if(!i)
             continue;
+        else if(i == NAME_MAX_LEN)
+        {
+            kfree(path_component);
+            return ENAMETOOLONG;
+        }
 
         path_component[i] = '\0';
 
