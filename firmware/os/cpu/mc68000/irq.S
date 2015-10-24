@@ -1,5 +1,5 @@
 /*
-    Interrupt handler for MC68010 CPU
+    Interrupt handlers for MC68010 CPU
 
     Part of ayumos
 
@@ -14,8 +14,25 @@
 #error This code requires the MC68010 architecture
 #endif
 
+.global irq_router_full
+.global irq_router_fast
+.global irq_router_swi
+
 
 /*
+    This module implements three interrupt routers:
+
+        irq_router_full
+            - saves/restores full CPU context before calling the interrupt handler.  Used for
+              context-switching and error-reporting.
+
+        irq_router_fast
+            - saves/restores minimal context.  Used by hardware interrupt handlers.
+
+        irq_router_swi
+            - saves/restores minimal context.  Used for software interrupts (i.e. system calls).
+
+
     On entry, the stack will look like this:
 
                  15                     0
@@ -29,7 +46,10 @@
         SP +0    |    status register   |
                  +----------------------+
 
-    The standard IRQ handler, which stacks a complete CPU state, needs to call the handler function
+    "Other junk" refers to additional data stacked for bus and address error exceptions.
+
+
+    irq_router_full, which stacks a complete CPU state, needs to call an interrupt handler function
     in this way:
 
         some_handler(ku32 irql, void *data, regs_t regs);
@@ -60,8 +80,44 @@
                  |       irql low       |     |
         SP +0    |       irql high      |     |
                  +----------------------+     /
+*/
 
-    The fast IRQ handler only stacks the parts of the state which are defined as "throwaway" by the
+/* "full" IRQ router: saves/restores complete CPU state.  Allows for task-switching etc. */
+/* Execution time: 468 clocks on MC68010, assuming zero wait states */
+irq_router_full:
+    moveml      %d0-%d7/%a0-%a7, %sp@-
+
+    movel       %usp, %a0
+    movel       %a0, %sp@(60)
+
+    clrl        %d0
+    movew       %sp@(70), %d0
+    andiw       #0x03ff, %d0
+
+    asll        #1, %d0
+    movel       %d0, %a0
+    addal       #g_interrupt_handlers, %a0
+
+    movel       %a0@(4), %sp@-
+
+    asrl        #3, %d0
+    movel       %d0, %sp@-
+
+    movel       %a0@, %a0
+    jsr         %a0@
+
+    addql       #8, %sp
+
+    movel       %sp@(60), %a0
+    movel       %a0, %usp
+    moveml      %sp@+, %d0-%d7/%a0-%a6
+
+    addql       #4, %sp
+
+    rte
+
+/*
+    The fast IRQ router only stacks the parts of the state which are defined as "throwaway" by the
     ABI, i.e. registers D0-D1 and A0-A1.  Any registers modified by the handler function will be
     saved/restored by the function itself.  The handler function call looks like this:
 
@@ -102,48 +158,13 @@
     RTE to resume normal processing.
 */
 
-.global irq_handler
 
-/* Standard generic IRQ entry point: saves complete CPU state.  Allows for task-switching etc. */
-irq_handler:
-    moveml      %d0-%d7/%a0-%a7, %sp@-
-
-    movel       %usp, %a0
-    movel       %a0, %sp@(60)
-
-    clrl        %d0
-    movew       %sp@(70), %d0
-    andiw       #0x03ff, %d0
-
-    asll        #1, %d0
-    movel       %d0, %a0
-    addal       #g_interrupt_handlers, %a0
-
-    movel       %a0@(4), %sp@-
-
-    asrl        #3, %d0
-    movel       %d0, %sp@-
-
-    movel       %a0@, %a0
-    jsr         %a0@
-
-    addql       #8, %sp
-
-    movel       %sp@(60), %a0
-    movel       %a0, %usp
-    moveml      %sp@+, %d0-%d7/%a0-%a6
-
-    addql       #4, %sp
-
-    rte
-
-
-fast_irq_handler:
+irq_router_fast:
     moveml      %d0-%d1/%a0-%a1, %sp@-
 
-    clrl        %d0
     movew       %sp@(22), %d0
     andiw       #0x03ff, %d0
+    extwl       %d0
 
     asll        #1, %d0
     movel       %d0, %a0

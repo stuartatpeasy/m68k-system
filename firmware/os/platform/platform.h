@@ -11,11 +11,16 @@
 	NOTE: this is currently just a collection of thoughts.  It is not yet ready for use!
 */
 
+#define IN_PLATFORM_H
+
 #include <cpu/cpu.h>
 #include <device/device.h>
 #include <include/defs.h>
 #include <memory/extents.h>
 #include <include/types.h>
+
+/* Parse platform-specific header */
+#include <platform/platform_specific.h>
 
 #define LED_RED             (0x80)
 #define LED_GREEN           (0x40)
@@ -30,8 +35,16 @@ s32 plat_mem_detect();			    /* Populate g_mem_extents with type & location of m
 s32 plat_get_serial_number(u8 sn[8]);
 
 s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg);
-s32 plat_stop_quantum();            /* Stop the currently-running quantum (task time-slice)     */
-s32 plat_start_quantum();           /* Start a new quantum                                      */
+
+/*
+    Quantum (=time-slice) start/stop functions.  Platform code can define these as macros for better
+    performance; if so, the platform-specific header should #define PLATFORM_QUANTUM_USES_MACROS.
+    If not, the platform-specific code should implement the following two functions.
+*/
+#ifndef PLATFORM_QUANTUM_USES_MACROS
+void plat_stop_quantum();     /* Stop the currently-running quantum (task time-slice)     */
+void plat_start_quantum();    /* Start a new quantum                                      */
+#endif
 
 s32 plat_dev_enumerate();
 
@@ -65,5 +78,7 @@ s32 plat_clockfreq_detect();
 s32 plat_console_init();			    /* Initialise console									*/
 s16 plat_console_putc(const char c);    /* Write a character to the console.  May block.		*/
 s16 plat_console_getc(void);		    /* Read a character from the console.  Must block.  	*/
+
+#undef IN_PLATFORM_H
 
 #endif

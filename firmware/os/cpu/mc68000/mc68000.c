@@ -26,7 +26,7 @@ void cpu_init_interrupt_handlers(void)
 
 	/* Point all exception vectors at the generic IRQ handler code initially */
 	for(u = 0; u <= CPU_MAX_IRQL; ++u)
-        CPU_EXC_VPTR_SET(u, irq_handler);
+        CPU_EXC_VPTR_SET(u, irq_router_full);
 
 	/* Now set specific handlers */
 	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */

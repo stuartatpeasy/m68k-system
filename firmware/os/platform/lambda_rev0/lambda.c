@@ -4,10 +4,12 @@
     Stuart Wallace, September 2015
 */
 
+#include <platform/platform.h>
 #include <platform/lambda_rev0/lambda.h>
 #include <platform/lambda_rev0/device.h>
 #include <device/device.h>
 #include <device/ds17485.h>
+#include <device/mc68681.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =
@@ -135,30 +137,8 @@ s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg)
     if(ret != SUCCESS)
         return ret;
 
-    return cpu_set_interrupt_handler(V_level_1_autovector, arg, handler);
-}
+    CPU_EXC_VPTR_SET(V_level_1_autovector, mc68010_irq_sched);
 
-
-/*
-    plat_start_quantum() - start the quantum timer, i.e. begin a new process time-slice.
-
-    Note: this function will be called in interrupt context.
-*/
-s32 plat_start_quantum()
-{
-    mc68681_start_counter(g_lambda_console, (MC68681_CLK_HZ / 16) / TICK_RATE);
-    return SUCCESS;
-}
-
-
-/*
-    plat_stop_quantum() - take any action necessary to finish the previous process time-slice.
-
-    Note: this function will be called in interrupt context.
-*/
-s32 plat_stop_quantum()
-{
-    mc68681_stop_counter(g_lambda_console);
     return SUCCESS;
 }
 

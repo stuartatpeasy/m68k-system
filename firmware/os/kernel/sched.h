@@ -65,7 +65,7 @@ struct proc_struct
 proc_t *g_current_proc;
 u32 g_ncontext_switches;
 
-void irq_schedule(ku32 irql, void *data, regs_t regs);
+void irq_schedule();
 s32 sched_init(const char * const init_proc_name);
 
 s32 create_process(const uid_t uid, const gid_t gid, const s8 *name, proc_main_t main_fn, u32 *arg,

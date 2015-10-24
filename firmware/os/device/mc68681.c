@@ -2,6 +2,11 @@
 	MC68681 DUART "driver"
 
 	(c) Stuart Wallace, December 2011.
+
+
+    NOTE: these two functions are defined inline in mc68681.h:
+            inline void mc68681_start_counter(dev_t *dev, ku16 init_count);
+            inline void mc68681_stop_counter(dev_t *dev);
 */
 
 #include <device/mc68681.h>
@@ -547,34 +552,6 @@ s32 mc68681_getc(void * const base_addr, ku16 channel, char *c)
 		return -EINVAL;
 
     return SUCCESS;
-}
-
-
-/*
-    mc68681_start_counter() - start the MC68681 counter/timer.
-*/
-void mc68681_start_counter(dev_t *dev, ku16 init_count)
-{
-    void * const base_addr = dev->base_addr;
-    u8 dummy;
-
-    /* Set CTUR/CTLR - the counter/timer upper/lower timeout counts */
-    MC68681_REG(base_addr, MC68681_CTUR) = (init_count >> 8) & 0xff;
-    MC68681_REG(base_addr, MC68681_CTLR) = init_count & 0xff;
-
-    dummy = MC68681_REG(base_addr, MC68681_START_CC);
-    dummy += 0;     /* silence the "var set but not used" compiler warning */
-}
-
-
-/*
-    mc68681_stop_counter() - stop the MC68681 counter/timer.
-    Check the MC68681 data sheet - there may be some oddness related to this.
-*/
-void mc68681_stop_counter(dev_t *dev)
-{
-    u8 dummy = MC68681_REG(dev->base_addr, MC68681_STOP_CC);
-    dummy += 0;     /* silence the "var set but not used" compiler warning */
 }
 
 

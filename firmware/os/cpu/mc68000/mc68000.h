@@ -22,6 +22,9 @@
 
 /*
     struct regs - container for a CPU context
+
+    NOTE: if this structure's size or layout changes, asm code will break!  Asm code elsewhere
+    assumes that the length of this struct is 70.
 */
 struct regs
 {
@@ -29,7 +32,7 @@ struct regs
     reg32_t a[8];
     reg16_t sr;     /* } These two elements align with the MC68000's exception stack frame. */
     reg32_t pc;     /* } See <cpu/mc68000/mc68000.h> for more information.                  */
-} __attribute__((aligned(2),packed));
+} __attribute__((aligned(2),packed));   /* sizeof(struct regs) == 70 */
 
 typedef struct regs regs_t;
 
@@ -153,7 +156,12 @@ inline u32 wswap_32(u32 x)
 };
 
 
-extern void irq_handler(void);      /* defined in irq.S */
+/* These are implemented in mc68000/irq.S */
+extern void irq_router_full(void);
+extern void irq_router_fast(void);
+extern void irq_router_swi(void);
+
+extern void mc68010_irq_sched(void);
 
 
 /*

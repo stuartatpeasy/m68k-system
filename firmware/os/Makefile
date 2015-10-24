@@ -18,7 +18,7 @@ CSOURCES:=	main.c \
 			kernel/syscall.c kernel/user.c \
 			memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
 
-ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/startup.S
+ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S cpu/$(CPU)/startup.S
 
 LDSCRIPT:=platform/$(PLATFORM)/kernel.ld
 
@@ -105,7 +105,10 @@ cpu/cpu.o: \
 cpu/$(CPU)/$(CPU).o: \
 	cpu/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c include/defs.h include/types.h
 
-startup.o: \
+cpu/$(CPU)/process.o: \
+	cpu/$(CPU)/process.S
+
+cpu/$(CPU)/startup.o: \
 	cpu/$(CPU)/startup.S memory/memorymap.h
 
 device/ata.o: \

@@ -96,23 +96,17 @@ printf("created process; sp=%08x\n", p->regs.a[7]);
 }
 
 
-void irq_schedule(ku32 irql, void *data, regs_t regs)
+void irq_schedule()
 {
     /*
         This is the interrupt handler for the system timer interrupt, which triggers a context
-        switch.  This function performs the context switch.
+        switch.  This function chooses the next task to run, and updates g_current_proc accordingly.
     */
-
     plat_stop_quantum();
+
     cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 
-    /* Store the outgoing process's state in *g_current_proc. */
-    memcpy(&g_current_proc->regs, &regs, sizeof(regs_t));
-
-	/*
-        TODO: Decide which process to run next, and update g_current_proc accordingly
-    */
-
+    ++g_current_proc->quanta;
     g_current_proc = g_current_proc->next;
 
     ++g_ncontext_switches;
@@ -124,10 +118,19 @@ void irq_schedule(ku32 irql, void *data, regs_t regs)
     */
     plat_start_quantum();
 
-    /* Restore the incoming task's state from g_current_task. */
-    memcpy(&regs, &g_current_proc->regs, sizeof(regs_t));
-    ++g_current_proc->quanta;
-
     cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
+}
+
+
+/*
+    sched_yield() - called by a process that wishes to give up the rest of its quantum.
+*/
+void sched_yield()
+{
+    /*
+        TODO:
+            save process state
+
+    */
 }
 

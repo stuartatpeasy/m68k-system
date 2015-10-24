@@ -312,9 +312,6 @@ s32 mc68681_serial_b_init(dev_t *dev);
 s32 mc68681_shut_down(dev_t *dev);
 s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const mc68681_pin_fn_t fn);
 
-void mc68681_start_counter(dev_t *dev, ku16 init_count);
-void mc68681_stop_counter(dev_t *dev);
-
 void mc68681_reset(void * const base_addr);
 s32 mc68681_reset_tx(void * const base_addr, ku16 channel);
 s32 mc68681_reset_rx(void * const base_addr, ku16 channel);
@@ -339,5 +336,39 @@ u32 mc68681_channel_b_get_baud_rate(dev_t *dev);
 u8 mc68681_read_ip(dev_t *dev);
 void mc68681_set_op_bits(dev_t *dev, ku8 bits);
 void mc68681_reset_op_bits(dev_t *dev, ku8 bits);
+
+/*
+    mc68681_start_counter() - start the MC68681 counter/timer.
+
+    Counter stop/starts may be done as part of context-switching, which needs to be fast, so this
+    function is inlined.
+*/
+inline void mc68681_start_counter(dev_t *dev, ku16 init_count)
+{
+    void * const base_addr = dev->base_addr;
+    u8 dummy;
+
+    /* Set CTUR/CTLR - the counter/timer upper/lower timeout counts */
+    MC68681_REG(base_addr, MC68681_CTUR) = (init_count >> 8) & 0xff;
+    MC68681_REG(base_addr, MC68681_CTLR) = init_count & 0xff;
+
+    dummy = MC68681_REG(base_addr, MC68681_START_CC);
+    dummy += 0;     /* silence the "var set but not used" compiler warning */
+};
+
+
+/*
+    mc68681_stop_counter() - stop the MC68681 counter/timer.
+    Check the MC68681 data sheet - there may be some oddness related to this.
+
+    Counter stop/starts may be done as part of context-switching, which needs to be fast, so this
+    function is inlined.
+*/
+inline void mc68681_stop_counter(dev_t *dev)
+{
+    u8 dummy = MC68681_REG(dev->base_addr, MC68681_STOP_CC);
+    dummy += 0;     /* silence the "var set but not used" compiler warning */
+};
+
 
 #endif

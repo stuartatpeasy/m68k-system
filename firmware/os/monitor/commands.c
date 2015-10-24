@@ -817,17 +817,19 @@ struct mydata
 #include <kernel/ksym.h>
 void myfn(void *arg)
 {
+    *((vu32 *) 0x200004) = 0;
     while(1)
     {
-        ++*((vu32 *) 0x200000);
+        ++*((vu32 *) 0x200004);
     }
 }
 
 void myfn2(void *arg)
 {
+    *((vu32 *) 0x200008) = 0;
     while(1)
     {
-        ++*((vu32 *) 0x200004);
+        ++*((vu32 *) 0x200008);
     }
 }
 
@@ -875,21 +877,6 @@ MONITOR_CMD_HANDLER(test)
 #endif
     }
     else if(testnum == 2)
-    {
-#if 0
-        dev_t dev =
-        {
-            .base_addr = (void *) 0xb00000,
-            .len = 0x100000,
-            .irql = 29          /* IRQ 5 */
-        };
-
-        s32 ret = encx24j600_init(&dev);
-
-        printf("encx24j600_init() returned %s\n", kstrerror(ret));
-#endif
-    }
-    else if(testnum == 3)
     {
         pid_t pid = 0;
 
