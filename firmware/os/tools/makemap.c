@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -27,6 +28,7 @@
 #define E_SYNTAX		(1)		/* Command-line syntax error 	*/
 #define E_FILE			(2)		/* File create/open error		*/
 #define E_IO			(3)		/* Read/write failed			*/
+#define E_MALLOC		(4)		/* Memory allocation failed		*/
 
 /*
 	Format of entries in an embedded symbol table:
@@ -86,9 +88,12 @@ int main(int argc, char **argv)
 {
 	char name[MAX_LINE_LEN];
 	FILE *fp_in, *fp_out;
-	symentry_t sym;
-	int ret;
-	const int num_input_fields = 3;
+	int ret, line;
+	const int num_input_fields = 3;		/* Number of fields in nm's output */
+	void *eot_buf;						/* Buffer to hold end-of-table (EOT) marker */
+
+	/* Size of end-of-table (EOT) marker, rounded up to the nearest four bytes */
+	const size_t eot_marker_len = (sizeof(symentry_t) + 3) & ~3;
 
 	fp_in = stdin;
 	fp_out = stdout;
@@ -112,11 +117,22 @@ int main(int argc, char **argv)
 		default:
 			error(E_SYNTAX, 0, "Syntax: %s [<input_file> [<output_file>]]", argv[0]);
 	}
+	
+	/*
+		Allocate buffer for end-of-table (EOT) marker.  This marker has all fields set to zero, so
+		calloc() both allocates and initialises the marker.
+	*/
+	eot_buf = (char *) calloc(1, eot_marker_len);
+	if(eot_buf == NULL)
+		error(E_MALLOC, errno, "Failed to allocate %d bytes", (int) eot_marker_len);
+
+	line = 1;
 
 	do
 	{
 		char *p;
 		uint32_t len, padding;
+		symentry_t sym;
 		
 		/*
 			Format of the output of *nm <obj_file>:
@@ -157,18 +173,20 @@ int main(int argc, char **argv)
 			for(; padding--;)
 				checked_fputc(0, fp_out);
 		}
-	} while(!feof(fp_in) && (ret == num_input_fields));
+		else if(ret > 0)
+		{
+			fprintf(stderr, "Skipping input line %d: unrecognised format\n", line);
+		}
+
+		++line;
+	} while(!feof(fp_in) && ret);
 
 	/* Write end-of-table marker */
-	sym.addr = 0;
-	sym.type = 0;
-	sym.len = 0;
-	sym.name = 0;
-
-	if(fwrite(&sym, sizeof(sym), 1, fp_out) < 1)
+	if(fwrite(eot_buf, eot_marker_len, 1, fp_out) < 1)
 		error(E_IO, errno, "Failed to write end-of-symbol-table marker");
 
 	fflush(fp_out);
+	free(eot_buf);
 
 	return 0;
 }
