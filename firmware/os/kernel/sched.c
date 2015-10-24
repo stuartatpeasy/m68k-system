@@ -44,7 +44,7 @@ s32 sched_init(const char * const init_proc_name)
     g_current_proc = p;
 
     /* Install the scheduler IRQ handler */
-	return plat_install_timer_irq_handler(irq_schedule, NULL);
+	return plat_install_timer_irq_handler(sched, NULL);
 }
 
 
@@ -96,15 +96,13 @@ printf("created process; sp=%08x\n", p->regs.a[7]);
 }
 
 
-void irq_schedule()
+/*
+    sched() - select the next task to run, and update g_current_proc accordingly.
+*/
+void sched()
 {
-    /*
-        This is the interrupt handler for the system timer interrupt, which triggers a context
-        switch.  This function chooses the next task to run, and updates g_current_proc accordingly.
-    */
+    /* Stop the current time-slice */
     plat_stop_quantum();
-
-    cpu_disable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 
     ++g_current_proc->quanta;
     g_current_proc = g_current_proc->next;
@@ -112,13 +110,11 @@ void irq_schedule()
     ++g_ncontext_switches;
 
     /*
-        Start the next timeslice.  We need to do this before restoring the incoming tasks's state
+        Start the next time-slice.  We need to do this before restoring the incoming task's state
         because the function call might interfere with register values.  This means that the next
-        timeslice starts before the corresponding task is actually ready to run.
+        time-slice starts before the corresponding task is actually ready to run.
     */
     plat_start_quantum();
-
-    cpu_enable_interrupts();   /* Not sure whether disable/enable IRQs is necessary */
 }
 
 

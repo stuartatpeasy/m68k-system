@@ -31,6 +31,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="cpu/mc68000/mc68000.h" />
+		<Unit filename="cpu/mc68000/process.S" />
 		<Unit filename="cpu/mc68000/startup.S" />
 		<Unit filename="cpu/mc68000/syscall.S" />
 		<Unit filename="device/ata.c">
@@ -247,6 +248,7 @@
 		</Unit>
 		<Unit filename="platform/lambda_rev0/lambda.h" />
 		<Unit filename="platform/platform.h" />
+		<Unit filename="platform/platform_specific.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

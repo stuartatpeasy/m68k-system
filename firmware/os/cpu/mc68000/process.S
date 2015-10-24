@@ -14,20 +14,12 @@
 #error This code requires the MC68010 architecture
 #endif
 
+#include <cpu/mc68000/regs.h>
+
 .global mc68010_irq_sched
 .global mc68010_sched_yield
 
 /*
-    stack(a0)
-
-    a0 = &g_current_proc->regs;
-
-
-    unstack(a0)
-
-
-    On entry, the stack will look like this:
-
                  15                     0
                  | ..other junk, maybe..|
                  +------+---------------+
@@ -41,46 +33,55 @@
 
     "Other junk" refers to additional data stacked for bus and address error exceptions.
 
-
-
+    mc68010_irq_sched is the timer interrupt handler.  It saves CPU context in the proc_t structure
+    pointed to by g_current_proc, then calls the sched() function.  That function should decide
+    which process to run next, and update g_current_proc accordingly before returning.
+    mc68010_irq_sched then restores CPU state for the incoming process and resumes execution.
 */
 
 
 mc68010_irq_sched:
-    /* Stack a0 and point it at the first hword after g_current_proc->regs */
-    movel       %a0, %sp@-
-    lea         g_current_proc, %a0
-    moveal      %a0@, %a0
+    ori.w       #0x0700, sr         /* Disable interrupts */
 
-    addaw       #70, %a0            /* NOTE: sizeof(regs_t) = 70 */
+    /* Stack a0 and point it at the first hword after g_current_proc->regs */
+    move.l      a0, sp@-
+
+    lea         g_current_proc, a0
+    movea.l     a0@, a0
+    adda.w      #70, a0             /* NOTE: sizeof(regs_t) = 70 */
 
     /* Store PC and SR of outgoing process in g_current_proc->regs */
-    movel       %sp@(6), %a0@-
-    movew       %sp@(4), %a0@-
+    move.l      sp@(6), a0@-
+    move.w      sp@(4), a0@-
 
     /*
         Store registers in g_current_proc->regs[].  a0 is trashed at this point, and will be re-read
         from the stack.  Also store the user stack pointer in g_current_proc->regs.a[7].
     */
-    moveml      %d0-%d7/%a0-%a7, %a0@-
-    movel       %sp@+, %a0@(32)
-    movel       %usp, %a1
-    movel       %a1, %a0@(60)
+    movem.l     d0-d7/a0-a7, a0@-
+    move.l      sp@+, a0@(32)
+    move.l      usp, a1
+    move.l      a1, a0@(60)
 
-    jsr         irq_schedule
+    jsr         sched
 
     /*
         Restore state from g_current_proc.
         NOTE: assumes regs is the first member of g_current_proc
     */
-    lea         g_current_proc, %a0
-    moveal      %a0@, %a0
+    lea         g_current_proc, a0
+    movea.l     a0@, a0
 
-    movel       %a0@(66), %sp@(2)
-    movew       %a0@(64), %sp@
-    movel       %a0@(60), %a1
-    movel       %a1, %usp
-    moveml      %a0@+, %d0-%d7/%a0-%a6
-    movel       %a0@(-28), %a0
+    move.l      a0@(66), sp@(2)
+    move.w      a0@(64), sp@
+    move.l      a0@(60), a1
+    move.l      a1, usp
+    movem.l     a0@+, d0-d7/a0-a6
+    move.l      a0@(-28), a0
+
+    andi.w      #0xf8ff, sr         /* Enable interrupts */
 
     rte
+
+
+mc68010_sched_yield:

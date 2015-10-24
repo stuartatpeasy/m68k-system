@@ -14,6 +14,8 @@
 #error This code requires the MC68010 architecture
 #endif
 
+#include <cpu/mc68000/regs.h>
+
 .global irq_router_full
 .global irq_router_fast
 .global irq_router_swi
@@ -85,34 +87,34 @@
 /* "full" IRQ router: saves/restores complete CPU state.  Allows for task-switching etc. */
 /* Execution time: 468 clocks on MC68010, assuming zero wait states */
 irq_router_full:
-    moveml      %d0-%d7/%a0-%a7, %sp@-
+    movem.l     d0-d7/a0-a7, sp@-
 
-    movel       %usp, %a0
-    movel       %a0, %sp@(60)
+    move.l      usp, a0
+    move.l      a0, sp@(60)
 
-    clrl        %d0
-    movew       %sp@(70), %d0
-    andiw       #0x03ff, %d0
+    clr.l       d0
+    move.w      sp@(70), d0
+    andi.w      #0x03ff, d0
 
-    asll        #1, %d0
-    movel       %d0, %a0
-    addal       #g_interrupt_handlers, %a0
+    asl.l       #1, d0
+    move.l      d0, a0
+    adda.l      #g_interrupt_handlers, a0
 
-    movel       %a0@(4), %sp@-
+    move.l      a0@(4), sp@-
 
-    asrl        #3, %d0
-    movel       %d0, %sp@-
+    asr.l       #3, d0
+    move.l      d0, sp@-
 
-    movel       %a0@, %a0
-    jsr         %a0@
+    move.l      a0@, a0
+    jsr         a0@
 
-    addql       #8, %sp
+    addq.l      #8, sp
 
-    movel       %sp@(60), %a0
-    movel       %a0, %usp
-    moveml      %sp@+, %d0-%d7/%a0-%a6
+    move.l      sp@(60), a0
+    move.l      a0, usp
+    movem.l     sp@+, d0-d7/a0-a6
 
-    addql       #4, %sp
+    addq.l       #4, sp
 
     rte
 
@@ -160,26 +162,26 @@ irq_router_full:
 
 
 irq_router_fast:
-    moveml      %d0-%d1/%a0-%a1, %sp@-
+    movem.l     d0-d1/a0-a1, sp@-
 
-    movew       %sp@(22), %d0
-    andiw       #0x03ff, %d0
-    extwl       %d0
+    move.w      sp@(22), d0
+    andi.w      #0x03ff, d0
+    ext.l       d0
 
-    asll        #1, %d0
-    movel       %d0, %a0
-    addal       #g_interrupt_handlers, %a0
+    asl.l       #1, d0
+    move.l      d0, a0
+    adda.l      #g_interrupt_handlers, a0
 
-    movel       %a0@(4), %sp@-
+    move.l      a0@(4), sp@-
 
-    asrl        #3, %d0
-    movel       %d0, %sp@-
+    asr.l       #3, d0
+    move.l      d0, sp@-
 
-    movel       %a0@, %a0
-    jsr         %a0@
+    move.l      a0@, a0
+    jsr         a0@
 
-    addql       #8, %sp
+    addq.l      #8, sp
 
-    moveml      %sp@+, %d0-%d1/%a0-%a1
+    movem.l     sp@+, d0-d1/a0-a1
 
     rte
