@@ -26,8 +26,6 @@ OBJLIBS:=libc.a libkutil.a libmonitor.a
 
 TOOLS:=tools/bin/makemap
 
-MAPFILE:=$(APPNAME).map
-
 LDFLAGS:=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
 LIBS:=-lgcc -lc -lkutil -lmonitor -lplatform
@@ -46,10 +44,9 @@ all: $(APPNAME)
 $(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE) $(TOOLS)
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
-	$(NM) $(APPNAME) > $(MAPFILE)
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
 	truncate --size %4 $(APPNAME).rom
-	tools/bin/makemap <$(MAPFILE) >>$(APPNAME).rom
+	$(NM) $(APPNAME) | tools/bin/makemap >>$(APPNAME).rom
 	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
 	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
 	chmod -f -x $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom || true
@@ -70,7 +67,7 @@ dfu:
 	$(DFU) --program --baud 115200 --infile $(APPNAME).rom
 
 clean:
-	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom $(MAPFILE)
+	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Cklibc clean
 	$(MAKE) $(MFLAGS) -Ckutil clean
