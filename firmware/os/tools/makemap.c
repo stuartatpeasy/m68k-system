@@ -21,7 +21,8 @@
 #include <string.h>
 #include <strings.h>
 
-#define MAX_LINE_LEN	(256)
+#define LINE_BUF_LEN	(512)
+#define MAX_NAME_LEN	(256)
 
 /* Program exit codes */
 #define E_SUCCESS		(0)		/* Success exit code			*/
@@ -86,7 +87,7 @@ int checked_fputc(int c, FILE *stream)
 
 int main(int argc, char **argv)
 {
-	char name[MAX_LINE_LEN];
+	char name[MAX_NAME_LEN], line_buf[LINE_BUF_LEN];
 	FILE *fp_in, *fp_out;
 	int ret, line;
 	const int num_input_fields = 3;		/* Number of fields in nm's output */
@@ -151,35 +152,34 @@ int main(int argc, char **argv)
 			  = 245 bytes
 		*/
 
-		bzero(name, sizeof(name) / sizeof(name[0]));
-		ret = fscanf(fp_in, "%08x %c %245s\n", &sym.addr, (char *) &sym.type, &name[0]);
-		if(ret == num_input_fields)
+		if(fgets(line_buf, sizeof(line_buf) / sizeof(line_buf[0]), fp_in) != NULL)
 		{
-			if(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-				sym.addr = __builtin_bswap32(sym.addr);
+			bzero(name, sizeof(name) / sizeof(name[0]));
 
-			len = sizeof(sym.addr) + sizeof(sym.type) + sizeof(sym.len) + strlen(name) + 1; 
-			padding = (4 - (len & 3)) & 3;
+			ret = sscanf(line_buf, "%08x %c %245s\n", &sym.addr, (char *) &sym.type, &name[0]);
+			if(ret == num_input_fields)
+			{
+				if(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+					sym.addr = __builtin_bswap32(sym.addr);
 
-			sym.len = len + padding;
+				len = sizeof(sym.addr) + sizeof(sym.type) + sizeof(sym.len) + strlen(name) + 1; 
+				padding = (4 - (len & 3)) & 3;
+
+				sym.len = len + padding;
 			
-			for(p = (char *) &sym; p < &sym.name; ++p)
-				checked_fputc(*p, fp_out);
+				for(p = (char *) &sym; p < &sym.name; ++p)
+					checked_fputc(*p, fp_out);
 
-			for(p = name; *p; ++p)
-				checked_fputc(*p, fp_out);
-			fputc(0, fp_out);
+				for(p = name; *p; ++p)
+					checked_fputc(*p, fp_out);
+				fputc(0, fp_out);
 
-			for(; padding--;)
-				checked_fputc(0, fp_out);
+				for(; padding--;)
+					checked_fputc(0, fp_out);
+			}
 		}
-		else if(ret > 0)
-		{
-			fprintf(stderr, "Skipping input line %d: unrecognised format\n", line);
-		}
-
 		++line;
-	} while(!feof(fp_in) && ret);
+	} while(!feof(fp_in));
 
 	/* Write end-of-table marker */
 	if(fwrite(eot_buf, eot_marker_len, 1, fp_out) < 1)
