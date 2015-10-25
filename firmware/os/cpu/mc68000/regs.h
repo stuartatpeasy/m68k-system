@@ -20,8 +20,9 @@
 #define a6      REG(a6)
 #define a7      REG(a7)
 
-#define sp      REG(sp)
-#define usp     REG(usp)
+#define fp      REG(fp)     /* = a6  */
+#define sp      REG(sp)     /* = a7  */
+#define usp     REG(usp)    /* = a7' */
 
 #define d0      REG(d0)
 #define d1      REG(d1)
@@ -34,5 +35,6 @@
 
 #define sr      REG(sr)
 #define ccr     REG(ccr)
+#define vbr     REG(vbr)
 
 #endif

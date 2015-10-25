@@ -16,6 +16,7 @@
 
 #include <cpu/mc68000/regs.h>
 
+.text
 .global irq_router_full
 .global irq_router_fast
 .global irq_router_swi

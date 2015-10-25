@@ -16,6 +16,7 @@
 
 #include <cpu/mc68000/regs.h>
 
+.text
 .global mc68010_irq_sched
 .global mc68010_sched_yield
 
@@ -46,8 +47,7 @@ mc68010_irq_sched:
     /* Stack a0 and point it at the first hword after g_current_proc->regs */
     move.l      a0, sp@-
 
-    lea         g_current_proc, a0
-    movea.l     a0@, a0
+    movea.l     g_current_proc, a0
     adda.w      #70, a0             /* NOTE: sizeof(regs_t) = 70 */
 
     /* Store PC and SR of outgoing process in g_current_proc->regs */
@@ -69,9 +69,7 @@ mc68010_irq_sched:
         Restore state from g_current_proc.
         NOTE: assumes regs is the first member of g_current_proc
     */
-    lea         g_current_proc, a0
-    movea.l     a0@, a0
-
+    movea.l     g_current_proc, a0
     move.l      a0@(66), sp@(2)
     move.w      a0@(64), sp@
     move.l      a0@(60), a1
