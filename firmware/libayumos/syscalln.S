@@ -7,23 +7,31 @@
 	Stuart Wallace, August 2015.
 */
 
-
+.text
 .globl syscall0
+.globl syscall1
+.globl syscall2
+.globl syscall3
+.globl sys_yield
+
 syscall0:
 		trap #0
 		rts
 
-.globl syscall1
 syscall1:
 		trap #0
 		rts
 
-.globl syscall2
 syscall2:
 		trap #0
 		rts
 
-.globl syscall3
 syscall3:
 		trap #0
 		rts
+
+sys_yield:
+		trap #15
+		moveq.l #0, %d0
+		rts
+

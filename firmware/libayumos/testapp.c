@@ -12,6 +12,7 @@ int y;										/* Force a .bss section */
 int main()
 {
 	sys_console_putchar('A');
+	sys_yield();
 
 	return 0;
 }

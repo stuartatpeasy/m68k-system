@@ -24,6 +24,8 @@ int syscall1(const unsigned int func, const unsigned int arg1);
 int syscall2(const unsigned int func, const unsigned int arg1, const unsigned int arg2);
 int syscall3(const unsigned int func, const unsigned int arg1, const unsigned int arg2, const unsigned int arg3);
 
+int sys_yield();
+
 void _start();
 
 extern int main();
