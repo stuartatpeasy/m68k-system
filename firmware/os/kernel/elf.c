@@ -5,15 +5,13 @@
 
 
 	Stuart Wallace, August 2015.
-
-	TODO: fix up error codes: add some new kernel-specific codes, maybe
 */
 
-#include "include/byteorder.h"
-#include "errno.h"
-#include "stdio.h"
-#include "string.h"
-#include "strings.h"
+#include <include/byteorder.h>
+#include <klibc/errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
 
 #include "include/elf.h"
 
@@ -174,6 +172,10 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 }
 
 
+/*
+    elf_is_relevant_progbits_section() - given the name of a section, return true if it is a
+    populated program section that needs to be processed; return false otherwise.
+*/
 u32 elf_is_relevant_progbits_section(ks8 * name)
 {
 	return !strcmp(name, ".text") || !strcmp(name, ".rodata")
@@ -181,6 +183,10 @@ u32 elf_is_relevant_progbits_section(ks8 * name)
 }
 
 
+/*
+    elf_is_relevant_nobits_section() - given the name of a section, return true if it is a section
+    taking up no space in the ELF file, but still relevant; return false otherwise.
+*/
 u32 elf_is_relevant_nobits_section(ks8 * name)
 {
 	return !strcmp(name, ".bss");

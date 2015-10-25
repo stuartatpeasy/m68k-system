@@ -839,7 +839,7 @@ struct mydata
 };
 
 
-#include <kernel/sched.h>
+#include <kernel/process.h>
 #include <include/elf.h>
 MONITOR_CMD_HANDLER(test)
 {
@@ -939,27 +939,22 @@ MONITOR_CMD_HANDLER(test)
         printf("copying %d bytes to %p\n", sizeof(testapp), addr);
         memcpy(addr, testapp, sizeof(testapp));
         ret = elf_load_exe(addr, sizeof(testapp), &img);
-        if(ret == SUCCESS)
-        {
-            printf("Image loaded! start=%p, len=%d, entry_point=%p\n",
-                   img.start, img.len, img.entry_point);
-        }
-        else
+        if(ret != SUCCESS)
             printf("elf_load_exe() returned %u: %s\n", ret, kstrerror(ret));
 
         /* FIXME - there's currently no way to free an exe_img_t cleanly */
 
-        ret = create_process(0, 0, "testapp", img.entry_point, NULL, 1024, 0, &pid);
-        printf("create_process returned %d (%s); pid=%d\n", ret, kstrerror(ret), pid);
+        ret = proc_create(0, 0, "testapp", img.entry_point, NULL, 1024, 0, &pid);
+        printf("proc_create returned %d (%s); pid=%d\n", ret, kstrerror(ret), pid);
 
 /*
         pid_t pid = 0;
 
-        s32 ret = create_process(0, 0, "testapp", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
-        printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+        s32 ret = proc_create(0, 0, "testapp", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
+        printf("proc_create() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
 
-        ret = create_process(0, 0, "test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
-        printf("create_process() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
+        ret = proc_create(0, 0, "test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
+        printf("proc_create() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
 */
     }
 

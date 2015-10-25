@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015
 */
 
-#include <kernel/sched.h>
+#include <kernel/process.h>
 #include <kernel/syscall.h>
 #include <klibc/stdio.h>
 #include <platform/platform.h>      /* for plat_console_putc() */
@@ -36,7 +36,7 @@ s32 syscall_exit(u32 code)
     /* TODO */
     cpu_disable_interrupts();
 
-    printf("Process %d exited with code %d\n", sched_get_pid(), code);
+    printf("\nProcess %d exited with code %d\n", proc_get_pid(), code);
 
     while(1)
         ;       /* FIXME - remove process from scheduler list; get on with something else... */

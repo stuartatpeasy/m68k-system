@@ -160,6 +160,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/ksym.h" />
+		<Unit filename="kernel/process.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/process.h" />
 		<Unit filename="kernel/sched.c">
 			<Option compilerVar="CC" />
 		</Unit>

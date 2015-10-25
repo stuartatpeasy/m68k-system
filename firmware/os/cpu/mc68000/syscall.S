@@ -58,7 +58,7 @@ syscall_dispatcher:
         beq.s       sdL2        /* Call takes no args */
 
         /*
-            Calculate the address of the first argument on the user stack;
+            Calculate the address of the first argument on the user stack:
                 = usp + sizeof(return_addr) + sizeof(syscall_num) + (num_args * sizeof(arg))
                 = usp + 8 + (num_args * 4)
         */
@@ -73,7 +73,7 @@ sdL1:   move.l      a0@-, sp@-
         dbf.w       d0, sdL1
 
         /* Do syscall */
-sdL2:   movel       a1@(4), a1
+sdL2:   move.l      a1@(4), a1
         jsr         a1@
 
         /* Deallocate syscall args and restore regs */
@@ -84,5 +84,5 @@ sdL2:   movel       a1@(4), a1
         rte
 
 syscall_handler_invalid_syscall:
-		moveq.l	#-1, d0
+		moveq.l	    #-1, d0
 		rte
