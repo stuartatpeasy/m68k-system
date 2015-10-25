@@ -32,11 +32,9 @@ void cpu_init_interrupt_handlers(void)
 	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
 	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
 
-	cpu_set_interrupt_handler(V_bus_error, NULL, mc68000_exc_bus_error);
-	cpu_set_interrupt_handler(V_address_error, NULL, mc68000_exc_address_error);
-
 	/* TODO install TRAP handlers */
-	cpu_set_interrupt_handler(V_trap_0, NULL, mc68000_trap_0_handler);
+	CPU_EXC_VPTR_SET(V_trap_0, syscall_dispatcher);
+
 	cpu_set_interrupt_handler(V_trap_1, NULL, mc68000_trap_1_handler);
 	cpu_set_interrupt_handler(V_trap_2, NULL, mc68000_trap_2_handler);
 	cpu_set_interrupt_handler(V_trap_3, NULL, mc68000_trap_3_handler);
@@ -55,50 +53,23 @@ void cpu_init_interrupt_handlers(void)
 }
 
 
-void mc68000_exc_bus_error(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(data);
-
-    cpu_disable_interrupts();
-	puts("\nException: Bus error");
-
-	mc68010_dump_address_exc_frame(irql, &regs);
-	putchar('\n');
-    mc68000_dump_regs(&regs);
-
-	puts("\nSystem halted.");
-	cpu_halt();
-}
-
-
-void mc68000_exc_address_error(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(data);
-
-    cpu_disable_interrupts();
-	puts("\nException: Address error");
-
-	mc68010_dump_address_exc_frame(irql, &regs);
-	putchar('\n');
-    mc68000_dump_regs(&regs);
-
-	puts("\nSystem halted.");
-	cpu_halt();
-}
-
-
+/*
+    mc68000_exc_generic() - handler for interrupts not otherwise handled.  Dumps state and halts
+    the CPU.
+*/
 void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 {
     UNUSED(data);
 
     cpu_disable_interrupts();
+
 	printf("\nUnhandled exception: ");
 	if((irql >= 25) && (irql <= 31))
-		printf("Level %d interrupt autoirqltor\n", irql - 24);
+		printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
 	else if((irql >= 32) && (irql <= 47))
-		printf("Trap #%d\n", irql - 32);
+		printf("Trap #%d (vector %d)\n", irql - 32, irql);
 	else if(irql >= 64)
-		printf("User-defined vector %d\n", irql - 64);
+		printf("User-defined interrupt %d (vector %d)\n", irql - 64, irql);
 	else
 	{
 		const char *msg = NULL;
@@ -129,16 +100,18 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 			case 56: msg = "MMU configuration error";				break;
 			case 57: msg = "MMU illegal operation";					break;
 			case 58: msg = "MMU access level violation";			break;
+			default: msg = "Unknown interrupt";                     break;
 		}
 
-		if(msg)
-			puts(msg);
-		else
-			printf("Unknown #%d\n", irql);
+        printf("%s (vector %d)\n\n", msg, irql);
 	}
 
-	mc68010_dump_exc_frame(irql, &regs);
-	putchar('\n');
+    if((irql == V_bus_error) || (irql == V_address_error))
+    {
+        mc68010_dump_address_exc_frame(irql, &regs);
+        putchar('\n');
+    }
+
     mc68000_dump_regs(&regs);
 
 	puts("\nSystem halted.");
@@ -409,25 +382,6 @@ const char * mc68000_dump_status_register(ku16 sr)
 
 
 /*
-	mc68010_dump_exc_frame() - dump a MC68010 exception frame (short version)
-*/
-void mc68010_dump_exc_frame(ku32 irql, const regs_t * const regs)
-{
-#if !defined(TARGET_MC68010)
-#error "This code requires a MC68010 target"
-#endif
-    char sym[128];
-
-    ksym_format_nearest_prev((void *) regs->pc, sym, sizeof(sym));
-
-	printf("Status register     = %04x [%s]\n"
-		   "Program counter     = 0x%08x    %s\n"
-		   "Vector number       = %u\n\n",
-			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc, sym, irql);
-}
-
-
-/*
 	mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
 */
 void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
@@ -435,26 +389,19 @@ void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
+    UNUSED(irql);
+
     const struct mc68010_address_exc_frame * const f =
         (const struct mc68010_address_exc_frame * const) &(regs[1]);
 
-    char sym[128];
-
-    ksym_format_nearest_prev((void *) regs->pc, sym, sizeof(sym));
-
-	printf("Status register     = %04x [%s]\n"
-		   "Program counter     = 0x%08x    %s\n"
-		/* "Frame format        = %x\n" */
-		   "Vector number       = %u\n"
-		   "Special status word = %04x\n"
+	printf("Special status word = %04x\n"
 		   "Fault address       = 0x%08x\n"
 		   "Data output buffer  = %04x\n"
 		   "Data input buffer   = %04x\n"
 		   "Instr output buffer = %04x\n"
 		   "Version number      = %04x\n",
-			regs->sr, mc68000_dump_status_register(regs->sr), regs->pc, sym, irql,
-            f->special_status_word, f->fault_addr, f->data_output_buffer, f->data_input_buffer,
-            f->instr_output_buffer,	f->version_number);
+			f->special_status_word, f->fault_addr, f->data_output_buffer,
+			f->data_input_buffer, f->instr_output_buffer,	f->version_number);
 }
 
 
@@ -463,14 +410,18 @@ void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
 */
 void mc68000_dump_regs(const regs_t *regs)
 {
+    char sym[128];
+
+    ksym_format_nearest_prev((void *) regs->pc, sym, sizeof(sym));
+
     printf("D0=%08x  D1=%08x  D2=%08x  D3=%08x\n"
            "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"
            "A0=%08x  A1=%08x  A2=%08x  A3=%08x\n"
            "A4=%08x  A5=%08x  A6=%08x  SP=%08x\n\n"
-           "PC=%08x  SR=%04x  [%s]\n",
+           "PC=%08x  %s\nSR=%04x  [%s]\n",
            regs->d[0], regs->d[1], regs->d[2], regs->d[3],
            regs->d[4], regs->d[5], regs->d[6], regs->d[7],
            regs->a[0], regs->a[1], regs->a[2], regs->a[3],
            regs->a[4], regs->a[5], regs->a[6], regs->a[7],
-           regs->pc, regs->sr, mc68000_dump_status_register(regs->sr));
+           regs->pc, sym, regs->sr, mc68000_dump_status_register(regs->sr));
 }
