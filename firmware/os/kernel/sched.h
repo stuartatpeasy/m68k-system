@@ -16,8 +16,6 @@
 #include <strings.h>
 
 
-typedef void (*proc_main_t)(void *);
-
 /*
     Process type flags
 */
@@ -68,7 +66,9 @@ u32 g_ncontext_switches;
 void sched();
 s32 sched_init(const char * const init_proc_name);
 
-s32 create_process(const uid_t uid, const gid_t gid, const s8 *name, proc_main_t main_fn, u32 *arg,
-                   ku32 stack_len, ku16 flags, pid_t *newpid);
+s32 create_process(const uid_t uid, const gid_t gid, const s8 *name, proc_entry_fn_t main_fn,
+                   u32 *arg, ku32 stack_len, ku16 flags, pid_t *newpid);
+
+pid_t sched_get_pid();
 
 #endif

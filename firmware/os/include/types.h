@@ -61,12 +61,16 @@ typedef struct rtc_time
 typedef s16 pid_t;
 #endif
 
+/* Process entry-point function */
+typedef void (*proc_entry_fn_t)(void *);
+
+
 /* In-memory executable image */
 struct exe_img
 {
-    void *start;            /* Ptr to first byte of img in memory   */
-    u32 len;                /* Img len                              */
-    u16 *entry_point;       /* Ptr to first instruction of img      */
+    void *start;                    /* Ptr to first byte of img in memory   */
+    u32 len;                        /* Img len                              */
+    proc_entry_fn_t entry_point;    /* Ptr to first instruction of img      */
 };
 
 typedef struct exe_img exe_img_t;

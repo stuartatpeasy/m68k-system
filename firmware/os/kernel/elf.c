@@ -139,7 +139,7 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 	if(!imgbuf)
 		return ENOMEM;
 
-	/* Pass 2: copy segments into buffer; intialise as required */
+	/* Pass 2: copy segments into buffer; initialise as required */
 	for(sh = shdr; sh < &shdr[nshdr]; ++sh)
 	{
 		ks8 * const name = strtab + BE2N32(sh->sh_name);
@@ -168,7 +168,7 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 
 	img->start = imgbuf;
 	img->len = size;
-	img->entry_point = (u16 *) (imgbuf + (BE2N32(ehdr->e_entry) - vaddr_start));
+	img->entry_point = (proc_entry_fn_t) (imgbuf + (BE2N32(ehdr->e_entry) - vaddr_start));
 
 	return SUCCESS;
 }

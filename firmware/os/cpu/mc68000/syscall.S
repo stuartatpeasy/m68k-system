@@ -24,7 +24,7 @@
                 | [syscall arg 2] |
            +12  |                 |
                 +-----------------+
-                |  syscall arg 1  |
+                | [syscall arg 1] |
             +8  |                 |
                 +-----------------+
                 |      syscall    |
@@ -46,11 +46,11 @@ syscall_dispatcher:
         bgt         syscall_handler_invalid_syscall
 
         /* Calculate the offset of the call entry in syscall_table */
-        movea.l     g_syscalls, a1
+        lea.l       g_syscalls, a1
         lsl.l       #3, d0
         adda.l      d0, a1
 
-        /* At this point, d0 contains the number of args needed by the requested syscall */
+        /* Set d0 = num args required by syscall */
         move.l      a1@, d0
 
         /* If the call requires arguments, copy them to the supervisor stack */
@@ -65,7 +65,8 @@ syscall_dispatcher:
         move.l      d0, d1
         lsl.l       #2, d1
         addq.l      #8, d1
-        adda.l      d0, a0
+        adda.l      d1, a0
+        subq.l      #1, d0
 
         /* Push args to supervisor stack */
 sdL1:   move.l      a0@-, sp@-

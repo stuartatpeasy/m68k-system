@@ -24,10 +24,10 @@ typedef struct syscall_table_entry
 const syscall_table_entry_t g_syscalls[];
 
 
-u32 syscall_exit();
-u32 syscall_console_putchar();
-u32 syscall_console_getchar();
-u32 syscall_leds();
-u32 syscall_yield();
+s32 syscall_exit(u32 code);
+s32 syscall_console_putchar(u32 c);
+s32 syscall_console_getchar();
+s32 syscall_leds(u32 state);
+s32 syscall_yield();
 
 #endif

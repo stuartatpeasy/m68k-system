@@ -51,8 +51,8 @@ s32 sched_init(const char * const init_proc_name)
 /*
     create_process() - create a new process and add it to the run queue.
 */
-s32 create_process(const uid_t uid, const gid_t gid, const s8* name, proc_main_t main_fn, u32 *arg,
-                   ku32 stack_len, ku16 flags, pid_t *newpid)
+s32 create_process(const uid_t uid, const gid_t gid, const s8* name, proc_entry_fn_t main_fn,
+                   u32 *arg, ku32 stack_len, ku16 flags, pid_t *newpid)
 {
     proc_t *p;
 
@@ -92,7 +92,6 @@ s32 create_process(const uid_t uid, const gid_t gid, const s8* name, proc_main_t
     g_current_proc->next->prev = p;
     g_current_proc->next = p;
 
-printf("created process; sp=%08x\n", p->regs.a[7]);
     cpu_enable_interrupts();
 
     return SUCCESS;
@@ -133,3 +132,11 @@ void sched_yield()
     */
 }
 
+
+/*
+    sched_get_pid() - return ID of currently-executing process
+*/
+pid_t sched_get_pid()
+{
+    return g_current_proc->id;
+}

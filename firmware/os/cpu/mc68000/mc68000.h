@@ -172,24 +172,6 @@ extern void syscall_dispatcher(void);
 void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs);
 
 
-void mc68000_trap_0_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_1_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_2_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_3_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_4_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_5_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_6_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_7_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_8_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_9_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_10_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_11_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_12_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_13_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_14_handler(ku32 irql, void *data, const regs_t regs);
-void mc68000_trap_15_handler(ku32 irql, void *data, const regs_t regs);
-
-
 const char * mc68000_dump_status_register(ku16 sr);
 void mc68000_dump_regs(const regs_t *regs);
 void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs);

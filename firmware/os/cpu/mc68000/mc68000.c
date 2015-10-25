@@ -32,24 +32,11 @@ void cpu_init_interrupt_handlers(void)
 	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
 	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
 
-	/* TODO install TRAP handlers */
+    /* System calls use TRAP #0 */
 	CPU_EXC_VPTR_SET(V_trap_0, syscall_dispatcher);
 
-	cpu_set_interrupt_handler(V_trap_1, NULL, mc68000_trap_1_handler);
-	cpu_set_interrupt_handler(V_trap_2, NULL, mc68000_trap_2_handler);
-	cpu_set_interrupt_handler(V_trap_3, NULL, mc68000_trap_3_handler);
-	cpu_set_interrupt_handler(V_trap_4, NULL, mc68000_trap_4_handler);
-	cpu_set_interrupt_handler(V_trap_5, NULL, mc68000_trap_5_handler);
-	cpu_set_interrupt_handler(V_trap_6, NULL, mc68000_trap_6_handler);
-	cpu_set_interrupt_handler(V_trap_7, NULL, mc68000_trap_7_handler);
-	cpu_set_interrupt_handler(V_trap_8, NULL, mc68000_trap_8_handler);
-	cpu_set_interrupt_handler(V_trap_9, NULL, mc68000_trap_9_handler);
-	cpu_set_interrupt_handler(V_trap_10, NULL, mc68000_trap_10_handler);
-	cpu_set_interrupt_handler(V_trap_11, NULL, mc68000_trap_11_handler);
-	cpu_set_interrupt_handler(V_trap_12, NULL, mc68000_trap_12_handler);
-	cpu_set_interrupt_handler(V_trap_13, NULL, mc68000_trap_13_handler);
-	cpu_set_interrupt_handler(V_trap_14, NULL, mc68000_trap_14_handler);
-	cpu_set_interrupt_handler(V_trap_15, NULL, mc68000_trap_15_handler);
+	/* Special case: sys_yield() uses TRAP #15 */
+	CPU_EXC_VPTR_SET(V_trap_15, cpu_yield);
 }
 
 
@@ -95,7 +82,7 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 			case 51: msg = "FP underflow";							break;
 			case 52: msg = "FP operand error";						break;
 			case 53: msg = "FP overflow";							break;
-			case 54: msg = "FP signaling NaN";						break;
+			case 54: msg = "FP signalling NaN";						break;
 			case 55: msg = "FP unimplemented data type";			break;
 			case 56: msg = "MMU configuration error";				break;
 			case 57: msg = "MMU illegal operation";					break;
@@ -103,179 +90,20 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 			default: msg = "Unknown interrupt";                     break;
 		}
 
-        printf("%s (vector %d)\n\n", msg, irql);
+        printf("%s (vector %d)\n", msg, irql);
 	}
 
     if((irql == V_bus_error) || (irql == V_address_error))
     {
-        mc68010_dump_address_exc_frame(irql, &regs);
         putchar('\n');
+        mc68010_dump_address_exc_frame(irql, &regs);
     }
 
+    putchar('\n');
     mc68000_dump_regs(&regs);
 
 	puts("\nSystem halted.");
 	cpu_halt();
-}
-
-
-void mc68000_trap_0_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 0");
-}
-
-
-void mc68000_trap_1_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 1");
-}
-
-
-void mc68000_trap_2_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 2");
-}
-
-
-void mc68000_trap_3_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 3");
-}
-
-
-void mc68000_trap_4_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 4");
-}
-
-
-void mc68000_trap_5_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 5");
-}
-
-
-void mc68000_trap_6_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 6");
-}
-
-
-void mc68000_trap_7_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 7");
-}
-
-
-void mc68000_trap_8_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 8");
-}
-
-
-void mc68000_trap_9_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 9");
-}
-
-
-void mc68000_trap_10_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 10");
-}
-
-
-void mc68000_trap_11_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 11");
-}
-
-
-void mc68000_trap_12_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 12");
-}
-
-
-void mc68000_trap_13_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 13");
-}
-
-
-void mc68000_trap_14_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 14");
-}
-
-
-void mc68000_trap_15_handler(ku32 irql, void *data, const regs_t regs)
-{
-    UNUSED(irql);
-    UNUSED(data);
-    UNUSED(regs);
-
-	puts("TRAP 15");
 }
 
 
@@ -417,7 +245,7 @@ void mc68000_dump_regs(const regs_t *regs)
     printf("D0=%08x  D1=%08x  D2=%08x  D3=%08x\n"
            "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"
            "A0=%08x  A1=%08x  A2=%08x  A3=%08x\n"
-           "A4=%08x  A5=%08x  A6=%08x  SP=%08x\n\n"
+           "A4=%08x  A5=%08x  A6=%08x USP=%08x\n\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n",
            regs->d[0], regs->d[1], regs->d[2], regs->d[3],
            regs->d[4], regs->d[5], regs->d[6], regs->d[7],

@@ -18,6 +18,7 @@
 
 .text
 .global cpu_context_switch
+.global cpu_yield
 
 /*
                  15                     0
@@ -42,6 +43,7 @@
 
 
 cpu_context_switch:
+cpu_yield:
     ori.w       #0x0700, sr         /* Disable interrupts */
 
     /* Stack a0 and point it at the first hword after g_current_proc->regs */

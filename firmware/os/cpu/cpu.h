@@ -38,7 +38,9 @@ inline u16 bswap_16(u16 x);
 inline u32 bswap_32(u32 x);
 inline u32 wswap_32(u32 x);
 
-void cpu_context_switch();                      /* Save context, call sched(), restore context  */
+/* These declarations are for IRQ handlers - they must not be called directly */
+void cpu_context_switch();      /* Save context, call sched(), restore context      */
+void cpu_yield();               /* Yield the remainder of the current time-slice    */
 
 /*
     Interrupt-related declarations
