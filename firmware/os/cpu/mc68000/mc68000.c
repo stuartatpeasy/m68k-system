@@ -57,6 +57,8 @@ void cpu_init_interrupt_handlers(void)
 
 void mc68000_exc_bus_error(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(data);
+
     cpu_disable_interrupts();
 	puts("\nException: Bus error");
 
@@ -71,6 +73,8 @@ void mc68000_exc_bus_error(ku32 irql, void *data, const regs_t regs)
 
 void mc68000_exc_address_error(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(data);
+
     cpu_disable_interrupts();
 	puts("\nException: Address error");
 
@@ -85,6 +89,8 @@ void mc68000_exc_address_error(ku32 irql, void *data, const regs_t regs)
 
 void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(data);
+
     cpu_disable_interrupts();
 	printf("\nUnhandled exception: ");
 	if((irql >= 25) && (irql <= 31))
@@ -142,96 +148,160 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 
 void mc68000_trap_0_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 0");
 }
 
 
 void mc68000_trap_1_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 1");
 }
 
 
 void mc68000_trap_2_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 2");
 }
 
 
 void mc68000_trap_3_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 3");
 }
 
 
 void mc68000_trap_4_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 4");
 }
 
 
 void mc68000_trap_5_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 5");
 }
 
 
 void mc68000_trap_6_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 6");
 }
 
 
 void mc68000_trap_7_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 7");
 }
 
 
 void mc68000_trap_8_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 8");
 }
 
 
 void mc68000_trap_9_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 9");
 }
 
 
 void mc68000_trap_10_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 10");
 }
 
 
 void mc68000_trap_11_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 11");
 }
 
 
 void mc68000_trap_12_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 12");
 }
 
 
 void mc68000_trap_13_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 13");
 }
 
 
 void mc68000_trap_14_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 14");
 }
 
 
 void mc68000_trap_15_handler(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 	puts("TRAP 15");
 }
 
@@ -314,7 +384,7 @@ u8 cpu_tas(u8 *addr)
 /*
 	mc68000_dump_status_register() - write a string describing the contents of the status register
 */
-const char * const mc68000_dump_status_register(ku16 sr)
+const char * mc68000_dump_status_register(ku16 sr)
 {
 	static char buf[16];
 

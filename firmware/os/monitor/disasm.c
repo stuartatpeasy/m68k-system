@@ -10,6 +10,10 @@
 #include "disasm.h"
 
 
+char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz);
+void movem_regs(char *str, unsigned short regs, char mode);
+
+
 ks8 * const g_disasm_branches[] =
 {
     "bra", "bsr", "bhi", "bls", "bcc", "bcs", "bne", "beq",

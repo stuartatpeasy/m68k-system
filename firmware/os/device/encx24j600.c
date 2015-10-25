@@ -70,6 +70,10 @@ s32 encx24j600_reset(dev_t *dev)
 
 void encx24j600_irq(ku32 irql, void *data, const regs_t regs)
 {
+    UNUSED(irql);
+    UNUSED(data);
+    UNUSED(regs);
+
 //    dev_t *dev = (dev_t *) data;
 
     /* Disable interrupts on the ENCX24 while we process this one */
@@ -129,23 +133,31 @@ s32 encx24j600_init(dev_t *dev)
 
 s32 encx24j600_shut_down(dev_t *dev)
 {
+    UNUSED(dev);
+
     return SUCCESS;
 }
 
 
 s32 encx24j600_read(dev_t *dev)
 {
+    UNUSED(dev);
+
     return SUCCESS;
 }
 
 
 s32 encx24j600_write(dev_t *dev)
 {
+    UNUSED(dev);
+
     return SUCCESS;
 }
 
 
 s32 encx24j600_control(dev_t *dev)
 {
+    UNUSED(dev);
+
     return SUCCESS;
 }

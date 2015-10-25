@@ -150,6 +150,8 @@ s32 ext2_mount(vfs_t *vfs)
 s32 ext2_umount(vfs_t *vfs)
 {
     /* TODO */
+    UNUSED(vfs);
+
     return SUCCESS;
 }
 
@@ -157,6 +159,10 @@ s32 ext2_umount(vfs_t *vfs)
 s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx)
 {
     /* TODO */
+    UNUSED(vfs);
+    UNUSED(node);
+    UNUSED(ctx);
+
     return SUCCESS;
 }
 
@@ -164,12 +170,20 @@ s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx)
 s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8* const name)
 {
     /* TODO */
+    UNUSED(vfs);
+    UNUSED(ctx);
+    UNUSED(dirent);
+    UNUSED(name);
+
     return SUCCESS;
 }
 
 
 s32 ext2_close_dir(vfs_t *vfs, void *ctx)
 {
+    UNUSED(vfs);
+    UNUSED(ctx);
+
     /* TODO */
     return SUCCESS;
 }
@@ -178,6 +192,9 @@ s32 ext2_close_dir(vfs_t *vfs, void *ctx)
 s32 ext2_stat(vfs_t *vfs, fs_stat_t *st)
 {
     /* TODO */
+    UNUSED(vfs);
+    UNUSED(st);
+
     return SUCCESS;
 }
 
@@ -563,6 +580,9 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 
 s32 ext2_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
 {
+    UNUSED(vfs);
+    UNUSED(dirent);
+
     return ENOSYS;
 }
 

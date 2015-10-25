@@ -43,6 +43,7 @@ const driver_map_entry_t driver_map[] =
 s32 dev_auto_init(ku8 hw_id, void *base_addr, ku32 irql, dev_t *parent_dev, dev_t **dev)
 {
     const driver_map_entry_t *p;
+    UNUSED(parent_dev);
 
     FOR_EACH(p, driver_map)
         if(p->hw_id == hw_id)

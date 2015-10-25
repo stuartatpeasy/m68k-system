@@ -421,6 +421,8 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
 */
 s32 fat_close_dir(vfs_t *vfs, void *ctx)
 {
+    UNUSED(vfs);
+
     kfree(((fat_dir_ctx_t *) ctx)->buffer);
     kfree(ctx);
     return SUCCESS;
@@ -467,7 +469,7 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
                     sizeof(fat_dirent_t);
 
                 /* Is there enough space in this cluster? */
-                if(bytes_needed > (dir_ctx->buffer_end - dir_ctx->de))
+                if(bytes_needed > (u32) (dir_ctx->buffer_end - dir_ctx->de))
                 {
                     /* No: find a free cluster and allocate it before proceeding */
                     /* TODO */
@@ -591,6 +593,10 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
 
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st)
 {
+    UNUSED(vfs);
+    UNUSED(st);
+
+    /* TODO */
 
     return 0;
 }

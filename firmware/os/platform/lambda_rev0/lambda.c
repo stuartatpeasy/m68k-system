@@ -131,13 +131,14 @@ s16 plat_console_getc()
 /*
 	plat_install_timer_irq_handler() - bind the timer IRQ to the appropriate handler in the OS.
 */
-s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg)
+s32 plat_install_timer_irq_handler(interrupt_handler handler)
 {
     ks32 ret = mc68681_set_output_pin_fn(g_lambda_duart, mc68681_pin_op3, mc68681_pin_fn_ct_output);
+
     if(ret != SUCCESS)
         return ret;
 
-    CPU_EXC_VPTR_SET(V_level_1_autovector, cpu_context_switch);
+    CPU_EXC_VPTR_SET(V_level_1_autovector, handler);
 
     return SUCCESS;
 }

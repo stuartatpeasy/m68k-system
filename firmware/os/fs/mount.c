@@ -60,7 +60,8 @@ s32 mount_init()
 
 s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev)
 {
-	s32 i, ret;
+	s32 ret;
+	u32 u;
 	mount_ent_t *ent;
 
 	if(g_mount_end == g_max_mounts)
@@ -71,9 +72,9 @@ s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev)
 			return ret;		/* probably ENOMEM */
 	}
 
-	for(i = 0; i < g_mount_end; ++i)
+	for(u = 0; u < g_mount_end; ++u)
 	{
-		if(!strcmp(mount_point, g_mount_table[i].mount_point))
+		if(!strcmp(mount_point, g_mount_table[u].mount_point))
 			return EBUSY;	/* Something else is already mounted here */
 	}
 
@@ -115,14 +116,14 @@ s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev)
 
 s32 mount_remove(const char * const mount_point)
 {
-	s32 i;
-	for(i = 0; i < g_mount_end; ++i)
+	u32 u;
+	for(u = 0; u < g_mount_end; ++u)
 	{
-		if(!strcmp(mount_point, g_mount_table[i].mount_point))
+		if(!strcmp(mount_point, g_mount_table[u].mount_point))
 		{
 			/* TODO: signal the device that it is being unmounted; flush changed pages, etc */
-			memcpy(&g_mount_table[i], &g_mount_table[i + 1],
-						(g_mount_end - i - 1) * sizeof(mount_ent_t));
+			memcpy(&g_mount_table[u], &g_mount_table[u + 1],
+						(g_mount_end - u - 1) * sizeof(mount_ent_t));
 
 			--g_mount_end;
 			return SUCCESS;
@@ -140,12 +141,12 @@ s32 mount_remove(const char * const mount_point)
 */
 vfs_t *mount_find(const char * const path, const char **rel)
 {
-	s32 i, best_match_len = 0;
+	u32 u, best_match_len = 0;
 	vfs_t *fs = NULL;
 
-	for(i = 0; i < g_mount_end; ++i)
+	for(u = 0; u < g_mount_end; ++u)
 	{
-        const mount_ent_t * const ent = &(g_mount_table[i]);
+        const mount_ent_t * const ent = &(g_mount_table[u]);
         const u32 len = ent->mount_point_len;
 
 		if(!strncmp(path, ent->mount_point, len) && (len > best_match_len))

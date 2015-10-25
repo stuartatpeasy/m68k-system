@@ -46,7 +46,7 @@ struct srec_data
 };
 
 
-ks8 * const srec_strerror(const enum srec_error e);
+ks8 * srec_strerror(const enum srec_error e);
 s32 srec(struct srec_data *s);
 
 #endif

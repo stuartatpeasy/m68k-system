@@ -69,9 +69,4 @@ typedef enum ea_size
 
 int disassemble(unsigned short **p, char *str);
 
-/* TODO: make these static */
-char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz);
-const char * const cond(unsigned char code);
-void movem_regs(char *str, unsigned short regs, char mode);
-
 #endif

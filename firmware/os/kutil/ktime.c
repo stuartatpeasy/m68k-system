@@ -302,7 +302,8 @@ s32 is_leap_year(ks32 year)
 /* Convert a Unix timestamp to a rtc_time_t */
 s32 timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt)
 {
-    s32 year_index, step, t_;
+    s32 step, t_;
+    u32 year_index;
     ks32 *month_offset;
 
     /* -- Year -- */

@@ -13,6 +13,9 @@
 
 s32 group_member(const uid_t uid, const gid_t gid)
 {
+    UNUSED(uid);
+    UNUSED(gid);
     /* TODO */
+
     return ENOENT;
 }

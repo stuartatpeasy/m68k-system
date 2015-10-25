@@ -124,8 +124,8 @@ s32 vsprintf(char *str, const char *format, va_list ap)
 
 s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 {
-	s32 n = 0, flags, field_width, precision;
-	u32 u;
+	s32 flags, field_width, precision;
+	u32 u, n = 0;
 	const char *pc;
 	const u32 size_ = size - 1;		/* number of bytes available in buffer, reserving one byte for the trailing \0 */
 	char ch;
@@ -235,7 +235,7 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
 			}
 			else if((ch == 'd') || (ch == 'i') || (ch == 'u'))
 			{
-				u32 required_digits, numeral;
+				s32 required_digits, numeral;
 
 				/* put decimal */
 				u = va_arg(ap, u32);

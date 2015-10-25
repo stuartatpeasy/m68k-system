@@ -19,11 +19,18 @@ void env_init(void)
 
 void env_set(const char *key, const char *val)
 {
+    UNUSED(key);
+    UNUSED(val);
 
+    /* TODO */
 }
 
 
 const char *env_get(const char *key)
 {
+    UNUSED(key);
+
+    /* TODO */
+
     return NULL;
 }

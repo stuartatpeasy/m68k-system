@@ -277,7 +277,8 @@ MONITOR_CMD_HANDLER(dumpw)
 */
 MONITOR_CMD_HANDLER(echo)
 {
-    u32 i;
+    s32 i;
+
     for(i = 0; i < num_args; ++i)
     {
         if(i)
@@ -377,6 +378,9 @@ MONITOR_CMD_HANDLER(fillw)
 
 MONITOR_CMD_HANDLER(free)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
 	printf("kernel: %9d bytes free\n"
            "  user: %9d bytes free\n", kfreemem(), ufreemem());
 	return SUCCESS;
@@ -413,6 +417,9 @@ MONITOR_CMD_HANDLER(go)
 */
 MONITOR_CMD_HANDLER(help)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
 	puts("Available commands (all can be abbreviated):\n\n"
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
@@ -477,7 +484,9 @@ MONITOR_CMD_HANDLER(help)
 */
 MONITOR_CMD_HANDLER(history)
 {
-    s32 i;
+    u32 i;
+    UNUSED(num_args);
+    UNUSED(args);
 
     printf("next = %u\n", g_hist->next);
     for(i = 0; i < history_get_len(g_hist); ++i)
@@ -500,6 +509,9 @@ MONITOR_CMD_HANDLER(history)
 */
 MONITOR_CMD_HANDLER(id)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
     puts(OS_NAME " v" OS_VERSION_STR " on " CPU_NAME ", build date " __DATE__ " " __TIME__);
     return SUCCESS;
 }
@@ -573,6 +585,9 @@ MONITOR_CMD_HANDLER(ls)
 */
 MONITOR_CMD_HANDLER(map)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
     /* FIXME */
     puts("This is broken at the moment.  Please check back later.");
 /*
@@ -605,15 +620,18 @@ MONITOR_CMD_HANDLER(map)
 */
 MONITOR_CMD_HANDLER(mount)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
     if(num_args == 0)
     {
         /* Display mount table */
-        s32 i;
-        for(i = 0; i < g_max_mounts; ++i)
+        u32 u;
+        for(u = 0; u < g_max_mounts; ++u)
         {
-            if(g_mount_table[i].vfs)
-                printf("%-10s %-10s %s\n", g_mount_table[i].vfs->dev->name,
-                       g_mount_table[i].vfs->driver->name, g_mount_table[i].mount_point);
+            if(g_mount_table[u].vfs)
+                printf("%-10s %-10s %s\n", g_mount_table[u].vfs->dev->name,
+                       g_mount_table[u].vfs->driver->name, g_mount_table[u].mount_point);
         }
 
     }
@@ -636,6 +654,9 @@ MONITOR_CMD_HANDLER(mount)
 */
 MONITOR_CMD_HANDLER(raw)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
 	puts("Dumping raw output.  Use ctrl-A to stop.\n");
 	for(;;)
 	{
@@ -671,14 +692,14 @@ MONITOR_CMD_HANDLER(rootfs)
         if(ret != SUCCESS)
             return ret;
 
-        s32 i;
-        for(i = 0; bpb.rootfs[i] && (i < sizeof(bpb.rootfs)); ++i)
-            putchar(bpb.rootfs[i]);
+        u32 u;
+        for(u = 0; bpb.rootfs[u] && (u < sizeof(bpb.rootfs)); ++u)
+            putchar(bpb.rootfs[u]);
 
         putchar(' ');
 
-        for(i = 0; bpb.fstype[i] && (i < sizeof(bpb.fstype)); ++i)
-            putchar(bpb.fstype[i]);
+        for(u = 0; bpb.fstype[u] && (u < sizeof(bpb.fstype)); ++u)
+            putchar(bpb.fstype[u]);
 
         putchar('\n');
     }
@@ -713,6 +734,9 @@ MONITOR_CMD_HANDLER(rootfs)
 */
 MONITOR_CMD_HANDLER(schedule)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
     plat_start_quantum();
     return SUCCESS;
 }
@@ -755,6 +779,8 @@ MONITOR_CMD_HANDLER(serial)
 MONITOR_CMD_HANDLER(slabs)
 {
     u16 u;
+    UNUSED(num_args);
+    UNUSED(args);
 
     puts("------------- Slab dump -------------");
     for(u = 0; u < NSLABS; ++u)
@@ -778,6 +804,8 @@ MONITOR_CMD_HANDLER(slabs)
 */
 MONITOR_CMD_HANDLER(srec)
 {
+    UNUSED(args);
+
 	if(num_args)
 		return EINVAL;
 
@@ -817,6 +845,8 @@ struct mydata
 #include <kernel/ksym.h>
 void myfn(void *arg)
 {
+    UNUSED(arg);
+
     *((vu32 *) 0x200004) = 0;
     while(1)
     {
@@ -826,6 +856,8 @@ void myfn(void *arg)
 
 void myfn2(void *arg)
 {
+    UNUSED(arg);
+
     *((vu32 *) 0x200008) = 0;
     while(1)
     {

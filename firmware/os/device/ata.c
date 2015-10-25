@@ -438,6 +438,11 @@ void ata_write_data(void * const base_addr, const void *buf)
 
 s32 ata_control(dev_t *dev, ku32 function, const void *in, void *out)
 {
+    UNUSED(dev);
+    UNUSED(function);
+    UNUSED(in);
+    UNUSED(out);
+
     return ENOSYS;
 }
 
@@ -447,6 +452,8 @@ s32 ata_control(dev_t *dev, ku32 function, const void *in, void *out)
 */
 s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
+    UNUSED(in);
+
 	switch(fn)
 	{
 		case dc_get_extent:

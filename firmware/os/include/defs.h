@@ -47,21 +47,29 @@
         return ret;             \
 }
 
+/* Obtain the number of elements in a static array. */
 #define ARRAY_COUNT(a)  (sizeof(a) / sizeof((a)[0]))
 
+/* Iterate over a static array. */
 #define FOR_EACH(p, a) \
     for(p = (a); p < &a[ARRAY_COUNT(a)]; ++p)
 
 
+/* Return the offset of member m in struct st.  Not strictly-valid C. */
 #define offsetof(st, m) ((size_t) (&((st *) 0)->m))
 
+/* Given ptr, pointing to a member of struct "type", return a ptr to the struct */
 #define containerof(ptr, type, member)                  \
 ({                                                      \
     const typeof(((type *) 0)->member) *mptr = (ptr);   \
     (type *) ((char *) mptr - offsetof(type, member));  \
 })
 
+/* Return a val with bit x set (i.e. compute 2^x). */
 #define BIT(x)          (1 << (x))
+
+/* Explicitly (and portably) "declare" an argument unused, silencing an "unused arg" warning. */
+#define UNUSED(x)       (void) (x)
 
 
 extern u8 _sdata,       /* .data section start      */

@@ -31,13 +31,14 @@ vfs_driver_t *g_fs_drivers[] =
 s32 vfs_init()
 {
 	nvram_bpb_t bpb;
-	s32 ret, i;
+	s32 ret;
+	u32 u;
 	dev_t *dev;
 
 	/* Init file system drivers */
-	for(i = 0; i < ARRAY_COUNT(g_fs_drivers); ++i)
+	for(u = 0; u < ARRAY_COUNT(g_fs_drivers); ++u)
     {
-        vfs_driver_t * const drv = g_fs_drivers[i];
+        vfs_driver_t * const drv = g_fs_drivers[u];
 
         printf("vfs: initialising '%s' fs driver: ", drv->name);
         if(drv->init() == SUCCESS)
@@ -98,31 +99,83 @@ s32 vfs_init()
 }
 
 
-/* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
+/* === Default handlers for the functions in vfs_driver_t.  These all return ENOSYS. === */
 s32 vfs_default_mount(vfs_t *vfs)
-{ return ENOSYS; }
+{
+    UNUSED(vfs);
+
+    return ENOSYS;
+}
+
+
 s32 vfs_default_umount(vfs_t *vfs)
-{ return ENOSYS; }
+{
+    UNUSED(vfs);
+
+    return ENOSYS;
+}
+
+
 s32 vfs_default_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
-{ return ENOSYS; }
+{
+    UNUSED(vfs);
+    UNUSED(dirent);
+
+    return ENOSYS;
+}
+
+
 s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
-{ return ENOSYS; }
+{
+    UNUSED(vfs);
+    UNUSED(node);
+    UNUSED(ctx);
+
+    return ENOSYS;
+}
+
+
 s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
-{ return ENOSYS; }
+{
+    UNUSED(vfs);
+    UNUSED(ctx);
+    UNUSED(dirent);
+    UNUSED(name);
+
+    return ENOSYS;
+}
+
+
 s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
-{ return ENOSYS; }
+{
+    UNUSED(vfs);
+    UNUSED(ctx);
+
+    return ENOSYS;
+}
+
+
 s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st)
-{ return ENOSYS; }
+{
+    UNUSED(vfs);
+    UNUSED(st);
+
+    return ENOSYS;
+}
+/* === END default handlers for functions in vfs_driver_t === */
 
 
+/*
+    vfs_get_driver_by_name() - look up a VFS driver by name.
+*/
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 {
-    s32 i;
+    vfs_driver_t **p;
 
-    for(i = 0; i < (sizeof(g_fs_drivers) / sizeof(g_fs_drivers[0])); ++i)
+    FOR_EACH(p, g_fs_drivers)
     {
-        if(!strcmp(g_fs_drivers[i]->name, name))
-            return g_fs_drivers[i];
+        if(!strcmp((*p)->name, name))
+            return *p;
     }
 
     return NULL;

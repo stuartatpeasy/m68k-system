@@ -250,6 +250,11 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
 */
 s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf)
 {
+    UNUSED(dev);
+    UNUSED(offset);
+    UNUSED(len);
+    UNUSED(buf);
+
     return ENOSYS;
 }
 
@@ -259,6 +264,11 @@ s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf)
 */
 s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void *buf)
 {
+    UNUSED(dev);
+    UNUSED(offset);
+    UNUSED(len);
+    UNUSED(buf);
+
     return ENOSYS;
 }
 
@@ -268,6 +278,11 @@ s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void
 */
 s32 dev_control_unimplemented(dev_t * const dev, ku32 function, const void *in, void *out)
 {
+    UNUSED(dev);
+    UNUSED(function);
+    UNUSED(in);
+    UNUSED(out);
+
     return ENOSYS;
 }
 
@@ -277,6 +292,9 @@ s32 dev_control_unimplemented(dev_t * const dev, ku32 function, const void *in, 
 */
 s32 dev_getc_unimplemented(dev_t * const dev, char *c)
 {
+    UNUSED(dev);
+    UNUSED(c);
+
     return ENOSYS;
 }
 
@@ -286,6 +304,9 @@ s32 dev_getc_unimplemented(dev_t * const dev, char *c)
 */
 s32 dev_putc_unimplemented(dev_t * const dev, const char c)
 {
+    UNUSED(dev);
+    UNUSED(c);
+
     return ENOSYS;
 }
 
@@ -295,5 +316,7 @@ s32 dev_putc_unimplemented(dev_t * const dev, const char c)
 */
 s32 dev_shut_down_unimplemented(dev_t * const dev)
 {
+    UNUSED(dev);
+
     return ENOSYS;
 }

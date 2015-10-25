@@ -186,6 +186,7 @@ s32 partition_write(dev_t *dev, ku32 offset, ku32 len, const void* buf)
 s32 partition_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
 	const struct partition_data * const pdata = (const struct partition_data * const) dev->data;
+    UNUSED(in);
 
 	switch(fn)
 	{

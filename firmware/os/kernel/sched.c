@@ -44,7 +44,7 @@ s32 sched_init(const char * const init_proc_name)
     g_current_proc = p;
 
     /* Install the scheduler IRQ handler */
-	return plat_install_timer_irq_handler(sched, NULL);
+	return plat_install_timer_irq_handler(cpu_context_switch);
 }
 
 
@@ -66,6 +66,9 @@ s32 create_process(const uid_t uid, const gid_t gid, const s8* name, proc_main_t
     p->parent = NULL;
     p->uid = uid;
     p->gid = gid;
+
+    strncpy(p->name, name, sizeof(p->name) - 1);
+    p->name[sizeof(p->name) - 1] = '\0';
 
     /* Set up the process's initial stack */
     *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */

@@ -44,7 +44,7 @@ s32 ksym_find_nearest_prev(void *addr, symentry_t **ent)
     u32 dist = U32_MAX;
 
     for_each_sym(sym)
-        if((addr >= sym->addr) && (dist >= (addr - sym->addr)))
+        if((addr >= sym->addr) && (dist >= (u32) (addr - sym->addr)))
         {
             dist = addr - sym->addr;
             symfound = sym;

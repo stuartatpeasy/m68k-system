@@ -2,23 +2,72 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="os" />
+		<Option title="ayumos" />
 		<Option pch_mode="2" />
-		<Option compiler="null" />
+		<Option compiler="m68k-linux-elf_toolchain" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/os" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/ayumos" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
 				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="null" />
+				<Option type="5" />
+				<Option compiler="m68k-linux-elf_toolchain" />
+				<Compiler>
+					<Add option="-ffreestanding" />
+					<Add option="-fno-delete-null-pointer-checks" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-m68000" />
+					<Add option="-O3" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-include buildcfg.h" />
+					<Add option="-DKMALLOC_HEAP" />
+					<Add option="-DTARGET_MC68010" />
+					<Add option="-DPLATFORM_LAMBDA_REV0" />
+					<Add option="-DBUG_ATA_BYTE_SWAP" />
+					<Add directory="/home/swallace/projects/m68k-system/firmware/os/" />
+					<Add directory="/home/swallace/projects/m68k-system/firmware/os/klibc" />
+					<Add directory="/home/swallace/projects/m68k-system/firmware/os/include" />
+				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/os" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/ayumos" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
 				<Option object_output="obj/Release/" />
-				<Option type="1" />
-				<Option compiler="null" />
+				<Option type="5" />
+				<Option compiler="m68k-linux-elf_toolchain" />
+				<Compiler>
+					<Add option="-ffreestanding" />
+					<Add option="-fno-delete-null-pointer-checks" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-m68000" />
+					<Add option="-O3" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-include buildcfg.h" />
+				</Compiler>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-ffreestanding" />
+			<Add option="-fno-delete-null-pointer-checks" />
+			<Add option="-fomit-frame-pointer" />
+			<Add option="-m68000" />
+			<Add option="-O3" />
+			<Add option="-Wextra" />
+			<Add option="-Wall" />
+			<Add option="-g" />
+		</Compiler>
+		<Linker>
+			<Add option="-T platform/lambda_rev0/kernel.ld" />
+			<Add option="-nostdlib" />
+			<Add option="-static" />
+			<Add option="-L/opt/m68k/lib/gcc/m68k-linux-elf/5.2.0/m68000" />
+			<Add option="-L." />
+			<Add library="gcc" />
+		</Linker>
 		<Unit filename="Makefile" />
 		<Unit filename="cpu/arch_specific.h" />
 		<Unit filename="cpu/cpu.c">

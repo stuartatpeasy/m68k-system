@@ -22,29 +22,40 @@ const syscall_table_entry_t g_syscalls[] =
 
 u32 syscall_exit(u32 code)
 {
+    UNUSED(code);
+    /* TODO */
+
     return 0;
 }
 
 
 u32 syscall_console_putchar(u32 c)
 {
+    UNUSED(c);
+    /* TODO */
+
     return 0;
 }
 
 
 u32 syscall_console_getchar()
 {
+    /* TODO */
     return 0;
 }
 
 
 u32 syscall_leds(u32 state)
 {
+    UNUSED(state);
+    /* TODO */
+
     return 0;
 }
 
 
 u32 syscall_yield()
 {
+    /* TODO */
     return 0;
 }

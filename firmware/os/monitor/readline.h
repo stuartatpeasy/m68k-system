@@ -12,7 +12,7 @@
 #include <include/types.h>
 
 
-void readline(char *buffer, ku32 buf_len, ku32 echo);
+void readline(char *buffer, s32 buf_len, ku32 echo);
 
 #endif
 

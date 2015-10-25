@@ -71,7 +71,7 @@ struct mc68010_exc_frame
 inline void cpu_nop(void)
 {
     asm volatile("nop" :);
-};
+}
 
 
 /*
@@ -87,7 +87,7 @@ inline void cpu_enable_interrupts(void)
         :
         :
     );
-};
+}
 
 
 inline void cpu_disable_interrupts(void)
@@ -99,7 +99,7 @@ inline void cpu_disable_interrupts(void)
         :
         :
     );
-};
+}
 
 
 /*
@@ -121,7 +121,7 @@ inline u16 bswap_16(u16 x)
     );
 
     return x_;
-};
+}
 
 
 inline u32 bswap_32(u32 x)
@@ -138,7 +138,7 @@ inline u32 bswap_32(u32 x)
     );
 
     return x_;
-};
+}
 
 
 inline u32 wswap_32(u32 x)
@@ -153,7 +153,7 @@ inline u32 wswap_32(u32 x)
     );
 
     return x_;
-};
+}
 
 
 /* These are implemented in mc68000/irq.S */
@@ -190,7 +190,7 @@ void mc68000_trap_14_handler(ku32 irql, void *data, const regs_t regs);
 void mc68000_trap_15_handler(ku32 irql, void *data, const regs_t regs);
 
 
-const char * const mc68000_dump_status_register(ku16 sr);
+const char * mc68000_dump_status_register(ku16 sr);
 void mc68000_dump_regs(const regs_t *regs);
 void mc68010_dump_exc_frame(ku32 irql, const regs_t * const regs);
 void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs);

@@ -25,7 +25,7 @@
 /* This macro provides the offset of register x from the start of the controller's memory map */
 #define MC68681_REG_OFFSET(x)       (MC68681_REG_BASE + (((u32) (x)) << MC68681_REG_SHIFT))
 
-#define MC68681_REG_ADDR(base, x)   ((base) + MC68681_REG_OFFSET(x))
+#define MC68681_REG_ADDR(base, x)   (((vu8 *) base) + MC68681_REG_OFFSET(x))
 
 /* This macro is an accessor for register x, given a controller at address "base" */
 #define MC68681_REG(base, x)        *((vu8 *) MC68681_REG_ADDR((base), (x)))
@@ -354,7 +354,7 @@ inline void mc68681_start_counter(dev_t *dev, ku16 init_count)
 
     dummy = MC68681_REG(base_addr, MC68681_START_CC);
     dummy += 0;     /* silence the "var set but not used" compiler warning */
-};
+}
 
 
 /*
@@ -368,7 +368,7 @@ inline void mc68681_stop_counter(dev_t *dev)
 {
     u8 dummy = MC68681_REG(dev->base_addr, MC68681_STOP_CC);
     dummy += 0;     /* silence the "var set but not used" compiler warning */
-};
+}
 
 
 #endif

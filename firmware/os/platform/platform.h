@@ -34,7 +34,7 @@ s32 plat_mem_detect();			    /* Populate g_mem_extents with type & location of m
                                     /* Place an eight-byte hardware serial number in sn			*/
 s32 plat_get_serial_number(u8 sn[8]);
 
-s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg);
+s32 plat_install_timer_irq_handler(interrupt_handler handler);
 
 /*
     Quantum (=time-slice) start/stop functions.  Platform code can define these as macros for better

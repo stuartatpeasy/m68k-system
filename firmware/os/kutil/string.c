@@ -39,7 +39,7 @@ s8 *str_trim(s8 *dest, ks8 *src)
 */
 s8 *strn_trim(s8 *dest, ks8 *src, u32 n)
 {
-    s32 x;
+    u32 x;
 
     /* Trim leading whitespace */
     for(; isspace(*src); ++src)

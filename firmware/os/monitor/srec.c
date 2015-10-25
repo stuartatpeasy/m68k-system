@@ -43,7 +43,7 @@ static s32 srec_err(struct srec_data * const s, const enum srec_error e)
 }
 
 
-ks8 * const srec_strerror(const enum srec_error e)
+ks8 * srec_strerror(const enum srec_error e)
 {
 	switch(e)
 	{

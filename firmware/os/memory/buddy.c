@@ -29,7 +29,7 @@ void buddy_init(buddy_ctx * const ctx, void * const mem, u32 mem_len, u32 min_al
 
 void buddy_dump(const buddy_ctx * const ctx)
 {
-	int i;
+	unsigned int i;
 	for(i = 0; i < ctx->end; i++)
 		printf("%3d ", ctx->map[i]);
 	puts("");
@@ -38,7 +38,8 @@ void buddy_dump(const buddy_ctx * const ctx)
 
 void *buddy_malloc(buddy_ctx * const ctx, u32 size)
 {
-	unsigned int min_index = -1, min_order = -1, offset = 0, pool_pos = 0, order, i;
+	unsigned int offset = 0, pool_pos = 0, i;
+	int order, min_order = -1, min_index = -1;
 
 	if(!size)
 		return NULL;		/* cannot allocate 0 bytes */
@@ -88,10 +89,9 @@ void *buddy_malloc(buddy_ctx * const ctx, u32 size)
 void buddy_free(buddy_ctx * const ctx, void *ptr)
 {
 	const unsigned int p_ = ptr - ctx->mem;	/* = offset of ptr from start of mem block */
-	unsigned int x = 0;
-	int i;
+	unsigned int i, x = 0;
 
-	if(p_ >= (1 << ctx->size))
+	if(p_ >= (unsigned int) (1 << ctx->size))
 		return;						/* XXX error: invalid ptr */
 
 	/* locate block */
@@ -105,7 +105,7 @@ void buddy_free(buddy_ctx * const ctx, void *ptr)
 	/* coalesce adjacent free blocks */
 	while(1)
 	{
-		int j;
+		unsigned int j;
 		if(i && (ctx->map[i - 1] == ctx->map[i]))
 		{
 			/* coalesce left */

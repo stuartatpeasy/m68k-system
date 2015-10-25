@@ -33,7 +33,7 @@
 #define READLINE_PUTC(x, echo)	{ if(echo) plat_console_putc(x); }
 
 
-void readline(char *buffer, ku32 buffer_len, ku32 echo)
+void readline(char *buffer, s32 buffer_len, ku32 echo)
 {
 	int pos = 0, line_length = 0;
 
