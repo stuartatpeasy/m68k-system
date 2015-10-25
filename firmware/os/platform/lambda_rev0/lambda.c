@@ -137,7 +137,7 @@ s32 plat_install_timer_irq_handler(interrupt_handler handler, void *arg)
     if(ret != SUCCESS)
         return ret;
 
-    CPU_EXC_VPTR_SET(V_level_1_autovector, mc68010_irq_sched);
+    CPU_EXC_VPTR_SET(V_level_1_autovector, cpu_context_switch);
 
     return SUCCESS;
 }

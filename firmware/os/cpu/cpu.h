@@ -18,6 +18,7 @@
 
 typedef struct regs regs_t;     /* struct regs must hold a complete CPU context */
 
+/* Primitives/intrinsics */
 void cpu_halt(void);                            /* Halt processing, pending an interrupt        */
 void cpu_reset(void) __attribute__((noreturn)); /* Reset the CPU                                */
 void cpu_swi();                                 /* Raise a software IRQ (=TRAP #x on the 680x0) */
@@ -36,6 +37,8 @@ u8 cpu_tas(u8 *addr);
 inline u16 bswap_16(u16 x);
 inline u32 bswap_32(u32 x);
 inline u32 wswap_32(u32 x);
+
+void cpu_context_switch();                      /* Save context, call sched(), restore context  */
 
 /*
     Interrupt-related declarations

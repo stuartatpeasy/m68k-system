@@ -161,8 +161,6 @@ extern void irq_router_full(void);
 extern void irq_router_fast(void);
 extern void irq_router_swi(void);
 
-extern void mc68010_irq_sched(void);
-
 
 /*
 	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
