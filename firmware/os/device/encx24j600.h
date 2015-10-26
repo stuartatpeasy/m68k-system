@@ -25,10 +25,10 @@
 /* This macro provides the offset of register x from the start of the controller's memory map */
 #define ENCX24_SFR_OFFSET(x)	    (ENCX24_SFR_BASE + (((u32) (x)) << ENCX24_SFR_SHIFT))
 
-#define ENCX24_SFR_ADDR(base, x)    ((base) + ENCX24_SFR_OFFSET(x))
+#define ENCX24_SFR_ADDR(base, x)    ((vu16 *) (((u8 *) base) + ENCX24_SFR_OFFSET(x)))
 
 /* This macro is an accessor for register x, given a controller at address "base" */
-#define ENCX24_REG(base, x)         *((vu16 *) ENCX24_SFR_ADDR((base), (x)))
+#define ENCX24_REG(base, x)         *(ENCX24_SFR_ADDR((base), (x)))
 
 // const dev_driver_t g_encx24j600_device;
 

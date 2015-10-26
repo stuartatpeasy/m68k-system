@@ -36,31 +36,19 @@
 
 /* Read from register r */
 #define DS17485_REG_READ(base, r)           \
-    ({                                      \
-        DS17485_ADDR(base) = r;             \
-        DS17485_DATA(base);                 \
-    })
+	(DS17485_ADDR(base) = (r)), DS17485_DATA(base)
 
 /* Write data to register r */
 #define DS17485_REG_WRITE(base, r, data)    \
-    ({                                      \
-        DS17485_ADDR(base) = r;             \
-        DS17485_DATA(base) = data;          \
-    })
+	(DS17485_ADDR(base) = (r)), (DS17485_DATA(base) = (data))
 
 /* Set bits b in register r */
 #define DS17485_REG_SET_BITS(base, r, b)    \
-    ({                                      \
-        DS17485_ADDR(base) = r;             \
-        DS17485_DATA(base) |= b;            \
-    })
+	(DS17485_ADDR(base) = (r)), (DS17485_DATA(base) |= (b))
 
 /* Clear bits b in register r */
 #define DS17485_REG_CLEAR_BITS(base, r, b)  \
-    ({                                      \
-        DS17485_ADDR(base) = r;             \
-        DS17485_DATA(base) &= ~b;           \
-    })
+	(DS17485_ADDR(base) = (r)), (DS17485_DATA(base) &= ~(b))
 
 /* Switch to the DS17485 extended register set */
 #define DS17485_SELECT_EXT_REG(base)        \

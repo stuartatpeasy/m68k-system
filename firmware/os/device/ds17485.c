@@ -224,13 +224,14 @@ void ds17485_force_valid_time(const dev_t * const dev)
 s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+	u8 *buffer_ = (u8 *) buffer;
 
     if((addr + len) > DS17485_USER_RAM_LEN)
         return EINVAL;
 
     DS17485_SELECT_STD_REG(base_addr);
     for(addr += DS17485_USER_RAM_START; len; --len, ++addr)
-        *((u8 *) buffer++) = DS17485_REG_READ(base_addr, addr);
+        *(buffer_++) = DS17485_REG_READ(base_addr, addr);
 
     return SUCCESS;
 }
@@ -242,13 +243,14 @@ s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+	ku8 *buffer_ = (ku8 *) buffer;
 
     if((addr + len) > DS17485_USER_RAM_LEN)
         return EINVAL;
 
     DS17485_SELECT_STD_REG(base_addr);
     for(addr += 14; len && (addr < 128); --len, ++addr)
-        DS17485_REG_WRITE(base_addr, addr, *((u8 *) buffer++));
+        DS17485_REG_WRITE(base_addr, addr, *(buffer_++));
 
     return SUCCESS;
 }
@@ -260,6 +262,7 @@ s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * bu
 s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+	u8 *buffer_ = (u8 *) buffer;
 
     if((addr + len) > DS17485_EXT_RAM_LEN)
         return EINVAL;
@@ -271,7 +274,7 @@ s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
     DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
     while(len-- & (addr++ < 0xfff))
-        *((u8 *) buffer++) = DS17485_REG_READ(base_addr, DS17485_EXTRAM_DATA);
+        *(buffer_++) = DS17485_REG_READ(base_addr, DS17485_EXTRAM_DATA);
 
     return SUCCESS;
 }
@@ -283,6 +286,7 @@ s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+	ku8 *buffer_ = (ku8 *) buffer;
 
     if((addr + len) > DS17485_EXT_RAM_LEN)
         return EINVAL;
@@ -294,7 +298,7 @@ s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buf
     DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
     while(len-- & (addr++ < 0xfff))
-        DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_DATA, *((u8 *) buffer++));
+        DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_DATA, *(buffer_++));
 
     return SUCCESS;
 }
