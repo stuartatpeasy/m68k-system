@@ -76,7 +76,7 @@ pid_t proc_get_pid()
 /*
     proc_destroy() - terminate the current process and clean up.
 */
-void sched_destroy()
+void proc_destroy()
 {
 
 }
