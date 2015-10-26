@@ -232,6 +232,7 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 {
     void * const base_addr = dev->base_addr;
     const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
+	u8 *buf_ = (u8 *) buf;
 
 	/* Select master / slave device */
 	if(drive == ata_drive_master)
@@ -277,8 +278,8 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 			return EUNKNOWN;
 	}
 
-	for(; len--; buf += ATA_SECTOR_SIZE)
-		ata_read_data(base_addr, buf);
+	for(; len--; buf_ += ATA_SECTOR_SIZE)
+		ata_read_data(base_addr, buf_);
 
 	g_ata_stats.blocks_read += len;
 
@@ -293,6 +294,7 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 {
     void * const base_addr = dev->base_addr;
     const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
+	ku8 *buf_ = (ku8 *) buf;
 
 	/* Select master / slave device */
 	if(drive == ata_drive_master)
@@ -320,8 +322,8 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 	/* Issue the command */
 	ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
 
-	for(; len--; buf += ATA_SECTOR_SIZE)
-		ata_write_data(base_addr, buf);
+	for(; len--; buf_ += ATA_SECTOR_SIZE)
+		ata_write_data(base_addr, buf_);
 
 	if(!ATA_WAIT_NBSY(base_addr))
 		return ETIME;

@@ -133,10 +133,10 @@ blockdev_stats_t g_ata_stats;
 
 
 #define ATA_REG_DATA(base_addr)    \
- 	*((volatile u16 *) ((u16 *) ((base_addr) + ATA_R_DATA)))
+	*((vu16 *) (((vu8 *) base_addr) + ATA_R_DATA))
 
 #define ATA_REG(base_addr, off)	\
-    *((volatile u8 *) ((base_addr) + off))
+    *(((vu8 *) base_addr) + off)
 
 
 /*
