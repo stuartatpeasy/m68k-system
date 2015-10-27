@@ -11,6 +11,7 @@
 
 #include <include/types.h>
 
+/* FIXME - target-specific */
 #if defined(TARGET_MC68008)
 #define DATA_BUS_WIDTH  (8)
 #elif defined(TARGET_MC68000) || defined(TARGET_MC68010)
@@ -42,7 +43,7 @@
    value) is anything other than SUCCESS, the value is returned. */
 #define CHECKED_CALL(expr)      \
 {                               \
-    ku32 ret = (expr);          \
+    ks32 ret = (expr);          \
     if(ret != SUCCESS)          \
         return ret;             \
 }
@@ -70,6 +71,46 @@
 
 /* Explicitly (and portably) "declare" an argument unused, silencing an "unused arg" warning. */
 #define UNUSED(x)       (void) (x)
+
+/*
+	CEIL_LOG2() - use the preprocessor to compute ceil(log2(x)), where 0 < x < 2^32.  x should be
+	something the preprocessor knows to be constant, e.g. sizeof(foo).
+
+	Note: yields 0 for x < 1.
+*/
+#define CEIL_LOG2(x) \
+	  (((x) > (1 << 30)) ? 31 \
+	: (((x) > (1 << 29)) ? 30 \
+	: (((x) > (1 << 28)) ? 29 \
+	: (((x) > (1 << 27)) ? 28 \
+	: (((x) > (1 << 26)) ? 27 \
+	: (((x) > (1 << 25)) ? 26 \
+	: (((x) > (1 << 24)) ? 25 \
+	: (((x) > (1 << 23)) ? 24 \
+	: (((x) > (1 << 22)) ? 23 \
+	: (((x) > (1 << 21)) ? 22 \
+	: (((x) > (1 << 20)) ? 21 \
+	: (((x) > (1 << 19)) ? 20 \
+	: (((x) > (1 << 18)) ? 19 \
+	: (((x) > (1 << 17)) ? 18 \
+	: (((x) > (1 << 16)) ? 17 \
+	: (((x) > (1 << 15)) ? 16 \
+	: (((x) > (1 << 14)) ? 15 \
+	: (((x) > (1 << 13)) ? 14 \
+	: (((x) > (1 << 12)) ? 13 \
+	: (((x) > (1 << 11)) ? 12 \
+	: (((x) > (1 << 10)) ? 11 \
+	: (((x) > (1 << 9))  ? 10 \
+	: (((x) > (1 << 8))  ?  9 \
+	: (((x) > (1 << 7))  ?  8 \
+	: (((x) > (1 << 6))  ?  7 \
+	: (((x) > (1 << 5))  ?  6 \
+	: (((x) > (1 << 4))  ?  5 \
+	: (((x) > (1 << 3))  ?  4 \
+	: (((x) > (1 << 2))  ?  3 \
+	: (((x) > (1 << 1))  ?  2 \
+	: (((x) > (1 << 0))  ?  1 \
+	: 0)))))))))))))))))))))))))))))))
 
 
 extern u8 _sdata,       /* .data section start      */
