@@ -40,7 +40,6 @@ inline u32 wswap_32(u32 x);
 
 /* These declarations are for IRQ handlers - they must not be called directly */
 void cpu_context_switch();      /* Save context, call sched(), restore context      */
-void cpu_yield();               /* Yield the remainder of the current time-slice    */
 
 /*
     Interrupt-related declarations

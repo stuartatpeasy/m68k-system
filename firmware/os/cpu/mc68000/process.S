@@ -14,12 +14,12 @@
 #error This code requires the MC68010 architecture
 #endif
 
-.include "cpu/mc68000/regs.h"
+#include "cpu/mc68000/regs.h"
 .include "cpu/mc68000/macros.S"
 
 .text
+.global syscall_yield
 .global cpu_context_switch
-.global cpu_yield
 
 /*
                  15                     0
@@ -35,19 +35,27 @@
 
     "Other junk" refers to additional data stacked for bus and address error exceptions.
 
-    mc68010_context_switch is used as the timer interrupt handler, and the handler for the TRAP
-    call used to yield a time-slice.  It saves CPU context in the proc_t structure pointed to by
-    g_current_proc, then calls the sched() function.  That function should decide which process to
-    run next, and update g_current_proc accordingly before returning.  mc68010_context_switch then
+    cpu_context_switch is used as the timer interrupt handler.  syscall_yield is the handler for the
+    TRAP call used to yield a time-slice.  cpu_context_switch saves CPU context in the proc_t
+    structure pointed to by g_current_proc, then calls the sched() function.  That function decides
+    which process to run next, and updates g_current_proc accordingly.  cpu_context_switch then
     restores CPU state for the incoming process and resumes execution.
+
+    syscall_yield handles the "yield" system call.  It unwinds the syscall_dispatcher stack frame,
+    restoring trashed registers, then falls through to cpu_context_switch.
 */
 
+syscall_yield:
+    addq.l      #4, sp
+    movem.l     sp@+, d1/a0-a2
+
+    /* fall through */
+
 cpu_context_switch:
-cpu_yield:
     DISABLE_INTERRUPTS
     SAVE_CONTEXT
 
-    jsr         sched
+    jsr         sched       /* Choose next process to run, update g_current_proc accordingly */
 
     RESTORE_CONTEXT
     ENABLE_INTERRUPTS

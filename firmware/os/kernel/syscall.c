@@ -76,15 +76,3 @@ s32 syscall_leds(u32 state)
 
     return 0;
 }
-
-
-/*
-    syscall_yield() - yield the remainder of the current process's time-slice.
-*/
-s32 syscall_yield()
-{
-    /* TODO */
-    puts("syscall: yield()");
-
-    return 0;
-}

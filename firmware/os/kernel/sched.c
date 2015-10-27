@@ -89,17 +89,3 @@ void sched_exit()
 
     kfree(oldproc);
 }
-
-
-/*
-    sched_yield() - called by a process that wishes to give up the rest of its quantum.
-*/
-void sched_yield()
-{
-    /*
-        TODO:
-            save process state
-
-    */
-}
-

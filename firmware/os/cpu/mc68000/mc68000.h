@@ -30,9 +30,10 @@ struct regs
 {
     reg32_t d[8];
     reg32_t a[8];
-    reg16_t sr;     /* } These two elements align with the MC68000's exception stack frame. */
-    reg32_t pc;     /* } See <cpu/mc68000/mc68000.h> for more information.                  */
-} __attribute__((aligned(2),packed));   /* sizeof(struct regs) == 70 */
+    reg32_t usp;        /* FIXME - this breaks EVERYTHING, for the time being. */
+    reg16_t sr;
+    reg32_t pc;
+} __attribute__((aligned(2),packed));   /* sizeof(struct regs) == 74 */
 
 typedef struct regs regs_t;
 

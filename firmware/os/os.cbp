@@ -76,6 +76,7 @@
 		<Unit filename="cpu/cpu.h" />
 		<Unit filename="cpu/mc68000/exceptions.h" />
 		<Unit filename="cpu/mc68000/irq.S" />
+		<Unit filename="cpu/mc68000/macros.S" />
 		<Unit filename="cpu/mc68000/mc68000.c">
 			<Option compilerVar="CC" />
 		</Unit>

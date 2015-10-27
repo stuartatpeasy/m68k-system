@@ -11,31 +11,38 @@
 #include <kernel/syscalls.h>
 
 .text
+.global syscall_dispatcher
 
 /*
-    On entry, the user stack will look like this:
+    On entry, the stacks will look like this:
 
-                15                0
-                |   other stuff   |
-                +-----------------+
-                | [syscall arg 3] |
-           +16  |                 |
-                +-----------------+
-                | [syscall arg 2] |
-           +12  |                 |
-                +-----------------+
-                | [syscall arg 1] |
-            +8  |                 |
-                +-----------------+
-                |      syscall    |
-            +4  |        num      |
-                +-----------------+
-                |  return address |
-        USP +0  |                 |
-                +-----------------+
+                      USER STACK                       SUPERVISOR STACK
+
+                15                     0
+                |     other stuff      |
+                +----------------------+
+                |   [ syscall arg ]    |
+           +16  |   [      3      ]    |
+                +----------------------+
+                |   [ syscall arg ]    |
+           +12  |   [      2      ]    |
+                +----------------------+           15                     0
+                |   [ syscall arg ]    |           | ..other junk, maybe..|
+            +8  |   [      1      ]    |           +----------------------+
+                +----------------------+       +6  |format| vector offset |
+                |       syscall        |           +----------------------+
+            +4  |         num          |           |    program counter   |
+                +----------------------+       +2  |                      |
+                |       return         |           +----------------------+
+       USP  +0  |       address        |    SP +0  |    status register   |
+                +----------------------+           +----------------------+
+
+    The syscall_dispatcher function validates the requested syscall number, copies the call args to
+    the supervisor stack, and invokes the syscall handler.  When the handler returns,
+    syscall_dispatcher unwinds its stack frame and returns to the caller.  The syscall return value
+    is left in d0.
 */
 
-.globl syscall_dispatcher
 syscall_dispatcher:
         movem.l     d1/a0-a2, sp@-
 		move.l      usp, a0
@@ -77,7 +84,7 @@ sdL2:   move.l      a1@(4), a1
         jsr         a1@
 
         /* Deallocate syscall args and restore regs */
-        movea.l     a2, sp
+sdL3:   movea.l     a2, sp
         movem.l     sp@+, d1/a0-a2
 
         /* syscall retval will be in d0 */

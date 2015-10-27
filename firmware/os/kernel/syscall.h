@@ -28,6 +28,6 @@ s32 syscall_exit(u32 code);
 s32 syscall_console_putchar(u32 c);
 s32 syscall_console_getchar();
 s32 syscall_leds(u32 state);
-s32 syscall_yield();
+extern void syscall_yield();
 
 #endif
