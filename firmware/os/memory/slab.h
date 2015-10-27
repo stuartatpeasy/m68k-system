@@ -43,14 +43,6 @@
         ++x_;                   \
     })
 
-/* For u8 x, compute ceil(log2(x)) */
-#define CEIL_LOG2(x)                            \
-    ({                                          \
-        u8 x_ = (x), logx;                      \
-        for(logx = 0; x_; ++logx, x_ >>= 1)     \
-            ;                                   \
-        logx;                                   \
-    })
 
 struct slab
 {
@@ -64,7 +56,7 @@ slab_t g_slabs[NSLABS];
 void *g_slab_base;
 void *g_slab_end;
 
-void *slab_alloc(ku8 nbytes);
+void *slab_alloc_pow2(ku32 radix);
 void *slab_alloc_obj(slab_t * const s);
 s32 slab_create(void *p, u8 const alloc_unit, slab_t *s);
 void slab_dump(void);

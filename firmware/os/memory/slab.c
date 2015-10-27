@@ -16,9 +16,11 @@ void *g_slab_base;
 void *g_slab_end;
 
 
+/*
+    slab_init() - initialise the slab allocator and create some initial slabs.
+*/
 void slab_init(void *slab_base)
 {
-    /* Initialise slab allocator and create some initial slabs. */
     u8 u;
 
     g_slab_base = slab_base;
@@ -30,18 +32,21 @@ void slab_init(void *slab_base)
 }
 
 
-void *slab_alloc(ku8 nbytes)
+/*
+    slab_alloc_pow2() - allocate an object of size 2^radix bytes in an appropriate slab.
+*/
+void *slab_alloc_pow2(ku32 radix)
 {
-    /* Round up nbytes to next power of 2 */
-    ku8 alloc_unit = CEIL_LOG2(nbytes);
-
-    if(!alloc_unit)
+    if(!radix)
         return NULL;    /* Requested allocation is 0 */
 
-    return slab_alloc_obj(&(g_slabs[alloc_unit - 1]));
+    return slab_alloc_obj(&(g_slabs[radix - 1]));
 }
 
 
+/*
+    slab_free() - free an object
+*/
 void slab_free(void *obj)
 {
     const slab_t *s = &(g_slabs[(obj - g_slab_base) >> SLAB_SIZE_LOG2]);
@@ -49,12 +54,20 @@ void slab_free(void *obj)
 }
 
 
+/*
+    slab_free_obj() - free an object in the specified slab.
+*/
 void slab_free_obj(slab_t * const s, void *object)
 {
     SLAB_BITMAP_SET_FREE(s->p, (object - s->p) >> s->alloc_unit);
 }
 
 
+/*
+    slab_create() - create a slab of size in the memory pointed to by p, which should be a region
+    SLAB_SIZE bytes in length, and initialise it to hold objects of size 2^alloc_unit.  The slab
+    object data is written to s.
+*/
 s32 slab_create(void *p, const u8 alloc_unit, slab_t *s)
 {
     /*
@@ -94,6 +107,10 @@ void slab_dump()
 }
 
 
+/*
+    slab_alloc_obj() - allocate an object within slab s, and return a pointer to it.  Return NULL if
+    the slab is full.
+*/
 void *slab_alloc_obj(slab_t * const s)
 {
     /* Compute length of the allocation bitmap in halfwords */
