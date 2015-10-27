@@ -74,6 +74,24 @@ void sched()
 
 
 /*
+    sched_exit() - ???
+*/
+void sched_exit()
+{
+    proc_t * const oldproc = g_current_proc;
+
+    sched();
+
+    /* TODO: release all resources associated with oldproc */
+
+    oldproc->prev->next = oldproc->next;
+    oldproc->next->prev = oldproc->prev;
+
+    kfree(oldproc);
+}
+
+
+/*
     sched_yield() - called by a process that wishes to give up the rest of its quantum.
 */
 void sched_yield()
