@@ -936,11 +936,10 @@ MONITOR_CMD_HANDLER(test)
         };
 
         void * const addr = (void *) 0x100000;
-        exe_img_t img;
+        exe_img_t *img;
         pid_t pid = 0;
         s32 ret;
 
-        printf("copying %d bytes to %p\n", sizeof(testapp), addr);
         memcpy(addr, testapp, sizeof(testapp));
         ret = elf_load_exe(addr, sizeof(testapp), &img);
         if(ret != SUCCESS)
@@ -948,18 +947,7 @@ MONITOR_CMD_HANDLER(test)
 
         /* FIXME - there's currently no way to free an exe_img_t cleanly */
 
-        ret = proc_create(0, 0, "testapp", img.entry_point, NULL, 1024, 0, &pid);
-        printf("proc_create returned %d (%s); pid=%d\n", ret, kstrerror(ret), pid);
-
-/*
-        pid_t pid = 0;
-
-        s32 ret = proc_create(0, 0, "testapp", (proc_main_t) 0x100000, NULL, 1024, 0, &pid);
-        printf("proc_create() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
-
-        ret = proc_create(0, 0, "test2", (proc_main_t) 0x100100, NULL, 1024, 0, &pid);
-        printf("proc_create() pid is %u; retval %u (%s)\n", pid, ret, kstrerror(ret));
-*/
+        ret = proc_create(0, 0, "testapp", img, NULL, 1024, 0, &pid);
     }
 
     return SUCCESS;

@@ -65,10 +65,11 @@ cpu_context_switch:
 
 
 syscall_exit:
+    DISABLE_INTERRUPTS
+
     adda.w      #20, sp             /* Unwind the syscall_dispatcher stack frame */
     move.l      sp@(-16), sp@       /* Reposition exit() arg immediately below exception frame */
 
-    DISABLE_INTERRUPTS
     jsr         proc_do_exit
 
     addq.l      #4, sp

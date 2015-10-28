@@ -325,7 +325,7 @@ typedef struct
 	u32		p_align;			/* Alignment of segment in memory and file				*/
 } Elf32_Phdr;
 
-s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img);
+s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img);
 
 u32 elf_is_relevant_progbits_section(ks8 * name);
 u32 elf_is_relevant_nobits_section(ks8 * name);

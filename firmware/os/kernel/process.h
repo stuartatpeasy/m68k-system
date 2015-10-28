@@ -41,6 +41,7 @@ struct proc_struct
 
     pid_t id;
     proc_state_t state;
+    s32 exit_code;
 
     char name[32];
     u32 flags;
@@ -49,15 +50,17 @@ struct proc_struct
     uid_t uid;
     gid_t gid;
 
+    exe_img_t *img;
+
     proc_t *next;
     proc_t *prev;
 };
 
 
-s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, proc_entry_fn_t main_fn,
-                   u32 *arg, ku32 stack_len, ku16 flags, pid_t *newpid);
+s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img, u32 *arg,
+                ku32 stack_len, ku16 flags, pid_t *newpid);
 
 pid_t proc_get_pid();
-void proc_do_exit(s32 status);
+void proc_do_exit(s32 exit_code);
 
 #endif

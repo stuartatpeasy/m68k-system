@@ -8,7 +8,7 @@
 */
 
 #include <kernel/process.h>
-
+#include <kernel/sched.h>
 
 proc_t *g_current_proc = NULL;
 pid_t g_next_pid = 0;
@@ -17,7 +17,7 @@ pid_t g_next_pid = 0;
 /*
     proc_create() - create a new process and add it to the run queue.
 */
-s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, proc_entry_fn_t main_fn, u32 *arg,
+s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img, u32 *arg,
                 ku32 stack_len, ku16 flags, pid_t *newpid)
 {
     proc_t *p;
@@ -29,9 +29,12 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, proc_entry_fn_
     u32 *process_stack_top = (u32 *) (process_stack + stack_len);
 
     p->id = g_next_pid++;
+    p->exit_code = S32_MIN;
     p->parent = NULL;
     p->uid = uid;
     p->gid = gid;
+
+    p->img = img;
 
     strncpy(p->name, name, sizeof(p->name) - 1);
     p->name[sizeof(p->name) - 1] = '\0';
@@ -40,7 +43,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, proc_entry_fn_
     *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
     *(--process_stack_top) = (u32) arg;
 
-    p->regs.pc = (u32) main_fn;
+    p->regs.pc = (u32) img->entry_point;
     if(flags & PROC_TYPE_KERNEL)
     {
         p->regs.sr |= 0x2000;       /* FIXME - arch-specific - force supervisor mode */
@@ -81,19 +84,28 @@ pid_t proc_get_pid()
 /*
     proc_do_exit() - terminate the current process and clean up.
 */
-void proc_do_exit(s32 status)
+void proc_do_exit(s32 exit_code)
 {
-    /* TODO: free resources */
-    printf("\nProcess %u exited with status %d\n", g_current_proc->id, status);
-    proc_t *g_exiting = g_current_proc;
+    proc_t * const g_exiting = g_current_proc;
+
+    g_exiting->exit_code = exit_code;
 
     sched();
+
+    /* Note: we're running in g_current_proc->next's quantum at this point... */
 
     /* Remove the exiting process from the run queue */
     g_exiting->next->prev = g_exiting->prev;
     g_exiting->prev->next = g_exiting->next;
 
-    /* TODO: deallocate any memory allocated to proc_t members */
+    /* TODO: deallocate any resources allocated by g_exiting */
+
+    /* TODO: move this code into a generic exe_img_free() fn */
+    kfree(g_exiting->img->start);
+    kfree(g_exiting->img);
+
+    /* TODO: move g_exiting onto "exited" list, to await exit-code collection? */
+
 
     kfree(g_exiting);
 }
