@@ -11,8 +11,25 @@ int y;										/* Force a .bss section */
 
 int main()
 {
-	sys_console_putchar('A');
+	const char *p = str;
+	int i;
+
+	while(*p)
+		sys_console_putchar(*p++);
+
+	while(1)
+	{
+		for(i = 0; i < 100; ++i)
+			sys_yield();
+
+		sys_console_putchar('*');
+	}
+
 	/* sys_yield(); */
+
+	/* Can't exit yet... */
+	while(1)
+		;
 
 	return 0;
 }
