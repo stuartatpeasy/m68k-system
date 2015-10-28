@@ -19,6 +19,7 @@
 
 .text
 .global syscall_yield
+.global syscall_exit
 .global cpu_context_switch
 
 /*
@@ -63,4 +64,16 @@ cpu_context_switch:
     rte
 
 
-proc_exit:
+syscall_exit:
+    move.l      sp@(4), sp@(20)     /* Reposition exit() arg immediately below exception frame */
+    add.l       #20, sp             /* Unwind the rest of the syscall_dispatcher frame */
+
+    DISABLE_INTERRUPTS
+    jsr         proc_do_exit
+
+    addq.l      #4, sp
+
+    RESTORE_CONTEXT
+    ENABLE_INTERRUPTS
+
+    rte

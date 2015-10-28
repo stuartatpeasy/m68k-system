@@ -31,6 +31,7 @@ const syscall_table_entry_t g_syscalls[] =
 /*
     syscall_exit() - terminate the current process.
 */
+#if 0
 s32 syscall_exit(u32 code)
 {
     /* TODO */
@@ -43,7 +44,7 @@ s32 syscall_exit(u32 code)
 
     return 0;
 }
-
+#endif
 
 /*
     syscall_console_putchar() - write a character to the console (blocking).

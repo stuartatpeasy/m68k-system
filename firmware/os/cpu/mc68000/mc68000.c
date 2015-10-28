@@ -243,7 +243,7 @@ void mc68000_dump_regs(const regs_t *regs)
            "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"
            "A0=%08x  A1=%08x  A2=%08x  A3=%08x\n"
            "A4=%08x  A5=%08x  A6=%08x  A7=%08x\n"
-           "                          USP=%08x\n\n"
+           "                                      USP=%08x\n\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n",
            regs->d[0], regs->d[1], regs->d[2], regs->d[3],
            regs->d[4], regs->d[5], regs->d[6], regs->d[7],

@@ -58,6 +58,6 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, proc_entry_fn_
                    u32 *arg, ku32 stack_len, ku16 flags, pid_t *newpid);
 
 pid_t proc_get_pid();
-
+void proc_do_exit(s32 status);
 
 #endif

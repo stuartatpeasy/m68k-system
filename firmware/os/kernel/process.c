@@ -79,9 +79,21 @@ pid_t proc_get_pid()
 
 
 /*
-    proc_destroy() - terminate the current process and clean up.
+    proc_do_exit() - terminate the current process and clean up.
 */
-void proc_destroy()
+void proc_do_exit(s32 status)
 {
+    /* TODO: free resources */
+    printf("Process %u exited with status %d\n", g_current_proc->id, status);
+    proc_t *g_exiting = g_current_proc;
 
+    sched();
+
+    /* Remove the exiting process from the run queue */
+    g_exiting->next->prev = g_exiting->prev;
+    g_exiting->prev->next = g_exiting->next;
+
+    /* TODO: deallocate any memory allocated to proc_t members */
+
+    kfree(g_exiting);
 }

@@ -12,12 +12,12 @@ int y;										/* Force a .bss section */
 int main()
 {
 	const char *p = str;
-	int i;
+	int i, j;
 
 	while(*p)
 		sys_console_putchar(*p++);
 
-	while(1)
+	for(j = 0; j < 10; ++j)
 	{
 		for(i = 0; i < 100; ++i)
 			sys_yield();
@@ -25,11 +25,7 @@ int main()
 		sys_console_putchar('*');
 	}
 
-	/* sys_yield(); */
-
-	/* Can't exit yet... */
-	while(1)
-		;
+	sys_exit(12345);
 
 	return 0;
 }
