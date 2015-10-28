@@ -84,7 +84,7 @@ pid_t proc_get_pid()
 void proc_do_exit(s32 status)
 {
     /* TODO: free resources */
-    printf("Process %u exited with status %d\n", g_current_proc->id, status);
+    printf("\nProcess %u exited with status %d\n", g_current_proc->id, status);
     proc_t *g_exiting = g_current_proc;
 
     sched();
