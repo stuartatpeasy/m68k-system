@@ -40,11 +40,16 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, proc_entry_fn_
     *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
     *(--process_stack_top) = (u32) arg;
 
-    p->regs.a[7] = (u32) process_stack_top;
     p->regs.pc = (u32) main_fn;
-
     if(flags & PROC_TYPE_KERNEL)
+    {
         p->regs.sr |= 0x2000;       /* FIXME - arch-specific - force supervisor mode */
+        p->regs.a[7] = (u32) process_stack_top; /* FIXME - arch-specific - SP in a7 */
+    }
+    else
+    {
+        p->regs.usp = (u32) process_stack_top;  /* FIXME - arch-specific - SP in usp */
+    }
 
     p->state = ps_runnable; /* Mark process as runnable so scheduler will pick it up. */
 
