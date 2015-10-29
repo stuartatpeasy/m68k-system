@@ -947,7 +947,7 @@ MONITOR_CMD_HANDLER(test)
 
         /* FIXME - there's currently no way to free an exe_img_t cleanly */
 
-        ret = proc_create(0, 0, "testapp", img, NULL, 1024, 0, &pid);
+        ret = proc_create(0, 0, "testapp", img, NULL, 1024, 0, proc_current(), &pid);
     }
 
     return SUCCESS;

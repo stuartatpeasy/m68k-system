@@ -15,6 +15,8 @@
 #include <kernel/user.h>
 
 
+#define PROC_KSTACK_LEN     (2048)      /* Per-process kernel stack size */
+
 /*
     Process type flags
 */
@@ -37,8 +39,6 @@ struct proc_struct
 {
     regs_t regs;
 
-	const struct proc_struct *parent;       /* needed yet? */
-
     pid_t id;
     proc_state_t state;
     s32 exit_code;
@@ -52,15 +52,22 @@ struct proc_struct
 
     exe_img_t *img;
 
+    void *kstack;   /* ptr to mem alloc'ed for kernel stack, i.e. bottom of stack   */
+    void *ustack;   /* ptr to mem alloc'ed for user stack, i.e. bottom of stack     */
+
+    void *arg;
+
+	const proc_t *parent;
     proc_t *next;
     proc_t *prev;
-};
+}; /* sizeof(proc_t) = 76 + sizeof(regs_t) */
 
 
 s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img, u32 *arg,
-                ku32 stack_len, ku16 flags, pid_t *newpid);
+                ku32 stack_len, ku16 flags, const proc_t * const parent, pid_t *newpid);
 
 pid_t proc_get_pid();
+proc_t *proc_current();
 void proc_do_exit(s32 exit_code);
 
 #endif

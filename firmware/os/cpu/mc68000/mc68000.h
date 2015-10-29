@@ -24,7 +24,7 @@
     struct regs - container for a CPU context
 
     NOTE: if this structure's size or layout changes, asm code will break!  Asm code elsewhere
-    assumes that the length of this struct is 70.
+    assumes that the length of this struct is 74.
 */
 struct regs
 {
@@ -37,37 +37,72 @@ struct regs
 
 typedef struct regs regs_t;
 
+/* Condition code register bits */
+#define MC68K_CCR_X             BIT(4)          /* Extend flag                              */
+#define MC68K_CCR_N             BIT(3)          /* Negative flag                            */
+#define MC68K_CCR_Z             BIT(2)          /* Zero flag                                */
+#define MC68K_CCR_V             BIT(1)          /* Overflow flag                            */
+#define MC68K_CCR_C             BIT(0)          /* Carry flag                               */
+
+/* Status register bits */
+#define MC68K_SR_TRACE          BIT(15)         /* Trace mode enabled                       */
+#define MC68K_SR_SUPERVISOR     BIT(13)         /* Supervisor/user flag: 1=S, 0=U           */
+#define MC68K_SR_STACK          BIT(12)         /* Master/interrupt stack flag: 1=M, 0=I    */
+
+#define MC68K_SR_X              MC68K_CCR_X     /* Extend flag                              */
+#define MC68K_SR_N              MC68K_CCR_N     /* Negative flag                            */
+#define MC68K_SR_Z              MC68K_CCR_Z     /* Zero flag                                */
+#define MC68K_SR_V              MC68K_CCR_V     /* Overflow flag                            */
+#define MC68K_SR_C              MC68K_CCR_C     /* Carry flag                               */
+
+#define MC68K_SR_TRACE_SHIFT    (14)            /* } Mask and shift for current             */
+#define MC68K_SR_TRACE_MASK     (0x3)           /* } trace level                            */
+
+#define MC68K_SR_IPL_SHIFT      (8)             /* } Mask and shift for current             */
+#define MC68K_SR_IPL_MASK       (0x7)           /* } interrupt priority level               */
+
+/* Extract IPL from SR value */
+#define MC68K_SR_IPL(sr) \
+    (((sr) >> MC68K_SR_IPL_SHIFT) & MC68K_SR_IPL_MASK)
+
+/* Extrace trace level from SR value */
+#define MC68K_SR_TRACE_LEVEL(sr) \
+    (((sr) >> MC68K_SR_TRACE_SHIFT) & MC68K_SR_TRACE_MASK)
+
+
 /*
 	MC68010 address/bus-error exception stack frame.  NOTE: this struct does not include the SR
 	and PC - they are extracted separately.
 */
 struct mc68010_address_exc_frame
 {
-	ku16 vector_offset;
-	ku16 special_status_word;
-	ku32 fault_addr;
-	ku16 unused_reserved_1;
-	ku16 data_output_buffer;
-	ku16 unused_reserved_2;
-	ku16 data_input_buffer;
-	ku16 unused_reserved_3;
-	ku16 instr_output_buffer;
-	ku16 version_number;
-	ku16 internal_information[15];
+	u16 vector_offset;
+	u16 special_status_word;
+	u32 fault_addr;
+	u16 unused_reserved_1;
+	u16 data_output_buffer;
+	u16 unused_reserved_2;
+	u16 data_input_buffer;
+	u16 unused_reserved_3;
+	u16 instr_output_buffer;
+	u16 version_number;
+	u16 internal_information[15];
 } __attribute__((packed));
 
 
 /*
 	MC68010 group 1/2 exception stack frame
 */
-struct mc68010_exc_frame
+typedef struct mc68010_short_exc_frame
 {
-    ku32 dummy;
-	ku16 sr;
-	ku32 pc;
-	ku16 vector_offset;
-} __attribute__((packed));
+	u16 sr;
+	u32 pc;
+	u16 format_offset;
+} mc68010_short_exc_frame_t;
 
+/* Definitions for the "format code" field in an MC68010+ exception stack frame */
+#define MC68K_EXC_FMT_SHORT     (0x0000)
+#define MC68K_EXC_FMT_LONG      (0x8000)
 
 inline void cpu_nop(void)
 {
