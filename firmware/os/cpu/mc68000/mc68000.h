@@ -30,7 +30,7 @@ struct regs
 {
     reg32_t d[8];
     reg32_t a[8];
-    reg32_t usp;        /* FIXME - this breaks EVERYTHING, for the time being. */
+    reg32_t usp;
     reg16_t sr;
     reg32_t pc;
 } __attribute__((aligned(2),packed));   /* sizeof(struct regs) == 74 */
@@ -116,9 +116,9 @@ inline u16 bswap_16(u16 x)
     asm volatile
     (
         "rol.w #8, %w0\n"
-        :
+        : /* "=d" (x_) */
         : "d" (x_)
-        : "d0", "cc"
+        : "cc"
     );
 
     return x_;

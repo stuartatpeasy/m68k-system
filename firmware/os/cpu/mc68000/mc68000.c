@@ -8,6 +8,7 @@
 */
 
 #include <cpu/mc68000/mc68000.h>
+#include <kernel/process.h>
 #include <klibc/stdio.h>
 
 
@@ -178,6 +179,32 @@ u8 cpu_tas(u8 *addr)
 
     return ret;
 }
+
+
+/*
+    cpu_init_proc_regs() - perform architecture-specific register initialisation before a new
+    process starts.
+*/
+s32 cpu_init_proc_regs(regs_t *r, void *entry_point, void *stack_top, ku32 flags)
+{
+    /* MC680x0 requires that the PC and SP are aligned to an even-numbered address */
+    if(((u32) entry_point & 1) || (((u32) stack_top) & 1))
+        return EINVAL;
+
+    if(flags & PROC_TYPE_KERNEL)
+    {
+        r->sr |= 0x2000;
+        r->a[7] = (u32) stack_top;
+    }
+    else
+    {
+        r->usp = (u32) stack_top;
+    }
+    r->pc = (u32) entry_point;
+
+    return SUCCESS;
+}
+
 
 /*
 	mc68000_dump_status_register() - write a string describing the contents of the status register

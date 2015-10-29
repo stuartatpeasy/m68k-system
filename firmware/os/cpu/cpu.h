@@ -16,9 +16,13 @@
 /* Parse target-specific header */
 #include <cpu/arch_specific.h>
 
+
 typedef struct regs regs_t;     /* struct regs must hold a complete CPU context */
 
-/* Primitives/intrinsics */
+/*
+    "Intrinsic" functions
+    ---------------------
+*/
 void cpu_halt(void);                            /* Halt processing, pending an interrupt        */
 void cpu_reset(void) __attribute__((noreturn)); /* Reset the CPU                                */
 void cpu_swi();                                 /* Raise a software IRQ (=TRAP #x on the 680x0) */
@@ -31,19 +35,25 @@ void cpu_swi();                                 /* Raise a software IRQ (=TRAP #
 */
 u8 cpu_tas(u8 *addr);
 
-/*
-    "Intrinsic" functions
-*/
 inline u16 bswap_16(u16 x);
 inline u32 bswap_32(u32 x);
 inline u32 wswap_32(u32 x);
 
-/* These declarations are for IRQ handlers - they must not be called directly */
+/*
+    Process-related declarations
+    ----------------------------
+*/
+
+/* Initialise proc_t::regs prior to starting a new process */
+s32 cpu_init_proc_regs(regs_t *r, void *entry_point, void *stack_top, ku32 flags);
+
+
+/* This declaration is for an IRQ handler - it must not be called directly */
 void cpu_context_switch();      /* Save context, call sched(), restore context      */
 
 /*
     Interrupt-related declarations
-    ==============================
+    ------------------------------
 */
 
 /*

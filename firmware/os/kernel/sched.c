@@ -45,7 +45,6 @@ s32 sched_init(const char * const init_proc_name)
 }
 
 
-
 /*
     sched() - select the next task to run, and update g_current_proc accordingly.
 */
@@ -56,11 +55,7 @@ void sched()
 
     ++g_current_proc->quanta;
 
-    do
-    {
-        g_current_proc = g_current_proc->next;
-
-    } while(g_current_proc->state != ps_runnable);
+    g_current_proc = g_current_proc->next;
 
     ++g_ncontext_switches;
 
@@ -70,22 +65,4 @@ void sched()
         time-slice starts before the corresponding task is actually ready to run.
     */
     plat_start_quantum();
-}
-
-
-/*
-    sched_exit() - ???
-*/
-void sched_exit()
-{
-    proc_t * const oldproc = g_current_proc;
-
-    sched();
-
-    /* TODO: release all resources associated with oldproc */
-
-    oldproc->prev->next = oldproc->next;
-    oldproc->next->prev = oldproc->prev;
-
-    kfree(oldproc);
 }

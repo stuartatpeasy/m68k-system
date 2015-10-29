@@ -43,16 +43,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     *(--process_stack_top) = (u32) 0xdeadbeef;  /* proc must exit with syscall, not rts */
     *(--process_stack_top) = (u32) arg;
 
-    p->regs.pc = (u32) img->entry_point;
-    if(flags & PROC_TYPE_KERNEL)
-    {
-        p->regs.sr |= 0x2000;       /* FIXME - arch-specific - force supervisor mode */
-        p->regs.a[7] = (u32) process_stack_top; /* FIXME - arch-specific - SP in a7 */
-    }
-    else
-    {
-        p->regs.usp = (u32) process_stack_top;  /* FIXME - arch-specific - SP in usp */
-    }
+    cpu_init_proc_regs(&p->regs, img->entry_point, process_stack_top, flags);
 
     p->state = ps_runnable; /* Mark process as runnable so scheduler will pick it up. */
 
