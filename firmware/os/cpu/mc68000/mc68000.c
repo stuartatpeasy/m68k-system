@@ -48,7 +48,7 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 
     cpu_disable_interrupts();
 
-	printf("\nUnhandled exception: ");
+	printf("\nUnhandled exception in process %d: ", proc_get_pid());
 	if((irql >= 25) && (irql <= 31))
 		printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
 	else if((irql >= 32) && (irql <= 47))
