@@ -54,9 +54,9 @@
 
 
 /*
-    Restore state from g_current_proc->regs.  Assume that the top of the stack contains a short-form
-    exception frame, and overwrite the values of PC and SR in the exception frame with the values in
-    g_current_proc->regs.pc and g_current_proc->regs.sr.
+    Restore CPU context from g_current_proc->regs.  Assume that the top of the stack contains a
+    short-form exception frame, and overwrite the values of PC and SR in the exception frame with
+    the values in g_current_proc->regs.pc and g_current_proc->regs.sr.
 
     NOTE: both (user and supervisor) stack pointers are restored.
     NOTE: assumes regs is the first member of g_current_proc.
