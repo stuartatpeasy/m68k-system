@@ -9,6 +9,7 @@
 
 #include <cpu/mc68000/regs.h>
 #include <kernel/syscalls.h>
+#include <klibc/errors.h>
 
 .text
 .global syscall_dispatcher
@@ -91,5 +92,5 @@ sdL3:   movea.l     a2, sp
         rte
 
 syscall_handler_invalid_syscall:
-		moveq.l	    #-1, d0
+		moveq.l	    #-ENOSYS, d0
 		rte
