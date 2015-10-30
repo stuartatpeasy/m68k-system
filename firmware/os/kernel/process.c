@@ -119,14 +119,20 @@ void proc_do_exit(s32 exit_code)
     g_exiting->next->prev = g_exiting->prev;
     g_exiting->prev->next = g_exiting->next;
 
-    kfree(g_exiting->kstack);
-    kfree(g_exiting->ustack);
+    if(g_exiting->kstack != NULL)
+        kfree(g_exiting->kstack);
+
+    if(g_exiting->ustack != NULL)
+        kfree(g_exiting->ustack);
 
     /* TODO: deallocate any other resources allocated by g_exiting (heaps, file handles, ...) */
 
     /* TODO: move this code into a generic exe_img_free() fn */
-    kfree(g_exiting->img->start);
-    kfree(g_exiting->img);
+    if(g_exiting->img != NULL)
+    {
+        kfree(g_exiting->img->start);
+        kfree(g_exiting->img);
+    }
 
     /* TODO: move g_exiting onto "exited" list, to await exit-code collection? */
 
