@@ -85,7 +85,10 @@
                  +----------------------+     /
 */
 
-/* "full" IRQ router: saves/restores complete CPU state.  Allows for task-switching etc. */
+/*
+    "full" IRQ router: saves/restores complete CPU state.  Used by unhandled-exception handlers to
+    report CPU state.
+*/
 /* Execution time: 468 clocks on MC68010, assuming zero wait states */
 irq_router_full:
     movem.l     d0-d7/a0-a7, sp@-
@@ -165,24 +168,29 @@ irq_router_full:
 irq_router_fast:
     movem.l     d0-d1/a0-a1, sp@-
 
+    /* Retrieve format/offset word, extract offset and extend to word length. */
     move.w      sp@(22), d0
     andi.w      #0x03ff, d0
     ext.l       d0
 
+    /* Use offset to calculate index into the g_interrupt_handlers table */
     asl.l       #1, d0
     move.l      d0, a0
     adda.l      #g_interrupt_handlers, a0
 
+    /* Stack the argument to the interrupt handler */
     move.l      a0@(4), sp@-
 
+    /* Stack the irql (IRQ level) */
     asr.l       #3, d0
     move.l      d0, sp@-
 
+    /* Call the IRQ handler */
     move.l      a0@, a0
     jsr         a0@
 
+    /* Unwind the stack and resume normal processing */
     addq.l      #8, sp
-
     movem.l     sp@+, d0-d1/a0-a1
 
     rte
