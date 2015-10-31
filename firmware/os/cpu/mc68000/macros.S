@@ -63,8 +63,6 @@
 */
 .macro RESTORE_CONTEXT
     movea.l     g_current_proc, %a0
-    move.l      %a0@(70), %sp@(2)
-    move.w      %a0@(68), %sp@
     move.l      %a0@(64), %a1
     move.l      %a1, %usp
     movem.l     %a0@+, %d0-%d7/%a0-%a7
