@@ -12,20 +12,10 @@
 #include <device/encx24j600.h>
 #include <klibc/stdio.h>			/* TODO remove */
 
+
 /*
-const dev_driver_t g_encx24j600_device =
-{
-    .name       = "eth",
-    .version    = 0x00000100,
-
-    .init       = encx24j600_init,
-    .shut_down  = encx24j600_shut_down,
-    .read       = encx24j600_read,
-    .write      = encx24j600_write,
-    .control    = encx24j600_control
-};
+    encx24j600_reset() - reset the ENCx24J600 controller IC
 */
-
 s32 encx24j600_reset(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
@@ -68,11 +58,13 @@ s32 encx24j600_reset(dev_t *dev)
 }
 
 
-void encx24j600_irq(ku32 irql, void *data, const regs_t regs)
+/*
+    encx24j600_irq() - interrupt service routine
+*/
+void encx24j600_irq(ku32 irql, void *data)
 {
     UNUSED(irql);
     UNUSED(data);
-    UNUSED(regs);
 
 //    dev_t *dev = (dev_t *) data;
 
@@ -82,6 +74,9 @@ void encx24j600_irq(ku32 irql, void *data, const regs_t regs)
 }
 
 
+/*
+    encx24j600_init() - initialise the ENCx24J600 controller IC.
+*/
 s32 encx24j600_init(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
@@ -131,6 +126,10 @@ s32 encx24j600_init(dev_t *dev)
 }
 
 
+/*
+    encx24j600_shut_down() - shut down the ENCx24J600 controller, in preparation for deletion of the
+    device.
+*/
 s32 encx24j600_shut_down(dev_t *dev)
 {
     UNUSED(dev);

@@ -205,7 +205,7 @@ extern void syscall_dispatcher(void);
 	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
 	this table and descriptions of each exception.
 */
-void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs);
+void mc68000_exc_generic(ku32 irql, void *data);
 
 
 const char * mc68000_dump_status_register(ku16 sr);

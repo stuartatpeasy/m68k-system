@@ -62,7 +62,7 @@ void cpu_context_switch();      /* Save context, call sched(), restore context  
 void cpu_init_interrupt_handlers(void);
 
 /* Set a handler for a particular IRQ level */
-typedef void(*interrupt_handler)(ku32 irql, void *data, const regs_t regs);
+typedef void(*interrupt_handler)(ku32 irql, void *data);
 
 /*
     An entry in the IRQ indirection table.  Consists of a ptr to a handler fn, and an arbitrary

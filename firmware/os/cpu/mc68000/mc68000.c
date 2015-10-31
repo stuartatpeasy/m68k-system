@@ -42,11 +42,10 @@ void cpu_init_interrupt_handlers(void)
     mc68000_exc_generic() - handler for interrupts not otherwise handled.  Dumps state and halts
     the CPU.
 */
-void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
+void mc68000_exc_generic(ku32 irql, void *data)
 {
+    const regs_t * const regs = &proc_current()->regs;
     UNUSED(data);
-
-    cpu_disable_interrupts();
 
 	printf("\nUnhandled exception in process %d: ", proc_get_pid());
 	if((irql >= 25) && (irql <= 31))
@@ -94,11 +93,11 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
     if((irql == V_bus_error) || (irql == V_address_error))
     {
         putchar('\n');
-        mc68010_dump_address_exc_frame(irql, &regs);
+        mc68010_dump_address_exc_frame(irql, regs);
     }
 
     putchar('\n');
-    mc68000_dump_regs(&regs);
+    mc68000_dump_regs(regs);
 
 	puts("\nSystem halted.");
 	cpu_halt();
