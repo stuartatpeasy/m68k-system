@@ -28,9 +28,9 @@
 */
 struct regs
 {
+    reg32_t usp;
     reg32_t d[8];
     reg32_t a[8];
-    reg32_t usp;
     reg16_t sr;
     reg32_t pc;
 } __attribute__((aligned(2),packed));   /* sizeof(struct regs) == 74 */
