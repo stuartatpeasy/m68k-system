@@ -48,7 +48,7 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 
     cpu_disable_interrupts();
 
-	printf("\nUnhandled exception: ");
+	printf("\nUnhandled exception in process %d: ", proc_get_pid());
 	if((irql >= 25) && (irql <= 31))
 		printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
 	else if((irql >= 32) && (irql <= 47))
@@ -182,25 +182,35 @@ u8 cpu_tas(u8 *addr)
 
 
 /*
-    cpu_init_proc_regs() - perform architecture-specific register initialisation before a new
-    process starts.
+    cpu_proc_init() - perform architecture-specific register initialisation before a new process
+    starts.
 */
-s32 cpu_init_proc_regs(regs_t *r, void *entry_point, void *stack_top, ku32 flags)
+s32 cpu_proc_init(regs_t *r, void *entry_point, void *ustack_top, void *kstack_top, ku32 flags)
 {
+    mc68010_short_exc_frame_t *f;
+
     /* MC680x0 requires that the PC and SP are aligned to an even-numbered address */
-    if(((u32) entry_point & 1) || (((u32) stack_top) & 1))
+    if(((u32) entry_point & 1) || (((u32) kstack_top) & 1) || (((u32) ustack_top) & 1))
         return EINVAL;
 
     if(flags & PROC_TYPE_KERNEL)
-    {
-        r->sr |= 0x2000;
-        r->a[7] = (u32) stack_top;
-    }
+        r->sr = MC68K_SR_SUPERVISOR;
     else
-    {
-        r->usp = (u32) stack_top;
-    }
+        r->sr = 0;
+
+    r->usp = (u32) ustack_top;
     r->pc = (u32) entry_point;
+
+    /*
+        Place a fake short-format exception stack frame at the top of the kernel stack.  This
+        enables us to start the process by switching to its stack and executing an rte.
+    */
+    f = (mc68010_short_exc_frame_t *) ((u8 *) kstack_top - sizeof(mc68010_short_exc_frame_t));
+    f->format_offset = MC68K_EXC_FMT_SHORT;
+    f->pc = r->pc;
+    f->sr = r->sr;
+
+    r->a[7] = (u32) f;
 
     return SUCCESS;
 }
@@ -214,19 +224,18 @@ const char * mc68000_dump_status_register(ku16 sr)
 	static char buf[16];
 
 	/* dump format:  Tx S M Ix XNZVC */
-	/* buf must point to a >= 16-byte buffer */
 	buf[0] = 'T';
-	buf[1] = '0' + ((sr >> 14) & 3);
+	buf[1] = '0' + MC68K_SR_TRACE_LEVEL(sr);
 	buf[2] = buf[4] = buf[6] = buf[9] = ' ';
-	buf[3] = (sr & 0x2000) ? 'S' : 'U';
-	buf[5] = (sr & 0x1000) ? 'M' : 'I';
+	buf[3] = (sr & MC68K_SR_SUPERVISOR) ? 'S' : 'U';
+	buf[5] = (sr & MC68K_SR_STACK) ? 'M' : 'I';
 	buf[7] = 'I';
-	buf[8] = '0' + ((sr >> 8) & 7);
-	buf[10] = (sr & 0x10) ? 'X' : 'x';
-	buf[11] = (sr & 0x08) ? 'N' : 'n';
-	buf[12] = (sr & 0x04) ? 'Z' : 'z';
-	buf[13] = (sr & 0x02) ? 'V' : 'v';
-	buf[14] = (sr & 0x01) ? 'C' : 'c';
+	buf[8] = '0' + MC68K_SR_IPL(sr);
+	buf[10] = (sr & MC68K_SR_X) ? 'X' : 'x';
+	buf[11] = (sr & MC68K_SR_N) ? 'N' : 'n';
+	buf[12] = (sr & MC68K_SR_Z) ? 'Z' : 'z';
+	buf[13] = (sr & MC68K_SR_V) ? 'V' : 'v';
+	buf[14] = (sr & MC68K_SR_C) ? 'C' : 'c';
 	buf[15] = '\0';
 
 	return buf;

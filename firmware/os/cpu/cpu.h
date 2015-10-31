@@ -45,8 +45,7 @@ inline u32 wswap_32(u32 x);
 */
 
 /* Initialise proc_t::regs prior to starting a new process */
-s32 cpu_init_proc_regs(regs_t *r, void *entry_point, void *stack_top, ku32 flags);
-
+s32 cpu_proc_init(regs_t *r, void *entry_point, void *ustack_top, void *kstack_top, ku32 flags);
 
 /* This declaration is for an IRQ handler - it must not be called directly */
 void cpu_context_switch();      /* Save context, call sched(), restore context      */

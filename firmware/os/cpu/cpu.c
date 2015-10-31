@@ -14,6 +14,9 @@
 interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
 
 
+/*
+    cpu_set_interrupt_handler() - register a handler function, and an arg, for an interrupt.
+*/
 s32 cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler)
 {
     if(irql > CPU_MAX_IRQL)
