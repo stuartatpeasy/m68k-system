@@ -20,6 +20,7 @@
 
 
 #define ENCX24_SFR_BASE         (0x7e00)	/* Base address of special-function registers		*/
+#define ENCX24_MEM_TOP          (0x6000)    /* End of RAM area + 1                              */
 #define ENCX24_SFR_SHIFT		(1)			/* Regs are 16 bit, so regnum must be <<'ed by 1	*/
 
 /* This macro provides the offset of register x from the start of the controller's memory map */
@@ -30,7 +31,25 @@
 /* This macro is an accessor for register x, given a controller at address "base" */
 #define ENCX24_REG(base, x)         *((vu16 *) ENCX24_SFR_ADDR((base), (x)))
 
-// const dev_driver_t g_encx24j600_device;
+/*
+    This macro is an accessor for the memory buffer in a controller.  Note: reads and writes must be
+    aligned on two-byte boundaries, i.e. "x" must be even.
+*/
+#define ENCX24_MEM_ADDR(base, x)     ((vu16 *) ((u8 *) (base) + (x)))
+
+/* Ethernet controller state structure */
+typedef struct encx24j600_state
+{
+    u16     rx_buf_start;
+    u16     rx_read_ptr;
+} encx24j600_state_t;
+
+/* Header added to incoming packets by the ENCx24J600 */
+typedef struct encx24j600_rxhdr
+{
+    u16     next_packet_ptr;
+    u8      rsv[6];
+} encx24j600_rxhdr_t;
 
 s32 encx24j600_reset(dev_t *dev);
 s32 encx24j600_init(dev_t *dev);
@@ -39,6 +58,7 @@ s32 encx24j600_read(dev_t *dev);
 s32 encx24j600_write(dev_t *dev);
 s32 encx24j600_control(dev_t *dev);
 void encx24j600_irq(ku32 irql, void *data);
+void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out);
 
 /*
     Cryptographic data memory map
@@ -303,7 +323,7 @@ enum ENC624J600_PHYReg
 #define EIDLED_ON           (1)         /* LED permanently on                              */
 #define EIDLED_OFF          (0)         /* LED permanently off                             */
 
-/* EIE register */
+/* EIE: Ethernet interrupt enable register */
 #define EIE_INTIE           (7)         /* Global interrupt enable                  (RW-1) */
 #define EIE_MODEXIE         (6)         /* Modular exponentiation interrupt enable  (RW-0) */
 #define EIE_HASHIE          (5)         /* MD5/SHA-1 hash interrupt enable          (RW-0) */
@@ -321,7 +341,25 @@ enum ENC624J600_PHYReg
 #define EIE_RXABTIE         (9)         /* Receive abort interrupt enable           (RW-0) */
 #define EIE_PCFULIE         (8)         /* Packet counter full interrupt enable     (RW-0) */
 
-/* ESTAT register */
+/* EIR: Ethernet interrupt flag register */
+#define EIR_CRYPTEN         (7)         /* Modular exp'n & AES crypto module enable (RW-0) */
+#define EIR_MODEXIF         (6)         /* Modular exponentiation interrupt flag    (RW-0) */
+#define EIR_HASHIF          (5)         /* MD5/SHA-1 hash interrupt flag            (RW-0) */
+#define EIR_AESIF           (4)         /* AES encrypt/decrypt interrupt flag       (RW-0) */
+#define EIR_LINKIF          (3)         /* PHY link status change interrupt flag    (RW-1) */
+/*                          (2)            (reserved; read: ignore, write: don't care)     */
+/*                          (1)            (reserved; read: ignore, write: don't care)     */
+/*                          (0)            (reserved; read: ignore, write: don't care)     */
+/*                          (15)           (reserved; read: ignore, write: don't care)     */
+#define EIR_PKTIF           (14)        /* RX packet pending interrupt flag         (R-0)  */
+#define EIR_DMAIF           (13)        /* DMA copy/cksum complete interrupt flag   (RW-0) */
+/*                          (12)           (reserved; read: ignore, write: don't care)     */
+#define EIR_TXIF            (11)        /* Transmit done interrupt flag             (RW-0) */
+#define EIR_TXABTIF         (10)        /* Transmit abort interrupt flag            (RW-0) */
+#define EIR_RXABTIF         (9)         /* Receive abort interrupt flag             (RW-0) */
+#define EIR_PCFULIF         (8)         /* Packet counter full interrupt flag       (RW-0) */
+
+/* ESTAT: Ethernet status register */
 #define ESTAT_INT           (7)
 #define ESTAT_FCIDLE        (6)
 #define ESTAT_RXBUSY        (5)

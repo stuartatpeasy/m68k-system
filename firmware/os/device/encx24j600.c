@@ -59,18 +59,91 @@ s32 encx24j600_reset(dev_t *dev)
 
 
 /*
+    encx24j600_rx_buf_read() - perform a wrapping read of len bytes from the RX buffer; update
+    the buffer-tail pointer register (ERXTAIL) appropriately.
+*/
+void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
+{
+    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
+    u16 *base_addr = (u16 *) dev->base_addr,
+        *out16 = (u16 *) out;
+    ku16 *stop, *buf;
+    u16 curr_part_len;
+
+
+    buf = (ku16 *) ((u8 *) base_addr + state->rx_read_ptr);
+    curr_part_len = MIN(len, ENCX24_MEM_TOP - state->rx_read_ptr);
+    stop = (ku16 *) ((u8 *) buf + curr_part_len);
+
+    while(buf < stop)
+        *out16++ = *buf++;
+
+    state->rx_read_ptr += curr_part_len;
+    len -= curr_part_len;
+    if(len)
+    {
+        state->rx_read_ptr = state->rx_buf_start;
+        buf = (ku16 *) ((u8 *) base_addr + state->rx_buf_start);
+        stop = (ku16 *) ((u8 *) buf + len);
+
+        while(buf < stop)
+            *out16++ = *buf++;
+
+        state->rx_read_ptr = state->rx_buf_start + len;
+    }
+
+    if(state->rx_read_ptr == state->rx_buf_start)
+    {
+        printf("{1:%04x}", N2LE16(ENCX24_MEM_TOP - 2));
+        ENCX24_REG(base_addr, ERXTAIL) = N2LE16(ENCX24_MEM_TOP - 2);
+    }
+    else
+    {
+        printf("{2:%04x}", N2LE16(state->rx_read_ptr - 2));
+        ENCX24_REG(base_addr, ERXTAIL) = N2LE16(state->rx_read_ptr - 2);
+    }
+
+    printf("{tail=%06x}", LE2N16(ENCX24_REG(base_addr, ERXTAIL)));
+    printf("{tail2=%06x}", *((vu16 *) 0xc07e06));
+}
+
+
+/*
     encx24j600_irq() - interrupt service routine
 */
 void encx24j600_irq(ku32 irql, void *data)
 {
+    dev_t * const dev = (dev_t *) data;
+    void * const base_addr = dev->base_addr;
+    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
+    u16 iflags;
     UNUSED(irql);
-    UNUSED(data);
 
-//    dev_t *dev = (dev_t *) data;
+    /* Read the interrupt flag register (EIR) to find out the cause of the interrupt */
+    iflags = ENCX24_REG(base_addr, EIR);
 
-    /* Disable interrupts on the ENCX24 while we process this one */
-//    ENCX24_REG(dev->base_addr, )
-    putchar('*');
+    if(iflags & BIT(EIR_LINKIF))
+    {
+        /* Link state changed */
+        put("~L");
+    }
+
+    if(iflags & BIT(EIR_PKTIF))
+    {
+        /* Packet received */
+        encx24j600_rxhdr_t hdr;
+
+        encx24j600_rx_buf_read(dev, sizeof(hdr), &hdr);
+
+        printf("~R: %04x %02x %02x %02x %02x %02x %02x\n", LE2N16(hdr.next_packet_ptr),
+               hdr.rsv[5], hdr.rsv[4], hdr.rsv[3], hdr.rsv[2], hdr.rsv[1], hdr.rsv[0]);
+
+        state->rx_read_ptr = LE2N16(hdr.next_packet_ptr);
+        ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
+    }
+
+    /* Clear all interrupts */
+    ENCX24_REG(base_addr, EIR) = 0;
 }
 
 
@@ -80,7 +153,14 @@ void encx24j600_irq(ku32 irql, void *data)
 s32 encx24j600_init(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
+    encx24j600_state_t *state;
     s32 ret;
+
+    dev->data = kmalloc(sizeof(encx24j600_state_t));
+    if(dev->data == NULL)
+        return ENOMEM;
+
+    state = dev->data;
 
     /* Reset the controller */
     ret = encx24j600_reset(dev);
@@ -90,7 +170,11 @@ s32 encx24j600_init(dev_t *dev)
     cpu_set_interrupt_handler(dev->irql, dev, encx24j600_irq);  /* Install IRQ handler */
 
     ENCX24_REG(base_addr, ECON2) &= ~ECON2_COCON_MASK;     /* Disable the ENC's output clock */
-    ENCX24_REG(base_addr, ERXST) = N2LE16(0x1000);         /* Initialise packet RX buffer */
+
+    /* Initialise packet RX buffer */
+    state->rx_buf_start = 0x1000;
+    state->rx_read_ptr = state->rx_buf_start;
+    ENCX24_REG(base_addr, ERXST) = N2LE16(state->rx_read_ptr);
 
     /* Initialise receive filters */
     ENCX24_REG(base_addr, ERXFCON) =
@@ -118,7 +202,7 @@ s32 encx24j600_init(dev_t *dev)
                                      (EIDLED_TR << EIDLED_LBCFG_SHIFT);
 
     /* Enable interrupts on link state changed and packet received events */
-//    ENCX24_REG(base_addr, EIE) = BIT(EIE_INTIE) | BIT(EIE_LINKIE) | BIT(EIE_PKTIE);
+    ENCX24_REG(base_addr, EIE) = BIT(EIE_INTIE) | BIT(EIE_LINKIE) | BIT(EIE_PKTIE);
 
     ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_RXEN);       /* Enable packet reception */
 
@@ -132,7 +216,8 @@ s32 encx24j600_init(dev_t *dev)
 */
 s32 encx24j600_shut_down(dev_t *dev)
 {
-    UNUSED(dev);
+    if(dev->data != NULL)
+        kfree(dev->data);
 
     return SUCCESS;
 }

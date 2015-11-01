@@ -66,6 +66,22 @@
     (type *) ((char *) mptr - offsetof(type, member));  \
 })
 
+/* Return the minimum of two values; accesses each value exactly once. */
+#define MIN(a, b)           \
+({                          \
+    typeof(a) _a = (a);     \
+    typeof(b) _b = (b);     \
+    _a < _b ? _a : _b;      \
+})
+
+/* Return the maximum of two values; accesses each value exactly once. */
+#define MAX(a, b)           \
+({                          \
+    typeof(a) _a = (a);     \
+    typeof(b) _b = (b);     \
+    _a > _b ? _a : _b;      \
+})
+
 /* Return a val with bit x set (i.e. compute 2^x). */
 #define BIT(x)          (1 << (x))
 

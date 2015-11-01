@@ -96,7 +96,7 @@ irq_router_full:
     SAVE_CONTEXT
 
     /* Retrieve format/offset word, extract offset and extend to word length. */
-    move.w      sp@, d0
+    move.w      sp@(6), d0
     andi.w      #0x03ff, d0
     ext.l       d0
 
