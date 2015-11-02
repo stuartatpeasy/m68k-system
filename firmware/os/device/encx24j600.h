@@ -37,6 +37,7 @@
 */
 #define ENCX24_MEM_ADDR(base, x)     ((vu16 *) ((u8 *) (base) + (x)))
 
+
 /* Ethernet controller state structure */
 typedef struct encx24j600_state
 {
@@ -48,8 +49,18 @@ typedef struct encx24j600_state
 typedef struct encx24j600_rxhdr
 {
     u16     next_packet_ptr;
-    u8      rsv[6];
+
+    /* "RSV" - receive status vector */
+    struct
+    {
+        u8      zero;               /* All bits set to zero                 */
+        u8      rsv4;               /* } Packet type / filter match flags   */
+        u8      rsv3;               /* }                                    */
+        u8      status;             /* Packet status information            */
+        u16     byte_count;         /* Number of bytes received             */
+    } rsv;
 } encx24j600_rxhdr_t;
+
 
 s32 encx24j600_reset(dev_t *dev);
 s32 encx24j600_init(dev_t *dev);
@@ -59,6 +70,7 @@ s32 encx24j600_write(dev_t *dev);
 s32 encx24j600_control(dev_t *dev);
 void encx24j600_irq(ku32 irql, void *data);
 void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out);
+
 
 /*
     Cryptographic data memory map
@@ -405,5 +417,15 @@ enum ENC624J600_PHYReg
 /*                          (9)            (reserved - write as 0)                         */
 #define MACON2_FULDPX       (8)         /* Full duplex mode enable                  (RW-0) */
 
+
+/* RSV (receive status vector) "status" byte field definitions */
+#define ENCX24_RSV_STAT_OK          (7)     /* Packet received successfully                */
+#define ENCX24_RSV_STAT_TOO_LONG    (6)     /* Packet length field indicates >1500 bytes   */
+#define ENCX24_RSV_STAT_LEN_ERR     (5)     /* Length field value != actual frame length   */
+#define ENCX24_RSV_STAT_CRC_ERR     (4)     /* CRC error                                   */
+/*                                  (3)        (reserved)                                  */
+#define ENCX24_RSV_STAT_CEPS        (2)     /* Carrier event previously seen               */
+/*                                  (1)        (reserved)                                  */
+#define ENCX24_RSV_STAT_PPI         (0)     /* Packet previously ignored                   */
 
 #endif

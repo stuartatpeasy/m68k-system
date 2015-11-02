@@ -99,38 +99,55 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
 
 
 /*
+    encx24j600_packet_read() - read a received frame from the controller's buffer.
+*/
+void encx24j600_packet_read(dev_t *dev)
+{
+    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
+    void * const base_addr = dev->base_addr;
+    encx24j600_rxhdr_t hdr;
+
+    encx24j600_rx_buf_read(dev, sizeof(hdr), &hdr);
+
+    if(hdr.rsv.status & BIT(ENCX24_RSV_STAT_OK))
+    {
+        /* Packet received successfully */
+        printf("~R: %04x %02x %02x %02x %02x %04x\n", hdr.next_packet_ptr,
+                hdr.rsv.zero, hdr.rsv.rsv4, hdr.rsv.rsv3, hdr.rsv.status, hdr.rsv.byte_count);
+    }
+    else
+    {
+        /* Something wrong with the packet - discard it */
+        if(hdr.next_packet_ptr == state->rx_buf_start)
+            ENCX24_REG(base_addr, ERXTAIL) = N2LE16(ENCX24_MEM_TOP - 2);
+        else
+            ENCX24_REG(base_addr, ERXTAIL) = N2LE16(hdr.next_packet_ptr - 2);
+    }
+
+    state->rx_read_ptr = hdr.next_packet_ptr;
+    ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
+}
+
+
+/*
     encx24j600_irq() - interrupt service routine
 */
 void encx24j600_irq(ku32 irql, void *data)
 {
     dev_t * const dev = (dev_t *) data;
     void * const base_addr = dev->base_addr;
-    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
+//    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
     u16 iflags;
     UNUSED(irql);
 
     /* Read the interrupt flag register (EIR) to find out the cause of the interrupt */
     iflags = ENCX24_REG(base_addr, EIR);
 
-    if(iflags & BIT(EIR_LINKIF))
-    {
-        /* Link state changed */
+    if(iflags & BIT(EIR_LINKIF))        /* Link state changed */
         put("~L");
-    }
 
-    if(iflags & BIT(EIR_PKTIF))
-    {
-        /* Packet received */
-        encx24j600_rxhdr_t hdr;
-
-        encx24j600_rx_buf_read(dev, sizeof(hdr), &hdr);
-
-        printf("~R: %04x %02x %02x %02x %02x %02x %02x\n", LE2N16(hdr.next_packet_ptr),
-               hdr.rsv[5], hdr.rsv[4], hdr.rsv[3], hdr.rsv[2], hdr.rsv[1], hdr.rsv[0]);
-
-        state->rx_read_ptr = LE2N16(hdr.next_packet_ptr);
-        ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
-    }
+    if(iflags & BIT(EIR_PKTIF))         /* Packet received    */
+        encx24j600_packet_read(dev);
 
     /* Clear all interrupts */
     ENCX24_REG(base_addr, EIR) = 0;
