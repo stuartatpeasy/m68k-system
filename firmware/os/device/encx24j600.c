@@ -65,13 +65,13 @@ s32 encx24j600_reset(dev_t *dev)
 void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
 {
     encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
-    u16 *base_addr = (u16 *) dev->base_addr,
-        *out16 = (u16 *) out;
+    u8 * const base_addr = (u8 *) dev->base_addr;
+    u16 *out16 = (u16 *) out;
     ku16 *stop, *buf;
     u16 curr_part_len;
 
 
-    buf = (ku16 *) ((u8 *) base_addr + state->rx_read_ptr);
+    buf = (ku16 *) (base_addr + state->rx_read_ptr);
     curr_part_len = MIN(len, ENCX24_MEM_TOP - state->rx_read_ptr);
     stop = (ku16 *) ((u8 *) buf + curr_part_len);
 
@@ -83,7 +83,7 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
     if(len)
     {
         state->rx_read_ptr = state->rx_buf_start;
-        buf = (ku16 *) ((u8 *) base_addr + state->rx_buf_start);
+        buf = (ku16 *) (base_addr + state->rx_buf_start);
         stop = (ku16 *) ((u8 *) buf + len);
 
         while(buf < stop)
@@ -93,18 +93,9 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
     }
 
     if(state->rx_read_ptr == state->rx_buf_start)
-    {
-        printf("{1:%04x}", N2LE16(ENCX24_MEM_TOP - 2));
         ENCX24_REG(base_addr, ERXTAIL) = N2LE16(ENCX24_MEM_TOP - 2);
-    }
     else
-    {
-        printf("{2:%04x}", N2LE16(state->rx_read_ptr - 2));
         ENCX24_REG(base_addr, ERXTAIL) = N2LE16(state->rx_read_ptr - 2);
-    }
-
-    printf("{tail=%06x}", LE2N16(ENCX24_REG(base_addr, ERXTAIL)));
-    printf("{tail2=%06x}", *((vu16 *) 0xc07e06));
 }
 
 
