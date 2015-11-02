@@ -73,7 +73,7 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
 
     buf = (ku16 *) (base_addr + state->rx_read_ptr);
     curr_part_len = MIN(len, ENCX24_MEM_TOP - state->rx_read_ptr);
-    stop = (ku16 *) ((u8 *) buf + curr_part_len);
+    stop = buf + (curr_part_len >> 1);
 
     while(buf < stop)
         *out16++ = *buf++;
@@ -82,9 +82,8 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
     len -= curr_part_len;
     if(len)
     {
-        state->rx_read_ptr = state->rx_buf_start;
         buf = (ku16 *) (base_addr + state->rx_buf_start);
-        stop = (ku16 *) ((u8 *) buf + len);
+        stop = buf + (len >> 1);
 
         while(buf < stop)
             *out16++ = *buf++;
