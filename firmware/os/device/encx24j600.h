@@ -41,9 +41,12 @@
 /* Ethernet controller state structure */
 typedef struct encx24j600_state
 {
-    u16     rx_buf_start;
-    u16     rx_read_ptr;
+    u16     *rx_buf_start;
+    u16     *rx_read_ptr;
+    u8      flags;
 } encx24j600_state_t;
+
+#define ENCX24_STATE_LINKED     (0)     /* Linked with remote partner               */
 
 /* Header added to incoming packets by the ENCx24J600 */
 typedef struct encx24j600_rxhdr
@@ -372,13 +375,17 @@ enum ENC624J600_PHYReg
 #define EIR_PCFULIF         (8)         /* Packet counter full interrupt flag       (RW-0) */
 
 /* ESTAT: Ethernet status register */
-#define ESTAT_INT           (7)
-#define ESTAT_FCIDLE        (6)
-#define ESTAT_RXBUSY        (5)
-#define ESTAT_CLKRDY        (4)
-#define ESTAT_PHYDPX        (3)
-#define ESTAT_PHYLINK       (2)
-#define ESTAT_PKTCNT_MASK   (0xff00)
+#define ESTAT_INT           (7)         /* Interrupt pending                         (R-0) */
+#define ESTAT_FCIDLE        (6)         /* Flow control state machine idle           (R-0) */
+#define ESTAT_RXBUSY        (5)         /* Receiver currently receiving a packet     (R-0) */
+#define ESTAT_CLKRDY        (4)         /* Ethernet clocks ready                     (R-0) */
+/*                          (3)            (reserved)                                      */
+#define ESTAT_PHYDPX        (2)         /* PHY duplex: 1=full, 0=half                (R-0) */
+/*                          (1)            (reserved)                                      */
+#define ESTAT_PHYLINK       (0)         /* PHY link status: 1=linked                 (R-0) */
+
+#define ESTAT_PKTCNT_MASK   (0xff)      /* Packet counter mask/shift          (R-00000000) */
+#define ESTAT_PKTCNT_SHIFT  (8)
 
 /* ERXFCON register */
 #define ERXFCON_HTEN        (7)         /* Hash table collection filter enable      (RW-0) */

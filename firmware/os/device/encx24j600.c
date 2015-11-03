@@ -64,37 +64,34 @@ s32 encx24j600_reset(dev_t *dev)
 */
 void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
 {
+    void * const base_addr = (void *) dev->base_addr;
     encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
-    u8 * const base_addr = (u8 *) dev->base_addr;
+    ku16 *rx_buf_top = (u16 *) base_addr + (ENCX24_MEM_TOP / sizeof(u16));
     u16 *out16 = (u16 *) out;
-    ku16 *stop, *buf;
     u16 curr_part_len;
 
+    out16 = (u16 *) out;
+    len >>= 1;
 
-    buf = (ku16 *) (base_addr + state->rx_read_ptr);
-    curr_part_len = MIN(len, ENCX24_MEM_TOP - state->rx_read_ptr);
-    stop = buf + (curr_part_len >> 1);
+    curr_part_len = MIN(len, rx_buf_top - state->rx_read_ptr);
 
-    while(buf < stop)
-        *out16++ = *buf++;
+    while(curr_part_len--)
+        *out16++ = *state->rx_read_ptr++;
 
-    state->rx_read_ptr += curr_part_len;
     len -= curr_part_len;
+
     if(len)
     {
-        buf = (ku16 *) (base_addr + state->rx_buf_start);
-        stop = buf + (len >> 1);
+        state->rx_read_ptr = state->rx_buf_start;
 
-        while(buf < stop)
-            *out16++ = *buf++;
-
-        state->rx_read_ptr = state->rx_buf_start + len;
+        while(len--)
+            *out16++ = *state->rx_read_ptr++;
     }
 
-    if(state->rx_read_ptr == state->rx_buf_start)
-        ENCX24_REG(base_addr, ERXTAIL) = N2LE16(ENCX24_MEM_TOP - 2);
-    else
-        ENCX24_REG(base_addr, ERXTAIL) = N2LE16(state->rx_read_ptr - 2);
+    ENCX24_REG(base_addr, ERXTAIL) =
+        (state->rx_read_ptr == state->rx_buf_start) ?
+            N2LE16(ENCX24_MEM_TOP - 2) :
+            N2LE16((state->rx_read_ptr - state->rx_buf_start - 1) << 1);
 }
 
 
@@ -118,13 +115,13 @@ void encx24j600_packet_read(dev_t *dev)
     else
     {
         /* Something wrong with the packet - discard it */
-        if(hdr.next_packet_ptr == state->rx_buf_start)
+        if(hdr.next_packet_ptr == ((u32) state->rx_buf_start - (u32) base_addr))
             ENCX24_REG(base_addr, ERXTAIL) = N2LE16(ENCX24_MEM_TOP - 2);
         else
             ENCX24_REG(base_addr, ERXTAIL) = N2LE16(hdr.next_packet_ptr - 2);
     }
 
-    state->rx_read_ptr = hdr.next_packet_ptr;
+    state->rx_read_ptr = (u16 *) ((u32) base_addr + hdr.next_packet_ptr);
     ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
 }
 
@@ -136,7 +133,7 @@ void encx24j600_irq(ku32 irql, void *data)
 {
     dev_t * const dev = (dev_t *) data;
     void * const base_addr = dev->base_addr;
-//    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
+    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
     u16 iflags;
     UNUSED(irql);
 
@@ -144,7 +141,12 @@ void encx24j600_irq(ku32 irql, void *data)
     iflags = ENCX24_REG(base_addr, EIR);
 
     if(iflags & BIT(EIR_LINKIF))        /* Link state changed */
-        put("~L");
+    {
+        if(ENCX24_REG(base_addr, ESTAT) & BIT(ESTAT_PHYLINK))
+            state->flags |= BIT(ENCX24_STATE_LINKED);
+        else
+            state->flags &= ~BIT(ENCX24_STATE_LINKED);
+    }
 
     if(iflags & BIT(EIR_PKTIF))         /* Packet received    */
         encx24j600_packet_read(dev);
@@ -162,6 +164,7 @@ s32 encx24j600_init(dev_t *dev)
     void * const base_addr = dev->base_addr;
     encx24j600_state_t *state;
     s32 ret;
+    ku32 rx_buf_start = 0x1000;
 
     dev->data = kmalloc(sizeof(encx24j600_state_t));
     if(dev->data == NULL)
@@ -179,9 +182,9 @@ s32 encx24j600_init(dev_t *dev)
     ENCX24_REG(base_addr, ECON2) &= ~ECON2_COCON_MASK;     /* Disable the ENC's output clock */
 
     /* Initialise packet RX buffer */
-    state->rx_buf_start = 0x1000;
+    state->rx_buf_start = (u16 *) ((u8 *) base_addr + rx_buf_start);
     state->rx_read_ptr = state->rx_buf_start;
-    ENCX24_REG(base_addr, ERXST) = N2LE16(state->rx_read_ptr);
+    ENCX24_REG(base_addr, ERXST) = N2LE16(rx_buf_start);
 
     /* Initialise receive filters */
     ENCX24_REG(base_addr, ERXFCON) =
