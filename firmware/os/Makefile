@@ -16,6 +16,7 @@ CSOURCES:=	main.c \
 			fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
 			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/process.c kernel/sched.c \
 			kernel/semaphore.c kernel/syscall.c kernel/user.c \
+			kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c \
 			memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
 
 ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S cpu/$(CPU)/startup.S
@@ -185,6 +186,18 @@ kernel/syscall.o: \
 
 kernel/user.o: \
 	kernel/user.c kernel/user.h include/defs.h include/types.h
+
+kernel/net/arp.o: \
+	kernel/net/arp.c kernel/net/arp.h include/byteorder.h include/defs.h include/error.h \
+	include/types.h kernel/net/ethernet.h
+
+kernel/net/ethernet.o: \
+	kernel/net/ethernet.c kernel/net/ethernet.h include/byteorder.h include/defs.h \
+	include/types.h kernel/net/ipv4.h
+
+kernel/net/ipv4.o: \
+	kernel/net/ipv4.c kernel/net/ipv4.h include/byteorder.h include/defs.h include/types.h \
+	kernel/net/ethernet.h
 
 memory/buddy.o: \
 	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a

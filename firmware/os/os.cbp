@@ -161,6 +161,18 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/ksym.h" />
+		<Unit filename="kernel/net/arp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/arp.h" />
+		<Unit filename="kernel/net/ethernet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/ethernet.h" />
+		<Unit filename="kernel/net/ipv4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/ipv4.h" />
 		<Unit filename="kernel/process.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -195,6 +207,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="klibc/errno.h" />
+		<Unit filename="klibc/errors.h" />
 		<Unit filename="klibc/limits.h" />
 		<Unit filename="klibc/printf.c">
 			<Option compilerVar="CC" />

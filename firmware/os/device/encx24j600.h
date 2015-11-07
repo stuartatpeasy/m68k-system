@@ -48,20 +48,23 @@ typedef struct encx24j600_state
 
 #define ENCX24_STATE_LINKED     (0)     /* Linked with remote partner               */
 
+
+/* "Receive status vector": prepended to received packets by the controller */
+typedef struct rsv
+{
+    u16     byte_count_le;      /* Number of bytes received (little-endian)     */
+    u8      status;             /* Packet status information                    */
+    u8      rsv3;               /* Packet type / filter match flags             */
+    u8      rsv4;               /* Packet type / filter match flags             */
+    u8      zero;               /* All bits set to zero                         */
+} rsv_t;
+
+
 /* Header added to incoming packets by the ENCx24J600 */
 typedef struct encx24j600_rxhdr
 {
     u16     next_packet_ptr;
-
-    /* "RSV" - receive status vector */
-    struct
-    {
-        u8      zero;               /* All bits set to zero                 */
-        u8      rsv4;               /* } Packet type / filter match flags   */
-        u8      rsv3;               /* }                                    */
-        u8      status;             /* Packet status information            */
-        u16     byte_count;         /* Number of bytes received             */
-    } rsv;
+    rsv_t   rsv;
 } encx24j600_rxhdr_t;
 
 

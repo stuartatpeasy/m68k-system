@@ -11,6 +11,7 @@
 
 #include <device/encx24j600.h>
 #include <klibc/stdio.h>			/* TODO remove */
+#include <kernel/net/ipv4.h>        /* TODO remove */
 
 
 /*
@@ -107,8 +108,10 @@ void encx24j600_packet_read(dev_t *dev)
     if(hdr.rsv.status & BIT(ENCX24_RSV_STAT_OK))
     {
         /* Packet received successfully */
-        printf("~R: %04x %02x %02x %02x %02x %04x\n", hdr.next_packet_ptr,
-                hdr.rsv.zero, hdr.rsv.rsv4, hdr.rsv.rsv3, hdr.rsv.status, hdr.rsv.byte_count);
+//        printf("~R: npp=%04x zero=%02x rsv4=%02x rsv3=%02x stat=%02x bc=%u\n", N2LE16(hdr.next_packet_ptr),
+//                hdr.rsv.zero, hdr.rsv.rsv4, hdr.rsv.rsv3, hdr.rsv.status, N2LE16(hdr.rsv.byte_count_le));
+
+        eth_handle_frame(state->rx_read_ptr, LE2N16(hdr.rsv.byte_count_le));
     }
     else
     {
