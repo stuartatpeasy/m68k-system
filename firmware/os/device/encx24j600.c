@@ -75,14 +75,14 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
 
     curr_part_len = MIN(len, (u16) (rx_buf_top - state->rx_read_ptr));
 
-    for(len -= curr_part_len; curr_part_len; --curr_part_len)
+    for(len -= curr_part_len; curr_part_len--;)
         *out16++ = *state->rx_read_ptr++;
 
     if(len)
     {
         state->rx_read_ptr = state->rx_buf_start;
 
-        for(; len; --len)
+        while(len--)
             *out16++ = *state->rx_read_ptr++;
     }
 
