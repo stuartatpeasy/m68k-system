@@ -73,18 +73,16 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
     out16 = (u16 *) out;
     len >>= 1;
 
-    curr_part_len = MIN(len, rx_buf_top - state->rx_read_ptr);
+    curr_part_len = MIN(len, (u16) (rx_buf_top - state->rx_read_ptr));
 
-    while(curr_part_len--)
+    for(len -= curr_part_len; curr_part_len; --curr_part_len)
         *out16++ = *state->rx_read_ptr++;
-
-    len -= curr_part_len;
 
     if(len)
     {
         state->rx_read_ptr = state->rx_buf_start;
 
-        while(len--)
+        for(; len; --len)
             *out16++ = *state->rx_read_ptr++;
     }
 
@@ -121,7 +119,8 @@ void encx24j600_packet_read(dev_t *dev)
             ENCX24_REG(base_addr, ERXTAIL) = N2LE16(hdr.next_packet_ptr - 2);
     }
 
-    state->rx_read_ptr = (u16 *) ((u32) base_addr + hdr.next_packet_ptr);
+    state->rx_read_ptr = (u16 *) ((u32) base_addr + N2LE16(hdr.next_packet_ptr));
+
     ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
 }
 
