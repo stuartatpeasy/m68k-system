@@ -12,7 +12,9 @@
 #include <include/byteorder.h>
 #include <include/defs.h>
 #include <include/types.h>
-#include <kernel/net/ethernet.h>
+
+/* IPv4 address */
+typedef u32 ipv4_addr_t;
 
 
 /* IPv4 packet header */

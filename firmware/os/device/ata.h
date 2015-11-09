@@ -40,6 +40,8 @@ s32 ata_init(dev_t *dev);
 s32 ata_master_init(dev_t * dev);
 s32 ata_slave_init(dev_t * dev);
 
+void ata_irq(ku32 irql, void *data);
+
 s32 ata_bus_shut_down(dev_t *dev);
 
 blockdev_stats_t g_ata_stats;

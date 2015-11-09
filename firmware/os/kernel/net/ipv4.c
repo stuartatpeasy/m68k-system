@@ -11,7 +11,7 @@
 #include <klibc/stdio.h>        /* TODO remove */
 
 
-void ip_print_addr(u32 addr)
+void ip_print_addr(ipv4_addr_t addr)
 {
     printf("%u.%u.%u.%u",
            ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), addr & 0xff);

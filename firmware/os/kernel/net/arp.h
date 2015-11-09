@@ -14,20 +14,38 @@
 #include <include/error.h>
 #include <include/types.h>
 #include <kernel/net/ethernet.h>
+#include <kernel/net/ipv4.h>
 
 
 s32 arp_process_reply(const void * const packet, u32 len);
-s32 arp_cache_add(const mac_addr_t *hw_addr, const u32 *ip);
+s32 arp_cache_add(const mac_addr_t hw_addr, const ipv4_addr_t ip);
 
 
 typedef struct arp_hdr
 {
-    u16     hw_type;
-    u16     proto_type;
-    u8      hw_addr_len;
-    u8      proto_addr_len;
-    u16     opcode;
+    u16             hw_type;
+    u16             proto_type;
+    u8              hw_addr_len;
+    u8              proto_addr_len;
+    u16             opcode;
 } arp_hdr_t;
+
+
+/* ARP packet payload (Ethernet + IPv4 addresses only) */
+typedef struct arp_payload
+{
+    mac_addr_t      src_mac;
+    ipv4_addr_t     src_ip;
+    mac_addr_t      dst_mac;
+    ipv4_addr_t     dst_ip;
+} arp_payload_t;
+
+
+typedef struct arp_eth_ipv4_packet
+{
+    arp_hdr_t       hdr;
+    arp_payload_t   payload;
+} arp_eth_ipv4_packet_t;
 
 
 /* ARP operation codes */
