@@ -70,3 +70,18 @@ void *mem_get_highest_addr(ku32 flags)
 
     return highest;
 }
+
+
+/*
+    mem_get_containing_extent() - return the extent containing address addr
+*/
+mem_extent_t *mem_get_containing_extent(void *addr)
+{
+    mem_extent_t *e;
+
+    for_each_mem_extent(e)
+        if((addr > e->base) && (addr < (void *) ((u8 *) e->base + e->len)))
+            return e;
+
+    return NULL;
+}

@@ -19,11 +19,25 @@ mem_extent_t g_lambda_mem_extents[] =
         .len    = 256 * 1024,
         .flags  = MEM_EXTENT_KERN | MEM_EXTENT_RAM
     },
-
     {
         .base   = (void *) 0x00040000,
         .len    = 0,                    /* will be filled in during RAM detection */
         .flags  = MEM_EXTENT_USER | MEM_EXTENT_RAM
+    },
+    {
+        .base   = (void *) 0x00800000,
+        .len    = 0x00200000,
+        .flags  = MEM_EXTENT_VACANT
+    },
+    {
+        .base   = (void *) 0x00a00000,
+        .len    = 0x00500000,
+        .flags  = MEM_EXTENT_PERIPH
+    },
+    {
+        .base   = (void *) 0x00f00000,
+        .len    = 0x00100000,
+        .flags  = MEM_EXTENT_KERN | MEM_EXTENT_ROM
     }
 };
 
@@ -59,7 +73,7 @@ s32 plat_mem_detect()
     g_lambda_mem_extents[1].len = ((u32) p) - ((u32) g_lambda_mem_extents[1].base);
 
     g_mem_extents = g_lambda_mem_extents;
-    g_mem_extents_end = &g_lambda_mem_extents[2];   /* ptr to first non-existent extent */
+    g_mem_extents_end = &g_lambda_mem_extents[ARRAY_COUNT(g_lambda_mem_extents)];
 
     return SUCCESS;
 }
