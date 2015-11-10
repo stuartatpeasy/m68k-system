@@ -18,6 +18,8 @@
 
 #define MEM_EXTENT_RAM      (0x00000100)    /* Read/write memory                            */
 #define MEM_EXTENT_ROM      (0x00000200)    /* Read-only memory                             */
+#define MEM_EXTENT_PERIPH   (0x00000400)    /* Memory-mapped peripherals                    */
+#define MEM_EXTENT_VACANT   (0x00000800)    /* Vacant extent - nothing maps here            */
 
 #define MEM_EXTENT_MASK_ANY (0xffffffff)    /* Match any kind of extent                     */
 
@@ -45,5 +47,7 @@ mem_extent_t *mem_get_largest_extent(ku32 flags);
 void mem_zero_extents(ku32 flags);
 u32 mem_get_total_size(ku32 flags);
 void *mem_get_highest_addr(ku32 flags);
+mem_extent_t *mem_get_containing_extent(void *addr);
+
 
 #endif

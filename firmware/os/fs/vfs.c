@@ -74,13 +74,13 @@ s32 vfs_init()
     dev = dev_find(bpb.rootfs);
     if(dev == NULL)
     {
-        printf("vfs: rootfs partition '%s' not found\n");
+        printf("vfs: rootfs partition '%s' not found\n", bpb.rootfs);
         return ENODEV;
     }
 
     if((dev->type != DEV_TYPE_BLOCK) || (dev->subtype != DEV_SUBTYPE_PARTITION))
     {
-        printf("vfs: rootfs '%s' is not a partition device\n");
+        printf("vfs: rootfs '%s' is not a partition device\n", bpb.rootfs);
         return ENODEV;
     }
 

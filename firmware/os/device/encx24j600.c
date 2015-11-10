@@ -111,7 +111,8 @@ void encx24j600_packet_read(dev_t *dev)
 //        printf("~R: npp=%04x zero=%02x rsv4=%02x rsv3=%02x stat=%02x bc=%u\n", N2LE16(hdr.next_packet_ptr),
 //                hdr.rsv.zero, hdr.rsv.rsv4, hdr.rsv.rsv3, hdr.rsv.status, N2LE16(hdr.rsv.byte_count_le));
 
-        eth_handle_frame(state->rx_read_ptr, LE2N16(hdr.rsv.byte_count_le));
+        // FIXME - don't pass NULL here!!!
+        eth_handle_frame(NULL, state->rx_read_ptr, LE2N16(hdr.rsv.byte_count_le));
     }
     else
     {
