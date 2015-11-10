@@ -1,0 +1,25 @@
+32 IOs
+
+
+1  input   pixel clock
+1  input   cs
+1  input   id
+1  input   cpu upper read
+1  input   cpu lower read
+
+15 output  address
+1  output  hsync
+1  output  vsync
+1  output  display address + data buffer enable
+1  output  cpu address + data buffer enable
+1  output  irq
+1  output  shift register load
+1  output  blank
+1  output  ram chip select
+1  output  dtack
+1  output  ram upper read
+1  output  ram lower read
+
+= 31 pins
+
+ram write sigs decoded externally
