@@ -72,7 +72,7 @@ s32 ksym_format_nearest_prev(void *addr, char *buf, u32 buf_len)
         if(ent->addr == addr)
             snprintf(buf, buf_len, "<%s>", &ent->name);
         else
-            snprintf(buf, buf_len, "<%s+0x%x>", &ent->name, addr - ent->addr);
+            snprintf(buf, buf_len, "<%s+0x%x>", &ent->name, (u32) addr - (u32) ent->addr);
 
         return SUCCESS;
     }

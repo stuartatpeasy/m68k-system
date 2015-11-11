@@ -117,8 +117,8 @@ void expansion_init()
             mc68681_set_op_bits(g_lambda_console, BIT(EXP_ID));
 
 
-            printf("slot %d (%x-%x, irq %u): ", i, base_addr,
-                    base_addr + EXP_ADDR_LEN - 1, irql);
+            printf("slot %d (%x-%x, irq %u): ", i, (u32) base_addr,
+                    (u32) base_addr + EXP_ADDR_LEN - 1, irql);
 
             ret = dev_auto_init(id, base_addr, irql, NULL, &dev);
 
