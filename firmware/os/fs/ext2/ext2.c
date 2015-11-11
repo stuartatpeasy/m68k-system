@@ -88,7 +88,7 @@ s32 ext2_mount(vfs_t *vfs)
 		return ENOMEM;
     }
 
-    printf("ext2: superblock size is %d\n", sizeof(ext2_superblock_t));
+    printf("ext2: superblock size is %d\n", (u32) sizeof(ext2_superblock_t));
 
     ret = vfs->dev->read(vfs->dev, 1024 / BLOCK_SIZE, sizeof(ext2_superblock_t) / BLOCK_SIZE,
                         fs->sblk);

@@ -789,7 +789,7 @@ MONITOR_CMD_HANDLER(slabs)
         const void * const p = g_slabs[u].p;
 
         printf("%02u: %08x - %08x au=%u (%ux%ub)\n",
-                u, p, p + SLAB_SIZE - 1, au, SLAB_SIZE >> au, 1 << au);
+                u, (u32) p, (u32) p + SLAB_SIZE - 1, au, SLAB_SIZE >> au, 1 << au);
     }
     puts("-------------------------------------");
 
