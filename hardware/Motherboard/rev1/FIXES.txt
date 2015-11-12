@@ -8,8 +8,6 @@ Moderate (makes assembly fiddly, or affects usability)
 
 ------------------------------------------------------
 
-19	Battery footprint is entirely wrong
-
 
 Minor (cosmetic)
 
