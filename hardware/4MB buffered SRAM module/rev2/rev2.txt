@@ -1,0 +1,2 @@
+[2015-11-12] [swallace]
+This revision makes no functional changes.  The pcb design has been modified to conform with Eurocircuits' technology class 4A design rules (8/8 spacing).  This reduces the cost of pcb production by about 25%.
