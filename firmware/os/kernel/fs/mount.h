@@ -9,10 +9,10 @@
 	(c) Stuart Wallace, March 2012.
 */
 
+#include <device/device.h>
+#include <include/types.h>
+#include <kernel/fs/vfs.h>
 #include <strings.h>
-#include "fs/vfs.h"
-#include "include/types.h"
-#include "device/device.h"
 
 #define MOUNT_INITIAL_NUM_MOUNT_POINTS		(16)
 #define MOUNT_ADDITIONAL_MOUNT_POINTS		(8)

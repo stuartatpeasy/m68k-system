@@ -7,11 +7,11 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include <fs/vfs.h>
-#include <fs/mount.h>
-#include <device/nvram.h>
-#include <device/device.h>
 #include <device/devctl.h>
+#include <device/device.h>
+#include <device/nvram.h>
+#include <kernel/fs/vfs.h>
+#include <kernel/fs/mount.h>
 
 
 vfs_t *g_filesystems[MAX_FILESYSTEMS];
@@ -19,8 +19,8 @@ vfs_t *g_filesystems[MAX_FILESYSTEMS];
 /*
     #include driver registration function declarations here
 */
-#include "fs/fat/fat.h"
-#include "fs/ext2/ext2.h"
+#include <kernel/fs/fat/fat.h>
+#include <kernel/fs/ext2/ext2.h>
 
 vfs_driver_t *g_fs_drivers[] =
 {

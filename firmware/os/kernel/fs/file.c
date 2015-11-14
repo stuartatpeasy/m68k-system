@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015.
 */
 
-#include "fs/file.h"
+#include <kernel/fs/file.h>
 
 
 /*

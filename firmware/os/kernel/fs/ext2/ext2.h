@@ -9,14 +9,14 @@
 	(c) Stuart Wallace <stuartw@atom.net>, December 2012.
 */
 
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include "fs/vfs.h"
-#include "include/defs.h"
-#include "include/types.h"
-#include "kutil/kutil.h"
-#include "memory/kmalloc.h"
+#include <include/defs.h>
+#include <include/types.h>
+#include <kernel/fs/vfs.h>
+#include <klibc/errno.h>
+#include <klibc/stdio.h>
+#include <klibc/string.h>
+#include <kutil/kutil.h>
+#include <memory/kmalloc.h>
 
 
 #define EXT2_SUPER_MAGIC		(0xef53)

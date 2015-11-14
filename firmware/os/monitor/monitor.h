@@ -11,10 +11,10 @@
 
 #include <platform/lambda_rev0/dfu.h>
 #include <device/nvram.h>
-#include <fs/mount.h>
-#include <fs/vfs.h>
 #include <include/defs.h>
 #include <include/version.h>
+#include <kernel/fs/mount.h>
+#include <kernel/fs/vfs.h>
 #include <kutil/kutil.h>
 #include <memory/kmalloc.h>
 #include <memory/slab.h>

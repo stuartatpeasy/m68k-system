@@ -8,10 +8,10 @@
 */
 
 #include <errno.h>
-#include "fs/mount.h"
-#include "include/defs.h"
-#include "kutil/kutil.h"
-#include "memory/kmalloc.h"
+#include <include/defs.h>
+#include <kernel/fs/mount.h>
+#include <kutil/kutil.h>
+#include <memory/kmalloc.h>
 
 mount_ent_t *g_mount_table = NULL;
 u32 g_max_mounts = 0;

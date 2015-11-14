@@ -9,9 +9,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015.
 */
 
-#include <fs/vfs.h>
 #include <include/defs.h>
 #include <include/types.h>
+#include <kernel/fs/vfs.h>
 #include <kernel/user.h>
 
 

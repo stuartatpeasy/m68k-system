@@ -6,10 +6,10 @@
 */
 
 
-#include <fs/vfs.h>
 #include <include/defs.h>
 #include <kernel/boot.h>
 #include <kernel/sched.h>
+#include <kernel/fs/vfs.h>
 #include <kutil/kutil.h>
 #include <memory/extents.h>
 #include <memory/kmalloc.h>

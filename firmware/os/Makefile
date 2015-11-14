@@ -13,7 +13,8 @@ CSOURCES:=	main.c \
 			cpu/cpu.c cpu/$(CPU)/$(CPU).c \
 			device/ata.c device/auto.c device/device.c device/ds17485.c device/encx24j600.c \
 			device/mc68681.c device/nvram.c device/partition.c \
-			fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
+			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
+			kernel/fs/fat/fat.c \
 			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/process.c kernel/sched.c \
 			kernel/semaphore.c kernel/syscall.c kernel/user.c \
 			kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c \
@@ -94,8 +95,9 @@ $(TOOLS):
 #
 
 main.o: \
-	main.c device/ds17485.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h \
-	memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h device/device.o kernel/sched.h
+	main.c device/ds17485.h kernel/fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
+	kutil/kutil.h memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h \
+	device/device.o kernel/sched.h
 
 cpu/cpu.o: \
 	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
@@ -138,24 +140,24 @@ device/partition.o: \
 	device/partition.c device/partition.h device/device.h include/byteorder.h include/defs.h \
 	include/mbr.h include/types.h klibc/stdio.h kutil/kutil.h cpu/cpu.h device/devctl.h
 
-fs/ext2/ext2.o: \
-	fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h klibc/string.h \
-	kutil/kutil.h memory/kmalloc.h
+kernel/fs/ext2/ext2.o: \
+	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h \
+	klibc/string.h kutil/kutil.h memory/kmalloc.h
 
-fs/fat/fat.o: \
-	fs/fat/fat.c fs/fat/fat.h fs/vfs.h include/byteorder.h include/defs.h include/error.h \
-	include/types.h klibc/strings.h kutil/kutil.h
+kernel/fs/fat/fat.o: \
+	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/fs/vfs.h include/byteorder.h include/defs.h \
+	include/error.h include/types.h klibc/strings.h kutil/kutil.h
 
-fs/file.o: \
-	fs/file.c fs/file.h fs/vfs.h include/defs.h include/types.h
+kernel/fs/file.o: \
+	kernel/fs/file.c kernel/fs/file.h kernel/fs/vfs.h include/defs.h include/types.h
 
-fs/mount.o: \
-	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h fs/vfs.h include/defs.h \
-	klibc/errno.h kutil/kutil.h memory/kmalloc.h
+kernel/fs/mount.o: \
+	kernel/fs/mount.c kernel/fs/mount.h include/defs.h include/types.h device/device.h \
+	kernel/fs/vfs.h include/defs.h klibc/errno.h kutil/kutil.h memory/kmalloc.h
 
-fs/vfs.o: \
-	fs/vfs.c fs/vfs.h fs/mount.h device/nvram.h device/devctl.h device/device.h include/defs.h \
-	include/types.h klibc/stdio.h
+kernel/fs/vfs.o: \
+	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h device/nvram.h device/devctl.h \
+	device/device.h include/defs.h include/types.h klibc/stdio.h
 
 include/byteorder.h: \
 	cpu/cpu.h

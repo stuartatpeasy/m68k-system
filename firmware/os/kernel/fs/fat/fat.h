@@ -9,13 +9,13 @@
     (c) Stuart Wallace, July 2015
 */
 
-#include "include/byteorder.h"
-#include "include/defs.h"
-#include "include/error.h"
-#include "include/types.h"
-#include "fs/vfs.h"
-#include "klibc/strings.h"
-#include "kutil/kutil.h"
+#include <include/byteorder.h>
+#include <include/defs.h>
+#include <include/error.h>
+#include <include/types.h>
+#include <kernel/fs/vfs.h>
+#include <klibc/strings.h>
+#include <kutil/kutil.h>
 
 
 struct fat_bpb_block

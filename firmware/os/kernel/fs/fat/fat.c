@@ -11,8 +11,9 @@
           many other things
 */
 
-#include "fat.h"
-#include "fs/vfs.h"
+#include <kernel/fs/fat/fat.h>
+#include <kernel/fs/vfs.h>
+
 
 vfs_driver_t g_fat_ops =
 {
