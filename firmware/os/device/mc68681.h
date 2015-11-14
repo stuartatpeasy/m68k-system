@@ -337,6 +337,7 @@ u8 mc68681_read_ip(dev_t *dev);
 void mc68681_set_op_bits(dev_t *dev, ku8 bits);
 void mc68681_reset_op_bits(dev_t *dev, ku8 bits);
 
+void mc68681_irq_handler(ku32 irql, void *arg);
 /*
     mc68681_start_counter() - start the MC68681 counter/timer.
 

@@ -48,7 +48,7 @@ s32 ata_init(dev_t *dev)
     ATA_REG(dev->base_addr, ATA_R_DEVICE_CONTROL) = ATA_DEVICE_CONTROL_NIEN;
 
     /* TODO: re-enable ATA interrupts... */
-    cpu_set_interrupt_handler(dev->irql, dev, ata_irq);      /* Install IRQ handler */
+    cpu_irq_add_handler(dev->irql, dev, ata_irq);      /* Install IRQ handler */
 
     return SUCCESS;
 }
@@ -195,6 +195,7 @@ s32 ata_shut_down(dev_t *dev)
 /*
     ata_irq() - interrupt service routine
 */
+#include <klibc/stdio.h>        // FIXME remove
 void ata_irq(ku32 irql, void *data)
 {
     u8 dummy;
@@ -206,6 +207,8 @@ void ata_irq(ku32 irql, void *data)
     /* Clear pending interrupts */
     dummy = ATA_REG(dev->base_addr, ATA_R_STATUS);
     dummy += 0;     /* Silence "set but not used" warning */
+
+return;
 
     putchar('#');
 

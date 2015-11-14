@@ -64,8 +64,9 @@ struct proc_struct
 }; /* sizeof(proc_t) = 80 + sizeof(regs_t) */
 
 
-s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img, u32 *arg,
-                ku32 stack_len, ku16 flags, const proc_t * const parent, pid_t *newpid);
+s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img,
+                proc_entry_fn_t entry, u32 *arg, ku32 stack_len, ku16 flags,
+                const proc_t * const parent, pid_t *newpid);
 
 pid_t proc_get_pid();
 proc_t *proc_current();

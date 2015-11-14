@@ -17,13 +17,9 @@
     are handled correctly, by being ignored, or reported and ignored, or being reported and
     followed by a CPU halt.
 */
-void cpu_init_interrupt_handlers(void)
+void cpu_irq_init_arch_specific(void)
 {
 	u16 u;
-
-    /* Initialise the generic IRQ handler's jump table */
-    for(u = 0; u <= CPU_MAX_IRQL; ++u)
-        cpu_set_interrupt_handler(u, NULL, mc68000_exc_generic);
 
 	/* Point all exception vectors at the generic IRQ handler code initially */
 	for(u = 0; u <= CPU_MAX_IRQL; ++u)
@@ -39,10 +35,10 @@ void cpu_init_interrupt_handlers(void)
 
 
 /*
-    mc68000_exc_generic() - handler for interrupts not otherwise handled.  Dumps state and halts
+    cpu_default_irq_handler() - handler for interrupts not otherwise handled.  Dumps state and halts
     the CPU.
 */
-void mc68000_exc_generic(ku32 irql, void *data)
+void cpu_default_irq_handler(ku32 irql, void *data)
 {
     const regs_t * const regs = &proc_current()->regs;
     UNUSED(data);

@@ -201,13 +201,6 @@ extern void irq_router_swi(void);
 extern void syscall_dispatcher(void);
 
 
-/*
-	Default handler functions for all exceptions. See M68000 PRM page B-2 for information about
-	this table and descriptions of each exception.
-*/
-void mc68000_exc_generic(ku32 irql, void *data);
-
-
 const char * mc68000_dump_status_register(ku16 sr);
 void mc68000_dump_regs(const regs_t *regs);
 void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs);

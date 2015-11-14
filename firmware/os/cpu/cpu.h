@@ -62,30 +62,48 @@ void cpu_sleep_process();
     ------------------------------
 */
 
-/*
-    Initialise the CPU's IRQ handler table to safe defaults, either to handle, ignore or stop on
-    various IRQ levels, as appropriate.
-*/
-void cpu_init_interrupt_handlers(void);
+#define IRQ_HANDLER_DEFAULT     (0x00000001)
 
-/* Set a handler for a particular IRQ level */
-typedef void(*interrupt_handler)(ku32 irql, void *data);
+/* IRQ handler function typedef */
+typedef void (*irq_handler)(ku32 irql, void *data);
+
+/* Initialise the IRQ handler table */
+void cpu_irq_init_table();
+
+/*
+    Architecture-specific function: initialise CPU IRQ vector table, and set up any known handlers
+    (e.g. the syscall handler).
+*/
+void cpu_irq_init_arch_specific(void);
+
+/* Architecture-specific default IRQ handler function */
+void cpu_default_irq_handler(ku32 irql, void *data);
+
+/* Handler for all IRQs - calls installed IRQ-specific handlers in turn */
+void cpu_irq_handler(ku32 irql);
+
+/* Add a handler for the specified IRQ */
+s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler);
 
 /*
     An entry in the IRQ indirection table.  Consists of a ptr to a handler fn, and an arbitrary
     data item.
 */
-typedef struct
+typedef struct irq_handler_table_entry irq_handler_table_entry_t;
+
+struct irq_handler_table_entry
 {
-    interrupt_handler   handler;
-    void *              data;
-} interrupt_handler_table_entry_t;
+    irq_handler                 handler;
+    void *                      data;
+    u32                         flags;
+    irq_handler_table_entry_t * next;
+};
 
 
 /* The IRQ indirection table */
-interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
+irq_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
 
-s32 cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler);
+s32 cpu_set_interrupt_handler(ku32 irql, void *data, irq_handler handler);
 
 #undef IN_CPU_H
 

@@ -22,6 +22,22 @@
 const char * const g_warmup_message = "\n  \\   ayumos"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";
 
+void housekeeper(void *arg)
+{
+    UNUSED(arg);
+    u32 i;
+
+
+    while(1)
+    {
+        for(i = 0; i < 10000; ++i)
+            ;
+
+        putchar('@');
+    }
+
+}
+
 
 void _main()
 {
@@ -40,7 +56,7 @@ void _main()
 	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
 
 	/* By default, all exceptions cause a context-dump followed by a halt. */
-	cpu_init_interrupt_handlers();
+	cpu_irq_init_table();
 
     /* === Initialise peripherals - phase 1 === */
     if(plat_init() != SUCCESS)
@@ -117,6 +133,9 @@ void _main()
     ret = sched_init("[sys]");      /* Init scheduler and create system process */
     if(ret != SUCCESS)
         printf("sched: init failed: %s\n", kstrerror(ret));
+
+    /* Create housekeeper process */
+    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 2048, PROC_TYPE_KERNEL, NULL, NULL);
 
     cpu_enable_interrupts();
 

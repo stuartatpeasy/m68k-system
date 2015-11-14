@@ -11,19 +11,81 @@
 #include <include/defs.h>
 
 
-interrupt_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
+irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL];
 
 
 /*
-    cpu_set_interrupt_handler() - register a handler function, and an arg, for an interrupt.
+    cpu_irq_init_table() - initialise the IRQ handler table
 */
-s32 cpu_set_interrupt_handler(ku32 irql, void *data, interrupt_handler handler)
+void cpu_irq_init_table()
 {
+    irq_handler_table_entry_t *irqent,
+                              *const irqent_last = &g_irq_handlers[CPU_MAX_IRQL];
+
+    for(irqent = g_irq_handlers; irqent < irqent_last; ++irqent)
+    {
+        irqent->handler = cpu_default_irq_handler;
+        irqent->data    = NULL;
+        irqent->flags   = IRQ_HANDLER_DEFAULT;
+        irqent->next    = NULL;
+    }
+
+    /*
+        Perform architecture-specific init, e.g. init CPU IRQ vector table, set any specific
+        handler functions, etc.
+    */
+    cpu_irq_init_arch_specific();
+}
+
+
+/*
+    cpu_irq_add_handler() - register a handler function, and an arg, for an interrupt.
+*/
+s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
+{
+    irq_handler_table_entry_t *ent;
+
     if(irql > CPU_MAX_IRQL)
 		return EINVAL;
 
-    g_interrupt_handlers[irql].handler  = handler;
-    g_interrupt_handlers[irql].data     = data;
+    ent = &g_irq_handlers[irql];
+
+    if(ent->flags & IRQ_HANDLER_DEFAULT)
+    {
+        /* Replace default IRQ handler with the specified handler */
+        ent->handler = handler;
+        ent->data = data;
+    }
+    else
+    {
+        /* Append the specified IRQ handler to the chain of handlers */
+        while(ent->next != NULL)
+            ent = ent->next;
+
+        ent->next = CHECKED_KMALLOC(sizeof(irq_handler_table_entry_t));
+        ent = ent->next;
+
+        ent->handler = handler;
+        ent->data = data;
+        ent->flags = 0;
+        ent->next = NULL;
+    }
 
 	return SUCCESS;
+}
+
+
+/*
+    cpu_irq_handler() - entry point for all interrupts.  Calls each associated interrupt handler in
+    turn.
+*/
+void cpu_irq_handler(ku32 irql)
+{
+    irq_handler_table_entry_t *ent = &g_irq_handlers[irql];
+
+    do
+    {
+        ent->handler(irql, ent->data);
+        ent = ent->next;
+    } while(ent != NULL);
 }

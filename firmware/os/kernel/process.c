@@ -23,8 +23,9 @@ pid_t g_next_pid = 0;
 /*
     proc_create() - create a new process and add it to the run queue.
 */
-s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img, u32 *arg,
-                ku32 stack_len, ku16 flags, const proc_t * const parent, pid_t *newpid)
+s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img,
+                proc_entry_fn_t entry, u32 *arg, ku32 stack_len, ku16 flags,
+                const proc_t * const parent, pid_t *newpid)
 {
     proc_t *p;
     u32 *ustack_top, *kstack_top;
@@ -33,11 +34,25 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     p = CHECKED_KCALLOC(1, sizeof(proc_t));
 
     /* Create process user stack */
-    p->ustack = umalloc(stack_len);
-    if(!p->ustack)
+    if(stack_len)
     {
-        kfree(p);
-        return ENOMEM;
+        p->ustack = umalloc(stack_len);
+        if(!p->ustack)
+        {
+            kfree(p);
+            return ENOMEM;
+        }
+    }
+    else
+    {
+        /* No user stack requested - fail unless we are creating a kernel process */
+        if(!(flags & PROC_TYPE_KERNEL))
+        {
+            kfree(p);
+            return EINVAL;
+        }
+
+        p->ustack = NULL;
     }
 
     /* Create process kernel stack */
@@ -65,7 +80,10 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     strncpy(p->name, name, sizeof(p->name) - 1);
     p->name[sizeof(p->name) - 1] = '\0';
 
-    ret = cpu_proc_init(&p->regs, img->entry_point, ustack_top, kstack_top, flags);
+    if(entry == NULL)
+        entry = img->entry_point;
+
+    ret = cpu_proc_init(&p->regs, entry, ustack_top, kstack_top, flags);
     if(ret != SUCCESS)
     {
         kfree(p->kstack);
@@ -147,6 +165,7 @@ void proc_do_exit(s32 exit_code)
 /*
     proc_sleep() - put the current process to sleep
 */
+#include <klibc/stdio.h>    // FIXME remove
 void proc_sleep()
 {
     g_current_proc->state = ps_sleeping;    /* Causes process to be removed from run queue */

@@ -180,7 +180,7 @@ s32 encx24j600_init(dev_t *dev)
     if(ret != SUCCESS)
         return ret;
 
-    cpu_set_interrupt_handler(dev->irql, dev, encx24j600_irq);  /* Install IRQ handler */
+    cpu_irq_add_handler(dev->irql, dev, encx24j600_irq);  /* Install IRQ handler */
 
     ENCX24_REG(base_addr, ECON2) &= ~ECON2_COCON_MASK;     /* Disable the ENC's output clock */
 

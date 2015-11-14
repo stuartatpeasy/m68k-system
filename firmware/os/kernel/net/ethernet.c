@@ -31,6 +31,7 @@ void eth_handle_frame(eth_iface_t *iface, void *frame, u32 len)
     const void * const payload = ((u8 *) frame) + sizeof(eth_hdr_t);
     const ethertype_t etype = (ethertype_t) ehdr->type;
     UNUSED(len);
+    UNUSED(iface);
 
     put("src=");
     eth_print_mac(&ehdr->src);

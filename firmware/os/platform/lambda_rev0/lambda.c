@@ -103,8 +103,8 @@ s32 plat_console_init(void)
         return ret;
     }
 
-	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A", IRQL_NONE,
-                        LAMBDA_MC68681_BASE, &g_lambda_console);
+	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A",
+                        LAMBDA_MC68681_IRQL, LAMBDA_MC68681_BASE, &g_lambda_console);
 	if(ret == SUCCESS)
 	{
 	    g_lambda_console->parent = g_lambda_duart;
@@ -145,7 +145,7 @@ s16 plat_console_getc()
 /*
 	plat_install_timer_irq_handler() - bind the timer IRQ to the appropriate handler in the OS.
 */
-s32 plat_install_timer_irq_handler(interrupt_handler handler)
+s32 plat_install_timer_irq_handler(irq_handler handler)
 {
     ks32 ret = mc68681_set_output_pin_fn(g_lambda_duart, mc68681_pin_op3, mc68681_pin_fn_ct_output);
 
