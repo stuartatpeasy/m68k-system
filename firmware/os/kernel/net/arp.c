@@ -57,6 +57,7 @@ s32 arp_handle_packet(eth_iface_t *iface, const void * const packet, u32 len)
         p.payload.src_mac       = iface->hw_addr;
 
 //      return iface->send_packet(p, sizeof(p));
+        UNUSED(p);
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
@@ -88,6 +89,8 @@ s32 arp_send_request(eth_iface_t *iface, const ipv4_addr_t ip)
     p.payload.dst_mac       = g_mac_zero;
 
 //  return iface->send_packet(p, sizeof(p));
+    UNUSED(p);
+
     return SUCCESS;
 }
 

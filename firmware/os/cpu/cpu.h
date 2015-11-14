@@ -51,6 +51,13 @@ s32 cpu_proc_init(regs_t *r, void *entry_point, void *ustack_top, void *kstack_t
 void cpu_context_switch();      /* Save context, call sched(), restore context      */
 
 /*
+    Called using C semantics with no args.  Save CPU state and use the caller's return address as
+    the stored program counter value.  Call sched() to switch to a new process.  Enables the kernel
+    to e.g. put a process to sleep and schedule a new process.
+*/
+void cpu_sleep_process();
+
+/*
     Interrupt-related declarations
     ------------------------------
 */

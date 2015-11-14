@@ -11,6 +11,7 @@
 
 #include <cpu/cpu.h>
 #include <include/defs.h>
+#include <include/list.h>
 #include <include/types.h>
 #include <kernel/user.h>
 
@@ -26,6 +27,7 @@ typedef enum proc_state
 {
     ps_unborn = 0,
     ps_runnable,
+    ps_sleeping,
     ps_exited
 } proc_state_t;
 
@@ -58,9 +60,8 @@ struct proc_struct
     void *arg;
 
 	const proc_t *parent;
-    proc_t *next;
-    proc_t *prev;
-}; /* sizeof(proc_t) = 76 + sizeof(regs_t) */
+	list_t queue;
+}; /* sizeof(proc_t) = 80 + sizeof(regs_t) */
 
 
 s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img, u32 *arg,
@@ -69,5 +70,6 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img
 pid_t proc_get_pid();
 proc_t *proc_current();
 void proc_do_exit(s32 exit_code);
+void proc_sleep();
 
 #endif

@@ -69,6 +69,7 @@
 			<Add library="gcc" />
 		</Linker>
 		<Unit filename="Makefile" />
+		<Unit filename="buildcfg.h" />
 		<Unit filename="cpu/arch_specific.h" />
 		<Unit filename="cpu/cpu.c">
 			<Option compilerVar="CC" />

@@ -7,8 +7,14 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
+#include <include/list.h>
 #include <kernel/process.h>
 #include <kernel/sched.h>
+
+
+list_t g_run_queue = LIST_INIT(g_run_queue);
+list_t g_sleep_queue = LIST_INIT(g_sleep_queue);
+list_t g_exited_queue = LIST_INIT(g_exited_queue);
 
 proc_t *g_current_proc = NULL;
 pid_t g_next_pid = 0;
@@ -54,6 +60,8 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     p->img = img;
     p->arg = arg;
 
+    list_init(&p->queue);
+
     strncpy(p->name, name, sizeof(p->name) - 1);
     p->name[sizeof(p->name) - 1] = '\0';
 
@@ -73,10 +81,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
 
     cpu_disable_interrupts();
 
-    p->prev = g_current_proc;
-    p->next = g_current_proc->next;
-    g_current_proc->next->prev = p;
-    g_current_proc->next = p;
+    list_insert(&p->queue, &g_run_queue);
 
     cpu_enable_interrupts();
 
@@ -116,8 +121,7 @@ void proc_do_exit(s32 exit_code)
     /* Note: we're running in g_current_proc->next's quantum at this point... */
 
     /* Remove the exiting process from the run queue */
-    g_exiting->next->prev = g_exiting->prev;
-    g_exiting->prev->next = g_exiting->next;
+    list_delete(&g_exiting->queue);
 
     if(g_exiting->kstack != NULL)
         kfree(g_exiting->kstack);
@@ -137,4 +141,30 @@ void proc_do_exit(s32 exit_code)
     /* TODO: move g_exiting onto "exited" list, to await exit-code collection? */
 
     kfree(g_exiting);
+}
+
+
+/*
+    proc_sleep() - put the current process to sleep
+*/
+void proc_sleep()
+{
+    g_current_proc->state = ps_sleeping;    /* Causes process to be removed from run queue */
+
+    /*
+        Put the process to sleep.  This function will not return until the process wakes up.  In the
+        meantime, another process will run.
+    */
+    cpu_sleep_process();
+
+    printf("Process %d woke up!\n", g_current_proc->id);        /* FIXME remove */
+}
+
+
+/*
+    proc_wake_up() - ...
+*/
+void proc_wake_up()
+{
+
 }

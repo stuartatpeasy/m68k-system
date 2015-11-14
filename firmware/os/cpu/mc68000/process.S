@@ -21,6 +21,7 @@
 .global syscall_yield
 .global syscall_exit
 .global cpu_context_switch
+.global cpu_sleep_process
 
 /*
                  15                     0
@@ -73,6 +74,24 @@ syscall_exit:
     jsr         proc_do_exit
 
     addq.l      #4, sp
+
+    RESTORE_CONTEXT
+    ENABLE_INTERRUPTS
+
+    rte
+
+
+cpu_sleep_process:
+    move.w      sr, sp@(-4)
+    subq.l      #2, sp
+    move.l      sp@(2), sp@
+    subq.l      #2, sp
+    clr.w       sp@(6)
+
+    DISABLE_INTERRUPTS
+    SAVE_CONTEXT
+
+    jsr         sched
 
     RESTORE_CONTEXT
     ENABLE_INTERRUPTS

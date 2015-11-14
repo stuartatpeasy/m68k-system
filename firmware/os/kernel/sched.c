@@ -11,9 +11,6 @@
 #include <platform/platform.h>
 
 
-//list_t g_run_queue;
-//list_t g_wait_queue;
-
 u32 g_ncontext_switches = 0;
 extern pid_t g_next_pid;
 
@@ -32,12 +29,11 @@ s32 sched_init(const char * const init_proc_name)
     p->state = ps_runnable;
     p->uid = ROOT_UID;
     p->gid = ROOT_GID;
-    p->next = p;
-    p->prev = p;
 
     p->flags |= PROC_TYPE_KERNEL;
     strcpy(p->name, init_proc_name);
 
+    list_insert(&p->queue, &g_run_queue);
     g_current_proc = p;
 
     /* Install the scheduler IRQ handler */
@@ -50,19 +46,28 @@ s32 sched_init(const char * const init_proc_name)
 */
 void sched()
 {
+    proc_t *g_prev_proc = g_current_proc;
+
     /* Stop the current time-slice */
     plat_stop_quantum();
 
     ++g_current_proc->quanta;
 
-    g_current_proc = g_current_proc->next;
+    if(list_is_last(&g_current_proc->queue, &g_run_queue))
+        g_current_proc = list_first_entry(&g_run_queue, proc_t, queue);
+    else
+        g_current_proc = list_next_entry(g_current_proc, queue);
 
-    ++g_ncontext_switches;
+    /* If the process went to sleep, move it to the "sleeping" queue */
+    if(g_prev_proc->state == ps_sleeping)
+        list_move_insert(&g_prev_proc->queue, &g_sleep_queue);
+
+   ++g_ncontext_switches;
 
     /*
         Start the next time-slice.  We need to do this before restoring the incoming task's state
-        because the function call might interfere with register values.  This means that the next
-        time-slice starts before the corresponding task is actually ready to run.
+        because the call to plat_start_quantum() will interfere with register values.  Consequently
+        the next time-slice starts before the corresponding task is actually ready to run.
     */
     plat_start_quantum();
 }

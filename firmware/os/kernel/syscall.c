@@ -20,31 +20,13 @@
 */
 const syscall_table_entry_t g_syscalls[] =
 {
-    {1,     syscall_exit},
+    {1,     syscall_exit},              /* Implemented in arch-specific asm */
     {1,     syscall_console_putchar},
     {0,     syscall_console_getchar},
     {1,     syscall_leds},
     {0,     syscall_yield}
 };
 
-
-/*
-    syscall_exit() - terminate the current process.
-*/
-#if 0
-s32 syscall_exit(u32 code)
-{
-    /* TODO */
-    cpu_disable_interrupts();
-
-    printf("\nProcess %d exited with code %d\n", proc_get_pid(), code);
-
-    while(1)
-        ;       /* FIXME - remove process from scheduler list; get on with something else... */
-
-    return 0;
-}
-#endif
 
 /*
     syscall_console_putchar() - write a character to the console (blocking).
@@ -60,10 +42,7 @@ s32 syscall_console_putchar(u32 c)
 */
 s32 syscall_console_getchar()
 {
-    /* TODO */
-    puts("syscall: console_getchar()");
-
-    return 0;
+    return plat_console_getc();
 }
 
 

@@ -49,6 +49,12 @@ s32     timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt);
        && ((d)->day_of_week > 0) && ((d)->day_of_week < 8))
 
 /*
+	Hashing functions
+*/
+u32 fnv1a32(const void *buf, u32 len);
+
+
+/*
     Numeric functions
 */
 u16 log10(ku32 n);

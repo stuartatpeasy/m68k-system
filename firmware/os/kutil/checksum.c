@@ -22,6 +22,7 @@ u16 fletcher16(const void *buf, u32 len)
     {
         u32 tlen = (len > 20) ? 20 : len;
         len -= tlen;
+
         do
         {
             sum2 += sum1 += *((u8 *) buf++);

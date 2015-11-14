@@ -19,7 +19,8 @@
 
 u32 g_ncontext_switches;
 extern proc_t *g_current_proc;
-
+extern list_t g_sleep_queue;
+extern list_t g_run_queue;
 
 void sched();
 s32 sched_init(const char * const init_proc_name);
