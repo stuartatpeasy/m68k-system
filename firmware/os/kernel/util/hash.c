@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, November 2015.
 */
 
-#include "kutil/kutil.h"
+#include <kernel/util/kutil.h>
 
 
 /*

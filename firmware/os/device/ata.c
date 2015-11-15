@@ -8,9 +8,9 @@
 */
 
 #include <device/ata.h>
-#include <kutil/kutil.h>
 #include <include/byteorder.h>
 #include <include/error.h>
+#include <kernel/util/kutil.h>
 
 #include <string.h>
 #include <strings.h>

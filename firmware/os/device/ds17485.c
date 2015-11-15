@@ -8,7 +8,7 @@
 */
 
 #include <device/ds17485.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 
 
 /*

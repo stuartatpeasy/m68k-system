@@ -15,7 +15,7 @@
 #include <kernel/memory/kmalloc.h>
 #include <klibc/errno.h>
 #include <klibc/string.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 
 
 /* pointers to blocks will be allocated in units of BVEC_BLOCKPTR_BLOCK_SIZE */

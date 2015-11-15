@@ -17,7 +17,7 @@
 #include <kernel/fs/vfs.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>
 #include <monitor/readline.h>

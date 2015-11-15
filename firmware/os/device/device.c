@@ -12,7 +12,7 @@
 #include <string.h>
 #include <strings.h>
 
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 #include <device/device.h>
 #include <device/partition.h>
 #include <platform/platform.h>

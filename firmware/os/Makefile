@@ -73,7 +73,7 @@ clean:
 	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Cklibc clean
-	$(MAKE) $(MFLAGS) -Ckutil clean
+	$(MAKE) $(MFLAGS) -Ckernel/util clean
 	$(MAKE) $(MFLAGS) -Cmonitor clean
 	$(MAKE) $(MFLAGS) -Ctools clean
 
@@ -81,7 +81,7 @@ libc.a:
 	$(MAKE) $(MFLAGS) -Cklibc
 
 libkutil.a:
-	$(MAKE) $(MFLAGS) -Ckutil
+	$(MAKE) $(MFLAGS) -Ckernel/util
 
 libmonitor.a:
 	$(MAKE) $(MFLAGS) -Cmonitor
@@ -97,7 +97,7 @@ $(TOOLS):
 
 main.o: \
 	main.c device/ds17485.h kernel/fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
-	kutil/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h kernel/memory/slab.h \
+	kernel/util/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h kernel/memory/slab.h \
 	monitor/monitor.h device/device.o kernel/sched.h
 
 cpu/cpu.o: \
@@ -120,11 +120,11 @@ device/auto.o: \
 	device/auto.c device/auto.h include/defs.h include/types.h device/device.h
 
 device/device.o: \
-	device/device.c device/devctl.h device/device.h kutil/kutil.h device/ata.h device/partition.h \
-	include/types.h klibc/errno.h
+	device/device.c device/devctl.h device/device.h kernel/util/kutil.h device/ata.h \
+	device/partition.h include/types.h klibc/errno.h
 
 device/ds17485.o: \
-	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
+	device/ds17485.c device/ds17485.h include/types.h kernel/util/kutil.h
 
 device/encx24j600.o: \
 	device/encx24j600.c device/encx24j600.h cpu/cpu.h device/device.h include/byteorder.h \
@@ -135,26 +135,26 @@ device/mc68681.o: \
 
 device/nvram.o: \
 	device/nvram.c device/nvram.h device/ds17485.h include/defs.h include/error.h include/types.h \
-	kutil/kutil.h
+	kernel/util/kutil.h
 
 device/partition.o: \
 	device/partition.c device/partition.h device/device.h include/byteorder.h include/defs.h \
-	include/mbr.h include/types.h klibc/stdio.h kutil/kutil.h cpu/cpu.h device/devctl.h
+	include/mbr.h include/types.h klibc/stdio.h kernel/util/kutil.h cpu/cpu.h device/devctl.h
 
 kernel/fs/ext2/ext2.o: \
 	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h \
-	klibc/string.h kutil/kutil.h kernel/memory/kmalloc.h
+	klibc/string.h kernel/util/kutil.h kernel/memory/kmalloc.h
 
 kernel/fs/fat/fat.o: \
 	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/fs/vfs.h include/byteorder.h include/defs.h \
-	include/error.h include/types.h klibc/strings.h kutil/kutil.h
+	include/error.h include/types.h klibc/strings.h kernel/util/kutil.h
 
 kernel/fs/file.o: \
 	kernel/fs/file.c kernel/fs/file.h kernel/fs/vfs.h include/defs.h include/types.h
 
 kernel/fs/mount.o: \
 	kernel/fs/mount.c kernel/fs/mount.h include/defs.h include/types.h device/device.h \
-	kernel/fs/vfs.h include/defs.h klibc/errno.h kutil/kutil.h kernel/memory/kmalloc.h
+	kernel/fs/vfs.h include/defs.h klibc/errno.h kernel/util/kutil.h kernel/memory/kmalloc.h
 
 kernel/fs/vfs.o: \
 	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h device/nvram.h device/devctl.h \
@@ -203,7 +203,7 @@ kernel/net/ipv4.o: \
 	kernel/net/ethernet.h
 
 kernel/memory/buddy.o: \
-	kernel/memory/buddy.c kernel/memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h \
+	kernel/memory/buddy.c kernel/memory/buddy.h include/types.h klibc/stdio.h kernel/util/kutil.h \
 	libkutil.a
 
 kernel/memory/extents.o: \

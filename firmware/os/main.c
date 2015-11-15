@@ -10,10 +10,10 @@
 #include <kernel/boot.h>
 #include <kernel/sched.h>
 #include <kernel/fs/vfs.h>
-#include <kutil/kutil.h>
 #include <kernel/memory/extents.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
+#include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
 #include <platform/platform.h>
 #include <stdio.h>

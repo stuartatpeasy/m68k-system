@@ -13,10 +13,10 @@
 #include <include/types.h>
 #include <kernel/fs/vfs.h>
 #include <kernel/memory/kmalloc.h>
+#include <kernel/util/kutil.h>
 #include <klibc/errno.h>
 #include <klibc/stdio.h>
 #include <klibc/string.h>
-#include <kutil/kutil.h>
 
 
 #define EXT2_SUPER_MAGIC		(0xef53)

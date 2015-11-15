@@ -13,7 +13,7 @@
 */
 
 #include <include/types.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 
 
 /* CPU_EXC_VTBL: a vector table entry, i.e. the address in RAM of a particular exception vector. */

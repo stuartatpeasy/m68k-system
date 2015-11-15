@@ -11,8 +11,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "assert.h"
-#include "kutil/kutil.h"
+#include <assert.h>
+#include <kernel/util/kutil.h>
+
 
 #define BEW_DISPLACEMENT(x)		((char) ((x) & 0xff))
 #define BEW_REGISTER(x)			(((x) & 0x7000) >> 12)

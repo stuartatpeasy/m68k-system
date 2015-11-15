@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <kernel/memory/kmalloc.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 #include <platform/lambda_rev0/device.h>
 #include <device/auto.h>
 #include <device/mc68681.h>                 /* DUART            */

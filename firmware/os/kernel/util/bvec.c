@@ -21,7 +21,7 @@
 */
 
 
-#include "kutil/bvec.h"
+#include <kernel/util/bvec.h>
 
 
 u32 bvec_init(u32 block_size, ku32 element_size, bvec_t *bv)

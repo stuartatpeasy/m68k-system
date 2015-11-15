@@ -21,10 +21,10 @@ clean:
 
 commands.o: \
 	commands.c monitor.h disasm.o srec.o ../kernel/memory/kmalloc.h ../kernel/memory/kmalloc.c \
-	../kutil/kutil.h
+	../kernel/util/kutil.h
 
 disasm.o: \
-	disasm.c disasm.h ../kutil/kutil.h ../libkutil.a
+	disasm.c disasm.h ../kernel/util/kutil.h
 
 env.o: \
 	env.c env.h
@@ -34,11 +34,11 @@ history.o: \
 
 monitor.o: \
 	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../device/nvram.h \
-	../kernel/fs/mount.h ../include/defs.h ../include/version.h ../kutil/kutil.h \
+	../kernel/fs/mount.h ../include/defs.h ../include/version.h ../kernel/util/kutil.h \
 	../kernel/memory/kmalloc.h ../kernel/memory/slab.h
 
 readline.o: \
 	readline.c readline.h ../platform/platform.h
 
 srec.o: \
-	srec.c srec.h readline.o ../kutil/kutil.h ../libkutil.a
+	srec.c srec.h readline.o ../kernel/util/kutil.h

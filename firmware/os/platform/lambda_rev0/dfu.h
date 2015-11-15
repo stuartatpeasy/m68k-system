@@ -16,7 +16,7 @@
 #include <include/types.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/memorymap.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 
 
 #define FLASH_OFFSET(x)		*((vu16 *) (ROM_START + (x << 1)))

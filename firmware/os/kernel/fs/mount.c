@@ -11,7 +11,7 @@
 #include <include/defs.h>
 #include <kernel/fs/mount.h>
 #include <kernel/memory/kmalloc.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 
 mount_ent_t *g_mount_table = NULL;
 u32 g_max_mounts = 0;

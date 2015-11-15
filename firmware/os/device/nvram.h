@@ -13,7 +13,7 @@
 #include <include/defs.h>
 #include <include/error.h>
 #include <include/types.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 
 
 #define NVRAM_BPB_MAGIC     (0xfea51b1e)

@@ -10,7 +10,7 @@
 #include <device/partition.h>
 #include <include/byteorder.h>
 #include <include/mbr.h>
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 
 #include <strings.h>
 

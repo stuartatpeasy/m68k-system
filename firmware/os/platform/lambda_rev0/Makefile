@@ -25,10 +25,10 @@ clean:
 device.o: \
 	$(STDDEPS) device.c device.h $(SRC_ROOT)/device/ata.h $(SRC_ROOT)/device/auto.h \
 	$(SRC_ROOT)/device/ds17485.h $(SRC_ROOT)/device/mc68681.h $(SRC_ROOT)/kernel/memory/kmalloc.h \
-	$(SRC_ROOT)/kutil/kutil.h $(SRC_ROOT)/klibc/stdio.h $(SRC_ROOT)/klibc/string.h
+	$(SRC_ROOT)/kernel/util/kutil.h $(SRC_ROOT)/klibc/stdio.h $(SRC_ROOT)/klibc/string.h
 
 dfu.o: \
-	$(STDDEPS) dfu.c dfu.h $(SRC_ROOT)/kutil/kutil.h $(SRC_ROOT)/kernel/memory/kmalloc.h \
+	$(STDDEPS) dfu.c dfu.h $(SRC_ROOT)/kernel/util/kutil.h $(SRC_ROOT)/kernel/memory/kmalloc.h \
 	$(SRC_ROOT)/kernel/memory/memorymap.h
 
 lambda.o: \

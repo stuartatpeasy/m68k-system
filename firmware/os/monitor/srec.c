@@ -8,7 +8,7 @@
 */
 
 #include "srec.h"
-#include <kutil/kutil.h>
+#include <kernel/util/kutil.h>
 #include <kernel/memory/kmalloc.h>
 
 

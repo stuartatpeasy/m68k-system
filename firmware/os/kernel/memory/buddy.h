@@ -10,8 +10,8 @@
 */
 
 #include <stdio.h>
-#include "include/types.h"
-#include "kutil/kutil.h"
+#include <include/types.h>
+#include <kernel/util/kutil.h>
 
 
 #define BUDDY_ABS(x)	({ __typeof__ (x) _x = (x); ((_x >= 0) ? (_x) : -(_x)); })
