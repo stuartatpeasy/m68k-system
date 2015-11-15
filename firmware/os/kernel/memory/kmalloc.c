@@ -7,7 +7,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2012-07
 */
 
-#include "memory/kmalloc.h"
+#include <kernel/memory/kmalloc.h>
+
 
 /* mem_ctx is a struct defined by whichever allocator is selected */
 mem_ctx g_kheap;    /* kernel heap */

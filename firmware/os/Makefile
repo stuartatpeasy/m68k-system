@@ -18,7 +18,8 @@ CSOURCES:=	main.c \
 			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/process.c kernel/sched.c \
 			kernel/semaphore.c kernel/syscall.c kernel/user.c \
 			kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c \
-			memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
+			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
+			kernel/memory/kmalloc.c kernel/memory/slab.c
 
 ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S cpu/$(CPU)/startup.S
 
@@ -96,8 +97,8 @@ $(TOOLS):
 
 main.o: \
 	main.c device/ds17485.h kernel/fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
-	kutil/kutil.h memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h \
-	device/device.o kernel/sched.h
+	kutil/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h kernel/memory/slab.h \
+	monitor/monitor.h device/device.o kernel/sched.h
 
 cpu/cpu.o: \
 	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
@@ -109,7 +110,7 @@ cpu/$(CPU)/process.o: \
 	cpu/$(CPU)/process.S
 
 cpu/$(CPU)/startup.o: \
-	cpu/$(CPU)/startup.S memory/memorymap.h
+	cpu/$(CPU)/startup.S kernel/memory/memorymap.h
 
 device/ata.o: \
 	device/ata.c device/ata.h device/block.h device/devctl.h device/device.h include/byteorder.h \
@@ -142,7 +143,7 @@ device/partition.o: \
 
 kernel/fs/ext2/ext2.o: \
 	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h \
-	klibc/string.h kutil/kutil.h memory/kmalloc.h
+	klibc/string.h kutil/kutil.h kernel/memory/kmalloc.h
 
 kernel/fs/fat/fat.o: \
 	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/fs/vfs.h include/byteorder.h include/defs.h \
@@ -153,7 +154,7 @@ kernel/fs/file.o: \
 
 kernel/fs/mount.o: \
 	kernel/fs/mount.c kernel/fs/mount.h include/defs.h include/types.h device/device.h \
-	kernel/fs/vfs.h include/defs.h klibc/errno.h kutil/kutil.h memory/kmalloc.h
+	kernel/fs/vfs.h include/defs.h klibc/errno.h kutil/kutil.h kernel/memory/kmalloc.h
 
 kernel/fs/vfs.o: \
 	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h device/nvram.h device/devctl.h \
@@ -201,17 +202,18 @@ kernel/net/ipv4.o: \
 	kernel/net/ipv4.c kernel/net/ipv4.h include/byteorder.h include/defs.h include/types.h \
 	kernel/net/ethernet.h
 
-memory/buddy.o: \
-	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a
+kernel/memory/buddy.o: \
+	kernel/memory/buddy.c kernel/memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h \
+	libkutil.a
 
-memory/extents.o: \
-	memory/extents.c memory/extents.h include/defs.h include/types.h klibc/strings.h
+kernel/memory/extents.o: \
+	kernel/memory/extents.c kernel/memory/extents.h include/defs.h include/types.h klibc/strings.h
 
-memory/heap.o: \
-	memory/heap.c memory/heap.h include/types.h klibc/stdio.h
+kernel/memory/heap.o: \
+	kernel/memory/heap.c kernel/memory/heap.h include/types.h klibc/stdio.h
 
-memory/kmalloc.o: \
-	memory/kmalloc.c memory/kmalloc.h include/types.h memory/memorymap.h
+kernel/memory/kmalloc.o: \
+	kernel/memory/kmalloc.c kernel/memory/kmalloc.h include/types.h kernel/memory/memorymap.h
 
-memory/slab.o: \
-	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
+kernel/memory/slab.o: \
+	kernel/memory/slab.c kernel/memory/slab.h include/defs.h include/types.h klibc/stdio.h

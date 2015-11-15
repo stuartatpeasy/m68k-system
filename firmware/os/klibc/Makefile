@@ -31,17 +31,17 @@ errno.o: \
 	errno.c errno.h ../include/types.h
 
 printf.o: \
-	printf.c stdio.h string.h ../memory/kmalloc.h ../include/limits.h ../include/types.h \
+	printf.c stdio.h string.h ../kernel/memory/kmalloc.h ../include/limits.h ../include/types.h \
 	../platform/platform.h
 
 stdio.o: \
 	stdio.c ../include/limits.h ../include/types.h ../platform/platform.h
 
 stdlib.o: \
-	stdlib.c stdlib.h ../include/limits.h ../include/types.h ../memory/kmalloc.h
+	stdlib.c stdlib.h ../include/limits.h ../include/types.h ../kernel/memory/kmalloc.h
 
 string.o: \
-	string.c string.h ../include/limits.h ../include/types.h ../memory/kmalloc.h
+	string.c string.h ../include/limits.h ../include/types.h ../kernel/memory/kmalloc.h
 
 strings.o: \
 	strings.c ctype.h ../include/types.h

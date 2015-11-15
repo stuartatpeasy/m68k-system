@@ -23,13 +23,13 @@ clean:
 
 bvec.o: \
 	bvec.c bvec.h kutil.h ../include/defs.h ../include/types.h ../klibc/errno.h ../klibc/string.h \
-	../memory/kmalloc.h
+	../kernel/memory/kmalloc.h
 
 checksum.o: \
 	checksum.c ../include/defs.h ../include/types.h
 
 dump.o: \
-	dump.c kutil.h ../include/defs.h ../include/types.h ../klibc/ctype.h ../memory/kmalloc.h
+	dump.c kutil.h ../include/defs.h ../include/types.h ../klibc/ctype.h ../kernel/memory/kmalloc.h
 
 hash.o: \
 	hash.c ../include/defs.h ../include/types.h

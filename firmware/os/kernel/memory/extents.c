@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
-#include <memory/extents.h>
+#include <kernel/memory/extents.h>
 
 
 /*

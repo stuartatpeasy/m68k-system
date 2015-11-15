@@ -11,9 +11,9 @@
 #include <kernel/sched.h>
 #include <kernel/fs/vfs.h>
 #include <kutil/kutil.h>
-#include <memory/extents.h>
-#include <memory/kmalloc.h>
-#include <memory/slab.h>
+#include <kernel/memory/extents.h>
+#include <kernel/memory/kmalloc.h>
+#include <kernel/memory/slab.h>
 #include <monitor/monitor.h>
 #include <platform/platform.h>
 #include <stdio.h>

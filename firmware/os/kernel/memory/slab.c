@@ -7,8 +7,8 @@
     (c) Stuart Wallace, July 2015.
 */
 
+#include <kernel/memory/slab.h>
 #include <klibc/stdio.h>
-#include <memory/slab.h>
 
 
 slab_t g_slabs[NSLABS];

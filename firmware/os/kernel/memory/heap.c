@@ -38,7 +38,7 @@
 	(c) Stuart Wallace, 13th August 2011.
 */
 
-#include <memory/heap.h>
+#include <kernel/memory/heap.h>
 #include <klibc/stdio.h>
 
 

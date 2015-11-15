@@ -8,8 +8,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012
 */
 
-#include "include/types.h"
-#include "memory/memorymap.h"
+#include <include/types.h>
+
 
 /* If no allocator was specified in build options, use the heap allocator */
 #if (!defined(KMALLOC_HEAP) && !defined(KMALLOC_BUDDY))
@@ -21,7 +21,7 @@
 	Use heap allocator
 */
 
-#include "memory/heap.h"
+#include <kernel/memory/heap.h>
 
 #define ALLOCATOR_FN(name) heap_##name
 typedef heap_ctx mem_ctx;
@@ -35,7 +35,7 @@ typedef heap_ctx mem_ctx;
 #define BUDDY_MIN_ALLOC_UNIT	(512)		/* bytes */
 #endif
 
-#include "memory/buddy.h"
+#include <kernel/memory/buddy.h>
 
 #define ALLOCATOR_FN(name) buddy_##name
 typedef buddy_ctx mem_ctx;
