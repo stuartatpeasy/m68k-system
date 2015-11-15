@@ -13,6 +13,7 @@
 #include <kernel/memory/extents.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
+#include <kernel/syscall.h>     /* FIXME remove - used by housekeeper() */
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
 #include <platform/platform.h>
@@ -25,13 +26,12 @@ const char * const g_warmup_message = "\n  \\   ayumos"
 void housekeeper(void *arg)
 {
     UNUSED(arg);
-    u32 i;
-
 
     while(1)
     {
-        for(i = 0; i < 10000; ++i)
-            ;
+        putchar('%');
+
+        proc_sleep();
 
         putchar('@');
     }

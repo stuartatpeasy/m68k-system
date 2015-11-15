@@ -1,9 +1,10 @@
-#ifndef KUTIL_BVEC_H_INC
-#define KUTIL_BVEC_H_INC
+#ifndef KERNEL_UTIL_BVEC_H_INC
+#define KERNEL_UTIL_BVEC_H_INC
 /*
 	bvec.h - block-allocating dynamic array (vector) implementation
 
 	Part of the as-yet-unnamed MC68010 operating system
+
 
 	(c) Stuart Wallace <stuartw@atom.net>, 2012-12
 

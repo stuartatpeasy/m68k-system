@@ -226,6 +226,10 @@
 		<Unit filename="kernel/util/checksum.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="kernel/util/circbuf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/circbuf.h" />
 		<Unit filename="kernel/util/dump.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -100,3 +100,18 @@
     move.l      %a0@(28), %a1       /* restore a1       */
     move.l      %a0@(24), %a0       /* restore a0       */
 .endm
+
+
+/*
+    Save full context of the current process, call sched() to select a new process to run, restore
+    the context of the new process.
+*/
+.macro DO_CONTEXT_SWITCH
+    DISABLE_INTERRUPTS
+    SAVE_CONTEXT
+
+    jsr         sched       /* Choose next process to run, update g_current_proc accordingly */
+
+    RESTORE_CONTEXT
+    ENABLE_INTERRUPTS
+.endm

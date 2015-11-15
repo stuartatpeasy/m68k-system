@@ -9,6 +9,7 @@
 */
 
 #include <include/types.h>
+#include <klibc/errno.h>
 
 
 /* If no allocator was specified in build options, use the heap allocator */

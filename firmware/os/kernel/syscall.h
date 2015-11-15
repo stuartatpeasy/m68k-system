@@ -21,7 +21,7 @@ typedef struct syscall_table_entry
 } syscall_table_entry_t;
 
 /* System call table: maps number of arguments to syscall fn */
-const syscall_table_entry_t g_syscalls[];
+const syscall_table_entry_t g_syscalls[MAX_SYSCALL + 1];
 
 
 s32 syscall_console_putchar(u32 c);

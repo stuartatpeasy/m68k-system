@@ -17,6 +17,8 @@
 static void mc68681_set_brg(dev_t *dev, ku8 brg_set, ku8 brg_test);
 static void mc68681_set_ct_mode(dev_t *dev, ku8 mode);
 
+void mc68681_serial_a_irq_handler(ku32 irql, void *arg);
+void mc68681_serial_b_irq_handler(ku32 irql, void *arg);
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 {
@@ -51,17 +53,33 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 s32 mc68681_init(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
+    mc68681_state_t *state = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
 
-    dev->data = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
+    /* Allocate and set up circular buffers */
+    if((circbuf_alloc(MC68681_RX_BUF_LEN, &state->rxa_buf) != SUCCESS) ||
+       (circbuf_alloc(MC68681_TX_BUF_LEN, &state->txa_buf) != SUCCESS) ||
+       (circbuf_alloc(MC68681_RX_BUF_LEN, &state->rxb_buf) != SUCCESS) ||
+       (circbuf_alloc(MC68681_TX_BUF_LEN, &state->txb_buf) != SUCCESS))
+    {
+        circbuf_free(&state->rxa_buf);
+        circbuf_free(&state->txa_buf);
+        circbuf_free(&state->rxb_buf);
+        circbuf_free(&state->txb_buf);
+
+        kfree(state);
+        return ENOMEM;
+    }
+
+    dev->data = state;
 
     mc68681_reset(base_addr);
 
-    MC68681_REG(base_addr, MC68681_IMR) = 0x00;    /* Disable all interrupts               */
+    state->imr = 0x00;
+    MC68681_REG(base_addr, MC68681_IMR) = state->imr;    /* Disable all interrupts */
 
 	/* Set mode register 1A */
-	MC68681_REG(base_addr, MC68681_MRA) = /* 0xd3 */
+	MC68681_REG(base_addr, MC68681_MRA) = /* 0x93 */
         BIT(MC68681_MR1_RXRTS) |                                        /* Enable RX RTS        */
-        BIT(MC68681_MR1_RXIRQ) |                                        /* RXINT: IRQ on FFULL  */
         (MC68681_PARITY_MODE_NONE << MC68681_MR1_PARITY_MODE_SHIFT) |   /* No parity            */
         (MC68681_BPC_8 << MC68681_MR1_BPC_SHIFT);                       /* 8 bits per character */
 
@@ -72,6 +90,18 @@ s32 mc68681_init(dev_t *dev)
         an internal pointer in the IC switches such that the next access will address MR2A.
     */
 	MC68681_REG(base_addr, MC68681_MRA) = /* 0x17 */
+        (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
+        BIT(MC68681_MR2_CTS) |
+        (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
+
+    /* Set mode register 1B */
+    MC68681_REG(base_addr, MC68681_MRB) = /* 0x93 */
+        BIT(MC68681_MR1_RXRTS) |                                        /* Enable RX RTS        */
+        (MC68681_PARITY_MODE_NONE << MC68681_MR1_PARITY_MODE_SHIFT) |   /* No parity            */
+        (MC68681_BPC_8 << MC68681_MR1_BPC_SHIFT);                       /* 8 bits per character */
+
+    /* Set mode register 2B (see notes for mode register 2A, above) */
+	MC68681_REG(base_addr, MC68681_MRB) = /* 0x17 */
         (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
         BIT(MC68681_MR2_CTS) |
         (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
@@ -191,16 +221,63 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
 */
 s32 mc68681_serial_a_init(dev_t *dev)
 {
+    mc68681_state_t *state = (mc68681_state_t *) dev->parent->data;
+
     dev->getc = mc68681_channel_a_getc;
     dev->putc = mc68681_channel_a_putc;
     dev->block_size = 1;
     dev->len = 1;
 
-    dev->data = dev->parent->data;
+    dev->data = state;
 
-    cpu_irq_add_handler(dev->irql, dev, mc68681_irq_handler);
+    cpu_irq_add_handler(dev->irql, dev, mc68681_serial_a_irq_handler);
+
+    /* Enable serial port A "receiver ready" interrupt */
+//    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_A);
+//    MC68681_REG(dev->base_addr, MC68681_IMR) = state->imr;
 
     return SUCCESS;
+}
+
+
+/*
+    mc68681_serial_a_irq_handler() - ISR for interrupts relating to serial channel A.
+*/
+void mc68681_serial_a_irq_handler(ku32 irql, void *arg)
+{
+    UNUSED(irql);
+    dev_t * const dev = (dev_t *) arg;
+    void * const base_addr = dev->base_addr;
+    mc68681_state_t *state = (mc68681_state_t *) dev->data;
+
+    ku8 irq = MC68681_REG(base_addr, MC68681_ISR);
+
+    while(irq & BIT(MC68681_IMR_RXRDY_FFULL_A))
+    {
+        /*
+            Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
+            the character will be dropped.
+        */
+        circbuf_write(&state->rxa_buf, MC68681_REG(base_addr, MC68681_RHRA));
+    }
+
+    if(irq & BIT(MC68681_IMR_TXRDY_A))
+    {
+        /*
+            Transmitter ready.  If there is another character to transmit, do so; if not, disable
+            this interrupt.
+        */
+        u8 byte;
+        if(circbuf_read(&state->txa_buf, &byte) == SUCCESS)
+        {
+            MC68681_REG(base_addr, MC68681_THRA) = byte;        /* Transmit next character */
+        }
+        else
+        {
+            state->imr &= ~BIT(MC68681_IMR_TXRDY_A);
+            MC68681_REG(base_addr, MC68681_IMR) = state->imr;
+        }
+    }
 }
 
 
@@ -209,16 +286,63 @@ s32 mc68681_serial_a_init(dev_t *dev)
 */
 s32 mc68681_serial_b_init(dev_t *dev)
 {
+    mc68681_state_t *state = (mc68681_state_t *) dev->parent->data;
+
     dev->getc = mc68681_channel_b_getc;
     dev->putc = mc68681_channel_b_putc;
     dev->block_size = 1;
     dev->len = 1;
 
-    dev->data = dev->parent->data;
+    dev->data = state;
 
-    cpu_irq_add_handler(dev->irql, dev, mc68681_irq_handler);
+    cpu_irq_add_handler(dev->irql, dev, mc68681_serial_b_irq_handler);
+
+    /* Enable serial port B "receiver ready" interrupt */
+//    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_B);
+//    MC68681_REG(dev->base_addr, MC68681_IMR) = state->imr;
 
     return SUCCESS;
+}
+
+
+/*
+    mc68681_serial_b_irq_handler() - ISR for interrupts relating to serial channel B.
+*/
+void mc68681_serial_b_irq_handler(ku32 irql, void *arg)
+{
+    UNUSED(irql);
+    dev_t * const dev = (dev_t *) arg;
+    void * const base_addr = dev->base_addr;
+    mc68681_state_t *state = (mc68681_state_t *) dev->data;
+
+    ku8 irq = MC68681_REG(base_addr, MC68681_ISR);
+
+    while(irq & BIT(MC68681_IMR_RXRDY_FFULL_B))
+    {
+        /*
+            Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
+            the character will be dropped.
+        */
+        circbuf_write(&state->rxb_buf, MC68681_REG(base_addr, MC68681_RHRB));
+    }
+
+    if(irq & BIT(MC68681_IMR_TXRDY_B))
+    {
+        /*
+            Transmitter ready.  If there is another character to transmit, do so; if not, disable
+            this interrupt.
+        */
+        u8 byte;
+        if(circbuf_read(&state->txb_buf, &byte) == SUCCESS)
+        {
+            MC68681_REG(base_addr, MC68681_THRB) = byte;        /* Transmit next character */
+        }
+        else
+        {
+            state->imr &= ~BIT(MC68681_IMR_TXRDY_B);
+            MC68681_REG(base_addr, MC68681_IMR) = state->imr;
+        }
+    }
 }
 
 
@@ -241,7 +365,15 @@ void mc68681_irq_handler(ku32 irql, void *arg)
 */
 s32 mc68681_shut_down(dev_t *dev)
 {
+    mc68681_state_t *state = (mc68681_state_t *) dev->data;
+
+    circbuf_free(&state->rxa_buf);
+    circbuf_free(&state->txa_buf);
+    circbuf_free(&state->rxb_buf);
+    circbuf_free(&state->txb_buf);
+
     kfree(dev->data);
+
     return SUCCESS;
 }
 

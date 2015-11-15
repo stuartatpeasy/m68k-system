@@ -13,6 +13,7 @@
 #include <include/defs.h>
 #include <include/error.h>
 #include <include/types.h>
+#include <kernel/util/circbuf.h>
 
 
 /*
@@ -294,14 +295,22 @@ typedef enum mc68681_pin_fn
 #define MC68681_CHANNEL_A               (0)
 #define MC68681_CHANNEL_B               (1)
 
+#define MC68681_RX_BUF_LEN              (64)
+#define MC68681_TX_BUF_LEN              (64)
+
 
 typedef struct
 {
-    u8 acr;         /* ACR is write-only, so we store its current val here              */
-    u8 opcr;        /* ditto OPCR                                                       */
-    u8 brg_test;    /* BRG test mode toggles with each read of the corresponding reg    */
-    u32 baud_a;     /* Channel A baud rate                                              */
-    u32 baud_b;     /* Channel B baud rate                                              */
+    u8          acr;        /* ACR is write-only, so we store its current val here              */
+    u8          opcr;       /* ditto OPCR                                                       */
+    u8          brg_test;   /* BRG test mode toggles with each read of the corresponding reg    */
+    u8          imr;        /* Interrupt mask register value                                    */
+    u32         baud_a;     /* Channel A baud rate                                              */
+    u32         baud_b;     /* Channel B baud rate                                              */
+    circbuf_t   rxa_buf;
+    circbuf_t   txa_buf;
+    circbuf_t   rxb_buf;
+    circbuf_t   txb_buf;
 } mc68681_state_t;
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22];

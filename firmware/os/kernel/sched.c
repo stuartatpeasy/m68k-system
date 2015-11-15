@@ -37,7 +37,7 @@ s32 sched_init(const char * const init_proc_name)
     g_current_proc = p;
 
     /* Install the scheduler IRQ handler */
-	return plat_install_timer_irq_handler(cpu_context_switch);
+	return plat_install_timer_irq_handler(cpu_preempt);
 }
 
 

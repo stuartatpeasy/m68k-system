@@ -18,7 +18,7 @@
 
     This must be kept in sync with the constants declared in <kernel/syscalls.h>.
 */
-const syscall_table_entry_t g_syscalls[] =
+const syscall_table_entry_t g_syscalls[MAX_SYSCALL + 1] =
 {
     {1,     syscall_exit},              /* Implemented in arch-specific asm */
     {1,     syscall_console_putchar},

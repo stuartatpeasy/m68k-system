@@ -20,8 +20,8 @@
 .text
 .global syscall_yield
 .global syscall_exit
-.global cpu_context_switch
-.global cpu_sleep_process
+.global cpu_preempt
+.global cpu_switch_process
 
 /*
                  15                     0
@@ -37,14 +37,14 @@
 
     "Other junk" refers to additional data stacked for bus and address error exceptions.
 
-    cpu_context_switch is used as the timer interrupt handler.  syscall_yield is the handler for the
-    TRAP call used to yield a time-slice.  cpu_context_switch saves CPU context in the proc_t
-    structure pointed to by g_current_proc, then calls the sched() function.  That function decides
-    which process to run next, and updates g_current_proc accordingly.  cpu_context_switch then
-    restores CPU state for the incoming process and resumes execution.
+    cpu_preempt is used as the timer interrupt handler.  syscall_yield is the handler for the TRAP
+    call used to yield a time-slice.  cpu_preempt saves CPU context in the proc_t structure pointed
+    to by g_current_proc, then calls the sched() function.  That function decides which process to
+    run next, and updates g_current_proc accordingly.  cpu_preempt then restores CPU state for the
+    incoming process and resumes execution.
 
     syscall_yield handles the "yield" system call.  It unwinds the syscall_dispatcher stack frame,
-    restoring trashed registers, then falls through to cpu_context_switch.
+    restoring trashed registers, then falls through to cpu_preempt.
 */
 
 syscall_yield:
@@ -53,14 +53,8 @@ syscall_yield:
 
     /* fall through */
 
-cpu_context_switch:
-    DISABLE_INTERRUPTS
-    SAVE_CONTEXT
-
-    jsr         sched       /* Choose next process to run, update g_current_proc accordingly */
-
-    RESTORE_CONTEXT
-    ENABLE_INTERRUPTS
+cpu_preempt:
+    DO_CONTEXT_SWITCH
 
     rte
 
@@ -81,19 +75,13 @@ syscall_exit:
     rte
 
 
-cpu_sleep_process:
+cpu_switch_process:
     move.w      sr, sp@(-4)
     subq.l      #2, sp
     move.l      sp@(2), sp@
     subq.l      #2, sp
     clr.w       sp@(6)
 
-    DISABLE_INTERRUPTS
-    SAVE_CONTEXT
-
-    jsr         sched
-
-    RESTORE_CONTEXT
-    ENABLE_INTERRUPTS
+    DO_CONTEXT_SWITCH
 
     rte

@@ -47,8 +47,13 @@ inline u32 wswap_32(u32 x);
 /* Initialise proc_t::regs prior to starting a new process */
 s32 cpu_proc_init(regs_t *r, void *entry_point, void *ustack_top, void *kstack_top, ku32 flags);
 
-/* This declaration is for an IRQ handler - it must not be called directly */
-void cpu_context_switch();      /* Save context, call sched(), restore context      */
+/*
+    Both of these functions perform a context switch by saving context, calling sched(), and then
+    restoring the context of the incoming process.
+*/
+void cpu_preempt();             /* Timer IRQ handler - do not call directly                     */
+
+void cpu_switch_process();      /* "Manual" context switch function - may be called directly    */
 
 /*
     Called using C semantics with no args.  Save CPU state and use the caller's return address as

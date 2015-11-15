@@ -1,5 +1,5 @@
-#ifndef KUTIL_KUTIL_H_INC
-#define KUTIL_KUTIL_H_INC
+#ifndef KERNEL_UTIL_KUTIL_H_INC
+#define KERNEL_UTIL_KUTIL_H_INC
 /*
 	kutil.h - declarations of the k*() utility functions
 

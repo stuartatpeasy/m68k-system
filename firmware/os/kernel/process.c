@@ -174,7 +174,7 @@ void proc_sleep()
         Put the process to sleep.  This function will not return until the process wakes up.  In the
         meantime, another process will run.
     */
-    cpu_sleep_process();
+    cpu_switch_process();
 
     printf("Process %d woke up!\n", g_current_proc->id);        /* FIXME remove */
 }
