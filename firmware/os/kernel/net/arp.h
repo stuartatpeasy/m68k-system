@@ -15,8 +15,10 @@
 #include <include/types.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/net.h>
 
 
+s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len);
 s32 arp_process_reply(const void * const packet, u32 len);
 s32 arp_cache_add(const mac_addr_t hw_addr, const ipv4_addr_t ip);
 

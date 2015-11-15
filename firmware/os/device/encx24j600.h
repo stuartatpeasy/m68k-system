@@ -20,6 +20,9 @@
 
 
 #define ENCX24_SFR_BASE         (0x7e00)	/* Base address of special-function registers		*/
+#define ENCX24_TX_BUF_START     (0x0000)    /* Start of packet TX buffer                        */
+#define ENCX24_TX_BUF_END       (0x1000)    /* End of packet TX buffer + 1                      */
+#define ENCX24_RX_BUF_START     (0x1000)    /* Start of packet RX buffer                        */
 #define ENCX24_MEM_TOP          (0x6000)    /* End of RAM area + 1                              */
 #define ENCX24_SFR_SHIFT		(1)			/* Regs are 16 bit, so regnum must be <<'ed by 1	*/
 
@@ -37,6 +40,9 @@
 */
 #define ENCX24_MEM_ADDR(base, x)     ((vu16 *) ((u8 *) (base) + (x)))
 
+#define ENCX24_MIN_TX_PACKET_LEN    (7)         /* Minimum packet len to meet IEEE802.3 spec    */
+#define ENCX24_MAX_TX_PACKET_LEN \
+    (ENCX24_TX_BUF_END - ENCX24_TX_BUF_START)   /* = size of packet TX buffer                   */
 
 /* Ethernet controller state structure */
 typedef struct encx24j600_state
@@ -71,11 +77,10 @@ typedef struct encx24j600_rxhdr
 s32 encx24j600_reset(dev_t *dev);
 s32 encx24j600_init(dev_t *dev);
 s32 encx24j600_shut_down(dev_t *dev);
-s32 encx24j600_read(dev_t *dev);
-s32 encx24j600_write(dev_t *dev);
-s32 encx24j600_control(dev_t *dev);
+s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
 void encx24j600_irq(ku32 irql, void *data);
 void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out);
+s32 encx24j600_packet_tx(dev_t *dev, void *buf, u32 len);
 
 
 /*

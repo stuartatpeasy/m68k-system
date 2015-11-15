@@ -17,7 +17,7 @@ CSOURCES:=	main.c \
 			kernel/fs/fat/fat.c \
 			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/process.c kernel/sched.c \
 			kernel/semaphore.c kernel/syscall.c kernel/user.c \
-			kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c \
+			kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c kernel/net/net.c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
 			kernel/memory/kmalloc.c kernel/memory/slab.c
 
@@ -201,6 +201,10 @@ kernel/net/ethernet.o: \
 kernel/net/ipv4.o: \
 	kernel/net/ipv4.c kernel/net/ipv4.h include/byteorder.h include/defs.h include/types.h \
 	kernel/net/ethernet.h
+
+kernel/net/net.o: \
+	kernel/net/net.c kernel/net/net.h include/defs.h include/types.h kernel/memory/kmalloc.h \
+	kernel/net/arp.h
 
 kernel/memory/buddy.o: \
 	kernel/memory/buddy.c kernel/memory/buddy.h include/types.h klibc/stdio.h kernel/util/kutil.h \

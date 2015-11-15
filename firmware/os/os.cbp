@@ -198,6 +198,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/ipv4.h" />
+		<Unit filename="kernel/net/net.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/net.h" />
 		<Unit filename="kernel/process.c">
 			<Option compilerVar="CC" />
 		</Unit>

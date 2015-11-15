@@ -11,7 +11,9 @@
 
 #include <device/encx24j600.h>
 #include <klibc/stdio.h>			/* TODO remove */
+#include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>        /* TODO remove */
+#include <kernel/net/net.h>
 
 
 /*
@@ -54,6 +56,40 @@ s32 encx24j600_reset(dev_t *dev)
     /* Wait at least 256us for the PHY to initialise */
     for(x = 1000; --x;)
         cpu_nop();                                  /* FIXME - hardwired delay */
+
+    return SUCCESS;
+}
+
+
+/*
+    encx24j600_packet_tx() - transmit a packet.  buf points to a buffer containing the packet.
+    Note that the controller will automatically prepend the source MAC and append a CRC - this data
+    should not be present in buf.
+*/
+s32 encx24j600_packet_tx(dev_t *dev, void *buf, u32 len)
+{
+    void * const base_addr = dev->base_addr;
+
+    if((len < ENCX24_MIN_TX_PACKET_LEN) || (len > ENCX24_MAX_TX_PACKET_LEN))
+        return EINVAL;
+
+    /* Clear EIR.TXIF (TX done) and EIR.TXABITIF (TX aborted) flags in interrupt flag register */
+    ENCX24_REG(base_addr, EIR) &= ~(BIT(EIR_TXIF) | BIT(EIR_TXABTIF));
+
+    /* Enable transmit done interrupt */
+    ENCX24_REG(base_addr, EIE) |= BIT(EIE_TXIE);
+
+    /* Copy the packet into the transmit buffer */
+    memcpy((u8 *) base_addr + ENCX24_TX_BUF_START, buf, len);
+
+    /* Set ETXST to the start address of the packet in the transmit buffer */
+    ENCX24_REG(base_addr, ETXST) = N2LE16(ENCX24_TX_BUF_START);
+
+    /* Set ETXLEN to the length of the packet */
+    ENCX24_REG(base_addr, ETXLEN) = N2LE16(len);
+
+    /* Set TXRTS to begin transmission */
+    ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_TXRTS);
 
     return SUCCESS;
 }
@@ -167,7 +203,6 @@ s32 encx24j600_init(dev_t *dev)
     void * const base_addr = dev->base_addr;
     encx24j600_state_t *state;
     s32 ret;
-    ku32 rx_buf_start = 0x1000;
 
     dev->data = kmalloc(sizeof(encx24j600_state_t));
     if(dev->data == NULL)
@@ -185,9 +220,9 @@ s32 encx24j600_init(dev_t *dev)
     ENCX24_REG(base_addr, ECON2) &= ~ECON2_COCON_MASK;     /* Disable the ENC's output clock */
 
     /* Initialise packet RX buffer */
-    state->rx_buf_start = (u16 *) ((u8 *) base_addr + rx_buf_start);
+    state->rx_buf_start = (u16 *) ((u8 *) base_addr + ENCX24_RX_BUF_START);
     state->rx_read_ptr = state->rx_buf_start;
-    ENCX24_REG(base_addr, ERXST) = N2LE16(rx_buf_start);
+    ENCX24_REG(base_addr, ERXST) = N2LE16(ENCX24_RX_BUF_START);
 
     /* Initialise receive filters */
     ENCX24_REG(base_addr, ERXFCON) =
@@ -219,6 +254,9 @@ s32 encx24j600_init(dev_t *dev)
 
     ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_RXEN);       /* Enable packet reception */
 
+    dev->control = encx24j600_control;
+    dev->shut_down = encx24j600_shut_down;
+
     return SUCCESS;
 }
 
@@ -236,25 +274,27 @@ s32 encx24j600_shut_down(dev_t *dev)
 }
 
 
-s32 encx24j600_read(dev_t *dev)
+/*
+    encx24j600_control() - devctl responder
+*/
+s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
-    UNUSED(dev);
+    const void * const base_addr = dev->base_addr;
+    UNUSED(in);
 
-    return SUCCESS;
-}
+    switch(fn)
+    {
+        case dc_get_hw_addr_type:
+            *((net_addr_type_t *) out) = na_ethernet;
+            return SUCCESS;
 
+        case dc_get_hw_addr:
+            ((mac_addr_t *) out)->w[0] = ENCX24_REG(base_addr, MAADR1);
+            ((mac_addr_t *) out)->w[1] = ENCX24_REG(base_addr, MAADR2);
+            ((mac_addr_t *) out)->w[2] = ENCX24_REG(base_addr, MAADR3);
+            return SUCCESS;
 
-s32 encx24j600_write(dev_t *dev)
-{
-    UNUSED(dev);
-
-    return SUCCESS;
-}
-
-
-s32 encx24j600_control(dev_t *dev)
-{
-    UNUSED(dev);
-
-    return SUCCESS;
+        default:
+            return ENOSYS;
+    }
 }

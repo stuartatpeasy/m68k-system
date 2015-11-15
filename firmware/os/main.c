@@ -13,6 +13,7 @@
 #include <kernel/memory/extents.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
+#include <kernel/net/net.h>
 #include <kernel/syscall.h>     /* FIXME remove - used by housekeeper() */
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
@@ -101,6 +102,9 @@ void _main()
     ret = vfs_init();
 	if(ret != SUCCESS)
 		printf("vfs: init failed: %s\n", kstrerror(ret));
+
+    /* Initialise networking system */
+    net_init();
 
     /* Display approximate CPU clock speed */
     if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)

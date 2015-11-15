@@ -14,12 +14,14 @@
 #include <include/defs.h>
 #include <include/types.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/net.h>
 
 
 /* Six-byte MAC address. NOTE: bytes stored in network order. */
-typedef struct mac_addr
+typedef union mac_addr
 {
     u8 b[6];
+    u16 w[3];
 } mac_addr_t;
 
 extern mac_addr_t g_mac_zero;
@@ -42,16 +44,6 @@ typedef enum ethertype
 } ethertype_t;
 
 
-/* Ethernet interface */
-typedef struct eth_iface
-{
-    dev_t           *dev;       /* The hardware device implementing this interface      */
-    mac_addr_t      hw_addr;    /* Hardware address of the interface                    */
-    ipv4_addr_t     ipv4_addr;  /* IPv4 address associated with this interface          */
-
-} eth_iface_t;
-
-
-void eth_handle_frame(eth_iface_t *iface, void *frame, u32 len);
+void eth_handle_frame(net_iface_t *iface, void *frame, u32 len);
 
 #endif

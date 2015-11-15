@@ -9,6 +9,7 @@
 
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/arp.h>
 #include <klibc/stdio.h>            /* FIXME remove */
 
 mac_addr_t g_mac_zero = {0};
@@ -25,7 +26,7 @@ void eth_print_mac(const mac_addr_t * const mac)
 /*
     eth_handle_frame() - handle a received Ethernet frame
 */
-void eth_handle_frame(eth_iface_t *iface, void *frame, u32 len)
+void eth_handle_frame(net_iface_t *iface, void *frame, u32 len)
 {
     const eth_hdr_t * const ehdr = (eth_hdr_t *) frame;
     const void * const payload = ((u8 *) frame) + sizeof(eth_hdr_t);
@@ -51,6 +52,6 @@ void eth_handle_frame(eth_iface_t *iface, void *frame, u32 len)
     }
     else if(etype == ethertype_arp)
     {
-        puts("  ARP");
+        arp_handle_packet(iface, payload, len - sizeof(eth_hdr_t));
     }
 }

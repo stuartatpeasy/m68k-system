@@ -55,7 +55,7 @@ void boot_list_mass_storage()
 
     while((dev = dev_get_next(dev)) != NULL)
     {
-        if((dev->type = DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_MASS_STORAGE))
+        if((dev->type == DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_MASS_STORAGE))
         {
             const char *model = unknown;
             const char *serial = unknown;
@@ -81,7 +81,7 @@ void boot_list_partitions()
 
     while((dev = dev_get_next(dev)) != NULL)
     {
-        if((dev->type = DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_PARTITION))
+        if((dev->type == DEV_TYPE_BLOCK) && (dev->subtype == DEV_SUBTYPE_PARTITION))
         {
             const char *active = unknown;
             const char *bootable = unknown;
