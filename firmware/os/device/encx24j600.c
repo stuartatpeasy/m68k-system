@@ -194,7 +194,6 @@ s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 len, u32 *nread)
 
         /* Indicate packet discard by returning a success status with 0 bytes read. */
         *nread = 0;
-        return SUCCESS;
     }
 
     return SUCCESS;

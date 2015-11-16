@@ -45,7 +45,7 @@
         Store registers in g_current_proc->regs[].  a0 is trashed at this point, and will be re-read
         from the stack.  Also store the user stack pointer in g_current_proc->regs.usp.
     */
-    subq.l      #4, %a0                 /* Step over USP and SP - these will be saved separately */
+    subq.l      #4, %a0                 /* Step over SP (A7) - it will be saved separately */
     movem.l     %d0-%d7/%a0-%a6, %a0@-
     move.l      %sp@+, %a0@(32)         /* Save original A0, and correct the value of SP */
     move.l      %sp, %a0@(60)           /* Save original SP */
