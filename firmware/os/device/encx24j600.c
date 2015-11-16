@@ -14,6 +14,11 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>        /* TODO remove */
 #include <kernel/net/net.h>
+#include <kernel/process.h>
+
+
+void encx24j600_rx_buf_peek(dev_t *dev, u16 len, void *out);
+void encx24j600_rx_buf_advance_ptr(dev_t *dev, u16 len);
 
 
 /*
@@ -96,32 +101,49 @@ s32 encx24j600_packet_tx(dev_t *dev, void *buf, u32 len)
 
 
 /*
-    encx24j600_rx_buf_read() - perform a wrapping read of len bytes from the RX buffer; update
-    the buffer-tail pointer register (ERXTAIL) appropriately.
+    encx24j600_rx_buf_peek() - read len bytes from the RX buffer into out, without advancing the
+    RX buffer read pointer.
 */
-void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
+void encx24j600_rx_buf_peek(dev_t *dev, u16 len, void *out)
 {
     void * const base_addr = (void *) dev->base_addr;
     encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
     ku16 *rx_buf_top = (u16 *) base_addr + (ENCX24_MEM_TOP / sizeof(u16));
-    u16 *out16 = (u16 *) out;
+    u16 *out16 = (u16 *) out,
+        *rx_read_ptr = state->rx_read_ptr;
     u16 curr_part_len;
 
-    out16 = (u16 *) out;
-    len >>= 1;
+    len = (len + 1) / sizeof(u16);
 
-    curr_part_len = MIN(len, (u16) (rx_buf_top - state->rx_read_ptr));
+    curr_part_len = MIN(len, (u16) (rx_buf_top - rx_read_ptr));
 
     for(len -= curr_part_len; curr_part_len--;)
-        *out16++ = *state->rx_read_ptr++;
+        *out16++ = *rx_read_ptr++;
 
     if(len)
     {
-        state->rx_read_ptr = state->rx_buf_start;
+        rx_read_ptr = state->rx_buf_start;
 
         while(len--)
-            *out16++ = *state->rx_read_ptr++;
+            *out16++ = *rx_read_ptr++;
     }
+}
+
+
+/*
+    encx24j600_rx_buf_advance_ptr() - advance the RX buffer read pointer by len bytes, and update
+    the RX tail pointer (ERXTAIL register) accordingly.
+*/
+void encx24j600_rx_buf_advance_ptr(dev_t *dev, u16 len)
+{
+    void * const base_addr = (void *) dev->base_addr;
+    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
+    ku16 *rx_buf_top = (u16 *) base_addr + (ENCX24_MEM_TOP / sizeof(u16));
+
+    state->rx_read_ptr += (len + 1) / sizeof(u16);
+
+    while(state->rx_read_ptr > rx_buf_top)
+        state->rx_read_ptr -= ENCX24_RX_BUF_LEN_WORDS;
 
     ENCX24_REG(base_addr, ERXTAIL) =
         (state->rx_read_ptr == state->rx_buf_start) ?
@@ -133,22 +155,31 @@ void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out)
 /*
     encx24j600_packet_read() - read a received frame from the controller's buffer.
 */
-void encx24j600_packet_read(dev_t *dev)
+s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 len, u32 *nread)
 {
     encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
     void * const base_addr = dev->base_addr;
     encx24j600_rxhdr_t hdr;
 
-    encx24j600_rx_buf_read(dev, sizeof(hdr), &hdr);
+    encx24j600_rx_buf_peek(dev, sizeof(hdr), &hdr);
 
     if(hdr.rsv.status & BIT(ENCX24_RSV_STAT_OK))
     {
         /* Packet received successfully */
-//        printf("~R: npp=%04x zero=%02x rsv4=%02x rsv3=%02x stat=%02x bc=%u\n", N2LE16(hdr.next_packet_ptr),
-//                hdr.rsv.zero, hdr.rsv.rsv4, hdr.rsv.rsv3, hdr.rsv.status, N2LE16(hdr.rsv.byte_count_le));
+        ku16 packet_len = N2LE16(hdr.rsv.byte_count_le);
 
-        // FIXME - don't pass NULL here!!!
-        eth_handle_frame(NULL, state->rx_read_ptr, LE2N16(hdr.rsv.byte_count_le));
+        *nread = packet_len;
+
+        if(len < packet_len)
+            return EFBIG;   /* Packet too big for the supplied buffer */
+
+        encx24j600_rx_buf_advance_ptr(dev, sizeof(hdr));
+
+        encx24j600_rx_buf_peek(dev, packet_len, buf);
+        encx24j600_rx_buf_advance_ptr(dev, packet_len);
+
+        state->rx_read_ptr = (u16 *) ((u32) base_addr + N2LE16(hdr.next_packet_ptr));
+        ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
     }
     else
     {
@@ -157,11 +188,16 @@ void encx24j600_packet_read(dev_t *dev)
             ENCX24_REG(base_addr, ERXTAIL) = N2LE16(ENCX24_MEM_TOP - 2);
         else
             ENCX24_REG(base_addr, ERXTAIL) = N2LE16(hdr.next_packet_ptr - 2);
+
+        state->rx_read_ptr = (u16 *) ((u32) base_addr + N2LE16(hdr.next_packet_ptr));
+        ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
+
+        /* Indicate packet discard by returning a success status with 0 bytes read. */
+        *nread = 0;
+        return SUCCESS;
     }
 
-    state->rx_read_ptr = (u16 *) ((u32) base_addr + N2LE16(hdr.next_packet_ptr));
-
-    ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
+    return SUCCESS;
 }
 
 
@@ -188,7 +224,13 @@ void encx24j600_irq(ku32 irql, void *data)
     }
 
     if(iflags & BIT(EIR_PKTIF))         /* Packet received    */
-        encx24j600_packet_read(dev);
+    {
+        ++(state->rx_packets_pending);
+        if(state->rx_wait_pid)
+            proc_wake_by_id(state->rx_wait_pid);
+
+        ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
+    }
 
     /* Clear all interrupts */
     ENCX24_REG(base_addr, EIR) = 0;
@@ -204,11 +246,12 @@ s32 encx24j600_init(dev_t *dev)
     encx24j600_state_t *state;
     s32 ret;
 
-    dev->data = kmalloc(sizeof(encx24j600_state_t));
-    if(dev->data == NULL)
+    state = kmalloc(sizeof(encx24j600_state_t));
+    if(state == NULL)
         return ENOMEM;
 
-    state = dev->data;
+    state->rx_wait_pid = 0;
+    state->rx_packets_pending = 0;
 
     /* Reset the controller */
     ret = encx24j600_reset(dev);
@@ -255,7 +298,10 @@ s32 encx24j600_init(dev_t *dev)
     ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_RXEN);       /* Enable packet reception */
 
     dev->control = encx24j600_control;
+    dev->read = encx24j600_read;
     dev->shut_down = encx24j600_shut_down;
+
+    dev->data = state;
 
     return SUCCESS;
 }
@@ -271,6 +317,39 @@ s32 encx24j600_shut_down(dev_t *dev)
         kfree(dev->data);
 
     return SUCCESS;
+}
+
+
+/*
+    encx24j600_read() - block until a packet can be read into buf.
+*/
+s32 encx24j600_read(dev_t *dev, ku32 offset, ku32 len, void *buf)
+{
+    encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
+    u32 nread = 0;
+    s32 ret;
+    UNUSED(offset);
+
+    if(state->rx_wait_pid)
+        return EBUSY;
+
+    /* Is a packet available? */
+    while(state->rx_packets_pending == 0)
+    {
+        /* No packets available - put process to sleep */
+        /* TODO - locking */
+        state->rx_wait_pid = proc_get_pid();
+        proc_sleep();
+    }
+
+    state->rx_wait_pid = 0;
+
+    ret = encx24j600_packet_read(dev, buf, len, &nread);
+
+    if(ret == SUCCESS)
+        state->rx_packets_pending--;
+
+    return ret;
 }
 
 

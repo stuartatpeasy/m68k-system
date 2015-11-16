@@ -65,12 +65,13 @@ struct proc_struct
 
 
 s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img,
-                proc_entry_fn_t entry, u32 *arg, ku32 stack_len, ku16 flags,
+                proc_entry_fn_t entry, void *arg, ku32 stack_len, ku16 flags,
                 const proc_t * const parent, pid_t *newpid);
 
 pid_t proc_get_pid();
 proc_t *proc_current();
 void proc_do_exit(s32 exit_code);
 void proc_sleep();
+void proc_wake_by_id(const pid_t pid);
 
 #endif

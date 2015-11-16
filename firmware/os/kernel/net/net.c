@@ -10,10 +10,12 @@
 #include <device/device.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/net.h>
+#include <kernel/process.h>
 #include <stdio.h>
 
 
 s32 net_add_interface(dev_t *dev);
+void net_receive(void *arg);
 
 net_iface_t *g_net_ifaces = NULL;
 
@@ -89,5 +91,27 @@ s32 net_add_interface(dev_t *dev)
     printf("net: added %s: %02x:%02x:%02x:%02x:%02x:%02x\n", dev->name,
            ma->b[0], ma->b[1], ma->b[2], ma->b[3], ma->b[4], ma->b[5]);
 
+    proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL, NULL);
+
     return SUCCESS;
+}
+
+
+void net_receive(void *arg)
+{
+    net_iface_t * const iface = (net_iface_t *) arg;
+    u8 *buf;
+
+    buf = kmalloc(1500);
+
+    while(1)
+    {
+        s32 ret = iface->dev->read(iface->dev, 0, 1500, buf);
+        if(ret == SUCCESS)
+        {
+            /* TODO - set correct length */
+            eth_handle_frame(iface, buf, 1500);
+        }
+        else printf("{%d}", ret);
+    }
 }

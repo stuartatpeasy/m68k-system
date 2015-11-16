@@ -829,16 +829,6 @@ MONITOR_CMD_HANDLER(srec)
 
     Used to trigger a test of some sort
 */
-#include "include/list.h"
-struct mydata
-{
-    int meh;
-    int foo;
-    int bar;
-    list_t ll;
-};
-
-
 #include <kernel/process.h>
 #include <include/elf.h>
 MONITOR_CMD_HANDLER(test)
@@ -848,43 +838,7 @@ MONITOR_CMD_HANDLER(test)
 
     ku32 testnum = strtoul(args[0], NULL, 0);
 
-    if(testnum == 1)
-    {
-#if 0
-        struct mydata
-        x = {
-            .meh = 1,
-            .foo = 2,
-            .bar = 3,
-            .ll = LIST_INIT(x.ll)
-        },
-        y = {
-            .meh = 10,
-            .foo = 20,
-            .bar = 30,
-            .ll = LIST_INIT(y.ll)
-        },
-        z = {
-            .meh = 100,
-            .foo = 200,
-            .bar = 300,
-            .ll = LIST_INIT(z.ll)
-        },
-        *p;
-
-        LINKED_LIST(mylist);
-
-        list_append(&x.ll, &mylist);
-        list_append(&y.ll, &mylist);
-        list_append(&z.ll, &mylist);
-
-        list_for_each_entry(p, &mylist, ll)
-        {
-            printf("foo is %d\n", p->foo);
-        }
-#endif
-    }
-    else if(testnum == 2)
+    if(testnum == 2)
     {
         const unsigned char testapp[] = {
           0x7f, 0x45, 0x4c, 0x46, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -948,6 +902,18 @@ MONITOR_CMD_HANDLER(test)
         /* FIXME - there's currently no way to free an exe_img_t cleanly */
 
         ret = proc_create(0, 0, "testapp", img, NULL, NULL, 1024, 0, proc_current(), &pid);
+    }
+    else if(testnum == 3)
+    {
+        if(num_args < 2)
+            return EINVAL;
+
+        u32 pid = strtoul(args[1], NULL, 0);
+
+        if(pid > 65535)
+            return EINVAL;
+
+        proc_wake_by_id(pid);
     }
 
     return SUCCESS;

@@ -50,13 +50,11 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
 
     ent = &g_irq_handlers[irql];
 
-    if(ent->flags & IRQ_HANDLER_DEFAULT)
-    {
-        /* Replace default IRQ handler with the specified handler */
-        ent->handler = handler;
-        ent->data = data;
-    }
-    else
+    /*
+        If the specified irql has a default handler (flags & IRQ_HANDLER_DEFAULT), replace it with
+        the supplied handler.  Otherwise append the supplied handler to the chain of handlers.
+    */
+    if(!(ent->flags & IRQ_HANDLER_DEFAULT))
     {
         /* Append the specified IRQ handler to the chain of handlers */
         while(ent->next != NULL)
@@ -64,12 +62,12 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
 
         ent->next = CHECKED_KMALLOC(sizeof(irq_handler_table_entry_t));
         ent = ent->next;
-
-        ent->handler = handler;
-        ent->data = data;
-        ent->flags = 0;
-        ent->next = NULL;
     }
+
+    ent->handler = handler;
+    ent->data = data;
+    ent->flags = 0;
+    ent->next = NULL;
 
 	return SUCCESS;
 }

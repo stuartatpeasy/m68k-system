@@ -24,7 +24,7 @@ pid_t g_next_pid = 0;
     proc_create() - create a new process and add it to the run queue.
 */
 s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img,
-                proc_entry_fn_t entry, u32 *arg, ku32 stack_len, ku16 flags,
+                proc_entry_fn_t entry, void *arg, ku32 stack_len, ku16 flags,
                 const proc_t * const parent, pid_t *newpid)
 {
     proc_t *p;
@@ -65,7 +65,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     }
 
     ustack_top = (u32 *) ((u8 *) p->ustack + stack_len);
-    kstack_top = (u32 *) ((u8 *) p->kstack + stack_len);
+    kstack_top = (u32 *) ((u8 *) p->kstack + PROC_KSTACK_LEN);
 
     p->id = g_next_pid++;
     p->exit_code = S32_MIN;
@@ -83,7 +83,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     if(entry == NULL)
         entry = img->entry_point;
 
-    ret = cpu_proc_init(&p->regs, entry, ustack_top, kstack_top, flags);
+    ret = cpu_proc_init(&p->regs, entry, arg, ustack_top, kstack_top, flags);
     if(ret != SUCCESS)
     {
         kfree(p->kstack);
@@ -112,7 +112,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
 */
 pid_t proc_get_pid()
 {
-    return g_current_proc->id;
+    return (g_current_proc != NULL) ? g_current_proc->id : 0;
 }
 
 
@@ -168,6 +168,8 @@ void proc_do_exit(s32 exit_code)
 #include <klibc/stdio.h>    // FIXME remove
 void proc_sleep()
 {
+    printf("Process %d going to sleep\n", g_current_proc->id);
+
     g_current_proc->state = ps_sleeping;    /* Causes process to be removed from run queue */
 
     /*
@@ -181,9 +183,23 @@ void proc_sleep()
 
 
 /*
-    proc_wake_up() - ...
+    proc_wake_by_id() -
 */
-void proc_wake_up()
+void proc_wake_by_id(const pid_t pid)
 {
+    proc_t *p, *tmp;
 
+    cpu_disable_interrupts();
+
+    list_for_each_entry_safe(p, tmp, &g_sleep_queue, queue)
+    {
+        if(p->id == pid)
+        {
+            p->state = ps_runnable;
+            list_move_append(&p->queue, &g_run_queue);  /* TODO: should be list_move_insert() */
+            break;
+        }
+    }
+
+    cpu_enable_interrupts();
 }

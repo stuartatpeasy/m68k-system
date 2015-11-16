@@ -103,9 +103,6 @@ void _main()
 	if(ret != SUCCESS)
 		printf("vfs: init failed: %s\n", kstrerror(ret));
 
-    /* Initialise networking system */
-    net_init();
-
     /* Display approximate CPU clock speed */
     if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)
         printf("\nCPU fclk ~%2u.%uMHz\n", cpu_clk_hz / 1000000, (cpu_clk_hz % 1000000) / 100000);
@@ -139,7 +136,12 @@ void _main()
         printf("sched: init failed: %s\n", kstrerror(ret));
 
     /* Create housekeeper process */
-    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 2048, PROC_TYPE_KERNEL, NULL, NULL);
+    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);
+
+    /* Initialise networking system */
+    ret = net_init();
+    if(ret != SUCCESS)
+        printf("net: init failed: %s\n", kstrerror(ret));
 
     cpu_enable_interrupts();
 

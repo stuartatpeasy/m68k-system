@@ -16,6 +16,7 @@
 #include <include/byteorder.h>
 #include <include/defs.h>
 #include <include/error.h>
+#include <include/list.h>
 #include <include/types.h>
 
 
@@ -44,12 +45,21 @@
 #define ENCX24_MAX_TX_PACKET_LEN \
     (ENCX24_TX_BUF_END - ENCX24_TX_BUF_START)   /* = size of packet TX buffer                   */
 
+#define ENCX24_RX_BUF_LEN \
+    (ENCX24_MEM_TOP - ENCX24_RX_BUF_START)      /* Length of the RX buffer in bytes             */
+
+#define ENCX24_RX_BUF_LEN_WORDS \
+    (ENCX24_RX_BUF_LEN / 2)                     /* Length of the RX buffer in 16-bit words      */
+
+
 /* Ethernet controller state structure */
 typedef struct encx24j600_state
 {
     u16     *rx_buf_start;
     u16     *rx_read_ptr;
     u8      flags;
+    pid_t   rx_wait_pid;
+    u32     rx_packets_pending;
 } encx24j600_state_t;
 
 #define ENCX24_STATE_LINKED     (0)     /* Linked with remote partner               */
@@ -78,8 +88,8 @@ s32 encx24j600_reset(dev_t *dev);
 s32 encx24j600_init(dev_t *dev);
 s32 encx24j600_shut_down(dev_t *dev);
 s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
+s32 encx24j600_read(dev_t *dev, ku32 offset, ku32 len, void *buf);
 void encx24j600_irq(ku32 irql, void *data);
-void encx24j600_rx_buf_read(dev_t *dev, u16 len, void *out);
 s32 encx24j600_packet_tx(dev_t *dev, void *buf, u32 len);
 
 

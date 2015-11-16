@@ -43,6 +43,8 @@ void cpu_default_irq_handler(ku32 irql, void *data)
     const regs_t * const regs = &proc_current()->regs;
     UNUSED(data);
 
+    cpu_disable_interrupts();
+
 	printf("\nUnhandled exception in process %d: ", proc_get_pid());
 	if((irql >= 25) && (irql <= 31))
 		printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
@@ -180,18 +182,35 @@ u8 cpu_tas(u8 *addr)
     cpu_proc_init() - perform architecture-specific register initialisation before a new process
     starts.
 */
-s32 cpu_proc_init(regs_t *r, void *entry_point, void *ustack_top, void *kstack_top, ku32 flags)
+s32 cpu_proc_init(regs_t *r, void *entry_point, void *arg, void *ustack_top, void *kstack_top,
+                  ku32 flags)
 {
+    u32 *sp;
     mc68010_short_exc_frame_t *f;
 
     /* MC680x0 requires that the PC and SP are aligned to an even-numbered address */
     if(((u32) entry_point & 1) || (((u32) kstack_top) & 1) || (((u32) ustack_top) & 1))
         return EINVAL;
 
+    /* Set flags and store the argument to the process on the correct stack. */
     if(flags & PROC_TYPE_KERNEL)
+    {
+        sp = (u32 *) kstack_top;
+        *--sp = (u32) arg;
+        *--sp = 0;          /* FIXME: ret addr should point to kernel proc-ending fn? */
+        kstack_top = sp;
+
         r->sr = MC68K_SR_SUPERVISOR;
+    }
     else
+    {
+        sp = (u32 *) ustack_top;
+        *--sp = (u32) arg;
+        *--sp = 0;          /* FIXME: ret addr should point to userspace proc-ending fn? */
+        ustack_top = sp;
+
         r->sr = 0;
+    }
 
     r->usp = (u32) ustack_top;
     r->pc = (u32) entry_point;
