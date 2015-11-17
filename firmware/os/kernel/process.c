@@ -10,7 +10,6 @@
 #include <include/list.h>
 #include <kernel/process.h>
 #include <kernel/sched.h>
-#include <klibc/stdio.h>    // FIXME remove
 
 
 list_t g_run_queue = LIST_INIT(g_run_queue);
@@ -97,7 +96,6 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     if(newpid != NULL)
         *newpid = p->id;
 
-printf("[%d=%p]\n", p->id, p);
     cpu_disable_interrupts();
 
     list_insert(&p->queue, &g_run_queue);
@@ -168,8 +166,6 @@ void proc_do_exit(s32 exit_code)
 */
 void proc_sleep()
 {
-    printf("Process %d going to sleep\n", g_current_proc->id);
-
     g_current_proc->state = ps_sleeping;    /* Causes process to be removed from run queue */
 
     /*
@@ -177,8 +173,6 @@ void proc_sleep()
         meantime, another process will run.
     */
     cpu_switch_process();
-
-    printf("Process %d woke up!\n", g_current_proc->id);        /* FIXME remove */
 }
 
 
@@ -189,7 +183,12 @@ void proc_wake_by_id(const pid_t pid)
 {
     proc_t *p, *tmp;
 
-    cpu_disable_interrupts();
+    /*
+        FIXME: it's not safe to disable/enable interrupts if we're intending to call this fn from
+        IRQ handler context.  Trouble is, IRQ handlers need to use this function to wake up
+        sleeping processes.  Decisions, decisions.
+    */
+/*  cpu_disable_interrupts(); */
 
     list_for_each_entry_safe(p, tmp, &g_sleep_queue, queue)
     {
@@ -201,5 +200,6 @@ void proc_wake_by_id(const pid_t pid)
         }
     }
 
-    cpu_enable_interrupts();
+    /* FIXME - see above */
+/*    cpu_enable_interrupts(); */
 }

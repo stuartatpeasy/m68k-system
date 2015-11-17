@@ -47,20 +47,21 @@ void cpu_irq_init_arch_specific(void)
 /*
     mc68000_bus_error_handler() - report a bus error and halt the system.
 */
-extern proc_t *g_current_proc;       /* FIXME remove */
 void mc68000_bus_error_handler(void *dummy)
 {
-    mc68010_short_exc_frame_t *sef =
-        (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+    mc68010_short_exc_frame_t *sef;
+    mc68010_address_exc_frame_t *aef;
 
-    mc68010_address_exc_frame_t *aef =
-        (mc68010_address_exc_frame_t *) &sef[1];
+    cpu_disable_interrupts();
+
+    sef = (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+    aef = (mc68010_address_exc_frame_t *) &sef[1];
 
     ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
 
-    printf("\nBus error in process %d (%p)\n\n"
+    printf("\nBus error in process %d\n\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n\n",
-           proc_get_pid(), g_current_proc, sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+           proc_get_pid(), sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
 
     mc68010_dump_address_exc_frame(aef);
 
@@ -73,17 +74,19 @@ void mc68000_bus_error_handler(void *dummy)
 */
 void mc68000_address_error_handler(void *dummy)
 {
-    mc68010_short_exc_frame_t *sef =
-        (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+    mc68010_short_exc_frame_t *sef;
+    mc68010_address_exc_frame_t *aef;
 
-    mc68010_address_exc_frame_t *aef =
-        (mc68010_address_exc_frame_t *) &sef[1];
+    cpu_disable_interrupts();
+
+    sef = (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+    aef = (mc68010_address_exc_frame_t *) &sef[1];
 
     ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
 
-    printf("\nAddress error in process %d (%p)\n\n"
+    printf("\nAddress error in process %d\n\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n\n",
-           proc_get_pid(), g_current_proc, sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+           proc_get_pid(), sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
 
     mc68010_dump_address_exc_frame(aef);
 
@@ -149,7 +152,6 @@ void cpu_default_irq_handler(ku32 irql, void *data)
     else
         puts("(memory corruption: register dump unavailable)");
 
-	puts("\nSystem halted.");
 	cpu_halt();
 }
 
@@ -181,6 +183,8 @@ void cpu_reset(void)
 */
 void cpu_halt(void)
 {
+	puts("\nSystem halted.");
+
     /* the arg to "stop" causes the CPU to stay in supervisor mode and sets the IRQ mask to 7 */
     asm volatile
     (

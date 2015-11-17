@@ -39,7 +39,7 @@ s32 sched_init(const char * const init_proc_name)
 
     list_insert(&p->queue, &g_run_queue);
     g_current_proc = p;
-printf("[%d=%p]\n", p->id, p);
+
     /* Install the scheduler IRQ handler */
 	return plat_install_timer_irq_handler(cpu_preempt);
 }
@@ -57,6 +57,8 @@ void sched()
 
     ++g_current_proc->quanta;
 
+    cpu_disable_interrupts();       /* FIXME - may be unnecessary; added for debug */
+
     if(list_is_last(&g_current_proc->queue, &g_run_queue))
         g_current_proc = list_first_entry(&g_run_queue, proc_t, queue);
     else
@@ -66,6 +68,8 @@ void sched()
 
     if(g_prev_proc->state == ps_sleeping)
         list_move_insert(&g_prev_proc->queue, &g_sleep_queue);
+
+    cpu_disable_interrupts();       /* FIXME - see above; added for debug */
 
     ++g_ncontext_switches;
 

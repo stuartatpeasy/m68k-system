@@ -224,11 +224,12 @@ void encx24j600_irq(ku32 irql, void *data)
 
     if(iflags & BIT(EIR_PKTIF))         /* Packet received    */
     {
+        ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
+
         ++(state->rx_packets_pending);
         if(state->rx_wait_pid)
             proc_wake_by_id(state->rx_wait_pid);
 
-        ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
     }
 
     /* Clear all interrupts */
