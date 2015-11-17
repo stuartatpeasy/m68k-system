@@ -41,6 +41,7 @@
 #include <kernel/memory/heap.h>
 #include <klibc/stdio.h>
 
+#ifdef KMALLOC_HEAP
 
 #define MEMBLOCK_HDR_MAGIC	(0xc91d58be)	/* meaningless number used as a signature to identify a
 											   memory block; important that the bottom bit isn't set
@@ -293,4 +294,6 @@ u32 heap_usedmem(const heap_ctx * const heap)
 
 	return used;
 }
+
+#endif	/* KMALLOC_HEAP */
 

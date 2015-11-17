@@ -11,6 +11,8 @@
 
 #include <include/types.h>
 
+#ifdef KMALLOC_HEAP
+
 typedef struct heap_
 {
 	void *			start;
@@ -25,6 +27,8 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size);
 void heap_free(const heap_ctx * const heap, const void *ptr);
 u32 heap_freemem(const heap_ctx * const heap);
 u32 heap_usedmem(const heap_ctx * const heap);
+
+#endif	/* KMALLOC_HEAP */
 
 #endif
 

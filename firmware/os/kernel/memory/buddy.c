@@ -3,11 +3,15 @@
 
 	Part of the as-yet-unnamed MC68010 operating system.
 
+
 	(c) Stuart Wallace, May 2012.
 
+	This code is not yet working.
 */
 
-#include "buddy.h"
+#ifdef KMALLOC_BUDDY
+
+#include <kernel/memory/buddy.h>
 
 #define BUDDY_DOUBLE_COALESCE	1
 
@@ -176,4 +180,6 @@ u32 buddy_get_used_space(const buddy_ctx * const ctx)
 
 	return used_bytes;
 }
+
+#endif	/* KMALLOC_BUDDY */
 

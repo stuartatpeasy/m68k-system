@@ -13,6 +13,7 @@
 #include <include/types.h>
 #include <kernel/util/kutil.h>
 
+#ifdef KMALLOC_BUDDY
 
 #define BUDDY_ABS(x)	({ __typeof__ (x) _x = (x); ((_x >= 0) ? (_x) : -(_x)); })
 
@@ -33,6 +34,8 @@ void *buddy_malloc(buddy_ctx * const ctx, u32 size);
 void buddy_free(buddy_ctx * const ctx, void *ptr);
 u32 buddy_get_free_space(const buddy_ctx * const ctx);
 u32 buddy_get_used_space(const buddy_ctx * const ctx);
+
+#endif /* KMALLOC_BUDDY */
 
 #endif
 
