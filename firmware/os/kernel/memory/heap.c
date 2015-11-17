@@ -65,24 +65,32 @@ typedef struct heap_memblock_
 
 
 /*
-	heap_init(): initialise the heap.  This must be called before either heap_malloc()
-				 or heap_free() are used.
+	heap_init(): initialise the heap.  This must be called before either heap_malloc() or
+	heap_free() are used.
 */
 void heap_init(heap_ctx * const heap, void * const mem, u32 mem_len)
 {
+	mem_len &= ~0x1;	/* Round mem_len down to a multiple of 2 */
+
 	heap->start = mem;
 	heap->size = mem_len;
 
-	heap_memblock * const p = (heap_memblock *) heap->start;
+	heap_memblock *p = (heap_memblock *) heap->start;
 
 	p->magic = MEMBLOCK_HDR_MAGIC;
-	p->size = heap->size - sizeof(heap_memblock);
+	p->size = heap->size - (2 * sizeof(heap_memblock));
+
+	/* Create end-of-heap marker */
+	p = (heap_memblock *) ((u8 *) heap->start + p->size + sizeof(heap_memblock));
+	
+	p->magic = MEMBLOCK_HDR_MAGIC | 0x1;	/* Mark end-of-heap block as used */
+	p->size = 0;
 }
 
 
 /*
-	os_malloc():	allocate heap memory.  Returns pointer to allocated block, or
-					0 (NULL) on failure.
+	heap_malloc(): allocate heap memory.  Returns pointer to allocated block, or 0 (NULL) on
+	failure.
 */
 void *heap_malloc(const heap_ctx * const heap, u32 size)
 {
@@ -93,7 +101,7 @@ void *heap_malloc(const heap_ctx * const heap, u32 size)
 
 	size = (size + MEMBLOCK_ALIGN_MASK) & ~MEMBLOCK_ALIGN_MASK;
 
-	while(p < (heap_memblock *) (heap->start + heap->size))
+	while(p->size)
 	{
 		/* Is this block free and large enough? */
 		if(!(p->magic & 0x1) && (size <= p->size))
@@ -110,7 +118,7 @@ void *heap_malloc(const heap_ctx * const heap, u32 size)
 				p->size = size;
 			}
 
-			p->magic |= 1;		/* Mark the block as allocated */
+			p->magic |= 0x1;		/* Mark the block as allocated */
 			return (void *) ++p;
 		}
 		p = (heap_memblock *) ((unsigned char *) p + p->size + sizeof(heap_memblock));
@@ -120,8 +128,8 @@ void *heap_malloc(const heap_ctx * const heap, u32 size)
 
 
 /*
-	heap_calloc():	allocate and clear heap memory.  Returns a pointer to the allocated and
-					cleared memory or 0 (NULL) on failure.
+	heap_calloc(): allocate and clear heap memory.  Returns a pointer to the allocated and cleared
+	memory or 0 (NULL) on failure.
 */
 void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
 {
@@ -150,9 +158,8 @@ void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
 
 
 /*
-	heap_realloc():	change the size of the memory block at ptr.  Copy contents to the new memory
-					block to the maximum extent possible.  Newly allocated memory will be
-					uninitialised.
+	heap_realloc(): change the size of the memory block at ptr.  Copy contents to the new memory
+	block to the maximum extent possible.  Newly allocated memory will be uninitialised.
 */
 void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 {
@@ -171,7 +178,7 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 	if(!ptr && size)
 		return heap_malloc(heap, size);
 
-	if(p->magic == (MEMBLOCK_HDR_MAGIC | 1))
+	if(p->magic == (MEMBLOCK_HDR_MAGIC | 0x1))
 	{
 		if(!(pnew = heap_malloc(heap, size)))
 			return 0;			/* New block allocation failed */
@@ -197,8 +204,13 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 		heap_free(heap, ptr);
 		return pnew;
 	}
-	else	/* TODO: report invalid memblock */
+	else
+	{
+#ifdef DEBUG_KMALLOC
+		printf("heap_realloc(): attempted to realloc unallocated block at %p\n", ptr);
+#endif
 		return 0;
+	}
 }
 
 
@@ -215,10 +227,16 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 
 	if(p->magic == (MEMBLOCK_HDR_MAGIC | 1))
 	{
+#ifdef DEBUG_KMALLOC
+		/* Check that the next block is intact */
+		const heap_memblock * const p_next = (heap_memblock *) ((u8 *) ptr + p->size);
+		if((p_next->magic & ~0x1) != MEMBLOCK_HDR_MAGIC)
+			printf("heap_free(): block at %p (size %d) wrote beyond bounds\n", ptr, p->size);
+#endif
 		p->magic &= ~1;		/* Mark block free */
 
 		/* Merge any subsequent free blocks into this block */
-		for(p_ = (heap_memblock *) ((u8 *) (p + 1) + p->size);
+		for(p_ = (heap_memblock *) ((u8 *) ptr + p->size);
 			(p_ < (heap_memblock *) (heap->start + heap->size)) && !(p_->magic & 0x1);
 			p_ = (heap_memblock *) (p_->size + (u8 *) (p_ + 1)))
 		{
@@ -226,14 +244,16 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 		}
 		/* TODO: also merge this block into previous free blocks */
 	}
+#ifdef DEBUG_KMALLOC
 	else
-        printf("heap_free(): warning: attempted to free unallocated block at %p\n", ptr);
+        printf("heap_free(): attempted to free unallocated block at %p\n", ptr);
+#endif
 }
 
 
 /*
-	heap_freemem():	return the number of free bytes in the specified heap.  Note that it may not
-					be possible to allocate a single block of this size because of fragmentation.
+	heap_freemem(): return the number of free bytes in the specified heap.  Note that it may not
+	be possible to allocate a single block of this size because of fragmentation.
 */
 u32 heap_freemem(const heap_ctx * const heap)
 {
@@ -254,7 +274,7 @@ u32 heap_freemem(const heap_ctx * const heap)
 
 /*
 	heap_usedmem(): return the number of allocated bytes in the specified heap.  Note that this
-					figure does not include overhead.
+	figure does not include overhead.
 */
 u32 heap_usedmem(const heap_ctx * const heap)
 {

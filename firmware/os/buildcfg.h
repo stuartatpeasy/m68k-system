@@ -15,6 +15,8 @@
 
 #define BUG_ATA_BYTE_SWAP
 
+#define DEBUG_KMALLOC
+
 #define TARGET_MC68010
 #define PLATFORM_LAMBDA_REV0
 
