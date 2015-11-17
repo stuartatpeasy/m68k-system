@@ -207,7 +207,7 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 	else
 	{
 #ifdef DEBUG_KMALLOC
-		printf("heap_realloc(): attempted to realloc unallocated block at %p\n", ptr);
+		printf("heap_realloc(%p, %u): not allocated\n", ptr, size);
 #endif
 		return 0;
 	}
@@ -231,7 +231,7 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 		/* Check that the next block is intact */
 		const heap_memblock * const p_next = (heap_memblock *) ((u8 *) ptr + p->size);
 		if((p_next->magic & ~0x1) != MEMBLOCK_HDR_MAGIC)
-			printf("heap_free(): block at %p (size %d) wrote beyond bounds\n", ptr, p->size);
+			printf("heap_free(%p): block (size %d) wrote beyond bounds\n", ptr, p->size);
 #endif
 		p->magic &= ~1;		/* Mark block free */
 
@@ -245,8 +245,10 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 		/* TODO: also merge this block into previous free blocks */
 	}
 #ifdef DEBUG_KMALLOC
+	else if(p->magic == MEMBLOCK_HDR_MAGIC)
+		printf("heap_free(%p): double-free\n", ptr);
 	else
-        printf("heap_free(): attempted to free unallocated block at %p\n", ptr);
+        printf("heap_free(%p): not allocated\n", ptr);
 #endif
 }
 
