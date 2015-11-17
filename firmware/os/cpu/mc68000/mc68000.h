@@ -74,7 +74,7 @@ typedef struct regs regs_t;
 	MC68010 address/bus-error exception stack frame.  NOTE: this struct does not include the SR
 	and PC - they are extracted separately.
 */
-struct mc68010_address_exc_frame
+typedef struct mc68010_address_exc_frame
 {
 	u16 vector_offset;
 	u16 special_status_word;
@@ -87,7 +87,7 @@ struct mc68010_address_exc_frame
 	u16 instr_output_buffer;
 	u16 version_number;
 	u16 internal_information[15];
-} __attribute__((packed));
+} mc68010_address_exc_frame_t;
 
 
 /*
@@ -203,6 +203,6 @@ extern void syscall_dispatcher(void);
 
 const char * mc68000_dump_status_register(ku16 sr);
 void mc68000_dump_regs(const regs_t *regs);
-void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs);
+void mc68010_dump_address_exc_frame(mc68010_address_exc_frame_t *aef);
 
 #endif

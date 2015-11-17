@@ -110,7 +110,7 @@ void net_receive(void *arg)
         if(ret == SUCCESS)
         {
             /* TODO - set correct length */
-            eth_handle_frame(iface, buf, 1500);
+//            eth_handle_frame(iface, buf, 1500);
         }
         else printf("{%d}", ret);
     }

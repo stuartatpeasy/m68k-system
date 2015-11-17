@@ -10,6 +10,7 @@
 #include <include/list.h>
 #include <kernel/process.h>
 #include <kernel/sched.h>
+#include <klibc/stdio.h>    // FIXME remove
 
 
 list_t g_run_queue = LIST_INIT(g_run_queue);
@@ -18,7 +19,6 @@ list_t g_exited_queue = LIST_INIT(g_exited_queue);
 
 proc_t *g_current_proc = NULL;
 pid_t g_next_pid = 0;
-
 
 /*
     proc_create() - create a new process and add it to the run queue.
@@ -97,6 +97,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     if(newpid != NULL)
         *newpid = p->id;
 
+printf("[%d=%p]\n", p->id, p);
     cpu_disable_interrupts();
 
     list_insert(&p->queue, &g_run_queue);
@@ -165,7 +166,6 @@ void proc_do_exit(s32 exit_code)
 /*
     proc_sleep() - put the current process to sleep
 */
-#include <klibc/stdio.h>    // FIXME remove
 void proc_sleep()
 {
     printf("Process %d going to sleep\n", g_current_proc->id);

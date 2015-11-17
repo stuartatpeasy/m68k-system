@@ -136,7 +136,7 @@ void _main()
         printf("sched: init failed: %s\n", kstrerror(ret));
 
     /* Create housekeeper process */
-    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);
+//    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);
 
     /* Initialise networking system */
     ret = net_init();

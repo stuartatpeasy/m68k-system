@@ -16,7 +16,7 @@ extern pid_t g_next_pid;
 
 /*
     sched_init() - initialise the process scheduler, and convert the current thread of execution
-    into a kernel process.
+    into a kernel process.  Interrupts must be disabled when this function is executed.
 */
 s32 sched_init(const char * const init_proc_name)
 {
@@ -25,17 +25,21 @@ s32 sched_init(const char * const init_proc_name)
     p = CHECKED_KCALLOC(1, sizeof(proc_t));
 
     p->id = g_next_pid++;
+    p->exit_code = S32_MIN;
     p->parent = NULL;
     p->state = ps_runnable;
     p->uid = ROOT_UID;
     p->gid = ROOT_GID;
+
+    p->ustack = NULL;   /* No user-mode stack for the current (kernel) task */
+    p->kstack = NULL;   /* No separately-allocated kstack either */
 
     p->flags |= PROC_TYPE_KERNEL;
     strcpy(p->name, init_proc_name);
 
     list_insert(&p->queue, &g_run_queue);
     g_current_proc = p;
-
+printf("[%d=%p]\n", p->id, p);
     /* Install the scheduler IRQ handler */
 	return plat_install_timer_irq_handler(cpu_preempt);
 }
@@ -59,10 +63,11 @@ void sched()
         g_current_proc = list_next_entry(g_current_proc, queue);
 
     /* If the process went to sleep, move it to the "sleeping" queue */
+
     if(g_prev_proc->state == ps_sleeping)
         list_move_insert(&g_prev_proc->queue, &g_sleep_queue);
 
-   ++g_ncontext_switches;
+    ++g_ncontext_switches;
 
     /*
         Start the next time-slice.  We need to do this before restoring the incoming task's state

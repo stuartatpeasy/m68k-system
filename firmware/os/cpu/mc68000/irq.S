@@ -103,7 +103,7 @@ irq_router_full:
     andi.w      #0x03ff, d0
     ext.l       d0
 
-    asr.l       #2, d0
+    lsr.l       #2, d0
     move.l      d0, sp@-
 
     jsr         cpu_irq_handler
@@ -171,7 +171,7 @@ irq_router_fast:
     andi.w      #0x03ff, d0
     ext.l       d0
 
-    asr.l       #2, d0
+    lsr.l       #2, d0
     move.l      d0, sp@-
 
     jsr         cpu_irq_handler

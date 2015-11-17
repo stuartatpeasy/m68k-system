@@ -12,6 +12,12 @@
 #include <klibc/stdio.h>
 
 
+void mc68000_bus_error_handler(void *dummy);
+void mc68000_address_error_handler(void *dummy);
+
+char g_errsym[128];
+
+
 /*
     Initialise the MC68000 vector table to some safe defaults.  This should ensure that any IRQs
     are handled correctly, by being ignored, or reported and ignored, or being reported and
@@ -21,16 +27,67 @@ void cpu_irq_init_arch_specific(void)
 {
 	u16 u;
 
-	/* Point all exception vectors at the generic IRQ handler code initially */
-	for(u = 0; u <= CPU_MAX_IRQL; ++u)
-        CPU_EXC_VPTR_SET(u, irq_router_full);
-
-	/* Now set specific handlers */
+	/* Set magic numbers in the bottom two vectors - these help (a bit) with debugging */
 	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
 	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
 
+	/* Bus and address errors have their own handler */
+	CPU_EXC_VPTR_SET(V_bus_error,       mc68000_bus_error_handler);
+	CPU_EXC_VPTR_SET(V_address_error,   mc68000_address_error_handler);
+
+	/* Point all other exception vectors at the generic IRQ handler code initially */
+	for(u = V_illegal_instruction; u <= CPU_MAX_IRQL; ++u)
+        CPU_EXC_VPTR_SET(u, irq_router_full);
+
     /* System calls use TRAP #0 */
 	CPU_EXC_VPTR_SET(V_trap_0, syscall_dispatcher);
+}
+
+
+/*
+    mc68000_bus_error_handler() - report a bus error and halt the system.
+*/
+extern proc_t *g_current_proc;       /* FIXME remove */
+void mc68000_bus_error_handler(void *dummy)
+{
+    mc68010_short_exc_frame_t *sef =
+        (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+
+    mc68010_address_exc_frame_t *aef =
+        (mc68010_address_exc_frame_t *) &sef[1];
+
+    ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
+
+    printf("\nBus error in process %d (%p)\n\n"
+           "PC=%08x  %s\nSR=%04x  [%s]\n\n",
+           proc_get_pid(), g_current_proc, sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+
+    mc68010_dump_address_exc_frame(aef);
+
+    cpu_halt();
+}
+
+
+/*
+    mc68000_address_error_handler() - report an address error and halt the system.
+*/
+void mc68000_address_error_handler(void *dummy)
+{
+    mc68010_short_exc_frame_t *sef =
+        (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+
+    mc68010_address_exc_frame_t *aef =
+        (mc68010_address_exc_frame_t *) &sef[1];
+
+    ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
+
+    printf("\nAddress error in process %d (%p)\n\n"
+           "PC=%08x  %s\nSR=%04x  [%s]\n\n",
+           proc_get_pid(), g_current_proc, sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+
+    mc68010_dump_address_exc_frame(aef);
+
+    cpu_halt();
 }
 
 
@@ -57,8 +114,6 @@ void cpu_default_irq_handler(ku32 irql, void *data)
 		const char *msg = NULL;
 		switch(irql)
 		{
-			case 2:  msg = "Bus error";								break;
-			case 3:  msg = "Address error";							break;
 			case 4:  msg = "Illegal instruction";					break;
 			case 5:  msg = "Integer divide by zero";				break;
 			case 6:  msg = "CHK/CHK2 instruction";					break;
@@ -88,14 +143,11 @@ void cpu_default_irq_handler(ku32 irql, void *data)
         printf("%s (vector %d)\n", msg, irql);
 	}
 
-    if((irql == V_bus_error) || (irql == V_address_error))
-    {
-        putchar('\n');
-        mc68010_dump_address_exc_frame(irql, regs);
-    }
-
     putchar('\n');
-    mc68000_dump_regs(regs);
+    if(!((u32) regs & 1))
+        mc68000_dump_regs(regs);
+    else
+        puts("(memory corruption: register dump unavailable)");
 
 	puts("\nSystem halted.");
 	cpu_halt();
@@ -259,24 +311,19 @@ const char * mc68000_dump_status_register(ku16 sr)
 /*
 	mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
 */
-void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
+void mc68010_dump_address_exc_frame(mc68010_address_exc_frame_t *aef)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
-    UNUSED(irql);
-
-    const struct mc68010_address_exc_frame * const f =
-        (const struct mc68010_address_exc_frame * const) &(regs[1]);
-
 	printf("Special status word = %04x\n"
 		   "Fault address       = 0x%08x\n"
 		   "Data output buffer  = %04x\n"
 		   "Data input buffer   = %04x\n"
 		   "Instr output buffer = %04x\n"
 		   "Version number      = %04x\n",
-			f->special_status_word, f->fault_addr, f->data_output_buffer,
-			f->data_input_buffer, f->instr_output_buffer,	f->version_number);
+			aef->special_status_word, aef->fault_addr, aef->data_output_buffer,
+			aef->data_input_buffer, aef->instr_output_buffer, aef->version_number);
 }
 
 
@@ -285,9 +332,7 @@ void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
 */
 void mc68000_dump_regs(const regs_t *regs)
 {
-    char sym[128];
-
-    ksym_format_nearest_prev((void *) regs->pc, sym, sizeof(sym));
+    ksym_format_nearest_prev((void *) regs->pc, g_errsym, sizeof(g_errsym));
 
     printf("D0=%08x  D1=%08x  D2=%08x  D3=%08x\n"
            "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"
@@ -299,5 +344,5 @@ void mc68000_dump_regs(const regs_t *regs)
            regs->d[4], regs->d[5], regs->d[6], regs->d[7],
            regs->a[0], regs->a[1], regs->a[2], regs->a[3],
            regs->a[4], regs->a[5], regs->a[6], regs->a[7], regs->usp,
-           regs->pc, sym, regs->sr, mc68000_dump_status_register(regs->sr));
+           regs->pc, g_errsym, regs->sr, mc68000_dump_status_register(regs->sr));
 }
