@@ -13,6 +13,7 @@
 #include <include/defs.h>
 #include <include/types.h>
 
+
 /* IPv4 address */
 typedef u32 ipv4_addr_t;
 
@@ -31,17 +32,6 @@ typedef struct ipv4_hdr
     u32             src;
     u32             dest;
 } ipv4_hdr_t;
-
-
-// FIXME MOVE
-/* UDP header */
-typedef struct udp_hdr
-{
-    u16             src_port;
-    u16             dest_port;
-    u16             len;
-    u16             cksum;
-} udp_hdr_t;
 
 
 /* Enumeration of IP protocol IDs */

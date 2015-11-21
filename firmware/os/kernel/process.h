@@ -9,10 +9,10 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <cpu/cpu.h>
 #include <include/defs.h>
 #include <include/list.h>
 #include <include/types.h>
+#include <kernel/cpu.h>
 #include <kernel/user.h>
 
 

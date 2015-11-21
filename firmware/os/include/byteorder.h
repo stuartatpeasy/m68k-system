@@ -29,7 +29,7 @@
 	items read from an ATA device.
 */
 
-#include <cpu/cpu.h>
+#include <kernel/cpu.h>
 
 #if defined(TARGET_BIGENDIAN)
 

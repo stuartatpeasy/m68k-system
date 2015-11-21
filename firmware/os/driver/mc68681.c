@@ -9,8 +9,8 @@
             inline void mc68681_stop_counter(dev_t *dev);
 */
 
-#include <cpu/cpu.h>
 #include <driver/mc68681.h>
+#include <kernel/cpu.h>
 #include <kernel/memory/kmalloc.h>
 
 

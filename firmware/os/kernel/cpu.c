@@ -7,8 +7,8 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
-#include <cpu/cpu.h>
 #include <include/defs.h>
+#include <kernel/cpu.h>
 
 
 irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL];
