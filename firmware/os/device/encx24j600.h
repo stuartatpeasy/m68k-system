@@ -84,11 +84,7 @@ typedef struct encx24j600_rxhdr
 } encx24j600_rxhdr_t;
 
 
-s32 encx24j600_reset(dev_t *dev);
 s32 encx24j600_init(dev_t *dev);
-s32 encx24j600_shut_down(dev_t *dev);
-s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
-s32 encx24j600_read(dev_t *dev, ku32 offset, ku32 len, void *buf);
 void encx24j600_irq(ku32 irql, void *data);
 s32 encx24j600_packet_tx(dev_t *dev, void *buf, u32 len);
 

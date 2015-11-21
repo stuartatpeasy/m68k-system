@@ -248,7 +248,7 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
 /*
     dev_read_unimplemented() - default handler for dev->read() calls
 */
-s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf)
+s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, u32 *len, void *buf)
 {
     UNUSED(dev);
     UNUSED(offset);
@@ -262,7 +262,7 @@ s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf)
 /*
     dev_write_unimplemented() - default handler for dev->write() calls
 */
-s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void *buf)
+s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, u32 *len, const void *buf)
 {
     UNUSED(dev);
     UNUSED(offset);

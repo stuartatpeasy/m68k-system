@@ -26,8 +26,8 @@ s32 ata_drive_init(dev_t *dev, const ata_drive_t drive);
 s32 ata_drive_do_init(dev_t *dev);
 s32 ata_shut_down(dev_t *dev);
 
-s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf);
-s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf);
+s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf);
+s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf);
 
 void ata_read_data(const void * const base_addr, void *buf);
 void ata_write_data(void * const base_addr, const void *buf);
@@ -254,10 +254,11 @@ s32 ata_send_command(void * const base_addr, const ata_drive_t drive, const ata_
 /*
     ata_read() - read sectors from an ATA device
 */
-s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
+s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf)
 {
     void * const base_addr = dev->base_addr;
     const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
+    u32 len_ = *len;
 
 	/* Select master / slave device */
 	if(drive == ata_drive_master)
@@ -270,12 +271,12 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 	if(!ATA_WAIT_NBSY(base_addr))
 		return ETIME;
 
-	if((offset + len < offset) || (offset + len > dev->len))
+	if((offset + len_ < offset) || (offset + len_ > dev->len))
 	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
-	ATA_REG(base_addr, ATA_R_SECTOR_COUNT)		= len;
+	ATA_REG(base_addr, ATA_R_SECTOR_COUNT)		= len_;
 
 	ATA_REG(base_addr, ATA_R_SECTOR_NUMBER)		= offset & 0xff;
 	ATA_REG(base_addr, ATA_R_CYLINDER_LOW)		= (offset >> 8) & 0xff;
@@ -303,10 +304,11 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 			return EUNKNOWN;
 	}
 
-	for(; len--; buf += ATA_SECTOR_SIZE)
+	for(; len_--; buf += ATA_SECTOR_SIZE)
 		ata_read_data(base_addr, buf);
 
-	g_ata_stats.blocks_read += len;
+	g_ata_stats.blocks_read += *len;
+	*len -= len_;
 
 	return SUCCESS;
 }
@@ -315,10 +317,11 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 len, void * buf)
 /*
     ata_write() - write sectors to an ATA device
 */
-s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
+s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
 {
     void * const base_addr = dev->base_addr;
     const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
+    u32 len_ = *len;
 
 	/* Select master / slave device */
 	if(drive == ata_drive_master)
@@ -331,12 +334,12 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 	if(!ATA_WAIT_NBSY(base_addr))
 		return ETIME;
 
-	if((offset + len < offset) || (offset + len > dev->len))
+	if((offset + len_ < offset) || (offset + len_ > dev->len))
 	   return EINVAL;
 
 	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
-	ATA_REG(base_addr, ATA_R_SECTOR_COUNT)	 	= len;
+	ATA_REG(base_addr, ATA_R_SECTOR_COUNT)	 	= len_;
 
 	ATA_REG(base_addr, ATA_R_SECTOR_NUMBER)	 	= offset & 0xff;
 	ATA_REG(base_addr, ATA_R_CYLINDER_LOW)	 	= (offset >> 8) & 0xff;
@@ -346,7 +349,7 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 	/* Issue the command */
 	ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
 
-	for(; len--; buf += ATA_SECTOR_SIZE)
+	for(; len_--; buf += ATA_SECTOR_SIZE)
 		ata_write_data(base_addr, buf);
 
 	if(!ATA_WAIT_NBSY(base_addr))
@@ -370,7 +373,8 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 len, const void * buf)
 			return EUNKNOWN;
 	}
 
-	g_ata_stats.blocks_written += len;
+	g_ata_stats.blocks_written += *len;
+	*len -= len_;
 
 	return SUCCESS;
 }

@@ -207,7 +207,8 @@ s32 plat_get_cpu_clock(u32 *clk)
     u32 loops;
     u8 curr_second;
     dev_t *rtc;
-    s32 (*rtc_get_time)(dev_t *, ku32 offset, ku32 len, void *);
+    s32 (*rtc_get_time)(dev_t *, ku32 offset, u32 *len, void *);
+    u32 one = 1;
     s32 ret;
 
     /* Find the first RTC */
@@ -218,19 +219,19 @@ s32 plat_get_cpu_clock(u32 *clk)
     rtc_get_time = rtc->read;
 
     /* Wait for the next second to start */
-    ret = rtc_get_time(rtc, 0, 1, &tm);
+    ret = rtc_get_time(rtc, 0, &one, &tm);
     if(ret != SUCCESS)
         return ret;
 
     for(curr_second = tm.second; curr_second == tm.second;)
-        rtc_get_time(rtc, 0, 1, &tm);
+        rtc_get_time(rtc, 0, &one, &tm);
 
     curr_second = tm.second;
 
     for(loops = 0; curr_second == tm.second; ++loops)
-        rtc_get_time(rtc, 0, 1, &tm);
+        rtc_get_time(rtc, 0, &one, &tm);
 
-    *clk = 803 * loops;
+    *clk = 816 * loops;
 
     return SUCCESS;
 }

@@ -70,6 +70,7 @@ s32 ext2_mount(vfs_t *vfs)
 	ext2_filesystem_t *fs;
 	u32 ret, buf_size, num_block_groups;
 	u8 *buf;
+	u32 len;
 
     vfs->data = kmalloc(sizeof(ext2_filesystem_t));
     if(!vfs->data)
@@ -126,9 +127,12 @@ s32 ext2_mount(vfs_t *vfs)
 		return ENOMEM;
 	}
 
+    len = buf_size >> LOG_BLOCK_SIZE;
     ret = vfs->dev->read(vfs->dev, (fs->sblk->s_log_block_size ? 1 : 2) <<
                                     (10 + fs->sblk->s_log_block_size - LOG_BLOCK_SIZE),
-                         buf_size >> LOG_BLOCK_SIZE, buf);
+                         &len, buf);
+
+    /* TODO - check for short read */
 	if(ret)
 	{
 		kfree(fs->sblk);
@@ -258,6 +262,7 @@ u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf)
 {
 	u32 ret;
 	u8 *buf;
+	u32 len;
 
     const ext2_filesystem_t *fs = (const ext2_filesystem_t *) vfs->data;
 
@@ -276,8 +281,11 @@ u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf)
 	}
 
 printf("[read block %u]\n", block);
+    len = (1024 << fs->sblk->s_log_block_size) >> LOG_BLOCK_SIZE;
 	ret = vfs->dev->read(vfs->dev, (block << (10 + fs->sblk->s_log_block_size)) >> LOG_BLOCK_SIZE,
-							(1024 << fs->sblk->s_log_block_size) >> LOG_BLOCK_SIZE, buf);
+							&len, buf);
+
+    /* TODO - check for short read */
 	if(ret)
 	{
 		/* block read failed */
@@ -298,6 +306,7 @@ printf("[read block %u]\n", block);
 u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode)
 {
     const ext2_filesystem_t *fs = (const ext2_filesystem_t *) vfs->data;
+    u32 one = 1;
 
 	if(inum < fs->sblk->s_inodes_count)
 	{
@@ -321,7 +330,7 @@ u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode)
 		/* inum_ = offset of this inode from the start of the block */
 		offset &= BLOCK_SIZE - 1;
 
-		ret = vfs->dev->read(vfs->dev, block, 1, buf);
+		ret = vfs->dev->read(vfs->dev, block, &one, buf);
 		if(ret)
 			return ret;
 

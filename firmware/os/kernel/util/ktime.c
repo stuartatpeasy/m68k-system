@@ -436,10 +436,11 @@ s32 rtc_time_to_timestamp(const rtc_time_t *dt, s32 *timestamp)
 s32 get_time(rtc_time_t *tm)
 {
     dev_t *rtc;
+    u32 one = 1;
 
     rtc = dev_find("rtc0");
     if(rtc == NULL)
         return ENOSYS;
 
-    return rtc->read(rtc, 0, 1, tm);
+    return rtc->read(rtc, 0, &one, tm);
 }

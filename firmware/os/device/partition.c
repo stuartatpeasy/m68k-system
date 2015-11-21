@@ -16,10 +16,9 @@
 
 
 /* Module-private function declarations */
-s32 partition_read(dev_t *dev, ku32 offset, ku32 len, void* buf);
-s32 partition_write(dev_t *dev, ku32 offset, ku32 len, const void* buf);
-
 s32 partition_control(dev_t *dev, ku32 function, const void *in, void *out);
+s32 partition_read(dev_t *dev, ku32 offset, u32 *len, void* buf);
+s32 partition_write(dev_t *dev, ku32 offset, u32 *len, const void* buf);
 
 
 /*
@@ -29,6 +28,7 @@ s32 partition_control(dev_t *dev, ku32 function, const void *in, void *out);
 s32 partition_init()
 {
     dev_t *dev = NULL;
+    u32 one = 1;
 
     /* Find mass-storage devices */
     while((dev = dev_get_next(dev)) != NULL)
@@ -43,7 +43,7 @@ s32 partition_init()
         struct mbr m;
         u16 part;
 
-        if(dev->read(dev, 0, 1, (u8 *) &m) != SUCCESS)
+        if(dev->read(dev, 0, &one, (u8 *) &m) != SUCCESS)
             continue;		/* Failed to read sector TODO: report error */
 
         if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)
@@ -153,12 +153,12 @@ s32 partition_shut_down(dev_t *dev)
 /*
     partition_read() - read len blocks from a partition, starting at offset.
 */
-s32 partition_read(dev_t *dev, ku32 offset, ku32 len, void* buf)
+s32 partition_read(dev_t *dev, ku32 offset, u32 *len, void* buf)
 {
     partition_data_t * const part_data = (partition_data_t *) dev->data;
     dev_t * const block_dev = part_data->device;
 
-	if((offset + len) > dev->len)
+	if((offset + *len) > dev->len)
 		return EINVAL;
 
     return block_dev->read(block_dev, part_data->offset + offset, len, buf);
@@ -168,12 +168,12 @@ s32 partition_read(dev_t *dev, ku32 offset, ku32 len, void* buf)
 /*
     partition_write() - write len blocks to a partition, starting at offset.
 */
-s32 partition_write(dev_t *dev, ku32 offset, ku32 len, const void* buf)
+s32 partition_write(dev_t *dev, ku32 offset, u32 *len, const void* buf)
 {
     partition_data_t * const part_data = (partition_data_t *) dev->data;
     dev_t * const block_dev = part_data->device;
 
-	if((offset + len) > dev->len)
+	if((offset + *len) > dev->len)
 		return EINVAL;
 
     return block_dev->write(block_dev, part_data->offset + offset, len, buf);

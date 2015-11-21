@@ -218,21 +218,4 @@ typedef u16 fat16_cluster_id;
 
 vfs_driver_t g_fat_ops;
 
-s32 fat_init();
-s32 fat_mount(vfs_t *vfs);
-s32 fat_umount(vfs_t *vfs);
-s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
-s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8* const name);
-s32 fat_close_dir(vfs_t *vfs, void *ctx);
-s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
-
-s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
-s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent);
-s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
-s32 fat_find_free_node(vfs_t *vfs, u32 *node);
-s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
-u8 fat_lfn_checksum(u8 *short_name);
-void fat_debug_dump_superblock(vfs_t *vfs);
-
 #endif

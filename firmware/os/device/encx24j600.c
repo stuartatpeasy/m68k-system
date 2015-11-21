@@ -17,8 +17,12 @@
 #include <kernel/process.h>
 
 
+s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
+s32 encx24j600_read(dev_t *dev, ku32 offset, u32 *len, void *buf);
+s32 encx24j600_reset(dev_t *dev);
 void encx24j600_rx_buf_peek(dev_t *dev, u16 len, void *out);
 void encx24j600_rx_buf_advance_ptr(dev_t *dev, u16 len);
+s32 encx24j600_shut_down(dev_t *dev);
 
 
 /*
@@ -323,7 +327,7 @@ s32 encx24j600_shut_down(dev_t *dev)
 /*
     encx24j600_read() - block until a packet can be read into buf.
 */
-s32 encx24j600_read(dev_t *dev, ku32 offset, ku32 len, void *buf)
+s32 encx24j600_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
 {
     encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
     u32 nread = 0;
@@ -344,7 +348,7 @@ s32 encx24j600_read(dev_t *dev, ku32 offset, ku32 len, void *buf)
 
     state->rx_wait_pid = 0;
 
-    ret = encx24j600_packet_read(dev, buf, len, &nread);
+    ret = encx24j600_packet_read(dev, buf, *len, &nread);
 
     if(ret == SUCCESS)
         state->rx_packets_pending--;

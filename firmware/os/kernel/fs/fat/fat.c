@@ -15,6 +15,24 @@
 #include <kernel/fs/vfs.h>
 
 
+s32 fat_init();
+s32 fat_mount(vfs_t *vfs);
+s32 fat_umount(vfs_t *vfs);
+s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
+s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8* const name);
+s32 fat_close_dir(vfs_t *vfs, void *ctx);
+s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
+
+s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
+s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent);
+s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
+s32 fat_find_free_node(vfs_t *vfs, u32 *node);
+s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
+u8 fat_lfn_checksum(u8 *short_name);
+void fat_debug_dump_superblock(vfs_t *vfs);
+
+
 vfs_driver_t g_fat_ops =
 {
     .name = "fat",
@@ -42,9 +60,10 @@ s32 fat_mount(vfs_t *vfs)
     struct fat_fs *fs;
     s32 ret;
     u32 root_dir_sectors;
+    u32 one = 1;
 
     /* Read first sector */
-    ret = vfs->dev->read(vfs->dev, 0, 1, &bpb);
+    ret = vfs->dev->read(vfs->dev, 0, &one, &bpb);
     if(ret != SUCCESS)
         return ret;
 
@@ -130,9 +149,11 @@ s32 fat_umount(vfs_t *vfs)
 s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u32 len = fs->sectors_per_cluster;
 
+    /* TODO - check for short read? */
     return vfs->dev->read(vfs->dev, ((node - 2) * fs->sectors_per_cluster) + fs->first_data_sector,
-                            fs->sectors_per_cluster, buffer);
+                            &len, buffer);
 }
 
 
@@ -143,6 +164,7 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)];
+    u32 one = 1;
 
     if((node - FAT_ROOT_NODE) < fs->root_dir_clusters)
     {
@@ -170,7 +192,7 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
         u32 ent_offset = (fat_offset & (BLOCK_SIZE - 1)) >> 1;
 
         /* Read sector */
-        u32 ret = vfs->dev->read(vfs->dev, fat_sector, 1, &sector);
+        u32 ret = vfs->dev->read(vfs->dev, fat_sector, &one, &sector);
         if(ret != SUCCESS)
             return ret;
 
@@ -611,13 +633,14 @@ s32 fat_find_free_node(vfs_t *vfs, u32 *node)
     u32 u;
     u16 sector[BLOCK_SIZE >> 1];
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u32 one = 1;
 
     for(u = 0; u < fs->sectors_per_fat; ++u)
     {
         u32 v;
 
         /* Read sector */
-        u32 ret = vfs->dev->read(vfs->dev, fs->first_fat_sector + u, 1, &sector);
+        u32 ret = vfs->dev->read(vfs->dev, fs->first_fat_sector + u, &one, &sector);
         if(ret != SUCCESS)
             return ret;
 

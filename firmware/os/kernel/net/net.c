@@ -101,16 +101,14 @@ void net_receive(void *arg)
 {
     net_iface_t * const iface = (net_iface_t *) arg;
     u8 *buf;
+    u32 len = 1500;
 
-    buf = kmalloc(1500);
+    buf = kmalloc(len);
 
     while(1)
     {
-        s32 ret = iface->dev->read(iface->dev, 0, 1500, buf);
+        s32 ret = iface->dev->read(iface->dev, 0, &len, buf);
         if(ret == SUCCESS)
-        {
-            /* TODO - set correct length */
-            eth_handle_frame(iface, buf, 1500);
-        }
+            eth_handle_frame(iface, buf, len);
     }
 }

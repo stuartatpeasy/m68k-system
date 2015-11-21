@@ -18,13 +18,14 @@ s32 nvram_bpb_read(nvram_bpb_t *pbpb)
     s32 ret;
     u16 checksum;
     dev_t *nvram;
+    u32 len = sizeof(nvram_bpb_t);
 
     nvram = dev_find("nvram0");
     if(nvram == NULL)
         return ENOSYS;
 
     /* Read the parameter block from battery-backed RAM */
-    ret = nvram->read(nvram, 0, sizeof(nvram_bpb_t), pbpb);
+    ret = nvram->read(nvram, 0, &len, pbpb);
     if(ret != SUCCESS)
         return ret;
 
@@ -32,7 +33,7 @@ s32 nvram_bpb_read(nvram_bpb_t *pbpb)
         Verify checksum by computing the checksum of all fields in bbrpb with the exception of the
         final u16 field (which holds the stored checksum).
     */
-    checksum = CHECKSUM16(pbpb, sizeof(nvram_bpb_t) - sizeof(u16));
+    checksum = CHECKSUM16(pbpb, len - sizeof(u16));
 
     if((pbpb->checksum != checksum) || (pbpb->magic != NVRAM_BPB_MAGIC))
         return ECKSUM;
@@ -49,6 +50,7 @@ s32 nvram_bpb_write(nvram_bpb_t *pbpb)
     s32 ret;
     rtc_time_t tm;
     dev_t *nvram;
+    u32 len = sizeof(nvram_bpb_t);
 
     nvram = dev_find("nvram0");
     if(nvram == NULL)
@@ -63,7 +65,7 @@ s32 nvram_bpb_write(nvram_bpb_t *pbpb)
         return ret;
 
     pbpb->magic = NVRAM_BPB_MAGIC;
-    pbpb->checksum = CHECKSUM16(pbpb, sizeof(nvram_bpb_t) - sizeof(u16));
+    pbpb->checksum = CHECKSUM16(pbpb, len - sizeof(u16));
 
-    return nvram->write(nvram, 0, sizeof(nvram_bpb_t), pbpb);
+    return nvram->write(nvram, 0, &len, pbpb);
 }

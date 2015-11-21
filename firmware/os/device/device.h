@@ -80,8 +80,8 @@ struct dev
     u32             len;
 
     s32             (*control)(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
-    s32             (*read)(dev_t *dev, ku32 offset, ku32 len, void *buf);
-    s32             (*write)(dev_t *dev, ku32 offset, ku32 len, const void *buf);
+    s32             (*read)(dev_t *dev, ku32 offset, u32 *len, void *buf);
+    s32             (*write)(dev_t *dev, ku32 offset, u32 *len, const void *buf);
     s32             (*getc)(dev_t *dev, char *c);
     s32             (*putc)(dev_t *dev, const char c);
     s32             (*shut_down)(dev_t *dev);
@@ -115,8 +115,8 @@ dev_t *dev_get_next(dev_t *node);
 
 s32 dev_add_suffix(char * const name);
 
-s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, ku32 len, void *buf);
-s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, ku32 len, const void *buf);
+s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, u32 *len, void *buf);
+s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, u32 *len, const void *buf);
 s32 dev_control_unimplemented(dev_t * const dev, const devctl_fn_t fn, const void *in, void *out);
 s32 dev_getc_unimplemented(dev_t *dev, char *c);
 s32 dev_putc_unimplemented(dev_t *dev, const char c);

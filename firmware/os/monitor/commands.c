@@ -31,8 +31,9 @@ MONITOR_CMD_HANDLER(date)
     if(num_args  == 0)
     {
         char timebuf[12], datebuf[32];
+        u32 one = 1;
 
-        dev->read(dev, 0, 1, &tm);
+        dev->read(dev, 0, &one, &tm);
 
         time_iso8601(&tm, timebuf, sizeof(timebuf));
         date_long(&tm, datebuf, sizeof(datebuf));
@@ -44,11 +45,12 @@ MONITOR_CMD_HANDLER(date)
             Set the date and time.  Acceptable format:
                 date YYYYMMDDHHMMSS
         */
+        u32 one = 1;
         s32 ret = rtc_time_from_str(args[0], &tm);
         if(ret != SUCCESS)
             return ret;
 
-        return dev->write(dev, 0, 1, &tm);
+        return dev->write(dev, 0, &one, &tm);
     }
     else
         return EINVAL;

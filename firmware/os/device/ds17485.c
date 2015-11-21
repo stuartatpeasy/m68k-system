@@ -116,12 +116,12 @@ s32 ds17485_init(dev_t * const dev)
 /*
     ds17485_rtc_read() - read the current time and populate a struct rtc_time_t.
 */
-s32 ds17485_rtc_read(dev_t * const dev, ku32 offset, ku32 len, void *buffer)
+s32 ds17485_rtc_read(dev_t * const dev, ku32 offset, u32 *len, void *buffer)
 {
     void * const base_addr = dev->base_addr;
     rtc_time_t * const tm = (rtc_time_t *) buffer;
 
-    if(offset || (len != 1))
+    if(offset || (*len != 1))
         return EINVAL;
 
     /* Set the "SET" bit in register B, to prevent updates while we read */
@@ -156,12 +156,12 @@ s32 ds17485_rtc_read(dev_t * const dev, ku32 offset, ku32 len, void *buffer)
 /*
     ds17485_rtc_write() - set the time stored in a DS17485 to the time specified by tm.
 */
-s32 ds17485_rtc_write(dev_t * const dev, ku32 offset, ku32 len, const void *buffer)
+s32 ds17485_rtc_write(dev_t * const dev, ku32 offset, u32 *len, const void *buffer)
 {
     void * const base_addr = dev->base_addr;
     const rtc_time_t * const tm = (const rtc_time_t *) buffer;
 
-    if(offset || (len != 1))
+    if(offset || (*len != 1))
         return EINVAL;
 
     /* Set the "SET" bit in register B, to prevent updates while we write */
@@ -198,8 +198,9 @@ void ds17485_force_valid_time(const dev_t * const dev)
 {
     void * const base_addr = dev->base_addr;
     rtc_time_t ts;
+    u32 one = 1;
 
-    ds17485_rtc_read(base_addr, 0, 1, &ts);
+    ds17485_rtc_read(base_addr, 0, &one, &ts);
 
     if(!VALID_RTC_DATE(&ts))
     {
@@ -213,7 +214,7 @@ void ds17485_force_valid_time(const dev_t * const dev)
         ts.day_of_week = 7;
         ts.dst = 0;
 
-        ds17485_rtc_write(base_addr, 0, 1, &ts);
+        ds17485_rtc_write(base_addr, 0, &one, &ts);
     }
 }
 
@@ -221,15 +222,16 @@ void ds17485_force_valid_time(const dev_t * const dev)
 /*
     ds17485_user_ram_read() - read len bytes of user NVRAM from offset addr into buffer
 */
-s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
+s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 *len, void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+    u32 len_ = *len;
 
-    if((addr + len) > DS17485_USER_RAM_LEN)
+    if((addr + len_) > DS17485_USER_RAM_LEN)
         return EINVAL;
 
     DS17485_SELECT_STD_REG(base_addr);
-    for(addr += DS17485_USER_RAM_START; len; --len, ++addr)
+    for(addr += DS17485_USER_RAM_START; len_; --len_, ++addr)
         *((u8 *) buffer++) = DS17485_REG_READ(base_addr, addr);
 
     return SUCCESS;
@@ -239,15 +241,16 @@ s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 /*
     ds17485_user_ram_write() - write len bytes from buffer into user NVRAM at offset addr
 */
-s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
+s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 *len, const void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+    u32 len_ = *len;
 
-    if((addr + len) > DS17485_USER_RAM_LEN)
+    if((addr + len_) > DS17485_USER_RAM_LEN)
         return EINVAL;
 
     DS17485_SELECT_STD_REG(base_addr);
-    for(addr += 14; len && (addr < 128); --len, ++addr)
+    for(addr += 14; len_ && (addr < 128); --len_, ++addr)
         DS17485_REG_WRITE(base_addr, addr, *((u8 *) buffer++));
 
     return SUCCESS;
@@ -257,11 +260,12 @@ s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 len, const void * bu
 /*
     ds17485_ext_ram_read() - read len bytes of extended NVRAM from offset addr into buffer
 */
-s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
+s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 *len, void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+    u32 len_ = *len;
 
-    if((addr + len) > DS17485_EXT_RAM_LEN)
+    if((addr + len_) > DS17485_EXT_RAM_LEN)
         return EINVAL;
 
     /* Switch to the extended register set in order to read the extended RAM area */
@@ -270,7 +274,7 @@ s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
     DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_MSB, (addr & 0xf00) >> 8);
     DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
-    while(len-- & (addr++ < 0xfff))
+    while(len_-- & (addr++ < 0xfff))
         *((u8 *) buffer++) = DS17485_REG_READ(base_addr, DS17485_EXTRAM_DATA);
 
     return SUCCESS;
@@ -280,11 +284,12 @@ s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 len, void * buffer)
 /*
     ds17485_ext_ram_write() - write len bytes from buffer into extended NVRAM at offset addr
 */
-s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buffer)
+s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 *len, const void * buffer)
 {
     const void * const base_addr = dev->base_addr;
+    u32 len_ = *len;
 
-    if((addr + len) > DS17485_EXT_RAM_LEN)
+    if((addr + len_) > DS17485_EXT_RAM_LEN)
         return EINVAL;
 
     /* Switch to the extended register set in order to read the extended RAM area */
@@ -293,7 +298,7 @@ s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 len, const void * buf
     DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_MSB, (addr & 0xf00) >> 8);
     DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_LSB, addr & 0xff);
 
-    while(len-- & (addr++ < 0xfff))
+    while(len_-- & (addr++ < 0xfff))
         DS17485_REG_WRITE(base_addr, DS17485_EXTRAM_DATA, *((u8 *) buffer++));
 
     return SUCCESS;
