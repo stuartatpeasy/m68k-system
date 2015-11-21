@@ -12,9 +12,9 @@
 #include <string.h>
 #include <strings.h>
 
+#include <kernel/device/device.h>
+#include <kernel/device/partition.h>
 #include <kernel/util/kutil.h>
-#include <device/device.h>
-#include <device/partition.h>
 #include <platform/platform.h>
 
 

@@ -9,9 +9,9 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include <device/block.h>
-#include <device/device.h>
 #include <include/types.h>
+#include <kernel/device/block.h>
+#include <kernel/device/device.h>
 
 
 typedef enum ata_drive

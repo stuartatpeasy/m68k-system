@@ -90,16 +90,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/ata.h" />
-		<Unit filename="device/auto.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/auto.h" />
-		<Unit filename="device/block.h" />
-		<Unit filename="device/devctl.h" />
-		<Unit filename="device/device.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/device.h" />
 		<Unit filename="device/ds17485.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -112,14 +102,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="device/mc68681.h" />
-		<Unit filename="device/nvram.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/nvram.h" />
-		<Unit filename="device/partition.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/partition.h" />
 		<Unit filename="global.mk" />
 		<Unit filename="include/byteorder.h" />
 		<Unit filename="include/ctype.h" />
@@ -135,6 +117,24 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/boot.h" />
+		<Unit filename="kernel/device/auto.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/auto.h" />
+		<Unit filename="kernel/device/block.h" />
+		<Unit filename="kernel/device/devctl.h" />
+		<Unit filename="kernel/device/device.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/device.h" />
+		<Unit filename="kernel/device/nvram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/nvram.h" />
+		<Unit filename="kernel/device/partition.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/partition.h" />
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, August 2015.
 */
 
-#include "device/nvram.h"
+#include <kernel/device/nvram.h>
 
 
 /*

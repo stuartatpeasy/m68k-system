@@ -9,10 +9,11 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
+#include <include/types.h>
+#include <include/defs.h>
+#include <kernel/device/device.h>
 #include <stdio.h>
-#include "device/device.h"
-#include "include/types.h"
-#include "include/defs.h"
+
 
 #define MAX_FILESYSTEMS         (16)
 

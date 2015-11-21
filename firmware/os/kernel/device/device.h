@@ -9,8 +9,8 @@
 	(c) Stuart Wallace, 9th February 2012.
 */
 
-#include <device/devctl.h>
 #include <include/types.h>
+#include <kernel/device/devctl.h>
 #include <klibc/errno.h>
 
 

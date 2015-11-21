@@ -33,7 +33,7 @@ history.o: \
 	history.c history.h ../include/defs.h ../include/types.h
 
 monitor.o: \
-	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../device/nvram.h \
+	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../kernel/device/nvram.h \
 	../kernel/fs/mount.h ../include/defs.h ../include/version.h ../kernel/util/kutil.h \
 	../kernel/memory/kmalloc.h ../kernel/memory/slab.h
 

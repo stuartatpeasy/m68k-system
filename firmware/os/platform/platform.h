@@ -14,9 +14,9 @@
 #define IN_PLATFORM_H
 
 #include <cpu/cpu.h>
-#include <device/device.h>
 #include <include/defs.h>
 #include <include/types.h>
+#include <kernel/device/device.h>
 #include <kernel/memory/extents.h>
 
 /* Parse platform-specific header */

@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <device/auto.h>
+#include <kernel/device/auto.h>
 
 /* Include the files containing drivers appearing in driver_map[], below */
 #include <device/encx24j600.h>

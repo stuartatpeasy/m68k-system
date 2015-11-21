@@ -7,7 +7,7 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <device/device.h>
+#include <kernel/device/device.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/net.h>
 #include <kernel/process.h>

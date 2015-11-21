@@ -10,9 +10,9 @@
 */
 
 #include <platform/lambda_rev0/dfu.h>
-#include <device/nvram.h>
 #include <include/defs.h>
 #include <include/version.h>
+#include <kernel/device/nvram.h>
 #include <kernel/fs/mount.h>
 #include <kernel/fs/vfs.h>
 #include <kernel/memory/kmalloc.h>

@@ -8,9 +8,10 @@
 */
 
 #include <kernel/boot.h>
+#include <kernel/device/devctl.h>
 #include <klibc/stdio.h>
-#include <device/devctl.h>
 #include <platform/platform.h>
+
 
 const char * const unknown = "(unknown)";
 

@@ -7,7 +7,7 @@
 #include <platform/platform.h>
 #include <platform/lambda_rev0/lambda.h>
 #include <platform/lambda_rev0/device.h>
-#include <device/device.h>
+#include <kernel/device/device.h>
 #include <device/ds17485.h>
 #include <device/mc68681.h>
 

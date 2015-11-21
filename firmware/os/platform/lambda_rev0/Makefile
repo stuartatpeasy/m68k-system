@@ -23,7 +23,7 @@ clean:
 	rm -f $(LIBNAME) $(OBJECTS)
 
 device.o: \
-	$(STDDEPS) device.c device.h $(SRC_ROOT)/device/ata.h $(SRC_ROOT)/device/auto.h \
+	$(STDDEPS) device.c device.h $(SRC_ROOT)/device/ata.h $(SRC_ROOT)/kernel/device/auto.h \
 	$(SRC_ROOT)/device/ds17485.h $(SRC_ROOT)/device/mc68681.h $(SRC_ROOT)/kernel/memory/kmalloc.h \
 	$(SRC_ROOT)/kernel/util/kutil.h $(SRC_ROOT)/klibc/stdio.h $(SRC_ROOT)/klibc/string.h
 

@@ -7,9 +7,9 @@
 	(c) Stuart Wallace, 9th February 2012.
 */
 
-#include <device/partition.h>
 #include <include/byteorder.h>
 #include <include/mbr.h>
+#include <kernel/device/partition.h>
 #include <kernel/util/kutil.h>
 
 #include <strings.h>

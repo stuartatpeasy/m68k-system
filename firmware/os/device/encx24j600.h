@@ -12,12 +12,12 @@
 */
 
 #include <cpu/cpu.h>
-#include <device/device.h>
 #include <include/byteorder.h>
 #include <include/defs.h>
 #include <include/error.h>
 #include <include/list.h>
 #include <include/types.h>
+#include <kernel/device/device.h>
 
 
 #define ENCX24_SFR_BASE         (0x7e00)	/* Base address of special-function registers		*/

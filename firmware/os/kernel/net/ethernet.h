@@ -9,10 +9,10 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <device/device.h>
 #include <include/byteorder.h>
 #include <include/defs.h>
 #include <include/types.h>
+#include <kernel/device/device.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
 

@@ -11,8 +11,9 @@ FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES:=	main.c \
 			cpu/cpu.c cpu/$(CPU)/$(CPU).c \
-			device/ata.c device/auto.c device/device.c device/ds17485.c device/encx24j600.c \
-			device/mc68681.c device/nvram.c device/partition.c \
+			device/ata.c device/ds17485.c device/encx24j600.c device/mc68681.c \
+			kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
+			kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
 			kernel/fs/fat/fat.c \
 			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/process.c kernel/sched.c \
@@ -98,7 +99,7 @@ $(TOOLS):
 main.o: \
 	main.c device/ds17485.h kernel/fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
 	kernel/util/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h kernel/memory/slab.h \
-	monitor/monitor.h device/device.o kernel/sched.h
+	monitor/monitor.h kernel/device/device.o kernel/sched.h
 
 cpu/cpu.o: \
 	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
@@ -113,33 +114,35 @@ cpu/$(CPU)/startup.o: \
 	cpu/$(CPU)/startup.S kernel/memory/memorymap.h
 
 device/ata.o: \
-	device/ata.c device/ata.h device/block.h device/devctl.h device/device.h include/byteorder.h \
-	include/defs.h include/mbr.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
-
-device/auto.o: \
-	device/auto.c device/auto.h include/defs.h include/types.h device/device.h
-
-device/device.o: \
-	device/device.c device/devctl.h device/device.h kernel/util/kutil.h device/ata.h \
-	device/partition.h include/types.h klibc/errno.h
+	device/ata.c device/ata.h kernel/device/block.h kernel/device/devctl.h kernel/device/device.h \
+	include/byteorder.h include/defs.h include/mbr.h include/types.h klibc/stdio.h klibc/string.h \
+	klibc/strings.h
 
 device/ds17485.o: \
 	device/ds17485.c device/ds17485.h include/types.h kernel/util/kutil.h
 
 device/encx24j600.o: \
-	device/encx24j600.c device/encx24j600.h cpu/cpu.h device/device.h include/byteorder.h \
+	device/encx24j600.c device/encx24j600.h cpu/cpu.h kernel/device/device.h include/byteorder.h \
 	include/defs.h include/error.h include/types.h
 
 device/mc68681.o: \
 	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
 
-device/nvram.o: \
-	device/nvram.c device/nvram.h device/ds17485.h include/defs.h include/error.h include/types.h \
-	kernel/util/kutil.h
+kernel/device/auto.o: \
+	kernel/device/auto.c kernel/device/auto.h include/defs.h include/types.h kernel/device/device.h
 
-device/partition.o: \
-	device/partition.c device/partition.h device/device.h include/byteorder.h include/defs.h \
-	include/mbr.h include/types.h klibc/stdio.h kernel/util/kutil.h cpu/cpu.h device/devctl.h
+kernel/device/device.o: \
+	kernel/device/device.c kernel/device/devctl.h kernel/device/device.h kernel/util/kutil.h \
+	device/ata.h kernel/device/partition.h include/types.h klibc/errno.h
+
+kernel/device/nvram.o: \
+	kernel/device/nvram.c kernel/device/nvram.h device/ds17485.h include/defs.h include/error.h \
+	include/types.h kernel/util/kutil.h
+
+kernel/device/partition.o: \
+	kernel/device/partition.c kernel/device/partition.h kernel/device/device.h include/byteorder.h \
+	include/defs.h include/mbr.h include/types.h klibc/stdio.h kernel/util/kutil.h cpu/cpu.h \
+	kernel/device/devctl.h
 
 kernel/fs/ext2/ext2.o: \
 	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h \
@@ -153,19 +156,19 @@ kernel/fs/file.o: \
 	kernel/fs/file.c kernel/fs/file.h kernel/fs/vfs.h include/defs.h include/types.h
 
 kernel/fs/mount.o: \
-	kernel/fs/mount.c kernel/fs/mount.h include/defs.h include/types.h device/device.h \
+	kernel/fs/mount.c kernel/fs/mount.h include/defs.h include/types.h kernel/device/device.h \
 	kernel/fs/vfs.h include/defs.h klibc/errno.h kernel/util/kutil.h kernel/memory/kmalloc.h
 
 kernel/fs/vfs.o: \
-	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h device/nvram.h device/devctl.h \
-	device/device.h include/defs.h include/types.h klibc/stdio.h
+	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h kernel/device/nvram.h \
+	kernel/device/devctl.h kernel/device/device.h include/defs.h include/types.h klibc/stdio.h
 
 include/byteorder.h: \
 	cpu/cpu.h
 
 kernel/boot.o: \
-	kernel/boot.c kernel/boot.h include/defs.h include/types.h device/devctl.h device/device.h \
-	klibc/stdio.h platform/platform.h
+	kernel/boot.c kernel/boot.h include/defs.h include/types.h kernel/device/devctl.h \
+	kernel/device/device.h klibc/stdio.h platform/platform.h
 
 kernel/elf.o: \
 	kernel/elf.c include/byteorder.h include/defs.h include/elf.h include/types.h klibc/errno.h \
