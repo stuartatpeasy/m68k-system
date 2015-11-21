@@ -1,5 +1,5 @@
-#ifndef MEMORY_SLAB_H_INC
-#define MEMORY_SLAB_H_INC
+#ifndef KERNEL_MEMORY_SLAB_H_INC
+#define KERNEL_MEMORY_SLAB_H_INC
 /*
     Slab allocator
 

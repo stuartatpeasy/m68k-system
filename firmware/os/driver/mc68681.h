@@ -1,5 +1,5 @@
-#ifndef MC68681_H_INC
-#define MC68681_H_INC
+#ifndef DRIVER_MC68681_H_INC
+#define DRIVER_MC68681_H_INC
 /*
 	MC68681 MC68681 driver function and macro declarations
 

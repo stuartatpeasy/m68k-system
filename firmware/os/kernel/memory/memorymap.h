@@ -1,5 +1,5 @@
-#ifndef MEMORY_MEMORYMAP_H_INC
-#define MEMORY_MEMORYMAP_H_INC
+#ifndef KERNEL_MEMORY_MEMORYMAP_H_INC
+#define KERNEL_MEMORY_MEMORYMAP_H_INC
 /*
 	Memory map declarations
 
@@ -39,6 +39,8 @@
 
 	f0:0000 - ff:ffff		1M		Operating system ROM
 	---------------------------------------------------------------
+
+	FIXME - this whole file (memorymap.h) needs to be removed
 */
 
 

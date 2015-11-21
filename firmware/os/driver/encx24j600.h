@@ -1,5 +1,5 @@
-#ifndef DEVICE_ENC624J600_H_INC
-#define DEVICE_ENC624J600_H_INC
+#ifndef DRIVER_ENC624J600_H_INC
+#define DRIVER_ENC624J600_H_INC
 /*
     Definitions relating to the Microchip ENCx24J600 Ethernet controller
 

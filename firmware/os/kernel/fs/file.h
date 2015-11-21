@@ -1,5 +1,5 @@
-#ifndef INCLUDE_FS_FILE_H_INC
-#define INCLUDE_FS_FILE_H_INC
+#ifndef KERNEL_FS_FILE_H_INC
+#define KERNEL_FS_FILE_H_INC
 /*
 	File-handling functions
 

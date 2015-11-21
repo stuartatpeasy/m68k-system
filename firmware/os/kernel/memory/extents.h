@@ -1,5 +1,5 @@
-#ifndef MEMORY_EXTENTS_H_INC
-#define MEMORY_EXTENTS_H_INC
+#ifndef KERNEL_MEMORY_EXTENTS_H_INC
+#define KERNEL_MEMORY_EXTENTS_H_INC
 /*
     Declarations relating to the manipulation of memory extents, which are blocks of memory.
 

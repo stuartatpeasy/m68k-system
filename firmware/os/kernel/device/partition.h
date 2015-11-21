@@ -1,5 +1,5 @@
-#ifndef DEVICE_BLOCK_PARTITION_H_INC
-#define DEVICE_BLOCK_PARTITION_H_INC
+#ifndef KERNEL_DEVICE_PARTITION_H_INC
+#define KERNEL_DEVICE_PARTITION_H_INC
 /*
 	partition.h: declarations of functions and types relating to the hard disc partition model
 

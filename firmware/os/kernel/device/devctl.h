@@ -1,5 +1,5 @@
-#ifndef DEVICE_DEVCTL_H_INC
-#define DEVICE_DEVCTL_H_INC
+#ifndef KERNEL_DEVICE_DEVCTL_H_INC
+#define KERNEL_DEVICE_DEVCTL_H_INC
 /*
 	devctl.h: device-manipulation functions, constants, etc.
 

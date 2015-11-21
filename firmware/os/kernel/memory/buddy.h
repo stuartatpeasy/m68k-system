@@ -1,5 +1,5 @@
-#ifndef MEMORY_BUDDY_H_INC
-#define MEMORY_BUDDY_H_INC
+#ifndef KERNEL_MEMORY_BUDDY_H_INC
+#define KERNEL_MEMORY_BUDDY_H_INC
 /*
 	buddy.h: declarations for buddy memory allocator
 

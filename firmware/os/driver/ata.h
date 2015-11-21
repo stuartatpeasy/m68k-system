@@ -1,5 +1,5 @@
-#ifndef DEVICE_BLOCK_ATA_ATA_H_INC
-#define DEVICE_BLOCK_ATA_ATA_H_INC
+#ifndef DRIVER_ATA_H_INC
+#define DRIVER_ATA_H_INC
 /*
 	AT Attachment (ATA) interface driver function and macro declarations
 
