@@ -22,8 +22,6 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
     const arp_hdr_t * const hdr = (arp_hdr_t *) packet;
     const arp_payload_t * const payload = (arp_payload_t *) ((u8 *) packet + sizeof(arp_hdr_t));
 
-    printf("  ARP: len=%d\n", len);
-
     /* Ensure that a complete header is present, and then verify that the packet is complete */
     if(len < sizeof(arp_hdr_t))
         return EINVAL;      /* Incomplete packet */
@@ -49,10 +47,10 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
         /* This is an Ethernet+IPv4 request addressed to this interface */
         /*
             TODO:
-                - send ARP response
                 - maybe update ARP cache with senders hw/proto address?
         */
         arp_eth_ipv4_packet_t p;
+        u32 len = sizeof(p);
 
         arp_cache_add(payload->src_mac, payload->src_ip);
 
@@ -63,12 +61,11 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
         p.hdr.opcode            = arp_reply;
 
         p.payload.dst_ip        = payload->src_ip;
-        p.payload.dst_mac       = payload->dst_mac;
+        p.payload.dst_mac       = payload->src_mac;
         p.payload.src_ip        = *((ipv4_addr_t *) &iface->proto_addr);
         p.payload.src_mac       = *((mac_addr_t *) &iface->hw_addr);
 
-//      return iface->send_packet(p, sizeof(p));
-        UNUSED(p);
+        return eth_transmit(iface, &p.payload.dst_mac, ethertype_arp, &p, len);
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
@@ -87,6 +84,7 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
 s32 arp_send_request(net_iface_t *iface, const ipv4_addr_t ip)
 {
     arp_eth_ipv4_packet_t p;
+    u32 len = sizeof(p);
 
     p.hdr.hw_type           = arp_hw_type_ethernet;
     p.hdr.proto_type        = ethertype_ipv4;
@@ -99,10 +97,7 @@ s32 arp_send_request(net_iface_t *iface, const ipv4_addr_t ip)
     p.payload.dst_ip        = ip;
     p.payload.dst_mac       = g_mac_zero;
 
-//  return iface->send_packet(p, sizeof(p));
-    UNUSED(p);
-
-    return SUCCESS;
+    return eth_transmit(iface, &g_mac_zero, ethertype_arp, &p, len);
 }
 
 

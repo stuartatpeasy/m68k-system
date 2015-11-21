@@ -18,11 +18,13 @@
 
 
 s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
+s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 *len);
 s32 encx24j600_read(dev_t *dev, ku32 offset, u32 *len, void *buf);
 s32 encx24j600_reset(dev_t *dev);
 void encx24j600_rx_buf_peek(dev_t *dev, u16 len, void *out);
 void encx24j600_rx_buf_advance_ptr(dev_t *dev, u16 len);
 s32 encx24j600_shut_down(dev_t *dev);
+s32 encx24j600_write(dev_t *dev, ku32 offset, u32 *len, const void *buf);
 
 
 /*
@@ -159,7 +161,7 @@ void encx24j600_rx_buf_advance_ptr(dev_t *dev, u16 len)
 /*
     encx24j600_packet_read() - read a received frame from the controller's buffer.
 */
-s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 len, u32 *nread)
+s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 *len)
 {
     encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
     void * const base_addr = dev->base_addr;
@@ -172,10 +174,13 @@ s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 len, u32 *nread)
         /* Packet received successfully */
         ku16 packet_len = N2LE16(hdr.rsv.byte_count_le);
 
-        *nread = packet_len;
-
-        if(len < packet_len)
+        if(*len < packet_len)
+        {
+            *len = packet_len;
             return EFBIG;   /* Packet too big for the supplied buffer */
+        }
+
+        *len = packet_len;
 
         encx24j600_rx_buf_advance_ptr(dev, sizeof(hdr));
 
@@ -197,7 +202,7 @@ s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 len, u32 *nread)
         ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
 
         /* Indicate packet discard by returning a success status with 0 bytes read. */
-        *nread = 0;
+        *len = 0;
     }
 
     return SUCCESS;
@@ -221,7 +226,15 @@ void encx24j600_irq(ku32 irql, void *data)
     if(iflags & BIT(EIR_LINKIF))        /* Link state changed */
     {
         if(ENCX24_REG(base_addr, ESTAT) & BIT(ESTAT_PHYLINK))
+        {
+            /* Set MAC duplex configuration to match PHY duplex configuration */
+            if(ENCX24_REG(base_addr, ESTAT) & BIT(ESTAT_PHYDPX))
+                ENCX24_REG(base_addr, MACON2) |= BIT(MACON2_FULDPX);
+            else
+                ENCX24_REG(base_addr, MACON2) &= ~BIT(MACON2_FULDPX);
+
             state->flags |= BIT(ENCX24_STATE_LINKED);
+        }
         else
             state->flags &= ~BIT(ENCX24_STATE_LINKED);
     }
@@ -271,6 +284,12 @@ s32 encx24j600_init(dev_t *dev)
     state->rx_read_ptr = state->rx_buf_start;
     ENCX24_REG(base_addr, ERXST) = N2LE16(ENCX24_RX_BUF_START);
 
+    /* Initialise packet TX buffer */
+    ENCX24_REG(base_addr, ETXST) = 0;
+
+    /* Disable automatic source MAC transmission */
+    ENCX24_REG(base_addr, ECON2) &= ~BIT(ECON2_TXMAC);
+
     /* Initialise receive filters */
     ENCX24_REG(base_addr, ERXFCON) =
         BIT(ERXFCON_CRCEN) |                /* Reject packets with CRC errors       */
@@ -285,7 +304,7 @@ s32 encx24j600_init(dev_t *dev)
         BIT(MACON2_TXCRCEN);                /* Enable auto CRC generation and append        */
         /* TODO: enable full duplex? */
 
-    ENCX24_REG(base_addr, MAMXFL) = N2LE16(1522);  /* Set max. frame length */
+    ENCX24_REG(base_addr, MAMXFL) = N2LE16(1500);  /* Set max. frame length */
 
     /* TODO - Initialise PHY */
 
@@ -303,6 +322,7 @@ s32 encx24j600_init(dev_t *dev)
 
     dev->control = encx24j600_control;
     dev->read = encx24j600_read;
+    dev->write = encx24j600_write;
     dev->shut_down = encx24j600_shut_down;
 
     dev->data = state;
@@ -330,7 +350,6 @@ s32 encx24j600_shut_down(dev_t *dev)
 s32 encx24j600_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
 {
     encx24j600_state_t * const state = (encx24j600_state_t *) dev->data;
-    u32 nread = 0;
     s32 ret;
     UNUSED(offset);
 
@@ -348,12 +367,36 @@ s32 encx24j600_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
 
     state->rx_wait_pid = 0;
 
-    ret = encx24j600_packet_read(dev, buf, *len, &nread);
+    ret = encx24j600_packet_read(dev, buf, len);
 
     if(ret == SUCCESS)
         state->rx_packets_pending--;
 
     return ret;
+}
+
+
+/*
+    encx24j600_write() - block until a packet can be written to the TX buffer.
+*/
+s32 encx24j600_write(dev_t *dev, ku32 offset, u32 *len, const void *buf)
+{
+    void * const base_addr = dev->base_addr;
+    UNUSED(offset);
+
+    /* Is a transmission in progress? */
+    /* TODO - put process to sleep, instead of busy-waiting */
+    while(ENCX24_REG(base_addr, ECON1) & BIT(ECON1_TXRTS))
+        ;
+
+    /* Copy the packet into the TX buffer */
+    memcpy((void *) ENCX24_MEM_ADDR(base_addr, ENCX24_TX_BUF_START), buf, *len);
+    ENCX24_REG(base_addr, ETXLEN) = N2LE16(*len);
+
+    /* Transmit the packet */
+    ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_TXRTS);
+
+    return SUCCESS;
 }
 
 

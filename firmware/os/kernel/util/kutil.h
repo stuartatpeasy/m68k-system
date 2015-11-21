@@ -64,7 +64,7 @@ u16 log2(u32 n);
 /*
     String-related functions
 */
-s32     dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
+s32     dump_hex(const void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
 ks8 *   kstrerror(ks32 errnum);
 s8 *    str_trim(s8 *dest, ks8 *src);
 s8 *    strn_trim(s8 *dest, ks8 *src, u32 n);

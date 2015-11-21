@@ -26,21 +26,22 @@ void eth_print_mac(const mac_addr_t * const mac)
 /*
     eth_handle_frame() - handle a received Ethernet frame
 */
-void eth_handle_frame(net_iface_t *iface, void *frame, u32 len)
+void eth_handle_frame(net_iface_t *iface, const void *frame, u32 len)
 {
     const eth_hdr_t * const ehdr = (eth_hdr_t *) frame;
     const void * const payload = ((u8 *) frame) + sizeof(eth_hdr_t);
     const ethertype_t etype = (ethertype_t) ehdr->type;
     UNUSED(len);
     UNUSED(iface);
-
+/*
     put("src=");
     eth_print_mac(&ehdr->src);
     put("  dst=");
     eth_print_mac(&ehdr->dest);
-
+*/
     if(etype == ethertype_ipv4)
     {
+/*
         ipv4_hdr_t *ihdr = (ipv4_hdr_t *) payload;
 
         put("  IPv4  ");
@@ -49,9 +50,36 @@ void eth_handle_frame(net_iface_t *iface, void *frame, u32 len)
         put("  dest=");
         ip_print_addr(ihdr->dest);
         putchar('\n');
+*/
     }
     else if(etype == ethertype_arp)
     {
         arp_handle_packet(iface, payload, len - sizeof(eth_hdr_t));
     }
+}
+
+
+/*
+    eth_transmit() - add an Ethernet header to the supplied frame and transmit it on the specified
+    interface.
+*/
+s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et, void *packet,
+                 u32 len)
+{
+    void *buf = CHECKED_KMALLOC(sizeof(eth_hdr_t) + len);
+    eth_hdr_t * const hdr = (eth_hdr_t *) buf;
+    s32 ret;
+
+    memcpy(&hdr->dest, dest, sizeof(mac_addr_t));
+    memcpy(&hdr->src, &iface->hw_addr, sizeof(mac_addr_t));
+
+    hdr->type = et;
+
+    memcpy((void *) (hdr + 1), packet, len);
+
+    ret = net_transmit(iface, buf, sizeof(eth_hdr_t) + len);
+
+    kfree(buf);
+
+    return ret;
 }

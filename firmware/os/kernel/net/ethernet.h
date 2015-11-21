@@ -44,6 +44,8 @@ typedef enum ethertype
 } ethertype_t;
 
 
-void eth_handle_frame(net_iface_t *iface, void *frame, u32 len);
+void eth_handle_frame(net_iface_t *iface, const void *frame, u32 len);
+s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et, void *packet,
+                 u32 len);
 
 #endif

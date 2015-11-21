@@ -49,6 +49,7 @@ struct net_iface
 
 
 s32 net_init();
+s32 net_transmit(net_iface_t *iface, const void *buffer, u32 len);
 
 
 #endif

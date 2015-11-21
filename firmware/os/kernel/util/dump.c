@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 
-s32 dump_hex(void *p, ku32 word_size, ku32 offset, ku32 num_bytes)
+s32 dump_hex(const void *p, ku32 word_size, ku32 offset, ku32 num_bytes)
 {
 	ku8 line_length = 16;
 	u8 x, y;

@@ -91,12 +91,30 @@ s32 net_add_interface(dev_t *dev)
     printf("net: added %s: %02x:%02x:%02x:%02x:%02x:%02x\n", dev->name,
            ma->b[0], ma->b[1], ma->b[2], ma->b[3], ma->b[4], ma->b[5]);
 
+    /* FIXME - remove (hardwiring IPv4 addr to 172.16.0.200) */
+    ipv4_addr_t addr = 0xac1000c8;      /* = 172.16.0.200 */
+    iface->proto_addr_type = na_ipv4;
+    memcpy(&iface->proto_addr, &addr, sizeof(addr));
+
     proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL, NULL);
 
     return SUCCESS;
 }
 
 
+/*
+    net_transmit() - send a packet over an interface.
+*/
+s32 net_transmit(net_iface_t *iface, const void *buffer, u32 len)
+{
+    return iface->dev->write(iface->dev, 0, &len, buffer);
+}
+
+
+/*
+    net_receive() - handle incoming packets on an interface.
+    NOTE: this function runs as a kernel process, one per interface.
+*/
 void net_receive(void *arg)
 {
     net_iface_t * const iface = (net_iface_t *) arg;
@@ -107,8 +125,10 @@ void net_receive(void *arg)
 
     while(1)
     {
-        s32 ret = iface->dev->read(iface->dev, 0, &len, buf);
+        u32 nread = len;
+        s32 ret = iface->dev->read(iface->dev, 0, &nread, buf);
+
         if(ret == SUCCESS)
-            eth_handle_frame(iface, buf, len);
+            eth_handle_frame(iface, buf, nread);
     }
 }

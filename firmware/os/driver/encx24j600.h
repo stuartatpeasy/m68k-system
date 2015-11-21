@@ -41,6 +41,7 @@
 */
 #define ENCX24_MEM_ADDR(base, x)     ((vu16 *) ((u8 *) (base) + (x)))
 
+
 #define ENCX24_MIN_TX_PACKET_LEN    (7)         /* Minimum packet len to meet IEEE802.3 spec    */
 #define ENCX24_MAX_TX_PACKET_LEN \
     (ENCX24_TX_BUF_END - ENCX24_TX_BUF_START)   /* = size of packet TX buffer                   */
@@ -50,6 +51,14 @@
 
 #define ENCX24_RX_BUF_LEN_WORDS \
     (ENCX24_RX_BUF_LEN / 2)                     /* Length of the RX buffer in 16-bit words      */
+
+/* Disable interrupts */
+#define ENCX24_IRQ_DISABLE(base_addr) \
+    ENCX24J600_REG((base_addr), EIE) &= ~BIT(EIE_INTIE)
+
+/* Enable interrupts */
+#define ENCX24_IRQ_ENABLE(base_addr) \
+    ENCX24J600_REG((base_addr), EIE) |= BIT(EIE_INTIE)
 
 
 /* Ethernet controller state structure */
@@ -448,5 +457,12 @@ enum ENC624J600_PHYReg
 #define ENCX24_RSV_STAT_CEPS        (2)     /* Carrier event previously seen               */
 /*                                  (1)        (reserved)                                  */
 #define ENCX24_RSV_STAT_PPI         (0)     /* Packet previously ignored                   */
+
+
+/* Macro representing all interrupt enable flags in the EIE register */
+#define ENCX24_ALL_IE \
+    (BIT(EIE_INTIE) | BIT(EIE_MODEXIE) | BIT(EIE_HASHIE) | BIT(EIE_AESIE) \
+     | BIT(EIE_LINKIE) | BIT(EIE_PKTIE) | BIT(EIE_DMAIE) | BIT(EIE_TXIE) \
+     | BIT(EIE_TXABTIE) | BIT(EIE_RXABTIE) | BIT(EIE_PCFULIE))
 
 #endif
