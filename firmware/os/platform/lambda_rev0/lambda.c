@@ -8,8 +8,8 @@
 #include <platform/lambda_rev0/lambda.h>
 #include <platform/lambda_rev0/device.h>
 #include <kernel/device/device.h>
-#include <device/ds17485.h>
-#include <device/mc68681.h>
+#include <driver/ds17485.h>
+#include <driver/mc68681.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =

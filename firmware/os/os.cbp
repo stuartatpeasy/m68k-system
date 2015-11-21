@@ -86,22 +86,22 @@
 		<Unit filename="cpu/mc68000/regs.h" />
 		<Unit filename="cpu/mc68000/startup.S" />
 		<Unit filename="cpu/mc68000/syscall.S" />
-		<Unit filename="device/ata.c">
+		<Unit filename="driver/ata.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/ata.h" />
-		<Unit filename="device/ds17485.c">
+		<Unit filename="driver/ata.h" />
+		<Unit filename="driver/ds17485.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/ds17485.h" />
-		<Unit filename="device/encx24j600.c">
+		<Unit filename="driver/ds17485.h" />
+		<Unit filename="driver/encx24j600.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/encx24j600.h" />
-		<Unit filename="device/mc68681.c">
+		<Unit filename="driver/encx24j600.h" />
+		<Unit filename="driver/mc68681.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/mc68681.h" />
+		<Unit filename="driver/mc68681.h" />
 		<Unit filename="global.mk" />
 		<Unit filename="include/byteorder.h" />
 		<Unit filename="include/ctype.h" />

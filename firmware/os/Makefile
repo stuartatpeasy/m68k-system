@@ -11,7 +11,7 @@ FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES:=	main.c \
 			cpu/cpu.c cpu/$(CPU)/$(CPU).c \
-			device/ata.c device/ds17485.c device/encx24j600.c device/mc68681.c \
+			driver/ata.c driver/ds17485.c driver/encx24j600.c driver/mc68681.c \
 			kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
 			kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
@@ -97,7 +97,7 @@ $(TOOLS):
 #
 
 main.o: \
-	main.c device/ds17485.h kernel/fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
+	main.c driver/ds17485.h kernel/fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h \
 	kernel/util/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h kernel/memory/slab.h \
 	monitor/monitor.h kernel/device/device.o kernel/sched.h
 
@@ -113,30 +113,30 @@ cpu/$(CPU)/process.o: \
 cpu/$(CPU)/startup.o: \
 	cpu/$(CPU)/startup.S kernel/memory/memorymap.h
 
-device/ata.o: \
-	device/ata.c device/ata.h kernel/device/block.h kernel/device/devctl.h kernel/device/device.h \
+driver/ata.o: \
+	driver/ata.c driver/ata.h kernel/device/block.h kernel/device/devctl.h kernel/device/device.h \
 	include/byteorder.h include/defs.h include/mbr.h include/types.h klibc/stdio.h klibc/string.h \
 	klibc/strings.h
 
-device/ds17485.o: \
-	device/ds17485.c device/ds17485.h include/types.h kernel/util/kutil.h
+driver/ds17485.o: \
+	driver/ds17485.c driver/ds17485.h include/types.h kernel/util/kutil.h
 
-device/encx24j600.o: \
-	device/encx24j600.c device/encx24j600.h cpu/cpu.h kernel/device/device.h include/byteorder.h \
+driver/encx24j600.o: \
+	driver/encx24j600.c driver/encx24j600.h cpu/cpu.h kernel/device/device.h include/byteorder.h \
 	include/defs.h include/error.h include/types.h
 
-device/mc68681.o: \
-	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
+driver/mc68681.o: \
+	driver/mc68681.c driver/mc68681.h include/defs.h include/error.h include/types.h
 
 kernel/device/auto.o: \
 	kernel/device/auto.c kernel/device/auto.h include/defs.h include/types.h kernel/device/device.h
 
 kernel/device/device.o: \
 	kernel/device/device.c kernel/device/devctl.h kernel/device/device.h kernel/util/kutil.h \
-	device/ata.h kernel/device/partition.h include/types.h klibc/errno.h
+	driver/ata.h kernel/device/partition.h include/types.h klibc/errno.h
 
 kernel/device/nvram.o: \
-	kernel/device/nvram.c kernel/device/nvram.h device/ds17485.h include/defs.h include/error.h \
+	kernel/device/nvram.c kernel/device/nvram.h driver/ds17485.h include/defs.h include/error.h \
 	include/types.h kernel/util/kutil.h
 
 kernel/device/partition.o: \

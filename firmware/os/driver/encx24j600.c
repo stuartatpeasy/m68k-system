@@ -9,7 +9,7 @@
     This device has driver ID 0x81.
 */
 
-#include <device/encx24j600.h>
+#include <driver/encx24j600.h>
 #include <klibc/stdio.h>			/* TODO remove */
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>        /* TODO remove */

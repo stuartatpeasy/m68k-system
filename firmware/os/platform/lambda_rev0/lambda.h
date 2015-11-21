@@ -6,8 +6,9 @@
     Stuart Wallace, September 2015
 */
 
-#include <device/mc68681.h>
+#include <driver/mc68681.h>
 #include <kernel/device/device.h>
+
 
 #define PLATFORM_QUANTUM_USES_MACROS
 

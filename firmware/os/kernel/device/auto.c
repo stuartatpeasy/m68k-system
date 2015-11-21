@@ -10,7 +10,7 @@
 #include <kernel/device/auto.h>
 
 /* Include the files containing drivers appearing in driver_map[], below */
-#include <device/encx24j600.h>
+#include <driver/encx24j600.h>
 
 
 typedef struct driver_map_entry

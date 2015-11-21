@@ -7,7 +7,7 @@
     (c) Stuart Wallace, June 2015.
 */
 
-#include <device/ds17485.h>
+#include <driver/ds17485.h>
 #include <kernel/util/kutil.h>
 
 

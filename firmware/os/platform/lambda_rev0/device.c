@@ -12,9 +12,9 @@
 #include <kernel/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 #include <platform/lambda_rev0/device.h>
-#include <device/mc68681.h>                 /* DUART            */
-#include <device/ds17485.h>                 /* RTC              */
-#include <device/ata.h>                     /* ATA interface    */
+#include <driver/mc68681.h>                 /* DUART            */
+#include <driver/ds17485.h>                 /* RTC              */
+#include <driver/ata.h>                     /* ATA interface    */
 
 
 dev_t *g_lambda_duart;      /* DUART device - stored separately for early console init  */
