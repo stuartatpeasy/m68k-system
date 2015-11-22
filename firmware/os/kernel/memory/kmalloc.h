@@ -8,7 +8,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012
 */
 
-#include <include/types.h>
+#include <kernel/include/types.h>
 #include <klibc/errno.h>
 
 

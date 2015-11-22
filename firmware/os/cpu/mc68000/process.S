@@ -14,7 +14,7 @@
 #error This code requires the MC68010 architecture
 #endif
 
-#include "cpu/mc68000/regs.h"
+#include <cpu/mc68000/regs.h>
 .include "cpu/mc68000/macros.S"
 
 .text

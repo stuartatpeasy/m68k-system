@@ -35,7 +35,8 @@
 	     is greater than the file system block size.
 */
 
-#include "ext2.h"
+#include <kernel/fs/ext2/ext2.h>
+
 
 vfs_driver_t g_ext2_ops =
 {

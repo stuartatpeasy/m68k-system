@@ -7,10 +7,10 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015
 */
 
+#include <kernel/platform.h>      /* for plat_console_putc() */
 #include <kernel/process.h>
 #include <kernel/syscall.h>
 #include <klibc/stdio.h>
-#include <platform/platform.h>      /* for plat_console_putc() */
 
 
 /*

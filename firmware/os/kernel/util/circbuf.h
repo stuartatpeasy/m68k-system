@@ -9,8 +9,8 @@
     (c) Stuart Wallace <stuartw@atom.net>, November 2015
 */
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 
 
 /* Byte-oriented circular buffer structure */

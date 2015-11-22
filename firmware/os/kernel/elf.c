@@ -7,13 +7,12 @@
 	Stuart Wallace, August 2015.
 */
 
-#include <include/byteorder.h>
+#include <kernel/elf.h>
+#include <kernel/include/byteorder.h>
 #include <klibc/errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-
-#include "include/elf.h"
 
 
 /*

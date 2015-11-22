@@ -9,14 +9,16 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <include/byteorder.h>
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/byteorder.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 #include <kernel/net/net.h>
 
 
 /* IPv4 address */
 typedef u32 ipv4_addr_t;
+
+#define IPV4_SRC_ADDR_DEFAULT       ((ipv4_addr_t) 0)
 
 
 /* IPv4 protocol IDs */
@@ -44,6 +46,22 @@ typedef struct ipv4_hdr
 } ipv4_hdr_t;
 
 
+#define IPV4_HDR_FLAG_DF        BIT(14)     /* Don't Fragment (DF) flag             */
+#define IPV4_HDR_FLAG_MF        BIT(13)     /* More Fragments (MF) flag             */
+
+typedef struct ipv4_route_ent
+{
+    ipv4_addr_t     dest;
+    ipv4_addr_t     gateway;
+    net_iface_t *   iface;
+    u8              mask;
+    u8              flags;
+    u8              metric;
+} ipv4_route_ent_t;
+
+
 s32 ipv4_handle_packet(net_iface_t *iface, const void *packet, u32 len);
+s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
+                     const void *packet, u32 len);
 
 #endif

@@ -11,13 +11,13 @@
     This device has driver ID 0x81.
 */
 
-#include <include/byteorder.h>
-#include <include/defs.h>
-#include <include/error.h>
-#include <include/list.h>
-#include <include/types.h>
 #include <kernel/cpu.h>
 #include <kernel/device/device.h>
+#include <kernel/include/byteorder.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/error.h>
+#include <kernel/include/list.h>
+#include <kernel/include/types.h>
 
 
 #define ENCX24_SFR_BASE         (0x7e00)	/* Base address of special-function registers		*/

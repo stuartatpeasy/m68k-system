@@ -7,8 +7,8 @@
     (c) Stuart Wallace <stuartw@atom.net>, July 2015.
 */
 
+#include <kernel/platform.h>
 #include <kernel/sched.h>
-#include <platform/platform.h>
 
 
 u32 g_ncontext_switches = 0;

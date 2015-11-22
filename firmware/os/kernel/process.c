@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <include/list.h>
+#include <kernel/include/list.h>
 #include <kernel/process.h>
 #include <kernel/sched.h>
 

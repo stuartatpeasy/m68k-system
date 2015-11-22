@@ -9,8 +9,8 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
-#include <include/limits.h>
-#include <include/types.h>
+#include <kernel/include/limits.h>
+#include <kernel/include/types.h>
 #include <kernel/memory/kmalloc.h>
 
 #define RAND_MAX (32767)

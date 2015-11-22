@@ -9,7 +9,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-07-01.
 */
 
-#include <include/types.h>
+#include <kernel/include/types.h>
 #include <klibc/errors.h>
 
 

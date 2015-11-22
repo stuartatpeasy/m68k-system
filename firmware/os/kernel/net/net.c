@@ -140,3 +140,17 @@ void net_receive(void *arg)
             eth_handle_packet(iface, buf, nread);
     }
 }
+
+
+/*
+    net_route_get() - look up a route in the kernel routing table.
+*/
+net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *addr)
+{
+    UNUSED(addr_type);
+    UNUSED(addr);
+
+    /* TODO */
+
+    return NULL;
+}

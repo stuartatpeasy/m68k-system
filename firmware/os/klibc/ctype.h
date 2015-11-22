@@ -9,7 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-07-01.
 */
 
-#include "include/types.h"
+#include <kernel/include/types.h>
+
 
 #define _ISUPPER	(0x0001)
 #define _ISLOWER	(0x0002)

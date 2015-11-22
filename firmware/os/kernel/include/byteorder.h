@@ -1,5 +1,5 @@
-#ifndef INCLUDE_BYTEORDER_H_INC
-#define INCLUDE_BYTEORDER_H_INC
+#ifndef KERNEL_INCLUDE_BYTEORDER_H_INC
+#define KERNEL_INCLUDE_BYTEORDER_H_INC
 /*
 	Byte-order conversion macros
 

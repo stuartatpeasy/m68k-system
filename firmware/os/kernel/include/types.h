@@ -1,5 +1,5 @@
-#ifndef INCLUDE_TYPES_H_INC
-#define INCLUDE_TYPES_H_INC
+#ifndef KERNEL_INCLUDE_TYPES_H_INC
+#define KERNEL_INCLUDE_TYPES_H_INC
 /*
 	Type definitions
 

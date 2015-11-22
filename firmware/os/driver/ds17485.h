@@ -9,9 +9,10 @@
     (c) Stuart Wallace, June 2015.
 */
 
-#include <include/defs.h>
-#include <include/types.h>
 #include <kernel/device/device.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
+
 
 /*
     OFFSET and SHIFT are used to deal with the situations where the DS17485 (an 8-bit device) is

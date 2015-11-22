@@ -7,11 +7,11 @@
     (c) Stuart Wallace, June 2015.
 */
 
-#include "include/defs.h"
-#include "include/limits.h"
-#include "include/types.h"
-#include "klibc/stdio.h"
-#include "kutil.h"
+#include <kernel/include/defs.h>
+#include <kernel/include/limits.h>
+#include <kernel/include/types.h>
+#include <kernel/util/kutil.h>
+#include <klibc/stdio.h>
 
 
 #define DATETIME_TS_MAX (S32_MAX)

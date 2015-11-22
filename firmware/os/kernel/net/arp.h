@@ -9,10 +9,10 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <include/byteorder.h>
-#include <include/defs.h>
-#include <include/error.h>
-#include <include/types.h>
+#include <kernel/include/byteorder.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/error.h>
+#include <kernel/include/types.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>

@@ -11,7 +11,7 @@
 
 #define IN_CPU_H
 
-#include <include/types.h>
+#include <kernel/include/types.h>
 
 /* Parse target-specific header */
 #include <cpu/arch_specific.h>

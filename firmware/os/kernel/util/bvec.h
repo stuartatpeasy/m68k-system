@@ -11,12 +11,12 @@
 	See comments in bvec.c for a description of this module.
 */
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 #include <kernel/memory/kmalloc.h>
+#include <kernel/util/kutil.h>
 #include <klibc/errno.h>
 #include <klibc/string.h>
-#include <kernel/util/kutil.h>
 
 
 /* pointers to blocks will be allocated in units of BVEC_BLOCKPTR_BLOCK_SIZE */

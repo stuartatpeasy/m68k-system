@@ -9,7 +9,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
-#include <include/types.h>
+#include <kernel/include/types.h>
 #include <kernel/ksym.h>
 #include <cpu/mc68000/exceptions.h>
 

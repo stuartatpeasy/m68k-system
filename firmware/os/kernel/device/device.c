@@ -14,8 +14,8 @@
 
 #include <kernel/device/device.h>
 #include <kernel/device/partition.h>
+#include <kernel/platform.h>
 #include <kernel/util/kutil.h>
-#include <platform/platform.h>
 
 
 /* Characters used to identify "sub-devices", e.g. partitions of devices.  The first sub-device

@@ -8,8 +8,8 @@
 */
 
 #include <driver/ata.h>
-#include <include/byteorder.h>
-#include <include/error.h>
+#include <kernel/include/byteorder.h>
+#include <kernel/include/error.h>
 #include <kernel/util/kutil.h>
 
 #include <string.h>

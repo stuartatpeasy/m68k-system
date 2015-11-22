@@ -1,5 +1,5 @@
-#ifndef INCLUDE_VERSION_H_INC
-#define INCLUDE_VERSION_H_INC
+#ifndef KERNEL_INCLUDE_VERSION_H_INC
+#define KERNEL_INCLUDE_VERSION_H_INC
 /*
     Software version constants
 

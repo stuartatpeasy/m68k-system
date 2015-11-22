@@ -1,5 +1,5 @@
-#ifndef INCLUDE_LIMITS_H_INC
-#define INCLUDE_LIMITS_H_INC
+#ifndef KERNEL_INCLUDE_LIMITS_H_INC
+#define KERNEL_INCLUDE_LIMITS_H_INC
 /*
 	Integer type limits
 

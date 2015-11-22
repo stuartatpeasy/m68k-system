@@ -10,10 +10,11 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
-#include "include/types.h"
-#include "include/limits.h"
-#include "stdlib.h"
-#include "errno.h"
+#include <kernel/include/types.h>
+#include <kernel/include/limits.h>
+#include <stdlib.h>
+#include <errno.h>
+
 
 s32 memcmp(const void *s1, const void *s2, u32 n);
 void *memcpy(void *dest, const void *src, u32 n);

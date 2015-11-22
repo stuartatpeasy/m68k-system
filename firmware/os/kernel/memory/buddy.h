@@ -10,8 +10,9 @@
 */
 
 #include <stdio.h>
-#include <include/types.h>
+#include <kernel/include/types.h>
 #include <kernel/util/kutil.h>
+
 
 #ifdef KMALLOC_BUDDY
 

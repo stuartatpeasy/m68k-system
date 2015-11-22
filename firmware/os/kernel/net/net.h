@@ -9,9 +9,9 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <include/defs.h>
-#include <include/types.h>
 #include <kernel/device/device.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 
 
 typedef enum net_addr_type
@@ -50,6 +50,7 @@ struct net_iface
 
 
 s32 net_init();
+net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *addr);
 s32 net_transmit(net_iface_t *iface, const void *buffer, u32 len);
 
 

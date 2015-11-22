@@ -1,5 +1,5 @@
 SRC_ROOT=../..
-OS_INCDIR=$(SRC_ROOT)/include
+OS_INCDIR=$(SRC_ROOT)/kernel/include
 
 include $(SRC_ROOT)/global.mk
 
@@ -9,7 +9,8 @@ CSOURCES=device.c dfu.c lambda.c
 
 OBJECTS=$(CSOURCES:.c=.o)
 
-STDDEPS=../platform.h $(OS_INCDIR)/defs.h $(OS_INCDIR)/error.h $(OS_INCDIR)/types.h
+STDDEPS=../../kernel/platform.h $(OS_INCDIR)/defs.h $(OS_INCDIR)/types.h \
+		../../kernel/include/error.h
 
 all: $(LIBNAME)
 

@@ -7,7 +7,7 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
-#include "string.h"
+#include <klibc/string.h>
 
 
 /*

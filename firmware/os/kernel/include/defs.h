@@ -1,5 +1,5 @@
-#ifndef INCLUDE_DEFS_H_INC
-#define INCLUDE_DEFS_H_INC
+#ifndef KERNEL_INCLUDE_DEFS_H_INC
+#define KERNEL_INCLUDE_DEFS_H_INC
 /*
 	Miscellaneous definitions
 
@@ -9,7 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include <include/types.h>
+#include <kernel/include/types.h>
+
 
 /* FIXME - target-specific */
 #if defined(TARGET_MC68008)

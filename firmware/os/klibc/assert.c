@@ -7,8 +7,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-08-28.
 */
 
-#include "assert.h"
-#include "stdio.h"		/* for puts(), below */
+#include <klibc/assert.h>
+#include <klibc/stdio.h>		/* for puts(), below */
 
 
 void assert(s32 expression)

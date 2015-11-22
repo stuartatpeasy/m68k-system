@@ -9,9 +9,9 @@
 	(c) Stuart Wallace, March 2012.
 */
 
-#include <include/types.h>
 #include <kernel/device/device.h>
 #include <kernel/fs/vfs.h>
+#include <kernel/include/types.h>
 #include <strings.h>
 
 

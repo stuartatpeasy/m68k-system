@@ -7,7 +7,8 @@
 	(c) Stuart Wallace, June 2015
 */
 
-#include "ctype.h"
+#include <klibc/ctype.h>
+
 
 /*
 	This is a 384-byte lookup table used by the "int is<x>(int c)" functions, e.g. isupper().  Each entry consists of

@@ -10,8 +10,9 @@
 */
 
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
+
 
 #define MBR_SECTOR_LEN		(512)
 #define MBR_SIGNATURE		(0xaa55)		/* validation signature in bytes 510-511 of a MBR	*/

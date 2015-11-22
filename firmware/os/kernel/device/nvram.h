@@ -9,10 +9,10 @@
 	(c) Stuart Wallace, August 2015.
 */
 
-#include <include/defs.h>
-#include <include/error.h>
-#include <include/types.h>
 #include <kernel/device/device.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/error.h>
+#include <kernel/include/types.h>
 #include <kernel/util/kutil.h>
 
 

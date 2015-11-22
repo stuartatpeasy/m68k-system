@@ -7,16 +7,14 @@
 
 
 	Stuart Wallace <stuartw@atom.net>, August 2015.
-
-	NOTE: this is currently just a collection of thoughts.  It is not yet ready for use!
 */
 
 #define IN_PLATFORM_H
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/types.h>
 #include <kernel/cpu.h>
 #include <kernel/device/device.h>
+#include <kernel/include/defs.h>
 #include <kernel/memory/extents.h>
 
 /* Parse platform-specific header */

@@ -12,7 +12,7 @@
 	always set to 0x00000000.
 */
 
-#include <include/types.h>
+#include <kernel/include/types.h>
 #include <kernel/util/kutil.h>
 
 

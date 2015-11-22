@@ -11,9 +11,9 @@
 
 #include <string.h>
 
-#include <include/error.h>
-#include <include/types.h>
 #include <kernel/cpu.h>
+#include <kernel/include/error.h>
+#include <kernel/include/types.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/memorymap.h>
 #include <kernel/util/kutil.h>

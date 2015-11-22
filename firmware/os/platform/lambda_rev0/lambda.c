@@ -4,12 +4,12 @@
     Stuart Wallace, September 2015
 */
 
-#include <platform/platform.h>
-#include <platform/lambda_rev0/lambda.h>
-#include <platform/lambda_rev0/device.h>
-#include <kernel/device/device.h>
 #include <driver/ds17485.h>
 #include <driver/mc68681.h>
+#include <kernel/device/device.h>
+#include <kernel/platform.h>
+#include <platform/lambda_rev0/lambda.h>
+#include <platform/lambda_rev0/device.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =

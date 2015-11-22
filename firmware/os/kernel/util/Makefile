@@ -8,7 +8,7 @@ OBJECTS=$(CSOURCES:.c=.o)
 
 all: $(LIBNAME)
 
-STDDEPS=../../include/defs.h ../../include/types.h
+STDDEPS=../include/defs.h ../include/types.h
 
 .c.o:
 	$(CC) $(CFLAGS) -o$@ $<
@@ -39,7 +39,7 @@ hash.o: \
 	hash.c $(STDDEPS)
 
 ktime.o: \
-	ktime.c kutil.h $(STDDEPS) ../../include/limits.h
+	ktime.c kutil.h $(STDDEPS) ../../kernel/include/limits.h
 
 numeric.o: \
 	numeric.c kutil.h $(STDDEPS)

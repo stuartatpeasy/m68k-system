@@ -9,9 +9,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, January 2012.
 */
 
-#include <include/defs.h>
-#include <include/types.h>
 #include <kernel/cpu.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 #include <kernel/process.h>
 #include <kernel/user.h>
 #include <strings.h>

@@ -10,8 +10,8 @@
 */
 
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 #include <kernel/memory/kmalloc.h>
 #include <stdlib.h>
 #include <string.h>

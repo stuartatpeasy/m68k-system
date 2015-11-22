@@ -1,4 +1,12 @@
 /*
+    OS entry point
+
+    Part of ayumos
+
+
+    (c) Stuart Wallace <stuartw@atom.net>, 2011-2015.
+
+
     TODO - BOOT PROCESS
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 
@@ -6,19 +14,18 @@
 */
 
 
-#include <include/defs.h>
 #include <kernel/boot.h>
 #include <kernel/fs/vfs.h>
 #include <kernel/housekeeper.h>
+#include <kernel/include/defs.h>
 #include <kernel/memory/extents.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
 #include <kernel/net/net.h>
+#include <kernel/platform.h>
 #include <kernel/sched.h>
-#include <kernel/syscall.h>     /* FIXME remove - used by housekeeper() */
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
-#include <platform/platform.h>
 #include <stdio.h>
 #include <strings.h>
 

@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include "monitor.h"
+#include <monitor/monitor.h>
 
 
 /*
@@ -832,7 +832,7 @@ MONITOR_CMD_HANDLER(srec)
     Used to trigger a test of some sort
 */
 #include <kernel/process.h>
-#include <include/elf.h>
+#include <kernel/elf.h>
 MONITOR_CMD_HANDLER(test)
 {
     if(num_args < 1)

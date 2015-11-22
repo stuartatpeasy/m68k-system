@@ -7,8 +7,8 @@
 	(c) Stuart Wallace, June 2015.
 */
 
-#include "stdio.h"
-#include "string.h"
+#include <klibc/stdio.h>
+#include <klibc/string.h>
 
 
 /*

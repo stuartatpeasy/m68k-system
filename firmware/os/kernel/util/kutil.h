@@ -10,8 +10,8 @@
 */
 
 #include <stdarg.h>
-#include <include/error.h>
-#include <include/types.h>
+#include <kernel/include/types.h>
+#include <kernel/include/error.h>
 #include <klibc/string.h>
 
 /*

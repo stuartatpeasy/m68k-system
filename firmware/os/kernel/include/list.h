@@ -1,5 +1,5 @@
-#ifndef INCLUDE_LIST_H_INC
-#define INCLUDE_LIST_H_INC
+#ifndef KERNEL_INCLUDE_LIST_H_INC
+#define KERNEL_INCLUDE_LIST_H_INC
 /*
 	Simple linked-list implementation.  Owes everything to <linux/list.h>.
 
@@ -9,7 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, December 2011.
 */
 
-#include "include/defs.h"
+#include <kernel/include/defs.h>
+
 
 struct llitem
 {

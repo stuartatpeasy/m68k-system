@@ -10,15 +10,14 @@
 */
 
 
-#include "include/defs.h"
-#include "include/types.h"
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 
-struct blockdev_stats
+
+typedef struct blockdev_stats
 {
     u32 blocks_read;
     u32 blocks_written;
-};
-
-typedef struct blockdev_stats blockdev_stats_t;
+} blockdev_stats_t;
 
 #endif

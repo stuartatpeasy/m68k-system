@@ -13,9 +13,10 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include <platform/platform.h>
-#include <include/limits.h>
-#include <include/types.h>
+#include <kernel/include/limits.h>
+#include <kernel/include/types.h>
+#include <kernel/platform.h>
+
 
 s32 printf(const char *format, ...)
 	__attribute__((format(printf, 1, 2)));

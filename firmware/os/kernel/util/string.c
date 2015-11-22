@@ -7,7 +7,7 @@
     (c) Stuart Wallace, July 2015.
 */
 
-#include "kutil.h"
+#include <kernel/util/kutil.h>
 #include <ctype.h>
 #include <string.h>
 

@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include "srec.h"
+#include <monitor/srec.h>
 #include <kernel/util/kutil.h>
 #include <kernel/memory/kmalloc.h>
 

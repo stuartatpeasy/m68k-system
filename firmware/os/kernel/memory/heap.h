@@ -9,7 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 7th August 2011.
 */
 
-#include <include/types.h>
+#include <kernel/include/types.h>
+
 
 #ifdef KMALLOC_HEAP
 

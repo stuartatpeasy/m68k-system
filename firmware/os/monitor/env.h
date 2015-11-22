@@ -9,6 +9,6 @@
 	(c) Stuart Wallace, 2015.
 */
 
-#include "../include/defs.h"
+#include <../kernel/include/defs.h>
 
 #endif

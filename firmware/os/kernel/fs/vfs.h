@@ -9,9 +9,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include <include/types.h>
-#include <include/defs.h>
 #include <kernel/device/device.h>
+#include <kernel/include/types.h>
+#include <kernel/include/defs.h>
 #include <stdio.h>
 
 

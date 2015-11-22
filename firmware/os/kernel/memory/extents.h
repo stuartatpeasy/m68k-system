@@ -9,8 +9,8 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 #include <klibc/strings.h>
 
 #define MEM_EXTENT_USER     (0x00000001)    /* User-accessible memory                       */

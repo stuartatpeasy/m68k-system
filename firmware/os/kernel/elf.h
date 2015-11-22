@@ -10,8 +10,8 @@
 */
 
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 
 
 /* Object file types (Elf32_Ehdr.e_type) */

@@ -7,7 +7,8 @@
 	(c) Stuart Wallace, June 2015
 */
 
-#include "errno.h"
+#include <klibc/errno.h>
+
 
 s32 errno;
 

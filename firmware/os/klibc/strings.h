@@ -9,8 +9,8 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
-#include "include/types.h"
-#include "klibc/ctype.h"
+#include <kernel/include/types.h>
+#include <klibc/ctype.h>
 
 
 void bcopy(const void *src, void *dest, u32 n);

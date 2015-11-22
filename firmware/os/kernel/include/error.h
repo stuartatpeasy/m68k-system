@@ -1,5 +1,5 @@
-#ifndef INCLUDE_ERROR_H_INC
-#define INCLUDE_ERROR_H_INC
+#ifndef KERNEL_INCLUDE_ERROR_H_INC
+#define KERNEL_INCLUDE_ERROR_H_INC
 /*
 	error.h: kernel internal error codes
 
