@@ -12,10 +12,20 @@
 #include <include/byteorder.h>
 #include <include/defs.h>
 #include <include/types.h>
+#include <kernel/net/net.h>
 
 
 /* IPv4 address */
 typedef u32 ipv4_addr_t;
+
+
+/* IPv4 protocol IDs */
+typedef enum ipv4_protocol
+{
+    ipv4_proto_icmp     = 1,
+    ipv4_proto_tcp      = 6,
+    ipv4_proto_udp      = 17
+} ipv4_protocol_t;
 
 
 /* IPv4 packet header */
@@ -34,11 +44,6 @@ typedef struct ipv4_hdr
 } ipv4_hdr_t;
 
 
-/* Enumeration of IP protocol IDs */
-typedef enum ipv4_protocol
-{
-    ip_proto_tcp    = 6,
-    ip_proto_udp    = 17
-} ipv4_protocol_t;
+s32 ipv4_handle_packet(net_iface_t *iface, const void *packet, u32 len);
 
 #endif

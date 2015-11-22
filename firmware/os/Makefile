@@ -12,13 +12,12 @@ FLASHPROGDEV=/dev/ttyS1
 CSOURCES:=	main.c \
 			cpu/$(CPU)/$(CPU).c \
 			driver/ata.c driver/ds17485.c driver/encx24j600.c driver/mc68681.c \
-			kernel/cpu.c \
 			kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
 			kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
 			kernel/fs/fat/fat.c \
-			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/process.c kernel/sched.c \
-			kernel/semaphore.c kernel/syscall.c kernel/user.c \
+			kernel/boot.c kernel/cpu.c kernel/elf.c kernel/housekeeper.c kernel/ksym.c \
+			kernel/process.c kernel/sched.c kernel/semaphore.c kernel/syscall.c kernel/user.c \
 			kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c kernel/net/net.c \
 			kernel/net/udp.c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
@@ -176,6 +175,9 @@ kernel/fs/vfs.o: \
 	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h kernel/device/nvram.h \
 	kernel/device/devctl.h kernel/device/device.h include/defs.h include/types.h klibc/stdio.h
 
+kernel/housekeeper.o: \
+	kernel/housekeeper.c kernel/housekeeper.h include/defs.h include/types.h
+
 kernel/ksym.o: \
 	kernel/ksym.c kernel/ksym.h include/defs.h include/types.h
 
@@ -202,6 +204,9 @@ kernel/net/arp.o: \
 kernel/net/ethernet.o: \
 	kernel/net/ethernet.c kernel/net/ethernet.h include/byteorder.h include/defs.h \
 	include/types.h kernel/net/ipv4.h
+
+kernel/net/icmp.o: \
+	kernel/net/icmp.c kernel/net/icmp.h include/defs.h include/types.h
 
 kernel/net/ipv4.o: \
 	kernel/net/ipv4.c kernel/net/ipv4.h include/byteorder.h include/defs.h include/types.h \

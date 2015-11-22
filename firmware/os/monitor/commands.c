@@ -907,15 +907,22 @@ MONITOR_CMD_HANDLER(test)
     }
     else if(testnum == 3)
     {
+/*
+        ipv4_addr_t ip;
+        mac_addr_t macaddr;
+        dev_t *dev;
+
         if(num_args < 2)
             return EINVAL;
 
-        u32 pid = strtoul(args[1], NULL, 0);
+        dev = dev_find("eth0");
+        if(dev == NULL)
+            return ENODEV;
 
-        if(pid > 65535)
-            return EINVAL;
-
-        proc_wake_by_id(pid);
+        ipv4_addr_t ip = strtoul(args[0], NULL, 0);
+        printf("ARP resolving address %u\n", ip);
+*/
+//        arp_lookup_ip(ip, iface, &macaddr);
     }
 
     return SUCCESS;

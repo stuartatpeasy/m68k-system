@@ -8,12 +8,13 @@
 
 #include <include/defs.h>
 #include <kernel/boot.h>
-#include <kernel/sched.h>
 #include <kernel/fs/vfs.h>
+#include <kernel/housekeeper.h>
 #include <kernel/memory/extents.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
 #include <kernel/net/net.h>
+#include <kernel/sched.h>
 #include <kernel/syscall.h>     /* FIXME remove - used by housekeeper() */
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
@@ -21,23 +22,9 @@
 #include <stdio.h>
 #include <strings.h>
 
+
 const char * const g_warmup_message = "\n  \\   ayumos"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";
-
-void housekeeper(void *arg)
-{
-    UNUSED(arg);
-
-    while(1)
-    {
-        putchar('%');
-
-        proc_sleep();
-
-        putchar('@');
-    }
-
-}
 
 
 void _main()

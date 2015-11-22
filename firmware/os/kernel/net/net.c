@@ -8,9 +8,11 @@
 */
 
 #include <kernel/device/device.h>
+#include <kernel/net/arp.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/net.h>
 #include <kernel/process.h>
+#include <kernel/util/kutil.h>
 #include <stdio.h>
 
 
@@ -26,6 +28,7 @@ net_iface_t *g_net_ifaces = NULL;
 s32 net_init()
 {
     dev_t *dev = NULL;
+    s32 ret;
 
     /* Iterate over hardware devices; look for any which identify as network interfaces. */
     while((dev = dev_get_next(dev)) != NULL)
@@ -45,6 +48,10 @@ s32 net_init()
             }
         }
     }
+
+    ret = arp_init();
+    if(ret != SUCCESS)
+        printf("net: arp: failed to initialise: %s\n", kstrerror(ret));
 
     return SUCCESS;
 }
@@ -128,7 +135,8 @@ void net_receive(void *arg)
         u32 nread = len;
         s32 ret = iface->dev->read(iface->dev, 0, &nread, buf);
 
+        /* TODO - this assumes we're working with an Ethernet interface - genericise */
         if(ret == SUCCESS)
-            eth_handle_frame(iface, buf, nread);
+            eth_handle_packet(iface, buf, nread);
     }
 }

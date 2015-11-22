@@ -158,6 +158,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/fs/vfs.h" />
+		<Unit filename="kernel/housekeeper.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/housekeeper.h" />
 		<Unit filename="kernel/ksym.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -194,6 +198,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/ethernet.h" />
+		<Unit filename="kernel/net/icmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/icmp.h" />
 		<Unit filename="kernel/net/ipv4.c">
 			<Option compilerVar="CC" />
 		</Unit>

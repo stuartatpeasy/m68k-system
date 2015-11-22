@@ -13,7 +13,10 @@
 #include "klibc/stdio.h"
 #include "kutil.h"
 
+
 #define DATETIME_TS_MAX (S32_MAX)
+
+s32 g_current_timestamp = 0;     /* Current timestamp (approx.) - updated by housekeeper process */
 
 const char * const g_day_names_long[] =
 {

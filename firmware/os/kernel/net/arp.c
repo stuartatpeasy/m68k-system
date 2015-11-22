@@ -8,8 +8,34 @@
 */
 
 #include <kernel/net/arp.h>
+#include <kernel/net/ethernet.h>
 #include <kernel/memory/kmalloc.h>
-#include <stdio.h>              /* FIXME: remove */
+#include <kernel/process.h>
+#include <klibc/stdlib.h>
+
+
+arp_cache_item_t *g_arp_cache = NULL;
+extern s32 g_current_timestamp;
+
+s32 arp_cache_add(const net_iface_t * const iface, const mac_addr_t hw_addr, const ipv4_addr_t ip);
+arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface, const ipv4_addr_t ip);
+arp_cache_item_t *arp_cache_get_entry_for_insert();
+
+
+/*
+    arp_init() - initialise ARP cache
+*/
+s32 arp_init()
+{
+    if(g_arp_cache != NULL)
+        kfree(g_arp_cache);
+
+    g_arp_cache = kcalloc(ARP_CACHE_SIZE, sizeof(arp_cache_item_t));
+    if(g_arp_cache == NULL)
+        return ENOMEM;
+
+    return SUCCESS;
+}
 
 
 /*
@@ -45,14 +71,10 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
        && payload->dst_ip == *((ipv4_addr_t *) &iface->proto_addr))
     {
         /* This is an Ethernet+IPv4 request addressed to this interface */
-        /*
-            TODO:
-                - maybe update ARP cache with senders hw/proto address?
-        */
         arp_eth_ipv4_packet_t p;
         u32 len = sizeof(p);
 
-        arp_cache_add(payload->src_mac, payload->src_ip);
+        arp_cache_add(iface, payload->src_mac, payload->src_ip);
 
         p.hdr.hw_type           = arp_hw_type_ethernet;
         p.hdr.proto_type        = ethertype_ipv4;
@@ -70,7 +92,7 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
     else if(hdr->opcode == BE2N16(arp_reply))
     {
         /* This is an Ethernet+IPv4 ARP reply.  Add the data to the cache. */
-        return arp_cache_add(payload->src_mac, payload->src_ip);
+        return arp_cache_add(iface, payload->src_mac, payload->src_ip);
     }
 
     return SUCCESS;     /* Discard - not an ARP request/response opcode */
@@ -95,21 +117,103 @@ s32 arp_send_request(net_iface_t *iface, const ipv4_addr_t ip)
     p.payload.src_ip        = *((ipv4_addr_t *) &iface->proto_addr);
     p.payload.src_mac       = *((mac_addr_t *) &iface->hw_addr);
     p.payload.dst_ip        = ip;
-    p.payload.dst_mac       = g_mac_zero;
+    p.payload.dst_mac       = g_mac_broadcast;
 
-    return eth_transmit(iface, &g_mac_zero, ethertype_arp, &p, len);
+    return eth_transmit(iface, &p.payload.dst_mac, ethertype_arp, &p, len);
+}
+
+
+/*
+    arp_lookup_ip() - look up the supplied IPv4 address on the specified network interface.
+*/
+s32 arp_lookup_ip(const ipv4_addr_t ip, net_iface_t *iface, mac_addr_t *hw_addr)
+{
+    arp_cache_item_t *p;
+    s32 i, ret;
+
+    for(p = NULL, i = 0; (p == NULL) && (i < ARP_MAX_REQUESTS); ++i)
+    {
+        p = arp_cache_lookup(iface, ip);
+        if(p == NULL)
+        {
+            /* Address not present in cache; try to look it up instead. */
+            ret = arp_send_request(iface, ip);
+            if(ret != SUCCESS)
+                return ret;
+
+            proc_sleep_for(ARP_REQUEST_INTERVAL);
+        }
+    }
+
+    if(p == NULL)
+        return ENOENT;
+
+    *hw_addr = p->hw_addr;
+    return SUCCESS;
+}
+
+
+/*
+    arp_cache_lookup() - find an entry in the ARP cache.
+*/
+arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface, const ipv4_addr_t ip)
+{
+    /* TODO */
+    arp_cache_item_t *p;
+
+    if(g_arp_cache != NULL)
+    {
+        /* Search cache for the requested address */
+        for(p = g_arp_cache; p < (g_arp_cache + ARP_CACHE_SIZE); ++p)
+            if((p->iface == iface) && (p->ipv4_addr == ip) && (p->etime > g_current_timestamp))
+                return p;
+    }
+
+    return NULL;
 }
 
 
 /*
     arp_cache_add() - add a MAC address / IPv4 address pair to the ARP cache
 */
-s32 arp_cache_add(const mac_addr_t hw_addr, const ipv4_addr_t ip)
+s32 arp_cache_add(const net_iface_t * const iface, const mac_addr_t hw_addr, const ipv4_addr_t ip)
 {
     UNUSED(hw_addr);
     UNUSED(ip);
 
-    /* TODO */
+    /* TODO - obtain lock on ARP cache during cache-add operation */
+    arp_cache_item_t *p = arp_cache_get_entry_for_insert();
+    if(p == NULL)
+        return SUCCESS;     /* Cache disabled; fail silently */
+
+    p->iface        = iface;
+    p->etime        = g_current_timestamp + ARP_CACHE_ITEM_LIFETIME;
+    p->hw_addr      = hw_addr;
+    p->ipv4_addr    = ip;
 
     return SUCCESS;
+}
+
+
+/*
+    arp_cache_get_entry_for_insert() - return a ptr to an ARP cache entry which can be overwritten
+    with a new entry.  Selects an entry at random if the cache is full.  Returns NULL if the ARP
+    cache is disabled or uninitialised.
+*/
+arp_cache_item_t *arp_cache_get_entry_for_insert()
+{
+    arp_cache_item_t *p;
+
+    if(g_arp_cache == NULL)
+        return NULL;
+
+    for(p = g_arp_cache; p < (g_arp_cache + ARP_CACHE_SIZE); ++p)
+    {
+        /* Is the item either unused or expired? */
+        if((p->iface == NULL) || (p->etime <= g_current_timestamp))
+            return p;
+    }
+
+    /* No unused/expired items found; pick an item at random (=random replacement algorithm) */
+    return g_arp_cache + (rand() % ARP_CACHE_SIZE);
 }

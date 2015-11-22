@@ -18,9 +18,14 @@
 #include <kernel/net/net.h>
 
 
+#define ARP_CACHE_SIZE              (16)        /* Number of slots in ARP cache                 */
+#define ARP_CACHE_ITEM_LIFETIME     (1200)      /* Lifetime of an ARP cache item in seconds     */
+#define ARP_MAX_REQUESTS            (5)         /* Max num of consecutive requests for an addr  */
+#define ARP_REQUEST_INTERVAL        (2)         /* #secs between ARP requests for a given addr  */
+
+s32 arp_init();
 s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len);
-s32 arp_process_reply(const void * const packet, u32 len);
-s32 arp_cache_add(const mac_addr_t hw_addr, const ipv4_addr_t ip);
+s32 arp_lookup_ip(const ipv4_addr_t ip, net_iface_t *iface, mac_addr_t *hw_addr);
 
 
 typedef struct arp_hdr
@@ -68,9 +73,10 @@ typedef enum arp_hw_type
 /* ARP cache entry */
 typedef struct arp_cache_item
 {
-    mac_addr_t  hw_addr;
-    u32         ipv4_addr;
-    s32         etime;
+    const net_iface_t * iface;
+    mac_addr_t          hw_addr;
+    u32                 ipv4_addr;
+    s32                 etime;
 } arp_cache_item_t;
 
 #endif

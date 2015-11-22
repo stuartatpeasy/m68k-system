@@ -12,7 +12,16 @@
 #include <kernel/net/arp.h>
 #include <klibc/stdio.h>            /* FIXME remove */
 
-mac_addr_t g_mac_zero = {0};
+
+mac_addr_t g_mac_broadcast =
+{
+    .b[0] = 0xff,
+    .b[1] = 0xff,
+    .b[2] = 0xff,
+    .b[3] = 0xff,
+    .b[4] = 0xff,
+    .b[5] = 0xff
+};
 
 
 /* TODO: eth_print_mac() is special-case/useless.  do this differently */
@@ -24,37 +33,25 @@ void eth_print_mac(const mac_addr_t * const mac)
 
 
 /*
-    eth_handle_frame() - handle a received Ethernet frame
+    eth_handle_packet() - handle a received Ethernet packet
 */
-void eth_handle_frame(net_iface_t *iface, const void *frame, u32 len)
+s32 eth_handle_packet(net_iface_t *iface, const void *packet, u32 len)
 {
-    const eth_hdr_t * const ehdr = (eth_hdr_t *) frame;
-    const void * const payload = ((u8 *) frame) + sizeof(eth_hdr_t);
-    const ethertype_t etype = (ethertype_t) ehdr->type;
-    UNUSED(len);
-    UNUSED(iface);
-/*
-    put("src=");
-    eth_print_mac(&ehdr->src);
-    put("  dst=");
-    eth_print_mac(&ehdr->dest);
-*/
-    if(etype == ethertype_ipv4)
-    {
-/*
-        ipv4_hdr_t *ihdr = (ipv4_hdr_t *) payload;
+    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet;
+    const void * const payload = ((u8 *) packet) + sizeof(eth_hdr_t);
 
-        put("  IPv4  ");
-        put("src=");
-        ip_print_addr(ihdr->src);
-        put("  dest=");
-        ip_print_addr(ihdr->dest);
-        putchar('\n');
-*/
-    }
-    else if(etype == ethertype_arp)
+    len -= sizeof(eth_hdr_t);
+
+    switch(ehdr->type)
     {
-        arp_handle_packet(iface, payload, len - sizeof(eth_hdr_t));
+        case ethertype_ipv4:
+            return ipv4_handle_packet(iface, payload, len);
+
+        case ethertype_arp:
+            return arp_handle_packet(iface, payload, len);
+
+        default:
+            return SUCCESS;
     }
 }
 

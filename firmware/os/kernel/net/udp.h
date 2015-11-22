@@ -11,6 +11,7 @@
 
 #include <include/defs.h>
 #include <include/types.h>
+#include <kernel/net/net.h>
 
 
 /* UDP header */
@@ -21,5 +22,8 @@ typedef struct udp_hdr
     u16             len;
     u16             cksum;
 } udp_hdr_t;
+
+
+s32 udp_handle_packet(net_iface_t *iface, const void *packet, u32 len);
 
 #endif

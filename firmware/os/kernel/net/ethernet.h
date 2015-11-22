@@ -24,16 +24,7 @@ typedef union mac_addr
     u16 w[3];
 } mac_addr_t;
 
-extern mac_addr_t g_mac_zero;
-
-
-/* Ethernet II frame header */
-typedef struct eth_hdr
-{
-    mac_addr_t      dest;
-    mac_addr_t      src;
-    u16             type;
-} eth_hdr_t;
+mac_addr_t g_mac_broadcast;
 
 
 /* Enumeration of Ethertype values */
@@ -43,8 +34,16 @@ typedef enum ethertype
     ethertype_arp   = 0x0806
 } ethertype_t;
 
+/* Ethernet II frame header */
+typedef struct eth_hdr
+{
+    mac_addr_t      dest;
+    mac_addr_t      src;
+    u16             type;   /* u16, not (enum) ethertype_t, because size is fixed */
+} eth_hdr_t;
 
-void eth_handle_frame(net_iface_t *iface, const void *frame, u32 len);
+
+s32 eth_handle_packet(net_iface_t *iface, const void *packet, u32 len);
 s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et, void *packet,
                  u32 len);
 

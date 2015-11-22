@@ -304,7 +304,7 @@ s32 encx24j600_init(dev_t *dev)
         BIT(MACON2_TXCRCEN);                /* Enable auto CRC generation and append        */
         /* TODO: enable full duplex? */
 
-    ENCX24_REG(base_addr, MAMXFL) = N2LE16(1500);  /* Set max. frame length */
+    ENCX24_REG(base_addr, MAMXFL) = N2LE16(ENCX24_PACKET_LEN_MAX);  /* Set max. frame length */
 
     /* TODO - Initialise PHY */
 
@@ -382,7 +382,11 @@ s32 encx24j600_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
 s32 encx24j600_write(dev_t *dev, ku32 offset, u32 *len, const void *buf)
 {
     void * const base_addr = dev->base_addr;
+    u32 len_ = *len;
     UNUSED(offset);
+
+    if((len_ < ENCX24_PACKET_LEN_MIN) || (len_ > ENCX24_PACKET_LEN_MAX))
+        return EINVAL;
 
     /* Is a transmission in progress? */
     /* TODO - put process to sleep, instead of busy-waiting */
@@ -390,8 +394,8 @@ s32 encx24j600_write(dev_t *dev, ku32 offset, u32 *len, const void *buf)
         ;
 
     /* Copy the packet into the TX buffer */
-    memcpy((void *) ENCX24_MEM_ADDR(base_addr, ENCX24_TX_BUF_START), buf, *len);
-    ENCX24_REG(base_addr, ETXLEN) = N2LE16(*len);
+    memcpy((void *) ENCX24_MEM_ADDR(base_addr, ENCX24_TX_BUF_START), buf, len_);
+    ENCX24_REG(base_addr, ETXLEN) = N2LE16(len_);
 
     /* Transmit the packet */
     ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_TXRTS);

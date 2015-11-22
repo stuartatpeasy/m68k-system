@@ -18,6 +18,8 @@ list_t g_exited_queue = LIST_INIT(g_exited_queue);
 
 proc_t *g_current_proc = NULL;
 pid_t g_next_pid = 0;
+extern s32 g_current_timestamp;
+
 
 /*
     proc_create() - create a new process and add it to the run queue.
@@ -177,7 +179,33 @@ void proc_sleep()
 
 
 /*
-    proc_wake_by_id() -
+    proc_sleep_for() -"sleep" the current process for the specified number of seconds.  Note that
+    the process does not actually move on to the sleep queue during this time - instead it
+    repeatedly yields its quantum until the wakeup time arrives.  This could be improved.
+*/
+void proc_sleep_for(s32 secs)
+{
+    s32 wakeup_time = g_current_timestamp + secs;
+
+    while(g_current_timestamp < wakeup_time)
+        cpu_switch_process();
+}
+
+
+/*
+    proc_sleep_until() - "sleep" the current process until the specified timestamp is passed.  Note
+    that the process does not actually move on to the sleep queue during this time - instead it
+    repeatedly yields its quantum until the wakeup time arrives.  This could be improved.
+*/
+void proc_sleep_until(s32 when)
+{
+    while(g_current_timestamp < when)
+        cpu_switch_process();
+}
+
+
+/*
+    proc_wake_by_id() - wake up the specified process
 */
 void proc_wake_by_id(const pid_t pid)
 {

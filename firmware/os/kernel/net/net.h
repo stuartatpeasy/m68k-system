@@ -11,6 +11,7 @@
 
 #include <include/defs.h>
 #include <include/types.h>
+#include <kernel/device/device.h>
 
 
 typedef enum net_addr_type
