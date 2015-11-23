@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "PS2Controller", "PS2Controller\PS2Controller.cproj", "{A0CBDB04-1832-4E88-8C4F-5C98CE3BC57C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0CBDB04-1832-4E88-8C4F-5C98CE3BC57C}.Debug|AVR.ActiveCfg = Debug|AVR
+		{A0CBDB04-1832-4E88-8C4F-5C98CE3BC57C}.Debug|AVR.Build.0 = Debug|AVR
+		{A0CBDB04-1832-4E88-8C4F-5C98CE3BC57C}.Release|AVR.ActiveCfg = Release|AVR
+		{A0CBDB04-1832-4E88-8C4F-5C98CE3BC57C}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
