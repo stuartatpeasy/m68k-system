@@ -9,33 +9,49 @@
 	(c) Stuart Wallace <stuartw@atom.net>, December 2011.
 */
 
-typedef unsigned char				u8;
-typedef const unsigned char			ku8;
-typedef volatile unsigned char		vu8;
-typedef char						s8;
-typedef const char					ks8;
-typedef volatile char				vs8;
 
-typedef unsigned short int			u16;
-typedef const unsigned short int	ku16;
-typedef volatile unsigned short int	vu16;
-typedef signed short int			s16;
-typedef const signed short int		ks16;
-typedef volatile signed short int	vs16;
+/*
+	Basic types - these should not be used in code.  They can be overridden for specific
+	host system architectures.
+*/
+#define T_S8				char
+#define T_U8				unsigned char
+#define T_S16				signed short int
+#define T_U16				unsigned short int
+#define T_S32				signed int
+#define T_U32				unsigned int
+#define T_S64				signed long long int
+#define T_U64				unsigned long long int
 
-typedef unsigned int				u32;
-typedef const unsigned int			ku32;
-typedef volatile unsigned int		vu32;
-typedef signed int					s32;
-typedef const signed int			ks32;
-typedef volatile signed int			vs32;
 
-typedef unsigned long long			u64;
-typedef const unsigned long long	ku64;
-typedef volatile unsigned long long	vu64;
-typedef signed long long			s64;
-typedef const signed long long		ks64;
-typedef volatile signed long long	vs64;
+/* Size-specific typedefs, to be used in kernel code */
+typedef T_U8				u8;
+typedef const T_U8			ku8;
+typedef volatile T_U8		vu8;
+typedef T_S8				s8;
+typedef const T_S8			ks8;
+typedef volatile T_S8		vs8;
+
+typedef T_U16				u16;
+typedef const T_U16			ku16;
+typedef volatile T_U16		vu16;
+typedef T_S16				s16;
+typedef const T_S16			ks16;
+typedef volatile T_S16		vs16;
+
+typedef T_U32				u32;
+typedef const T_U32			ku32;
+typedef volatile T_U32		vu32;
+typedef T_S32				s32;
+typedef const T_S32			ks32;
+typedef volatile T_S32		vs32;
+
+typedef T_U64				u64;
+typedef const T_U64			ku64;
+typedef volatile T_U64		vu64;
+typedef T_S64				s64;
+typedef const T_S64			ks64;
+typedef volatile T_S64		vs64;
 
 /* Test harnesses may already have defined size_t, so define it conditionally here */
 #ifndef HAVE_SIZE_T
