@@ -7,19 +7,16 @@
     (c) Stuart Wallace <stuartw@atom.net>, July 2015.
 */
 
+#include <kernel/platform.h>
 #include <kernel/sched.h>
-#include <platform/platform.h>
 
-
-//list_t g_run_queue;
-//list_t g_wait_queue;
 
 u32 g_ncontext_switches = 0;
 extern pid_t g_next_pid;
 
 /*
     sched_init() - initialise the process scheduler, and convert the current thread of execution
-    into a kernel process.
+    into a kernel process.  Interrupts must be disabled when this function is executed.
 */
 s32 sched_init(const char * const init_proc_name)
 {
@@ -28,22 +25,24 @@ s32 sched_init(const char * const init_proc_name)
     p = CHECKED_KCALLOC(1, sizeof(proc_t));
 
     p->id = g_next_pid++;
+    p->exit_code = S32_MIN;
     p->parent = NULL;
     p->state = ps_runnable;
     p->uid = ROOT_UID;
     p->gid = ROOT_GID;
-    p->next = p;
-    p->prev = p;
+
+    p->ustack = NULL;   /* No user-mode stack for the current (kernel) task */
+    p->kstack = NULL;   /* No separately-allocated kstack either */
 
     p->flags |= PROC_TYPE_KERNEL;
     strcpy(p->name, init_proc_name);
 
+    list_insert(&p->queue, &g_run_queue);
     g_current_proc = p;
 
     /* Install the scheduler IRQ handler */
-	return plat_install_timer_irq_handler(cpu_context_switch);
+	return plat_install_timer_irq_handler(cpu_preempt);
 }
-
 
 
 /*
@@ -51,37 +50,33 @@ s32 sched_init(const char * const init_proc_name)
 */
 void sched()
 {
+    proc_t *g_prev_proc = g_current_proc;
+
     /* Stop the current time-slice */
     plat_stop_quantum();
 
     ++g_current_proc->quanta;
 
-    do
-    {
-        g_current_proc = g_current_proc->next;
+    cpu_disable_interrupts();       /* FIXME - may be unnecessary; added for debug */
 
-    } while(g_current_proc->state != ps_runnable);
+    if(list_is_last(&g_current_proc->queue, &g_run_queue))
+        g_current_proc = list_first_entry(&g_run_queue, proc_t, queue);
+    else
+        g_current_proc = list_next_entry(g_current_proc, queue);
+
+    /* If the process went to sleep, move it to the "sleeping" queue */
+
+    if(g_prev_proc->state == ps_sleeping)
+        list_move_insert(&g_prev_proc->queue, &g_sleep_queue);
+
+    cpu_disable_interrupts();       /* FIXME - see above; added for debug */
 
     ++g_ncontext_switches;
 
     /*
         Start the next time-slice.  We need to do this before restoring the incoming task's state
-        because the function call might interfere with register values.  This means that the next
-        time-slice starts before the corresponding task is actually ready to run.
+        because the call to plat_start_quantum() will interfere with register values.  Consequently
+        the next time-slice starts before the corresponding task is actually ready to run.
     */
     plat_start_quantum();
 }
-
-
-/*
-    sched_yield() - called by a process that wishes to give up the rest of its quantum.
-*/
-void sched_yield()
-{
-    /*
-        TODO:
-            save process state
-
-    */
-}
-

@@ -22,26 +22,28 @@ clean:
 #
 
 assert.o: \
-	assert.c assert.h ../include/types.h ../klibc/stdio.h
+	assert.c assert.h ../kernel/include/types.h ../klibc/stdio.h
 
 ctype.o: \
-	ctype.c ctype.h ../include/types.h
+	ctype.c ctype.h ../kernel/include/types.h
 
 errno.o: \
-	errno.c errno.h ../include/types.h
+	errno.c errno.h ../kernel/include/types.h
 
 printf.o: \
-	printf.c stdio.h string.h ../memory/kmalloc.h ../include/limits.h ../include/types.h \
-	../platform/platform.h
+	printf.c stdio.h string.h ../kernel/memory/kmalloc.h ../kernel/include/limits.h \
+	../kernel/include/types.h ../kernel/platform.h
 
 stdio.o: \
-	stdio.c ../include/limits.h ../include/types.h ../platform/platform.h
+	stdio.c ../kernel/include/limits.h ../kernel/include/types.h ../kernel/platform.h
 
 stdlib.o: \
-	stdlib.c stdlib.h ../include/limits.h ../include/types.h ../memory/kmalloc.h
+	stdlib.c stdlib.h ../kernel/include/limits.h ../kernel/include/types.h \
+	../kernel/memory/kmalloc.h
 
 string.o: \
-	string.c string.h ../include/limits.h ../include/types.h ../memory/kmalloc.h
+	string.c string.h ../kernel/include/limits.h ../kernel/include/types.h \
+	../kernel/memory/kmalloc.h
 
 strings.o: \
-	strings.c ctype.h ../include/types.h
+	strings.c ctype.h ../kernel/include/types.h

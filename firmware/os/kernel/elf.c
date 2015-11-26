@@ -7,23 +7,23 @@
 	Stuart Wallace, August 2015.
 */
 
-#include <include/byteorder.h>
+#include <kernel/elf.h>
+#include <kernel/include/byteorder.h>
 #include <klibc/errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-
-#include "include/elf.h"
 
 
 /*
 	elf_load_exe() - load an executable ELF image.  buf should point to an in-memory copy of the
 	executable file; len should specify buf's length.
 */
-s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
+s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
 {
 	const Elf32_Ehdr *ehdr;
 	const Elf32_Shdr *shdr, *sh;
+	exe_img_t *image;
 	s8 *strtab;
 	u8 *imgbuf;
 	u32 vaddr_start, vaddr_end, size;
@@ -137,6 +137,13 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 	if(!imgbuf)
 		return ENOMEM;
 
+    image = kmalloc(sizeof(exe_img_t));
+    if(!image)
+    {
+        ufree(imgbuf);
+        return ENOMEM;
+    }
+
 	/* Pass 2: copy segments into buffer; initialise as required */
 	for(sh = shdr; sh < &shdr[nshdr]; ++sh)
 	{
@@ -164,9 +171,12 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t *img)
 			bzero(sect_start_img, BE2N32(sh->sh_size));	/* Zero-init NOBITS sections (eg. .bss) */
 	}
 
-	img->start = imgbuf;
-	img->len = size;
-	img->entry_point = (proc_entry_fn_t) (imgbuf + (BE2N32(ehdr->e_entry) - vaddr_start));
+
+	image->start = imgbuf;
+	image->len = size;
+	image->entry_point = (proc_entry_fn_t) (imgbuf + (BE2N32(ehdr->e_entry) - vaddr_start));
+
+    *img = image;
 
 	return SUCCESS;
 }

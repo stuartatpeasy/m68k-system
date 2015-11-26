@@ -9,8 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015
 */
 
-#include <include/defs.h>
-#include <include/types.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
 #include <kernel/syscalls.h>
 
 
@@ -21,13 +21,14 @@ typedef struct syscall_table_entry
 } syscall_table_entry_t;
 
 /* System call table: maps number of arguments to syscall fn */
-const syscall_table_entry_t g_syscalls[];
+const syscall_table_entry_t g_syscalls[MAX_SYSCALL + 1];
 
 
-s32 syscall_exit(u32 code);
 s32 syscall_console_putchar(u32 c);
 s32 syscall_console_getchar();
 s32 syscall_leds(u32 state);
-s32 syscall_yield();
+
+extern void syscall_yield();
+extern void syscall_exit();
 
 #endif

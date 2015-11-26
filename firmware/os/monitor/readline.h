@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <include/types.h>
+#include <kernel/include/types.h>
 
 
 void readline(char *buffer, s32 buf_len, ku32 echo);

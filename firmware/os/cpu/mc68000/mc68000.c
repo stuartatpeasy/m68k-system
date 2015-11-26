@@ -8,7 +8,14 @@
 */
 
 #include <cpu/mc68000/mc68000.h>
+#include <kernel/process.h>
 #include <klibc/stdio.h>
+
+
+void mc68000_bus_error_handler(void *dummy);
+void mc68000_address_error_handler(void *dummy);
+
+char g_errsym[128];
 
 
 /*
@@ -16,41 +23,89 @@
     are handled correctly, by being ignored, or reported and ignored, or being reported and
     followed by a CPU halt.
 */
-void cpu_init_interrupt_handlers(void)
+void cpu_irq_init_arch_specific(void)
 {
 	u16 u;
 
-    /* Initialise the generic IRQ handler's jump table */
-    for(u = 0; u <= CPU_MAX_IRQL; ++u)
-        cpu_set_interrupt_handler(u, NULL, mc68000_exc_generic);
-
-	/* Point all exception vectors at the generic IRQ handler code initially */
-	for(u = 0; u <= CPU_MAX_IRQL; ++u)
-        CPU_EXC_VPTR_SET(u, irq_router_full);
-
-	/* Now set specific handlers */
+	/* Set magic numbers in the bottom two vectors - these help (a bit) with debugging */
 	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
 	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
 
+	/* Bus and address errors have their own handler */
+	CPU_EXC_VPTR_SET(V_bus_error,       mc68000_bus_error_handler);
+	CPU_EXC_VPTR_SET(V_address_error,   mc68000_address_error_handler);
+
+	/* Point all other exception vectors at the generic IRQ handler code initially */
+	for(u = V_illegal_instruction; u <= CPU_MAX_IRQL; ++u)
+        CPU_EXC_VPTR_SET(u, irq_router_full);
+
     /* System calls use TRAP #0 */
 	CPU_EXC_VPTR_SET(V_trap_0, syscall_dispatcher);
-
-	/* Special case: sys_yield() uses TRAP #15 */
-	CPU_EXC_VPTR_SET(V_trap_15, cpu_yield);
 }
 
 
 /*
-    mc68000_exc_generic() - handler for interrupts not otherwise handled.  Dumps state and halts
+    mc68000_bus_error_handler() - report a bus error and halt the system.
+*/
+void mc68000_bus_error_handler(void *dummy)
+{
+    mc68010_short_exc_frame_t *sef;
+    mc68010_address_exc_frame_t *aef;
+
+    cpu_disable_interrupts();
+
+    sef = (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+    aef = (mc68010_address_exc_frame_t *) &sef[1];
+
+    ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
+
+    printf("\nBus error in process %d\n\n"
+           "PC=%08x  %s\nSR=%04x  [%s]\n\n",
+           proc_get_pid(), sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+
+    mc68010_dump_address_exc_frame(aef);
+
+    cpu_halt();
+}
+
+
+/*
+    mc68000_address_error_handler() - report an address error and halt the system.
+*/
+void mc68000_address_error_handler(void *dummy)
+{
+    mc68010_short_exc_frame_t *sef;
+    mc68010_address_exc_frame_t *aef;
+
+    cpu_disable_interrupts();
+
+    sef = (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
+    aef = (mc68010_address_exc_frame_t *) &sef[1];
+
+    ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
+
+    printf("\nAddress error in process %d\n\n"
+           "PC=%08x  %s\nSR=%04x  [%s]\n\n",
+           proc_get_pid(), sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+
+    mc68010_dump_address_exc_frame(aef);
+
+    cpu_halt();
+}
+
+
+/*
+    cpu_default_irq_handler() - handler for interrupts not otherwise handled.  Dumps state and halts
     the CPU.
 */
-void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
+void cpu_default_irq_handler(ku32 irql, void *data)
 {
+    const regs_t * const regs = &proc_current()->regs;
     UNUSED(data);
 
     cpu_disable_interrupts();
 
-	printf("\nUnhandled exception: ");
+	printf("\nUnhandled exception in process %d: ", proc_get_pid());
 	if((irql >= 25) && (irql <= 31))
 		printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
 	else if((irql >= 32) && (irql <= 47))
@@ -62,8 +117,6 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
 		const char *msg = NULL;
 		switch(irql)
 		{
-			case 2:  msg = "Bus error";								break;
-			case 3:  msg = "Address error";							break;
 			case 4:  msg = "Illegal instruction";					break;
 			case 5:  msg = "Integer divide by zero";				break;
 			case 6:  msg = "CHK/CHK2 instruction";					break;
@@ -93,16 +146,12 @@ void mc68000_exc_generic(ku32 irql, void *data, const regs_t regs)
         printf("%s (vector %d)\n", msg, irql);
 	}
 
-    if((irql == V_bus_error) || (irql == V_address_error))
-    {
-        putchar('\n');
-        mc68010_dump_address_exc_frame(irql, &regs);
-    }
-
     putchar('\n');
-    mc68000_dump_regs(&regs);
+    if(!((u32) regs & 1))
+        mc68000_dump_regs(regs);
+    else
+        puts("(memory corruption: register dump unavailable)");
 
-	puts("\nSystem halted.");
 	cpu_halt();
 }
 
@@ -134,6 +183,8 @@ void cpu_reset(void)
 */
 void cpu_halt(void)
 {
+	puts("\nSystem halted.");
+
     /* the arg to "stop" causes the CPU to stay in supervisor mode and sets the IRQ mask to 7 */
     asm volatile
     (
@@ -182,6 +233,59 @@ u8 cpu_tas(u8 *addr)
     return ret;
 }
 
+
+/*
+    cpu_proc_init() - perform architecture-specific register initialisation before a new process
+    starts.
+*/
+s32 cpu_proc_init(regs_t *r, void *entry_point, void *arg, void *ustack_top, void *kstack_top,
+                  ku32 flags)
+{
+    u32 *sp;
+    mc68010_short_exc_frame_t *f;
+
+    /* MC680x0 requires that the PC and SP are aligned to an even-numbered address */
+    if(((u32) entry_point & 1) || (((u32) kstack_top) & 1) || (((u32) ustack_top) & 1))
+        return EINVAL;
+
+    /* Set flags and store the argument to the process on the correct stack. */
+    if(flags & PROC_TYPE_KERNEL)
+    {
+        sp = (u32 *) kstack_top;
+        *--sp = (u32) arg;
+        *--sp = 0;          /* FIXME: ret addr should point to kernel proc-ending fn? */
+        kstack_top = sp;
+
+        r->sr = MC68K_SR_SUPERVISOR;
+    }
+    else
+    {
+        sp = (u32 *) ustack_top;
+        *--sp = (u32) arg;
+        *--sp = 0;          /* FIXME: ret addr should point to userspace proc-ending fn? */
+        ustack_top = sp;
+
+        r->sr = 0;
+    }
+
+    r->usp = (u32) ustack_top;
+    r->pc = (u32) entry_point;
+
+    /*
+        Place a fake short-format exception stack frame at the top of the kernel stack.  This
+        enables us to start the process by switching to its stack and executing an rte.
+    */
+    f = (mc68010_short_exc_frame_t *) ((u8 *) kstack_top - sizeof(mc68010_short_exc_frame_t));
+    f->format_offset = MC68K_EXC_FMT_SHORT;
+    f->pc = r->pc;
+    f->sr = r->sr;
+
+    r->a[7] = (u32) f;
+
+    return SUCCESS;
+}
+
+
 /*
 	mc68000_dump_status_register() - write a string describing the contents of the status register
 */
@@ -190,19 +294,18 @@ const char * mc68000_dump_status_register(ku16 sr)
 	static char buf[16];
 
 	/* dump format:  Tx S M Ix XNZVC */
-	/* buf must point to a >= 16-byte buffer */
 	buf[0] = 'T';
-	buf[1] = '0' + ((sr >> 14) & 3);
+	buf[1] = '0' + MC68K_SR_TRACE_LEVEL(sr);
 	buf[2] = buf[4] = buf[6] = buf[9] = ' ';
-	buf[3] = (sr & 0x2000) ? 'S' : 'U';
-	buf[5] = (sr & 0x1000) ? 'M' : 'I';
+	buf[3] = (sr & MC68K_SR_SUPERVISOR) ? 'S' : 'U';
+	buf[5] = (sr & MC68K_SR_STACK) ? 'M' : 'I';
 	buf[7] = 'I';
-	buf[8] = '0' + ((sr >> 8) & 7);
-	buf[10] = (sr & 0x10) ? 'X' : 'x';
-	buf[11] = (sr & 0x08) ? 'N' : 'n';
-	buf[12] = (sr & 0x04) ? 'Z' : 'z';
-	buf[13] = (sr & 0x02) ? 'V' : 'v';
-	buf[14] = (sr & 0x01) ? 'C' : 'c';
+	buf[8] = '0' + MC68K_SR_IPL(sr);
+	buf[10] = (sr & MC68K_SR_X) ? 'X' : 'x';
+	buf[11] = (sr & MC68K_SR_N) ? 'N' : 'n';
+	buf[12] = (sr & MC68K_SR_Z) ? 'Z' : 'z';
+	buf[13] = (sr & MC68K_SR_V) ? 'V' : 'v';
+	buf[14] = (sr & MC68K_SR_C) ? 'C' : 'c';
 	buf[15] = '\0';
 
 	return buf;
@@ -212,24 +315,19 @@ const char * mc68000_dump_status_register(ku16 sr)
 /*
 	mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
 */
-void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
+void mc68010_dump_address_exc_frame(mc68010_address_exc_frame_t *aef)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
-    UNUSED(irql);
-
-    const struct mc68010_address_exc_frame * const f =
-        (const struct mc68010_address_exc_frame * const) &(regs[1]);
-
 	printf("Special status word = %04x\n"
 		   "Fault address       = 0x%08x\n"
 		   "Data output buffer  = %04x\n"
 		   "Data input buffer   = %04x\n"
 		   "Instr output buffer = %04x\n"
 		   "Version number      = %04x\n",
-			f->special_status_word, f->fault_addr, f->data_output_buffer,
-			f->data_input_buffer, f->instr_output_buffer,	f->version_number);
+			aef->special_status_word, aef->fault_addr, aef->data_output_buffer,
+			aef->data_input_buffer, aef->instr_output_buffer, aef->version_number);
 }
 
 
@@ -238,18 +336,17 @@ void mc68010_dump_address_exc_frame(ku32 irql, const regs_t * const regs)
 */
 void mc68000_dump_regs(const regs_t *regs)
 {
-    char sym[128];
-
-    ksym_format_nearest_prev((void *) regs->pc, sym, sizeof(sym));
+    ksym_format_nearest_prev((void *) regs->pc, g_errsym, sizeof(g_errsym));
 
     printf("D0=%08x  D1=%08x  D2=%08x  D3=%08x\n"
            "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"
            "A0=%08x  A1=%08x  A2=%08x  A3=%08x\n"
-           "A4=%08x  A5=%08x  A6=%08x USP=%08x\n\n"
+           "A4=%08x  A5=%08x  A6=%08x  A7=%08x\n"
+           "                                      USP=%08x\n\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n",
            regs->d[0], regs->d[1], regs->d[2], regs->d[3],
            regs->d[4], regs->d[5], regs->d[6], regs->d[7],
            regs->a[0], regs->a[1], regs->a[2], regs->a[3],
-           regs->a[4], regs->a[5], regs->a[6], regs->a[7],
-           regs->pc, sym, regs->sr, mc68000_dump_status_register(regs->sr));
+           regs->a[4], regs->a[5], regs->a[6], regs->a[7], regs->usp,
+           regs->pc, g_errsym, regs->sr, mc68000_dump_status_register(regs->sr));
 }

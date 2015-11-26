@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011.
 */
 
-#include "disasm.h"
+#include <monitor/disasm.h>
 
 
 char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz);

@@ -10,8 +10,8 @@
 	TODO: get rid of "echo" stuff; implement separate length-limited read function.
 */
 
+#include <kernel/platform.h>
 #include <monitor/readline.h>
-#include <platform/platform.h>
 
 
 #define MAX_LINE_LENGTH 	(255)

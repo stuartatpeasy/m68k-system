@@ -20,24 +20,25 @@ clean:
 	rm -f $(LIBNAME) $(OBJECTS)
 
 commands.o: \
-	commands.c monitor.h disasm.o srec.o ../memory/kmalloc.h ../memory/kmalloc.c ../kutil/kutil.h
+	commands.c monitor.h disasm.o srec.o ../kernel/memory/kmalloc.h ../kernel/memory/kmalloc.c \
+	../kernel/util/kutil.h
 
 disasm.o: \
-	disasm.c disasm.h ../kutil/kutil.h ../libkutil.a
+	disasm.c disasm.h ../kernel/util/kutil.h
 
 env.o: \
 	env.c env.h
 
 history.o: \
-	history.c history.h ../include/defs.h ../include/types.h
+	history.c history.h ../kernel/include/defs.h ../kernel/include/types.h
 
 monitor.o: \
-	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../device/nvram.h \
-	../fs/mount.h ../include/defs.h ../include/version.h ../kutil/kutil.h ../memory/kmalloc.h \
-	../memory/slab.h
+	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../kernel/device/nvram.h \
+	../kernel/fs/mount.h ../kernel/include/defs.h ../kernel/include/version.h \
+	../kernel/util/kutil.h ../kernel/memory/kmalloc.h ../kernel/memory/slab.h
 
 readline.o: \
-	readline.c readline.h ../platform/platform.h
+	readline.c readline.h ../kernel/platform.h
 
 srec.o: \
-	srec.c srec.h readline.o ../kutil/kutil.h ../libkutil.a
+	srec.c srec.h readline.o ../kernel/util/kutil.h

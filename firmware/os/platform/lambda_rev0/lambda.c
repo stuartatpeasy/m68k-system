@@ -4,12 +4,12 @@
     Stuart Wallace, September 2015
 */
 
-#include <platform/platform.h>
+#include <driver/ds17485.h>
+#include <driver/mc68681.h>
+#include <kernel/device/device.h>
+#include <kernel/platform.h>
 #include <platform/lambda_rev0/lambda.h>
 #include <platform/lambda_rev0/device.h>
-#include <device/device.h>
-#include <device/ds17485.h>
-#include <device/mc68681.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =
@@ -19,11 +19,25 @@ mem_extent_t g_lambda_mem_extents[] =
         .len    = 256 * 1024,
         .flags  = MEM_EXTENT_KERN | MEM_EXTENT_RAM
     },
-
     {
         .base   = (void *) 0x00040000,
         .len    = 0,                    /* will be filled in during RAM detection */
         .flags  = MEM_EXTENT_USER | MEM_EXTENT_RAM
+    },
+    {
+        .base   = (void *) 0x00800000,
+        .len    = 0x00200000,
+        .flags  = MEM_EXTENT_VACANT
+    },
+    {
+        .base   = (void *) 0x00a00000,
+        .len    = 0x00500000,
+        .flags  = MEM_EXTENT_PERIPH
+    },
+    {
+        .base   = (void *) 0x00f00000,
+        .len    = 0x00100000,
+        .flags  = MEM_EXTENT_KERN | MEM_EXTENT_ROM
     }
 };
 
@@ -59,7 +73,7 @@ s32 plat_mem_detect()
     g_lambda_mem_extents[1].len = ((u32) p) - ((u32) g_lambda_mem_extents[1].base);
 
     g_mem_extents = g_lambda_mem_extents;
-    g_mem_extents_end = &g_lambda_mem_extents[2];   /* ptr to first non-existent extent */
+    g_mem_extents_end = &g_lambda_mem_extents[ARRAY_COUNT(g_lambda_mem_extents)];
 
     return SUCCESS;
 }
@@ -89,8 +103,8 @@ s32 plat_console_init(void)
         return ret;
     }
 
-	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A", IRQL_NONE,
-                        LAMBDA_MC68681_BASE, &g_lambda_console);
+	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A",
+                        LAMBDA_MC68681_IRQL, LAMBDA_MC68681_BASE, &g_lambda_console);
 	if(ret == SUCCESS)
 	{
 	    g_lambda_console->parent = g_lambda_duart;
@@ -131,7 +145,7 @@ s16 plat_console_getc()
 /*
 	plat_install_timer_irq_handler() - bind the timer IRQ to the appropriate handler in the OS.
 */
-s32 plat_install_timer_irq_handler(interrupt_handler handler)
+s32 plat_install_timer_irq_handler(irq_handler handler)
 {
     ks32 ret = mc68681_set_output_pin_fn(g_lambda_duart, mc68681_pin_op3, mc68681_pin_fn_ct_output);
 
@@ -193,7 +207,8 @@ s32 plat_get_cpu_clock(u32 *clk)
     u32 loops;
     u8 curr_second;
     dev_t *rtc;
-    s32 (*rtc_get_time)(dev_t *, ku32 offset, ku32 len, void *);
+    s32 (*rtc_get_time)(dev_t *, ku32 offset, u32 *len, void *);
+    u32 one = 1;
     s32 ret;
 
     /* Find the first RTC */
@@ -204,19 +219,19 @@ s32 plat_get_cpu_clock(u32 *clk)
     rtc_get_time = rtc->read;
 
     /* Wait for the next second to start */
-    ret = rtc_get_time(rtc, 0, 1, &tm);
+    ret = rtc_get_time(rtc, 0, &one, &tm);
     if(ret != SUCCESS)
         return ret;
 
     for(curr_second = tm.second; curr_second == tm.second;)
-        rtc_get_time(rtc, 0, 1, &tm);
+        rtc_get_time(rtc, 0, &one, &tm);
 
     curr_second = tm.second;
 
     for(loops = 0; curr_second == tm.second; ++loops)
-        rtc_get_time(rtc, 0, 1, &tm);
+        rtc_get_time(rtc, 0, &one, &tm);
 
-    *clk = 803 * loops;
+    *clk = 816 * loops;
 
     return SUCCESS;
 }

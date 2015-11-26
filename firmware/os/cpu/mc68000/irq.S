@@ -15,6 +15,7 @@
 #endif
 
 #include <cpu/mc68000/regs.h>
+.include "cpu/mc68000/macros.S"
 
 .text
 .global irq_router_full
@@ -85,37 +86,33 @@
                  +----------------------+     /
 */
 
-/* "full" IRQ router: saves/restores complete CPU state.  Allows for task-switching etc. */
-/* Execution time: 468 clocks on MC68010, assuming zero wait states */
+/*
+    "full" IRQ router: saves/restores complete CPU state.  Used by unhandled-exception handlers to
+    report CPU state.
+*/
+/* Execution time: ~458 clocks on MC68010, assuming zero wait states */
 irq_router_full:
-    movem.l     d0-d7/a0-a7, sp@-
+    DISABLE_INTERRUPTS
+    SAVE_CONTEXT
 
-    move.l      usp, a0
-    move.l      a0, sp@(60)
-
-    clr.l       d0
-    move.w      sp@(70), d0
+    /*
+        Retrieve format/offset word, extract offset, convert to IRQ number and extend to word len.
+        Stack it and call the IRQ handler.
+    */
+    move.w      sp@(6), d0
     andi.w      #0x03ff, d0
+    ext.l       d0
 
-    asl.l       #1, d0
-    move.l      d0, a0
-    adda.l      #g_interrupt_handlers, a0
-
-    move.l      a0@(4), sp@-
-
-    asr.l       #3, d0
+    lsr.l       #2, d0
     move.l      d0, sp@-
 
-    move.l      a0@, a0
-    jsr         a0@
+    jsr         cpu_irq_handler
 
-    addq.l      #8, sp
+    /* Unwind the stack and resume normal processing */
+    addq.l      #4, sp
 
-    move.l      sp@(60), a0
-    move.l      a0, usp
-    movem.l     sp@+, d0-d7/a0-a6
-
-    addq.l       #4, sp
+    RESTORE_CONTEXT
+    ENABLE_INTERRUPTS
 
     rte
 
@@ -163,26 +160,26 @@ irq_router_full:
 
 
 irq_router_fast:
-    movem.l     d0-d1/a0-a1, sp@-
+    DISABLE_INTERRUPTS
+    SAVE_CONTEXT_SHORT
 
-    move.w      sp@(22), d0
+    /*
+        Retrieve format/offset word, extract offset, convert to IRQ number and extend to word len.
+        Stack it and call the IRQ handler.
+    */
+    move.w      sp@(6), d0
     andi.w      #0x03ff, d0
     ext.l       d0
 
-    asl.l       #1, d0
-    move.l      d0, a0
-    adda.l      #g_interrupt_handlers, a0
-
-    move.l      a0@(4), sp@-
-
-    asr.l       #3, d0
+    lsr.l       #2, d0
     move.l      d0, sp@-
 
-    move.l      a0@, a0
-    jsr         a0@
+    jsr         cpu_irq_handler
 
-    addq.l      #8, sp
+    /* Unwind the stack and resume normal processing */
+    addq.l      #4, sp
 
-    movem.l     sp@+, d0-d1/a0-a1
+    RESTORE_CONTEXT_SHORT
+    ENABLE_INTERRUPTS
 
     rte

@@ -30,8 +30,3 @@ syscall3:
 		trap #0
 		rts
 
-sys_yield:
-		trap #15
-		moveq.l #0, %d0
-		rts
-

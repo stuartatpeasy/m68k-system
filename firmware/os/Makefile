@@ -9,14 +9,18 @@ FLASHTOOL=/usr/local/bin/flashtool
 DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
-CSOURCES:=	main.c \
-			cpu/cpu.c cpu/$(CPU)/$(CPU).c \
-			device/ata.c device/auto.c device/device.c device/ds17485.c device/encx24j600.c \
-			device/mc68681.c device/nvram.c device/partition.c \
-			fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c \
-			kernel/boot.c kernel/elf.c kernel/ksym.c kernel/process.c kernel/sched.c \
-			kernel/semaphore.c kernel/syscall.c kernel/user.c \
-			memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c
+CSOURCES:=	cpu/$(CPU)/$(CPU).c \
+			driver/ata.c driver/ds17485.c driver/encx24j600.c driver/mc68681.c \
+			kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
+			kernel/device/partition.c \
+			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
+			kernel/fs/fat/fat.c \
+			kernel/boot.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/housekeeper.c \
+			kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c kernel/syscall.c \
+			kernel/user.c kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c \
+			kernel/net/net.c kernel/net/udp.c \
+			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
+			kernel/memory/kmalloc.c kernel/memory/slab.c
 
 ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S cpu/$(CPU)/startup.S
 
@@ -70,7 +74,7 @@ clean:
 	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Cklibc clean
-	$(MAKE) $(MFLAGS) -Ckutil clean
+	$(MAKE) $(MFLAGS) -Ckernel/util clean
 	$(MAKE) $(MFLAGS) -Cmonitor clean
 	$(MAKE) $(MFLAGS) -Ctools clean
 
@@ -78,7 +82,7 @@ libc.a:
 	$(MAKE) $(MFLAGS) -Cklibc
 
 libkutil.a:
-	$(MAKE) $(MFLAGS) -Ckutil
+	$(MAKE) $(MFLAGS) -Ckernel/util
 
 libmonitor.a:
 	$(MAKE) $(MFLAGS) -Cmonitor
@@ -92,111 +96,149 @@ $(TOOLS):
 # Dependencies below this point
 #
 
-main.o: \
-	main.c device/ds17485.h fs/vfs.h include/defs.h klibc/stdio.h klibc/strings.h kutil/kutil.h \
-	memory/extents.o memory/kmalloc.h memory/slab.h monitor/monitor.h device/device.o kernel/sched.h
-
-cpu/cpu.o: \
-	cpu/cpu.c cpu/cpu.h cpu/arch_specific.h include/types.h
-
 cpu/$(CPU)/$(CPU).o: \
-	cpu/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c include/defs.h include/types.h
+	kernel/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c kernel/include/defs.h \
+	kernel/include/types.h
 
 cpu/$(CPU)/process.o: \
 	cpu/$(CPU)/process.S
 
 cpu/$(CPU)/startup.o: \
-	cpu/$(CPU)/startup.S memory/memorymap.h
+	cpu/$(CPU)/startup.S kernel/memory/memorymap.h
 
-device/ata.o: \
-	device/ata.c device/ata.h device/block.h device/devctl.h device/device.h include/byteorder.h \
-	include/defs.h include/mbr.h include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
-
-device/auto.o: \
-	device/auto.c device/auto.h include/defs.h include/types.h device/device.h
-
-device/device.o: \
-	device/device.c device/devctl.h device/device.h kutil/kutil.h device/ata.h device/partition.h \
-	include/types.h klibc/errno.h
-
-device/ds17485.o: \
-	device/ds17485.c device/ds17485.h include/types.h kutil/kutil.h
-
-device/encx24j600.o: \
-	device/encx24j600.c device/encx24j600.h cpu/cpu.h device/device.h include/byteorder.h \
-	include/defs.h include/error.h include/types.h
-
-device/mc68681.o: \
-	device/mc68681.c device/mc68681.h include/defs.h include/error.h include/types.h
-
-device/nvram.o: \
-	device/nvram.c device/nvram.h device/ds17485.h include/defs.h include/error.h include/types.h \
-	kutil/kutil.h
-
-device/partition.o: \
-	device/partition.c device/partition.h device/device.h include/byteorder.h include/defs.h \
-	include/mbr.h include/types.h klibc/stdio.h kutil/kutil.h cpu/cpu.h device/devctl.h
-
-fs/ext2/ext2.o: \
-	fs/ext2/ext2.c fs/ext2/ext2.h include/defs.h klibc/errno.h klibc/stdio.h klibc/string.h \
-	kutil/kutil.h memory/kmalloc.h
-
-fs/fat/fat.o: \
-	fs/fat/fat.c fs/fat/fat.h fs/vfs.h include/byteorder.h include/defs.h include/error.h \
-	include/types.h klibc/strings.h kutil/kutil.h
-
-fs/file.o: \
-	fs/file.c fs/file.h fs/vfs.h include/defs.h include/types.h
-
-fs/mount.o: \
-	fs/mount.c fs/mount.h include/defs.h include/types.h device/device.h fs/vfs.h include/defs.h \
-	klibc/errno.h kutil/kutil.h memory/kmalloc.h
-
-fs/vfs.o: \
-	fs/vfs.c fs/vfs.h fs/mount.h device/nvram.h device/devctl.h device/device.h include/defs.h \
-	include/types.h klibc/stdio.h
-
-include/byteorder.h: \
-	cpu/cpu.h
-
-kernel/boot.o: \
-	kernel/boot.c kernel/boot.h include/defs.h include/types.h device/devctl.h device/device.h \
-	klibc/stdio.h platform/platform.h
-
-kernel/elf.o: \
-	kernel/elf.c include/byteorder.h include/defs.h include/elf.h include/types.h klibc/errno.h \
+driver/ata.o: \
+	driver/ata.c driver/ata.h kernel/device/block.h kernel/device/devctl.h kernel/device/device.h \
+	kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h kernel/include/types.h \
 	klibc/stdio.h klibc/string.h klibc/strings.h
 
+driver/ds17485.o: \
+	driver/ds17485.c driver/ds17485.h kernel/include/types.h kernel/util/kutil.h
+
+driver/encx24j600.o: \
+	driver/encx24j600.c driver/encx24j600.h kernel/cpu.h kernel/device/device.h \
+	kernel/include/byteorder.h kernel/include/defs.h kernel/include/error.h kernel/include/types.h
+
+driver/mc68681.o: \
+	driver/mc68681.c driver/mc68681.h kernel/include/defs.h kernel/include/error.h \
+	kernel/include/types.h
+
+kernel/boot.o: \
+	kernel/boot.c kernel/boot.h kernel/include/defs.h kernel/include/types.h \
+	kernel/device/devctl.h kernel/device/device.h klibc/stdio.h kernel/platform.h
+
+kernel/cpu/cpu.o: \
+	kernel/cpu/cpu.c kernel/cpu.h cpu/arch_specific.h kernel/include/types.h
+
+kernel/device/auto.o: \
+	kernel/device/auto.c kernel/device/auto.h kernel/include/defs.h kernel/include/types.h \
+	kernel/device/device.h
+
+kernel/device/device.o: \
+	kernel/device/device.c kernel/device/devctl.h kernel/device/device.h kernel/util/kutil.h \
+	driver/ata.h kernel/device/partition.h kernel/include/types.h klibc/errno.h
+
+kernel/device/nvram.o: \
+	kernel/device/nvram.c kernel/device/nvram.h driver/ds17485.h kernel/include/defs.h \
+	kernel/include/error.h kernel/include/types.h kernel/util/kutil.h
+
+kernel/device/partition.o: \
+	kernel/device/partition.c kernel/device/partition.h kernel/device/device.h \
+	kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h kernel/include/types.h \
+	klibc/stdio.h kernel/util/kutil.h kernel/cpu.h kernel/device/devctl.h
+
+kernel/elf.o: \
+	kernel/elf.c kernel/include/byteorder.h kernel/include/defs.h kernel/elf.h \
+	kernel/include/types.h klibc/errno.h klibc/stdio.h klibc/string.h klibc/strings.h
+
+kernel/entry.o: \
+	kernel/entry.c driver/ds17485.h kernel/fs/vfs.h kernel/include/defs.h klibc/stdio.h \
+	klibc/strings.h kernel/util/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h \
+	kernel/memory/slab.h monitor/monitor.h kernel/device/device.o kernel/sched.h
+
+kernel/fs/ext2/ext2.o: \
+	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h kernel/include/defs.h klibc/errno.h klibc/stdio.h \
+	klibc/string.h kernel/util/kutil.h kernel/memory/kmalloc.h
+
+kernel/fs/fat/fat.o: \
+	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/fs/vfs.h kernel/include/byteorder.h \
+	kernel/include/defs.h kernel/include/error.h kernel/include/types.h klibc/strings.h \
+	kernel/util/kutil.h
+
+kernel/fs/file.o: \
+	kernel/fs/file.c kernel/fs/file.h kernel/fs/vfs.h kernel/include/defs.h kernel/include/types.h
+
+kernel/fs/mount.o: \
+	kernel/fs/mount.c kernel/fs/mount.h kernel/include/defs.h kernel/include/types.h \
+	kernel/device/device.h kernel/fs/vfs.h kernel/include/defs.h klibc/errno.h kernel/util/kutil.h \
+	kernel/memory/kmalloc.h
+
+kernel/fs/vfs.o: \
+	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h kernel/device/nvram.h \
+	kernel/device/devctl.h kernel/device/device.h kernel/include/defs.h kernel/include/types.h \
+	klibc/stdio.h
+
+kernel/housekeeper.o: \
+	kernel/housekeeper.c kernel/housekeeper.h kernel/include/defs.h kernel/include/types.h
+
+kernel/include/byteorder.h: \
+	kernel/cpu.h
+
 kernel/ksym.o: \
-	kernel/ksym.c kernel/ksym.h include/defs.h include/types.h
+	kernel/ksym.c kernel/ksym.h kernel/include/defs.h kernel/include/types.h
 
-kernel/process.o: \
-	kernel/process.c kernel/process.h include/defs.h include/types.h
+kernel/memory/buddy.o: \
+	kernel/memory/buddy.c kernel/memory/buddy.h kernel/include/types.h klibc/stdio.h \
+	kernel/util/kutil.h libkutil.a
 
-kernel/sched.o: \
-	kernel/sched.c kernel/sched.h cpu/cpu.h include/defs.h include/types.h kernel/user.h \
+kernel/memory/extents.o: \
+	kernel/memory/extents.c kernel/memory/extents.h kernel/include/defs.h kernel/include/types.h \
 	klibc/strings.h
 
+kernel/memory/heap.o: \
+	kernel/memory/heap.c kernel/memory/heap.h kernel/include/types.h klibc/stdio.h
+
+kernel/memory/kmalloc.o: \
+	kernel/memory/kmalloc.c kernel/memory/kmalloc.h kernel/include/types.h \
+	kernel/memory/memorymap.h
+
+kernel/memory/slab.o: \
+	kernel/memory/slab.c kernel/memory/slab.h kernel/include/defs.h kernel/include/types.h \
+	klibc/stdio.h
+
+kernel/net/arp.o: \
+	kernel/net/arp.c kernel/net/arp.h kernel/include/byteorder.h kernel/include/defs.h \
+	kernel/include/error.h kernel/include/types.h kernel/net/ethernet.h
+
+kernel/net/ethernet.o: \
+	kernel/net/ethernet.c kernel/net/ethernet.h kernel/include/byteorder.h kernel/include/defs.h \
+	kernel/include/types.h kernel/net/ipv4.h
+
+kernel/net/icmp.o: \
+	kernel/net/icmp.c kernel/net/icmp.h kernel/include/defs.h kernel/include/types.h
+
+kernel/net/ipv4.o: \
+	kernel/net/ipv4.c kernel/net/ipv4.h kernel/include/byteorder.h kernel/include/defs.h \
+	kernel/include/types.h kernel/net/ethernet.h
+
+kernel/net/net.o: \
+	kernel/net/net.c kernel/net/net.h kernel/include/defs.h kernel/include/types.h \
+	kernel/memory/kmalloc.h kernel/net/arp.h
+
+kernel/net/udp.o: \
+	kernel/net/udp.c kernel/net/udp.h kernel/include/defs.h kernel/include/types.h
+
+kernel/process.o: \
+	kernel/process.c kernel/process.h kernel/include/defs.h kernel/include/types.h
+
+kernel/sched.o: \
+	kernel/sched.c kernel/sched.h kernel/cpu.h kernel/include/defs.h kernel/include/types.h \
+	kernel/user.h klibc/strings.h
+
 kernel/semaphore.o: \
-	kernel/semaphore.c kernel/semaphore.h include/defs.h include/types.h cpu/cpu.h
+	kernel/semaphore.c kernel/semaphore.h kernel/include/defs.h kernel/include/types.h kernel/cpu.h
 
 kernel/syscall.o: \
 	kernel/syscall.c kernel/syscall.h kernel/syscalls.h
 
 kernel/user.o: \
-	kernel/user.c kernel/user.h include/defs.h include/types.h
-
-memory/buddy.o: \
-	memory/buddy.c memory/buddy.h include/types.h klibc/stdio.h kutil/kutil.h libkutil.a
-
-memory/extents.o: \
-	memory/extents.c memory/extents.h include/defs.h include/types.h klibc/strings.h
-
-memory/heap.o: \
-	memory/heap.c memory/heap.h include/types.h klibc/stdio.h
-
-memory/kmalloc.o: \
-	memory/kmalloc.c memory/kmalloc.h include/types.h memory/memorymap.h
-
-memory/slab.o: \
-	memory/slab.c memory/slab.h include/defs.h include/types.h klibc/stdio.h
+	kernel/user.c kernel/user.h kernel/include/defs.h kernel/include/types.h

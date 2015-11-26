@@ -69,13 +69,11 @@
 			<Add library="gcc" />
 		</Linker>
 		<Unit filename="Makefile" />
+		<Unit filename="buildcfg.h" />
 		<Unit filename="cpu/arch_specific.h" />
-		<Unit filename="cpu/cpu.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="cpu/cpu.h" />
 		<Unit filename="cpu/mc68000/exceptions.h" />
 		<Unit filename="cpu/mc68000/irq.S" />
+		<Unit filename="cpu/mc68000/macros.S" />
 		<Unit filename="cpu/mc68000/mc68000.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -84,82 +82,141 @@
 		<Unit filename="cpu/mc68000/regs.h" />
 		<Unit filename="cpu/mc68000/startup.S" />
 		<Unit filename="cpu/mc68000/syscall.S" />
-		<Unit filename="device/ata.c">
+		<Unit filename="driver/ata.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/ata.h" />
-		<Unit filename="device/auto.c">
+		<Unit filename="driver/ata.h" />
+		<Unit filename="driver/ds17485.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/auto.h" />
-		<Unit filename="device/block.h" />
-		<Unit filename="device/devctl.h" />
-		<Unit filename="device/device.c">
+		<Unit filename="driver/ds17485.h" />
+		<Unit filename="driver/encx24j600.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/device.h" />
-		<Unit filename="device/ds17485.c">
+		<Unit filename="driver/encx24j600.h" />
+		<Unit filename="driver/mc68681.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="device/ds17485.h" />
-		<Unit filename="device/encx24j600.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/encx24j600.h" />
-		<Unit filename="device/mc68681.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/mc68681.h" />
-		<Unit filename="device/nvram.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/nvram.h" />
-		<Unit filename="device/partition.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="device/partition.h" />
-		<Unit filename="fs/ext2/ext2.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="fs/ext2/ext2.h" />
-		<Unit filename="fs/fat/fat.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="fs/fat/fat.h" />
-		<Unit filename="fs/file.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="fs/file.h" />
-		<Unit filename="fs/mount.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="fs/mount.h" />
-		<Unit filename="fs/vfs.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="fs/vfs.h" />
+		<Unit filename="driver/mc68681.h" />
 		<Unit filename="global.mk" />
-		<Unit filename="include/byteorder.h" />
-		<Unit filename="include/ctype.h" />
-		<Unit filename="include/defs.h" />
-		<Unit filename="include/elf.h" />
-		<Unit filename="include/error.h" />
-		<Unit filename="include/limits.h" />
-		<Unit filename="include/list.h" />
-		<Unit filename="include/mbr.h" />
-		<Unit filename="include/types.h" />
-		<Unit filename="include/version.h" />
 		<Unit filename="kernel/boot.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/boot.h" />
+		<Unit filename="kernel/cpu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/cpu.h" />
+		<Unit filename="kernel/device/auto.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/auto.h" />
+		<Unit filename="kernel/device/block.h" />
+		<Unit filename="kernel/device/devctl.h" />
+		<Unit filename="kernel/device/device.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/device.h" />
+		<Unit filename="kernel/device/mbr.h" />
+		<Unit filename="kernel/device/nvram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/nvram.h" />
+		<Unit filename="kernel/device/partition.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/partition.h" />
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="kernel/elf.h" />
+		<Unit filename="kernel/entry.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/fs/ext2/ext2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/fs/ext2/ext2.h" />
+		<Unit filename="kernel/fs/fat/fat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/fs/fat/fat.h" />
+		<Unit filename="kernel/fs/file.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/fs/file.h" />
+		<Unit filename="kernel/fs/mount.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/fs/mount.h" />
+		<Unit filename="kernel/fs/vfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/fs/vfs.h" />
+		<Unit filename="kernel/housekeeper.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/housekeeper.h" />
+		<Unit filename="kernel/include/byteorder.h" />
+		<Unit filename="kernel/include/defs.h" />
+		<Unit filename="kernel/include/error.h" />
+		<Unit filename="kernel/include/limits.h" />
+		<Unit filename="kernel/include/list.h" />
+		<Unit filename="kernel/include/types.h" />
+		<Unit filename="kernel/include/version.h" />
 		<Unit filename="kernel/ksym.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/ksym.h" />
+		<Unit filename="kernel/memory/blockalloc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/memory/buddy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/memory/buddy.h" />
+		<Unit filename="kernel/memory/extents.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/memory/extents.h" />
+		<Unit filename="kernel/memory/heap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/memory/heap.h" />
+		<Unit filename="kernel/memory/kmalloc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/memory/kmalloc.h" />
+		<Unit filename="kernel/memory/memorymap.h" />
+		<Unit filename="kernel/memory/slab.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/memory/slab.h" />
+		<Unit filename="kernel/net/arp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/arp.h" />
+		<Unit filename="kernel/net/ethernet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/ethernet.h" />
+		<Unit filename="kernel/net/icmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/icmp.h" />
+		<Unit filename="kernel/net/ipv4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/ipv4.h" />
+		<Unit filename="kernel/net/net.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/net.h" />
+		<Unit filename="kernel/net/udp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/udp.h" />
+		<Unit filename="kernel/platform.h" />
 		<Unit filename="kernel/process.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -181,6 +238,36 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/user.h" />
+		<Unit filename="kernel/util/bvec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/bvec.h" />
+		<Unit filename="kernel/util/checksum.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/circbuf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/circbuf.h" />
+		<Unit filename="kernel/util/dump.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/hash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/kprintf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/ktime.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/kutil.h" />
+		<Unit filename="kernel/util/numeric.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/util/string.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="klibc/Makefile" />
 		<Unit filename="klibc/assert.c">
 			<Option compilerVar="CC" />
@@ -194,6 +281,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="klibc/errno.h" />
+		<Unit filename="klibc/errors.h" />
 		<Unit filename="klibc/limits.h" />
 		<Unit filename="klibc/printf.c">
 			<Option compilerVar="CC" />
@@ -214,51 +302,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="klibc/strings.h" />
-		<Unit filename="kutil/Makefile" />
-		<Unit filename="kutil/bvec.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/bvec.h" />
-		<Unit filename="kutil/checksum.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/dump.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/ktime.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/kutil.h" />
-		<Unit filename="kutil/numeric.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="kutil/string.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="main.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/buddy.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/buddy.h" />
-		<Unit filename="memory/extents.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/extents.h" />
-		<Unit filename="memory/heap.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/heap.h" />
-		<Unit filename="memory/kmalloc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/kmalloc.h" />
-		<Unit filename="memory/memorymap.h" />
-		<Unit filename="memory/slab.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memory/slab.h" />
 		<Unit filename="monitor/Makefile" />
 		<Unit filename="monitor/commands.c">
 			<Option compilerVar="CC" />
@@ -301,7 +344,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="platform/lambda_rev0/lambda.h" />
-		<Unit filename="platform/platform.h" />
 		<Unit filename="platform/platform_specific.h" />
 		<Extensions>
 			<envvars />

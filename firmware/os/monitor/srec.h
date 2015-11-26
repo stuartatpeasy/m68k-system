@@ -9,13 +9,13 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include "include/types.h"
+#include <kernel/include/types.h>
+#include <monitor/readline.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
-#include "monitor/readline.h"
 
 #define SREC_MAX_LINE_LENGTH		(256)
 

@@ -7,8 +7,8 @@
 	(c) Stuart Wallace, June 2015.
 */
 
-#include "stdio.h"
-#include "string.h"
+#include <klibc/stdio.h>
+#include <klibc/string.h>
 
 
 /*
@@ -80,30 +80,38 @@ s32 sprintf(char *str, const char *format, ...)
 
 /*
     vprintf()
+
+	Tries to print to a stack-based buffer of size PRINTF_INITIAL_BUFFER_SIZE; if this buffer
+	isn't big enough, allocates a sufficiently-large heap-based buffer and prints to that instead.
 */
 s32 vprintf(const char *format, va_list ap)
 {
 	s32 buf_size = PRINTF_INITIAL_BUFFER_SIZE;
-	char *buf;
+	char *p;
+	char buf[PRINTF_INITIAL_BUFFER_SIZE];
 	s32 n;
 
+	p = buf;
 	while(1)
 	{
-		buf = (char *) malloc(buf_size);
-		n = vsnprintf(buf, buf_size, format, ap);
+		n = vsnprintf(p, buf_size, format, ap);
 
 		if(n == -1)
 			return n;
 
 		if(n < buf_size)
 		{
-			put(buf);
-			free(buf);
+			put(p);
+			if(p != buf)
+				kfree(p);
+
 			return n;
 		}
 
-		free(buf);
 		buf_size = n + 1;
+		p = kmalloc(buf_size);
+		if(!p)
+			return -ENOMEM;
 	}
 }
 

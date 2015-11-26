@@ -1,0 +1,84 @@
+/*
+    IPv4 implementation
+
+    Part of ayumos
+
+
+    (c) Stuart Wallace, November 2015.
+*/
+
+#include <kernel/net/icmp.h>
+#include <kernel/net/ipv4.h>
+#include <kernel/net/udp.h>
+#include <klibc/stdio.h>        /* TODO remove */
+
+
+void ip_print_addr(ipv4_addr_t addr)
+{
+    printf("%u.%u.%u.%u",
+           ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), addr & 0xff);
+}
+
+
+/*
+    ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
+    returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
+*/
+s32 ipv4_handle_packet(net_iface_t *iface, const void *packet, u32 len)
+{
+    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet;
+    void *payload = (void *) ((u8 *) packet + sizeof(ipv4_hdr_t));
+
+    UNUSED(iface);
+    UNUSED(len);
+    UNUSED(hdr);
+    UNUSED(payload);
+
+    return SUCCESS;
+}
+
+
+/*
+    ipv4_send_packet() - send an IPv4 packet to a peer
+*/
+s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
+                     const void *packet, u32 len)
+{
+    ipv4_hdr_t *hdr;
+    ipv4_addr_t srcaddr;
+    void *buffer;
+    u32 total_len;
+
+    net_iface_t *iface = net_route_get(na_ipv4, (net_addr_t *) &dest);
+    if(iface == NULL)
+        return EHOSTUNREACH;
+
+    total_len = sizeof(ipv4_hdr_t) + len;
+    buffer = kmalloc(total_len);
+    if(buffer == NULL)
+        return ENOMEM;
+
+    hdr = (ipv4_hdr_t *) buffer;
+
+    srcaddr =
+    (src == IPV4_SRC_ADDR_DEFAULT) ?
+    *((ipv4_addr_t *) &iface->proto_addr) :
+        src;
+
+    /* TODO - fragmentation... */
+
+    /* Create an IPv4 header for the packet */
+    hdr->version_hdr_len    = (4 << 4) | 5;     /* IPv4, header len = 5 32-bit words (=20 bytes) */
+    hdr->diff_svcs          = 0;
+    hdr->total_len          = sizeof(ipv4_hdr_t) + len;
+    hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
+    hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
+    hdr->ttl                = 64;               /* Sensible default? */
+    hdr->protocol           = proto;
+    hdr->src                = srcaddr;
+    hdr->dest               = dest;
+
+    memcpy((u8 *) buffer + sizeof(ipv4_hdr_t), packet, len);
+
+    return net_transmit(iface, buffer, total_len);
+}

@@ -10,7 +10,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011-08-28.
 */
 
-#include "include/types.h"
+#include <kernel/include/types.h>
 
 
 #ifdef NDEBUG

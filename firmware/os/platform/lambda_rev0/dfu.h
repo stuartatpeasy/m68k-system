@@ -11,13 +11,12 @@
 
 #include <string.h>
 
-#include <cpu/cpu.h>
-#include "device/duart.h"			/* for led_on() */
-#include "include/error.h"
-#include "include/types.h"
-#include "kutil/kutil.h"
-#include "memory/kmalloc.h"
-#include "memory/memorymap.h"
+#include <kernel/cpu.h>
+#include <kernel/include/error.h>
+#include <kernel/include/types.h>
+#include <kernel/memory/kmalloc.h>
+#include <kernel/memory/memorymap.h>
+#include <kernel/util/kutil.h>
 
 
 #define FLASH_OFFSET(x)		*((vu16 *) (ROM_START + (x << 1)))

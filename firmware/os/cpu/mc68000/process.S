@@ -15,10 +15,13 @@
 #endif
 
 #include <cpu/mc68000/regs.h>
+.include "cpu/mc68000/macros.S"
 
 .text
-.global cpu_context_switch
-.global cpu_yield
+.global syscall_yield
+.global syscall_exit
+.global cpu_preempt
+.global cpu_switch_process
 
 /*
                  15                     0
@@ -34,51 +37,51 @@
 
     "Other junk" refers to additional data stacked for bus and address error exceptions.
 
-    mc68010_context_switch is used as the timer interrupt handler, and the handler for the TRAP
-    call used to yield a time-slice.  It saves CPU context in the proc_t structure pointed to by
-    g_current_proc, then calls the sched() function.  That function should decide which process to
-    run next, and update g_current_proc accordingly before returning.  mc68010_context_switch then
-    restores CPU state for the incoming process and resumes execution.
+    cpu_preempt is used as the timer interrupt handler.  syscall_yield is the handler for the TRAP
+    call used to yield a time-slice.  cpu_preempt saves CPU context in the proc_t structure pointed
+    to by g_current_proc, then calls the sched() function.  That function decides which process to
+    run next, and updates g_current_proc accordingly.  cpu_preempt then restores CPU state for the
+    incoming process and resumes execution.
+
+    syscall_yield handles the "yield" system call.  It unwinds the syscall_dispatcher stack frame,
+    restoring trashed registers, then falls through to cpu_preempt.
 */
 
+syscall_yield:
+    addq.l      #4, sp
+    movem.l     sp@+, d1/a0-a2
 
-cpu_context_switch:
-cpu_yield:
-    ori.w       #0x0700, sr         /* Disable interrupts */
+    /* fall through */
 
-    /* Stack a0 and point it at the first hword after g_current_proc->regs */
-    move.l      a0, sp@-
+cpu_preempt:
+    DO_CONTEXT_SWITCH
 
-    movea.l     g_current_proc, a0
-    adda.w      #70, a0             /* NOTE: sizeof(regs_t) = 70 */
+    rte
 
-    /* Store PC and SR of outgoing process in g_current_proc->regs */
-    move.l      sp@(6), a0@-
-    move.w      sp@(4), a0@-
 
-    /*
-        Store registers in g_current_proc->regs[].  a0 is trashed at this point, and will be re-read
-        from the stack.  Also store the user stack pointer in g_current_proc->regs.a[7].
-    */
-    movem.l     d0-d7/a0-a7, a0@-
-    move.l      sp@+, a0@(32)
-    move.l      usp, a1
-    move.l      a1, a0@(60)
+syscall_exit:
+    DISABLE_INTERRUPTS
 
-    jsr         sched
+    adda.w      #20, sp             /* Unwind the syscall_dispatcher stack frame */
+    move.l      sp@(-16), sp@       /* Reposition exit() arg immediately below exception frame */
 
-    /*
-        Restore state from g_current_proc.
-        NOTE: assumes regs is the first member of g_current_proc
-    */
-    movea.l     g_current_proc, a0
-    move.l      a0@(66), sp@(2)
-    move.w      a0@(64), sp@
-    move.l      a0@(60), a1
-    move.l      a1, usp
-    movem.l     a0@+, d0-d7/a0-a6
-    move.l      a0@(-28), a0
+    jsr         proc_do_exit
 
-    andi.w      #0xf8ff, sr         /* Enable interrupts */
+    addq.l      #4, sp
+
+    RESTORE_CONTEXT
+    ENABLE_INTERRUPTS
+
+    rte
+
+
+cpu_switch_process:
+    move.w      sr, sp@(-4)
+    subq.l      #2, sp
+    move.l      sp@(2), sp@
+    subq.l      #2, sp
+    clr.w       sp@(6)
+
+    DO_CONTEXT_SWITCH
 
     rte
