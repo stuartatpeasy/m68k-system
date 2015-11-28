@@ -69,7 +69,7 @@ void sched()
     if(g_prev_proc->state == ps_sleeping)
         list_move_insert(&g_prev_proc->queue, &g_sleep_queue);
 
-    cpu_disable_interrupts();       /* FIXME - see above; added for debug */
+    cpu_enable_interrupts();        /* FIXME - see above; added for debug */
 
     ++g_ncontext_switches;
 

@@ -62,8 +62,13 @@ cpu_preempt:
 syscall_exit:
     DISABLE_INTERRUPTS
 
-    adda.w      #20, sp             /* Unwind the syscall_dispatcher stack frame */
-    move.l      sp@(-16), sp@       /* Reposition exit() arg immediately below exception frame */
+    /*
+        The syscall_dispatcher stack frame consists of four saved registers d1/a0-a2 (16 bytes),
+        the one argument to syscall_exit (4 bytes) and the return address for the jsr used to invoke
+        the syscall handler (4 bytes).  The total stack frame size is therefore 24 bytes.
+    */
+    adda.w      #24, sp             /* Unwind the syscall_dispatcher stack frame */
+    move.l      sp@(-20), sp@       /* Reposition exit() arg immediately below exception frame */
 
     jsr         proc_do_exit
 

@@ -147,10 +147,7 @@ void cpu_default_irq_handler(ku32 irql, void *data)
 	}
 
     putchar('\n');
-    if(!((u32) regs & 1))
-        mc68000_dump_regs(regs);
-    else
-        puts("(memory corruption: register dump unavailable)");
+    mc68000_dump_regs(regs);
 
 	cpu_halt();
 }
@@ -336,6 +333,12 @@ void mc68010_dump_address_exc_frame(mc68010_address_exc_frame_t *aef)
 */
 void mc68000_dump_regs(const regs_t *regs)
 {
+    if((addr_t) regs & 1)
+    {
+        puts("(regdump unavailable - stack corrupt)");
+        return;
+    }
+
     ksym_format_nearest_prev((void *) regs->pc, g_errsym, sizeof(g_errsym));
 
     printf("D0=%08x  D1=%08x  D2=%08x  D3=%08x\n"

@@ -32,6 +32,9 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     u32 *ustack_top, *kstack_top;
     s32 ret;
 
+// INSERTED while debugging the multitasking crashing bug
+    cpu_disable_interrupts();
+
     p = CHECKED_KCALLOC(1, sizeof(proc_t));
 
     /* Create process user stack */
@@ -98,7 +101,8 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     if(newpid != NULL)
         *newpid = p->id;
 
-    cpu_disable_interrupts();
+// MOVED (see above) while debugging the multitasking crashing bug
+//    cpu_disable_interrupts();
 
     list_insert(&p->queue, &g_run_queue);
 
