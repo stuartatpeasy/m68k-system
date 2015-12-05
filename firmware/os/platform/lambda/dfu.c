@@ -81,7 +81,7 @@ s32 dfu(ku16 *data, ku32 len)
 
     cpu_disable_interrupts();
 
-	if(!len || (len > ROM_LENGTH) || (len & 1))
+	if(!len || (len > LAMBDA_ROM_LENGTH) || (len & 1))
 		return EINVAL;
 
 	p_write_flash = (void (*)(ku16 *, ku32)) kmalloc(write_flash_len);

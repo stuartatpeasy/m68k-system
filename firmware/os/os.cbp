@@ -80,7 +80,6 @@
 		<Unit filename="cpu/mc68000/mc68000.h" />
 		<Unit filename="cpu/mc68000/process.S" />
 		<Unit filename="cpu/mc68000/regs.h" />
-		<Unit filename="cpu/mc68000/startup.S" />
 		<Unit filename="cpu/mc68000/syscall.S" />
 		<Unit filename="driver/ds17485.c">
 			<Option compilerVar="CC" />
@@ -187,7 +186,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/memory/kmalloc.h" />
-		<Unit filename="kernel/memory/memorymap.h" />
 		<Unit filename="kernel/memory/slab.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -344,6 +342,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="platform/lambda/lambda.h" />
+		<Unit filename="platform/lambda/startup.S" />
 		<Unit filename="platform/platform_specific.h" />
 		<Extensions>
 			<envvars />

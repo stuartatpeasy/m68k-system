@@ -9,8 +9,6 @@
 
     TODO - BOOT PROCESS
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
-
-    FIXME - OS_STACK_BOTTOM is platform-specific and shouldn't be in here
 */
 
 
@@ -29,6 +27,8 @@
 #include <stdio.h>
 #include <strings.h>
 
+/* FIXME - move definition of KERNEL_STACK_LEN elsewhere */
+#define KERNEL_STACK_LEN        (32 * 1024)     /* Kernel stack is 32KB */
 
 const char * const g_warmup_message = "\n  \\   ayumos"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";
@@ -44,25 +44,29 @@ void _main()
 
     cpu_disable_interrupts();   /* Just in case we were called manually */
 
-    /* === Initialise memory === */
+    /* Copy kernel read/write data areas into kernel RAM */
     memcpy(&_sdata, &_etext, &_edata - &_sdata);        /* Copy .data section to kernel RAM */
     bzero(&_sbss, &_ebss - &_sbss);                     /* Initialise .bss section          */
-    slab_init(&_ebss);                                  /* Slabs sit after the .bss section */
-	kmeminit(g_slab_end, (void *) OS_STACK_BOTTOM);     /* Initialise kernel heap           */
 
-	/* By default, all exceptions cause a context-dump followed by a halt. */
-	cpu_irq_init_table();
-
-    /* === Initialise peripherals - phase 1 === */
+    /* Begin platform initialisation */
     if(plat_init() != SUCCESS)
         boot_early_fail(1);
 
-    if(plat_mem_detect() != SUCCESS)        /* Detect installed RAM */
+    if(plat_mem_detect() != SUCCESS)    /* Detect installed RAM, initialise memory extents  */
         boot_early_fail(2);
 
-    /* Initialise DUART.  This has the side-effect of shutting the goddamned beeper up. */
+    /* Initialise kernel slabs */
+    slab_init(&_ebss);                  /* Slabs sit after the .bss section */
+
+    /* Initialise kernel heap */
+    kmeminit(g_slab_end, mem_get_highest_addr(MEM_EXTENT_KERN | MEM_EXTENT_RAM) - KERNEL_STACK_LEN);
+
+    /* Initialise the console */
     if(plat_console_init() != SUCCESS)
         boot_early_fail(3);
+
+	/* By default, all exceptions cause a context-dump followed by a halt. */
+	cpu_irq_init_table();
 
     /*
         At this point, minimal configuration has been done.  The scheduler is not yet running,

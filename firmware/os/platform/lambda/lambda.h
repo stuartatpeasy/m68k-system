@@ -10,6 +10,12 @@
 #include <kernel/device/device.h>
 
 
+/* Firmware ROM memory start address and length */
+#define LAMBDA_ROM_START        (0xf00000)      /* Start of OS ROM in memory map    */
+#define LAMBDA_ROM_LENGTH       (0x100000)      /* Size of OS ROM                   */
+
+
+/* See kernel/platform.h for an explanation of this #define */
 #define PLATFORM_QUANTUM_USES_MACROS
 
 /*

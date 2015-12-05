@@ -54,5 +54,5 @@ SECTIONS
 
 ENTRY(_main)
 
-STARTUP(cpu/mc68000/startup.o)
+STARTUP(platform/lambda/startup.o)
 

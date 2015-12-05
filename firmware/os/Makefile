@@ -22,7 +22,7 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
 			kernel/memory/kmalloc.c kernel/memory/slab.c
 
-ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S cpu/$(CPU)/startup.S
+ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S
 
 LDSCRIPT:=platform/$(PLATFORM)/kernel.ld
 
@@ -34,7 +34,6 @@ LDFLAGS:=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
 LIBS:=-lgcc -lc -lkutil -lmonitor -lplatform
 
-VTABLE:=cpu/$(CPU)/startup.o
 OBJECTS:=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
 
 all: $(APPNAME)
@@ -45,7 +44,7 @@ all: $(APPNAME)
 .S.o:
 	$(CC) $(CFLAGS) -o$@ $<
 
-$(APPNAME): $(OBJECTS) $(OBJLIBS) $(VTABLE) $(TOOLS)
+$(APPNAME): $(OBJECTS) $(OBJLIBS) $(TOOLS)
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
@@ -71,7 +70,7 @@ dfu:
 	$(DFU) --program --baud 115200 --infile $(APPNAME).rom
 
 clean:
-	rm -f $(APPNAME) $(OBJECTS) $(VTABLE) $(APPNAME).?.rom $(APPNAME).rom
+	rm -f $(APPNAME) $(OBJECTS) $(APPNAME).?.rom $(APPNAME).rom
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Cklibc clean
 	$(MAKE) $(MFLAGS) -Ckernel/util clean
@@ -102,9 +101,6 @@ cpu/$(CPU)/$(CPU).o: \
 
 cpu/$(CPU)/process.o: \
 	cpu/$(CPU)/process.S
-
-cpu/$(CPU)/startup.o: \
-	cpu/$(CPU)/startup.S kernel/memory/memorymap.h
 
 driver/ds17485.o: \
 	driver/ds17485.c driver/ds17485.h kernel/include/types.h kernel/util/kutil.h
@@ -198,8 +194,7 @@ kernel/memory/heap.o: \
 	kernel/memory/heap.c kernel/memory/heap.h kernel/include/types.h klibc/stdio.h
 
 kernel/memory/kmalloc.o: \
-	kernel/memory/kmalloc.c kernel/memory/kmalloc.h kernel/include/types.h \
-	kernel/memory/memorymap.h
+	kernel/memory/kmalloc.c kernel/memory/kmalloc.h kernel/include/types.h
 
 kernel/memory/slab.o: \
 	kernel/memory/slab.c kernel/memory/slab.h kernel/include/defs.h kernel/include/types.h \

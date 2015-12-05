@@ -20,6 +20,7 @@
 /* Parse platform-specific header */
 #include <platform/platform_specific.h>
 
+
 #define LED_RED             (0x80)
 #define LED_GREEN           (0x40)
 #define LED_ALL             (0xff)
@@ -27,10 +28,14 @@
 extern mem_extent_t *g_mem_extents;
 extern mem_extent_t *g_mem_extents_end;
 
+/*
+    NOTE: plat_init() and plat_mem_detect() are called before the initialisation of the kernel heap
+    and slabs.  They must not allocate any memory on the heap.
+*/
 s32 plat_init(void);		        /* Perform any post-reset platform init tasks   	        */
 s32 plat_mem_detect();			    /* Populate g_mem_extents with type & location of memory    */
-                                    /* Place an eight-byte hardware serial number in sn			*/
-s32 plat_get_serial_number(u8 sn[8]);
+
+s32 plat_get_serial_number(u8 sn[8]);   /* Place an eight-byte hardware serial number in sn		*/
 
 s32 plat_install_timer_irq_handler(irq_handler handler);
 

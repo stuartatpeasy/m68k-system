@@ -15,13 +15,13 @@
 #include <kernel/include/error.h>
 #include <kernel/include/types.h>
 #include <kernel/memory/kmalloc.h>
-#include <kernel/memory/memorymap.h>
 #include <kernel/util/kutil.h>
+#include <platform/lambda/lambda.h>
 
 
-#define FLASH_OFFSET(x)		*((vu16 *) (ROM_START + (x << 1)))
-#define FLASH_REG1			*((vu16 *) (ROM_START + (0x555 << 1)))
-#define FLASH_REG2			*((vu16 *) (ROM_START + (0x2aa << 1)))
+#define FLASH_OFFSET(x)		*((vu16 *) (LAMBDA_ROM_START + (x << 1)))
+#define FLASH_REG1			*((vu16 *) (LAMBDA_ROM_START + (0x555 << 1)))
+#define FLASH_REG2			*((vu16 *) (LAMBDA_ROM_START + (0x2aa << 1)))
 
 
 s32 dfu(ku16 *data, ku32 len);

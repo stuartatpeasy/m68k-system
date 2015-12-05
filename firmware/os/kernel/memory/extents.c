@@ -5,6 +5,9 @@
 
 
     (c) Stuart Wallace <stuartw@atom.net>, September 2015.
+
+    NOTE: These functions are called very early in the boot process, i.e. before the kernel heap has
+    been initialised.  They therefore must not attempt to use heap memory or slabs.
 */
 
 #include <kernel/memory/extents.h>
