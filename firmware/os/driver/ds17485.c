@@ -196,11 +196,10 @@ s32 ds17485_rtc_write(dev_t * const dev, ku32 offset, u32 *len, const void *buff
 
 void ds17485_force_valid_time(dev_t * const dev)
 {
-    void * const base_addr = dev->base_addr;
     rtc_time_t ts;
     u32 one = 1;
 
-    ds17485_rtc_read(base_addr, 0, &one, &ts);
+    ds17485_rtc_read(dev, 0, &one, &ts);
 
     if(!VALID_RTC_DATE(&ts))
     {
