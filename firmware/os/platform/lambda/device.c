@@ -8,13 +8,13 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <kernel/device/auto.h>
+#include <kernel/device/ata.h>              /* ATA interface    						*/
+#include <kernel/device/auto.h>				/* Automatic peripheral driver selection	*/
 #include <kernel/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 #include <platform/lambda/device.h>
-#include <driver/mc68681.h>                 /* DUART            */
-#include <driver/ds17485.h>                 /* RTC              */
-#include <driver/ata.h>                     /* ATA interface    */
+#include <driver/mc68681.h>                 /* DUART            						*/
+#include <driver/ds17485.h>                 /* RTC              						*/
 
 
 dev_t *g_lambda_duart;      /* DUART device - stored separately for early console init  */

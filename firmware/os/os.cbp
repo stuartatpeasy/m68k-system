@@ -82,10 +82,6 @@
 		<Unit filename="cpu/mc68000/regs.h" />
 		<Unit filename="cpu/mc68000/startup.S" />
 		<Unit filename="cpu/mc68000/syscall.S" />
-		<Unit filename="driver/ata.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="driver/ata.h" />
 		<Unit filename="driver/ds17485.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -107,6 +103,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/cpu.h" />
+		<Unit filename="kernel/device/ata.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/ata.h" />
 		<Unit filename="kernel/device/auto.c">
 			<Option compilerVar="CC" />
 		</Unit>

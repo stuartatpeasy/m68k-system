@@ -25,9 +25,11 @@
 
     /* Definitions which depend on hardware revision */
     #if (PLATFORM_REV == 0)
+        /* Revision 0 (prototype) */
         #define BUG_ATA_BYTE_SWAP
         #define ATA_REG_OFFSET      (1)
     #elif (PLATFORM_REV == 1)
+        /* Revision 1 */
         #define ATA_REG_OFFSET      (0)
     #else
         #error "Unsupported lambda platform revision"

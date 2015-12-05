@@ -1,5 +1,5 @@
-#ifndef DRIVER_ATA_H_INC
-#define DRIVER_ATA_H_INC
+#ifndef KERNEL_DEVICE_ATA_H_INC
+#define KERNEL_DEVICE_ATA_H_INC
 /*
 	AT Attachment (ATA) interface driver function and macro declarations
 
@@ -12,7 +12,7 @@
 #include <kernel/device/block.h>
 #include <kernel/device/device.h>
 #include <kernel/include/types.h>
-#include <kernel/platform.h>        /* because BUG_ATA_BYTE_SWAP is platform-specific */
+#include <kernel/platform.h>        /* for platform-specific definitions */
 
 
 typedef enum ata_drive
@@ -341,4 +341,3 @@ typedef struct ata_identify_device_ret
 
 
 #endif
-

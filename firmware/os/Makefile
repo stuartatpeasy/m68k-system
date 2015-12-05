@@ -10,8 +10,8 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES:=	cpu/$(CPU)/$(CPU).c \
-			driver/ata.c driver/ds17485.c driver/encx24j600.c driver/mc68681.c \
-			kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
+			driver/ds17485.c driver/encx24j600.c driver/mc68681.c \
+			kernel/device/ata.c kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
 			kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
 			kernel/fs/fat/fat.c \
@@ -106,11 +106,6 @@ cpu/$(CPU)/process.o: \
 cpu/$(CPU)/startup.o: \
 	cpu/$(CPU)/startup.S kernel/memory/memorymap.h
 
-driver/ata.o: \
-	driver/ata.c driver/ata.h kernel/device/block.h kernel/device/devctl.h kernel/device/device.h \
-	kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h kernel/include/types.h \
-	klibc/stdio.h klibc/string.h klibc/strings.h
-
 driver/ds17485.o: \
 	driver/ds17485.c driver/ds17485.h kernel/include/types.h kernel/util/kutil.h
 
@@ -129,13 +124,18 @@ kernel/boot.o: \
 kernel/cpu/cpu.o: \
 	kernel/cpu/cpu.c kernel/cpu.h cpu/arch_specific.h kernel/include/types.h
 
+kernel/device/ata.o: \
+	kernel/device/ata.c kernel/device/ata.h kernel/device/block.h kernel/device/devctl.h \
+	kernel/device/device.h kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h \
+	kernel/include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
+
 kernel/device/auto.o: \
 	kernel/device/auto.c kernel/device/auto.h kernel/include/defs.h kernel/include/types.h \
 	kernel/device/device.h
 
 kernel/device/device.o: \
 	kernel/device/device.c kernel/device/devctl.h kernel/device/device.h kernel/util/kutil.h \
-	driver/ata.h kernel/device/partition.h kernel/include/types.h klibc/errno.h
+	kernel/device/ata.h kernel/device/partition.h kernel/include/types.h klibc/errno.h
 
 kernel/device/nvram.o: \
 	kernel/device/nvram.c kernel/device/nvram.h driver/ds17485.h kernel/include/defs.h \
