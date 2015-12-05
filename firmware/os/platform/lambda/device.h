@@ -57,6 +57,12 @@
 #define EXP_ID                      (2)
 
 
+/*
+    MC68681 output port bit connected to the beeper
+*/
+#define LAMBDA_DUART_BEEPER_OUTPUT  (5)
+
+
 dev_t *g_lambda_duart;
 dev_t *g_lambda_console;
 

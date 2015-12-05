@@ -12,6 +12,7 @@
 #include <kernel/device/block.h>
 #include <kernel/device/device.h>
 #include <kernel/include/types.h>
+#include <kernel/platform.h>        /* because BUG_ATA_BYTE_SWAP is platform-specific */
 
 
 typedef enum ata_drive
@@ -73,65 +74,98 @@ blockdev_stats_t g_ata_stats;
         t_;																        \
     }))
 
+/*
+    The constants ATA_REG_BASE, ATA_REG_OFFSET and ATA_REG_SHIFT can be used to cater for different
+    ATA bus implementations.  The offset of byte-wide ATA register 'reg' from the ATA bus base
+    address is calculated as:
+
+        ATA_REG_BASE + (reg << ATA_REG_SHIFT) + ATA_REG_OFFSET
+
+    In this way, the registers can be positioned to suit the requirements of any CPU bus.  For an
+    MC68000 system (16-bit data bus) with ATAD15..ATAD0 connected to D15..D0, the constants should
+    be:
+
+        ATA_REG_BASE        (determined by wiring of ATA chip-select lines to CPU address lines)
+        ATA_REG_OFFSET      1
+        ATA_REG_SHIFT       1
+
+    This places the ATA registers at sequential odd addresses.  NOTE: the ATA data register is
+    assumed to be at ATA_REG_BASE; the constants ATA_REG_OFFSET and ATA_REG_SHIFT are not used when
+    calculating its address.
+
+    These constants should be overridden in the platform/platform_specific.h.
+*/
+
+
+/* ATA_REG_BASE: offset of ATA registers from the ATA base address */
+#ifndef ATA_REG_BASE
+#define ATA_REG_BASE        (0)
+#endif
+
+/* ATA_ALT_REG_BASE: offset of ATA "alternate" register set from the ATA base address */
+#ifndef ATA_ALT_REG_BASE
+#define ATA_ALT_REG_BASE    (0x10)
+#endif
+
+/* ATA_REG_OFFSET: constant to be added to each register address (useful for bus widths >8bit) */
+#ifndef ATA_REG_OFFSET
+#define ATA_REG_OFFSET      (0)
+#endif
+
+/* ATA_REG_SHIFT: amount by which each reg number is <<'ed when calculating its address */
+#ifndef ATA_REG_SHIFT
+#define ATA_REG_SHIFT       (1)
+#endif
+
+
+/* Macros yielding the address of ATA register "reg" relative to the ATA base address */
+#define ATA_R(reg)          (ATA_REG_BASE + ((reg) << ATA_REG_SHIFT) + ATA_REG_OFFSET)
+#define ATA_ALT_R(reg)      (ATA_ALT_REG_BASE + ((reg << ATA_REG_SHIFT) + ATA_REG_OFFSET))
+
+
 
 /*
 	ATA registers
 	-------------
-
-	Note: the CPU address bus is mapped to the ATA control and address bus thus:
-
-		ATA:	nCS1	nCS0	DA2		DA1		DA0
-		CPU:	A5		A4		A3		A2		A1
-
-	Byte-wide registers must be read/written on odd addresses.  Half-word registers (i.e. the ATA
-	data port) must be read/written on even addresses.  For example, address ATA_BASE + 0x2f
-	decodes to:
-
-		ATA:	nCS1	nCS0	DA2		DA1		DA0
-				1		0		1		1		1		[1]
-				-----------   -------------------------------
-				     2                       f
-
-	...i.e. the status register (for reads) / the command register (for writes)
 
 	MAIN REGISTERS (nCS1 negated, nCS0 asserted)
 
 	reg #				read									write
 	--------------------------------------------------------------------------------------------
 	0					Data									Data							*/
-#define ATA_R_DATA				(0x20)
+#define ATA_R_DATA				ATA_REG_BASE
 
 /*	1					Error									Features						*/
-#define ATA_R_ERROR				(0x23)
-#define ATA_R_FEATURES			(0x23)
+#define ATA_R_ERROR				ATA_R(1)
+#define ATA_R_FEATURES			ATA_R(1)
 
 /*	2					Sector count							Sector count					*/
-#define ATA_R_SECTOR_COUNT		(0x25)
+#define ATA_R_SECTOR_COUNT		ATA_R(2)
 
 /*	3					Sector number							Sector number					*/
-#define ATA_R_SECTOR_NUMBER		(0x27)
+#define ATA_R_SECTOR_NUMBER		ATA_R(3)
 
 /*	4					Cylinder low							Cylinder low					*/
-#define ATA_R_CYLINDER_LOW		(0x29)
+#define ATA_R_CYLINDER_LOW		ATA_R(4)
 
 /*	5					Cylinder high							Cylinder high					*/
-#define ATA_R_CYLINDER_HIGH		(0x2b)
+#define ATA_R_CYLINDER_HIGH		ATA_R(5)
 
 /*	6					Device / head							Device / head					*/
-#define ATA_R_DEVICE_HEAD		(0x2d)
+#define ATA_R_DEVICE_HEAD		ATA_R(6)
 
 /*	7					Status									Commmand						*/
-#define ATA_R_STATUS			(0x2f)
-#define ATA_R_COMMAND			(0x2f)
+#define ATA_R_STATUS			ATA_R(7)
+#define ATA_R_COMMAND			ATA_R(7)
 
 /*
-	ALTERNATE REGISTERS (nCS1 negated, nCS0 asserted)
+	ALTERNATE REGISTERS (nCS1 asserted, nCS0 negated)
 
 	reg #				read									write
 	--------------------------------------------------------------------------------------------
 	6					Alternate status						Device control					*/
-#define ATA_R_ALT_STATUS		(0x1d)
-#define ATA_R_DEVICE_CONTROL	(0x1d)
+#define ATA_R_ALT_STATUS		ATA_ALT_R(6)
+#define ATA_R_DEVICE_CONTROL	ATA_ALT_R(6)
 
 
 #define ATA_REG_DATA(base_addr)    \

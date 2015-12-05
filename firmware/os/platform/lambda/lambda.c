@@ -1,5 +1,5 @@
 /*
-    ayumos port for the "lambda" rev0 (MC68010) motherboard
+    ayumos port for the "lambda" (MC68010) motherboard
 
     Stuart Wallace, September 2015
 */
@@ -8,8 +8,8 @@
 #include <driver/mc68681.h>
 #include <kernel/device/device.h>
 #include <kernel/platform.h>
-#include <platform/lambda_rev0/lambda.h>
-#include <platform/lambda_rev0/device.h>
+#include <platform/lambda/lambda.h>
+#include <platform/lambda/device.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =
@@ -114,6 +114,16 @@ s32 plat_console_init(void)
 			kfree(g_lambda_console);
 			g_lambda_console = NULL;
 		}
+
+        /*
+            Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
+            subsequent revisions it's active-low.
+        */
+#if PLATFORM_REV == 0
+		mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+#else
+		mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+#endif
 	}
 
 	return ret;

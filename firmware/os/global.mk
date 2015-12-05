@@ -34,6 +34,6 @@ CFLAGS=-I$(SRCDIR) -I$(SRCDIR)/klibc -c -Wall -Wextra -O2 -m68000 -g -include bu
 
 AFLAGS=-m68000
 
-PLATFORM=lambda_rev0
+PLATFORM=lambda
 CPU=mc68000
 

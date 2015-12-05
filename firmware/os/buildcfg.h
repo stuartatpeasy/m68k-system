@@ -13,12 +13,13 @@
 
 #define KMALLOC_HEAP
 
-#define BUG_ATA_BYTE_SWAP
-
 #define DEBUG_KMALLOC
 
+/* FIXME - target arch should be defined in platform/platform_specific.h, not here */
 #define TARGET_MC68010
-#define PLATFORM_LAMBDA_REV0
+
+#define PLATFORM_LAMBDA
+#define PLATFORM_REV    1
 
 #endif
 

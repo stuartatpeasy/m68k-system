@@ -10,7 +10,7 @@
 	This module manages the process of re-flashing system ROMs.
 */
 
-#include <platform/lambda_rev0/dfu.h>
+#include <platform/lambda/dfu.h>
 
 
 void write_flash(ku16 *data, ku32 len)

@@ -330,20 +330,20 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="monitor/srec.h" />
-		<Unit filename="platform/lambda_rev0/Makefile" />
-		<Unit filename="platform/lambda_rev0/device.c">
+		<Unit filename="platform/lambda/Makefile" />
+		<Unit filename="platform/lambda/device.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="platform/lambda_rev0/device.h" />
-		<Unit filename="platform/lambda_rev0/dfu.c">
+		<Unit filename="platform/lambda/device.h" />
+		<Unit filename="platform/lambda/dfu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="platform/lambda_rev0/dfu.h" />
-		<Unit filename="platform/lambda_rev0/kernel.ld" />
-		<Unit filename="platform/lambda_rev0/lambda.c">
+		<Unit filename="platform/lambda/dfu.h" />
+		<Unit filename="platform/lambda/kernel.ld" />
+		<Unit filename="platform/lambda/lambda.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="platform/lambda_rev0/lambda.h" />
+		<Unit filename="platform/lambda/lambda.h" />
 		<Unit filename="platform/platform_specific.h" />
 		<Extensions>
 			<envvars />

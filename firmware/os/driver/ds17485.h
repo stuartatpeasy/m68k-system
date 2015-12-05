@@ -174,7 +174,7 @@ s32 ds17485_ext_ram_init(dev_t * const dev);
 
 s32 ds17485_rtc_read(dev_t * const dev, ku32 offset, u32 *len, void *buffer);
 s32 ds17485_rtc_write(dev_t * const dev, ku32 offset, u32 *len, const void *buffer);
-void ds17485_force_valid_time(const dev_t * const dev);
+void ds17485_force_valid_time(dev_t * const dev);
 
 s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 *len, void * buffer);
 s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 *len, const void * buffer);

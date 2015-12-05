@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <platform/lambda_rev0/dfu.h>
+#include <platform/lambda/dfu.h>
 #include <kernel/device/nvram.h>
 #include <kernel/fs/mount.h>
 #include <kernel/fs/vfs.h>
