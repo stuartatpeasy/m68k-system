@@ -16,6 +16,20 @@
 #include <driver/mc68681.h>                 /* DUART            						*/
 #include <driver/ds17485.h>                 /* RTC              						*/
 
+/*
+    Interrupt assignments
+
+    IRQ         irql          rev0                      rev1
+    --------------------------------------------------------------------
+    1           25            timer (MC68681)           timer (MC68681)
+    2           26            ATA                       ATA
+    3           27            DUART                     DUART
+    4           28            expansion 0               RTC
+    5           29            expansion 1               expansion 0 & 1
+    6           30            expansion 2               expansion 2 & 3
+    7 (NMI)     31            expansion 3               NMI button
+    --------------------------------------------------------------------
+*/
 
 dev_t *g_lambda_duart;      /* DUART device - stored separately for early console init  */
 dev_t *g_lambda_console;    /* Console device - stored separately for early init        */
@@ -96,12 +110,11 @@ void expansion_init()
 {
     u16 i;
     void *base_addr;
-    u32 irql;
 
-	for(base_addr = EXP_BASE_ADDR, irql = EXP_BASE_IRQ, i = 0; i < EXP_NUM_SLOTS;
-        ++i, base_addr += EXP_ADDR_LEN, ++irql)
+	for(base_addr = LAMBDA_EXP_BASE_ADDR, i = 0; i < LAMBDA_EXP_NUM_SLOTS;
+        ++i, base_addr += LAMBDA_EXP_ADDR_LEN)
     {
-        if(!(mc68681_read_ip(g_lambda_console) & EXP_PD_MASK(i)))
+        if(!(mc68681_read_ip(g_lambda_console) & LAMBDA_EXP_PD_MASK(i)))
         {
             /* A card is present; read its identity from the first byte of its address space */
             u8 id;
@@ -109,18 +122,18 @@ void expansion_init()
             s32 ret;
 
             /* Assert nEID to ask peripherals to identify themselves */
-            mc68681_reset_op_bits(g_lambda_console, BIT(EXP_ID));
+            mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_EXP_ID));
 
-            id = *((u8 *) EXP_BASE(i));
+            id = *((u8 *) LAMBDA_EXP_BASE(i));
 
             /* Negate nEID */
-            mc68681_set_op_bits(g_lambda_console, BIT(EXP_ID));
+            mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_EXP_ID));
 
 
             printf("slot %d (%x-%x, irq %u): ", i, (u32) base_addr,
-                    (u32) base_addr + EXP_ADDR_LEN - 1, irql);
+                    (u32) base_addr + LAMBDA_EXP_ADDR_LEN - 1, LAMBDA_EXP_IRQ(i));
 
-            ret = dev_auto_init(id, base_addr, irql, NULL, &dev);
+            ret = dev_auto_init(id, base_addr, LAMBDA_EXP_IRQ(i), NULL, &dev);
 
             if(ret == SUCCESS)
                 puts(dev->human_name);
