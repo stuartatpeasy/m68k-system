@@ -214,7 +214,7 @@ void ds17485_force_valid_time(const dev_t * const dev)
         ts.day_of_week = 7;
         ts.dst = 0;
 
-        ds17485_rtc_write(base_addr, 0, &one, &ts);
+        ds17485_rtc_write(dev, 0, &one, &ts);
     }
 }
 
