@@ -10,6 +10,7 @@
 	This module manages the process of re-flashing system ROMs.
 */
 
+#include <kernel/platform.h>
 #include <platform/lambda/dfu.h>
 
 
@@ -61,7 +62,7 @@ void write_flash(ku16 *data, ku32 len)
 	}
 
 	/* Reset the system */
-	cpu_reset();
+	plat_reset();
 }
 
 /*

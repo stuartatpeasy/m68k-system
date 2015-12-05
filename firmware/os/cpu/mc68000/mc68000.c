@@ -154,28 +154,6 @@ void cpu_default_irq_handler(ku32 irql, void *data)
 
 
 /*
-    cpu_reset() - reset the MC68000.
-*/
-void cpu_reset(void)
-{
-    asm volatile
-    (
-        "reset                          \n"
-        "lea.l      0x00f00000, %%a0    \n"     /* FIXME - board-specific ROM location */
-        "move.l     %%a0@, %%a7         \n"
-        "addq.l     #4, %%a0\n          \n"
-        "move.l     %%a0@, %%a0         \n"
-        "jmp        %%a0@               \n"
-        :
-        :
-    );
-
-    /* Won't return */
-    while(1) ;
-}
-
-
-/*
     cpu_halt() - stop processing.
 */
 void cpu_halt(void)

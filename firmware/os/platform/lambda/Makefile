@@ -34,7 +34,8 @@ device.o: \
 	$(KERN_ROOT)/util/kutil.h $(SRC_ROOT)/klibc/stdio.h $(SRC_ROOT)/klibc/string.h
 
 dfu.o: \
-	$(STDDEPS) dfu.c dfu.h lambda.h $(KERN_ROOT)/util/kutil.h $(KERN_ROOT)/memory/kmalloc.h
+	$(STDDEPS) dfu.c dfu.h lambda.h $(KERN_ROOT)/platform.h $(KERN_ROOT)/util/kutil.h \
+	$(KERN_ROOT)/memory/kmalloc.h
 
 lambda.o: \
 	$(STDDEPS) lambda.c lambda.h

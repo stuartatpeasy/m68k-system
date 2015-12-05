@@ -24,7 +24,6 @@ typedef struct regs regs_t;     /* struct regs must hold a complete CPU context 
     ---------------------
 */
 void cpu_halt(void);                            /* Halt processing, pending an interrupt        */
-void cpu_reset(void) __attribute__((noreturn)); /* Reset the CPU                                */
 void cpu_swi();                                 /* Raise a software IRQ (=TRAP #x on the 680x0) */
 
 /*

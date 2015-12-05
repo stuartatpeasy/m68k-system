@@ -7,7 +7,6 @@
 
 
 	(c) Stuart Wallace <stuartw@atom.net>, November 2015.
-
 */
 
 

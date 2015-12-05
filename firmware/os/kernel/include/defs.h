@@ -37,8 +37,12 @@
 /* "Tick rate" - number of timer interrupts per second */
 #define TICK_RATE       (100)
 
-/* Per-process stack size */
-#define PROC_STACK_SIZE (16 * 1024)
+/* Length of kernel stack */
+#define KERNEL_STACK_LEN        (32 * 1024)     /* Kernel stack is 32KB */
+
+/* "Stringification" macros - see https://gcc.gnu.org/onlinedocs/cpp/Stringification.html */
+#define STRINGIFY(s)    STRINGIFY_(s)
+#define STRINGIFY_(s)   #s
 
 /* CHECKED_CALL evaluates expr, which is normally a function call.  If expr (the call's return
    value) is anything other than SUCCESS, the value is returned. */

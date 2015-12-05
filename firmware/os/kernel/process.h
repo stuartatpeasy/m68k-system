@@ -16,7 +16,8 @@
 #include <kernel/user.h>
 
 
-#define PROC_KSTACK_LEN     (2048)      /* Per-process kernel stack size */
+#define PROC_KSTACK_LEN     (2048)      /* Per-process kernel stack size        */
+#define PROC_USTACK_LEN     (2048)      /* Per-process default user stack size  */
 
 /*
     Process type flags

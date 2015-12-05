@@ -27,8 +27,6 @@
 #include <stdio.h>
 #include <strings.h>
 
-/* FIXME - move definition of KERNEL_STACK_LEN elsewhere */
-#define KERNEL_STACK_LEN        (32 * 1024)     /* Kernel stack is 32KB */
 
 const char * const g_warmup_message = "\n  \\   ayumos"
                                       "\n  /\\  Stuart Wallace, 2011-2015.\n";

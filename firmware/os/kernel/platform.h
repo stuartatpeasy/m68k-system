@@ -56,13 +56,13 @@ s32 plat_get_cpu_clock(u32 *clk);   /* Get CPU clock frequency in Hz            
 /*
 	Base
 
-	The platform must be able to detect the amount of installed RAM.  It must provide one red LED
-	and one green LED, to be used as status indicators.  It must be provide a means of estimating
-	the system clock frequency.
+	The platform must provide one red LED and one green LED, to be used as status indicators.  It
+	must provide a means of estimating the system clock frequency, and a means of resetting the CPU.
 */
 s32 plat_led_on(ku8 leds);
 s32 plat_led_off(ku8 leds);
 s32 plat_clockfreq_detect();
+void plat_reset() __attribute__((noreturn));
 
 
 /*
