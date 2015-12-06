@@ -13,6 +13,7 @@
 #define KMALLOC_HEAP
 
 #define DEBUG_KMALLOC
+#define DEBUG_KSYM
 
 /* FIXME - target arch should be defined in platform/platform_specific.h, not here */
 #define TARGET_MC68010

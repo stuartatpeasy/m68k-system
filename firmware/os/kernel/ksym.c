@@ -21,6 +21,7 @@
 */
 s32 ksym_find_by_name(const char * const name, symentry_t **ent)
 {
+#ifdef DEBUG_KSYM
     symentry_t *sym;
 
     for_each_sym(sym)
@@ -29,6 +30,10 @@ s32 ksym_find_by_name(const char * const name, symentry_t **ent)
             *ent = sym;
             return SUCCESS;
         }
+#else
+    UNUSED(name);
+    UNUSED(ent);
+#endif
 
     return ENOENT;
 }
@@ -40,6 +45,7 @@ s32 ksym_find_by_name(const char * const name, symentry_t **ent)
 */
 s32 ksym_find_nearest_prev(void *addr, symentry_t **ent)
 {
+#ifdef DEBUG_KSYM
     symentry_t *sym, *symfound = NULL;
     u32 dist = U32_MAX;
 
@@ -50,12 +56,17 @@ s32 ksym_find_nearest_prev(void *addr, symentry_t **ent)
             symfound = sym;
         }
 
-    if(symfound == NULL)
-        return ENOENT;
+    if(symfound != NULL)
+    {
+        *ent = symfound;
+        return SUCCESS;
+    }
+#else
+    UNUSED(addr);
+    UNUSED(ent);
+#endif
 
-    *ent = symfound;
-
-    return SUCCESS;
+    return ENOENT;
 }
 
 
@@ -65,6 +76,7 @@ s32 ksym_find_nearest_prev(void *addr, symentry_t **ent)
 */
 s32 ksym_format_nearest_prev(void *addr, char *buf, u32 buf_len)
 {
+#ifdef DEBUG_KSYM
     symentry_t *ent;
 
     if(ksym_find_nearest_prev(addr, &ent) == SUCCESS)
@@ -76,9 +88,10 @@ s32 ksym_format_nearest_prev(void *addr, char *buf, u32 buf_len)
 
         return SUCCESS;
     }
-    else
-    {
-        strncpy(buf, "<\?\?\?>", buf_len);  /* \-escape '?' chars to avoid trigraph warning */
-        return ENOENT;
-    }
+#else
+    UNUSED(addr);
+#endif
+
+    strncpy(buf, "<\?\?\?>", buf_len);  /* \-escape '?' chars to avoid trigraph warning */
+    return ENOENT;
 }
