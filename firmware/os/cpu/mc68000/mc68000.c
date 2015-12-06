@@ -14,6 +14,12 @@
 
 void mc68000_bus_error_handler(void *dummy);
 void mc68000_address_error_handler(void *dummy);
+const char * mc68000_dump_status_register(ku16 sr);
+void mc68000_dump_regs(const regs_t *regs);
+void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const aef);
+const char * mc68000_dump_ssw(ku16 ssw);
+const char * mc68000_dump_fc(ku16 fc);
+
 
 char g_errsym[128];
 
@@ -262,7 +268,7 @@ const char * mc68000_dump_status_register(ku16 sr)
 {
 	static char buf[16];
 
-	/* dump format:  Tx S M Ix XNZVC */
+	/* dump format:  "Tx S M Ix XNZVC" */
 	buf[0] = 'T';
 	buf[1] = '0' + MC68K_SR_TRACE_LEVEL(sr);
 	buf[2] = buf[4] = buf[6] = buf[9] = ' ';
@@ -282,6 +288,49 @@ const char * mc68000_dump_status_register(ku16 sr)
 
 
 /*
+    mc68000_dump_fc() - return a string describing a function code, e.g. "cpu", "ud", "sp", "fc3".
+*/
+const char * mc68000_dump_fc(ku16 fc)
+{
+    switch(fc)
+    {
+        case 0:     return "fc0";       /* (undefined, reserved)    */
+        case 1:     return "ud";        /* user data                */
+        case 2:     return "up";        /* user program             */
+        case 3:     return "fc3";       /* (undefined, reserved)    */
+        case 4:     return "fc4";       /* (undefined, reserved)    */
+        case 5:     return "sd";        /* supervisor data          */
+        case 6:     return "sp";        /* supervisor program       */
+        case 7:     return "cpu";       /* CPU space                */
+        default:    return "???";       /* invalid function code    */
+    }
+}
+
+
+/*
+    mc68000_dump_ssw() - return a string describing the contents of the special status word, a set
+    of flags written to bus/address error exception frames.
+*/
+const char * mc68000_dump_ssw(ku16 ssw)
+{
+    static char buf[46];
+
+    /* dump format: "RR=cpu IF=x DF=x RM=x HB=x BY=x R/W=x FC=ur " */
+    sprintf(buf, "RR=%s IF=%c DF=%c RM=%c HB=%c BY=%c R/W=%c FC=%s",
+            (ssw & MC68K_SSW_RR) ? "cpu" : "sw ",
+            (ssw & MC68K_SSW_IF) ? '1' : '0',
+            (ssw & MC68K_SSW_DF) ? '1' : '0',
+            (ssw & MC68K_SSW_RM) ? '1' : '0',
+            (ssw & MC68K_SSW_HB) ? '1' : '0',
+            (ssw & MC68K_SSW_BY) ? '1' : '0',
+            (ssw & MC68K_SSW_RW) ? 'r' : 'w',
+            mc68000_dump_fc((ssw & MC68K_SSW_FC_MASK) >> MC68K_SSW_FC_SHIFT));
+
+    return buf;
+}
+
+
+/*
 	mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
 */
 void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const aef)
@@ -289,14 +338,15 @@ void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const ae
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
-	printf("Special status word = %04x\n"
+	printf("Special status word = %04x    [%s]\n"
 		   "Fault address       = 0x%08x\n"
 		   "Data output buffer  = %04x\n"
 		   "Data input buffer   = %04x\n"
 		   "Instr output buffer = %04x\n"
 		   "Version number      = %04x\n",
-			aef->special_status_word, aef->fault_addr, aef->data_output_buffer,
-			aef->data_input_buffer, aef->instr_output_buffer, aef->version_number);
+			aef->special_status_word, mc68000_dump_ssw(aef->special_status_word), aef->fault_addr,
+            aef->data_output_buffer, aef->data_input_buffer, aef->instr_output_buffer,
+            aef->version_number);
 }
 
 

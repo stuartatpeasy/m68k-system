@@ -61,6 +61,18 @@ typedef struct regs regs_t;
 #define MC68K_SR_IPL_SHIFT      (8)             /* } Mask and shift for current             */
 #define MC68K_SR_IPL_MASK       (0x7)           /* } interrupt priority level               */
 
+/* Special status word (part of address/bus error stack frame) bits */
+#define MC68K_SSW_RR            BIT(15)         /* Re-run flag: 0=CPU re-run; 1=software    */
+#define MC68K_SSW_IF            BIT(13)         /* Instruction fetch flag                   */
+#define MC68K_SSW_DF            BIT(12)         /* Data fetch flag                          */
+#define MC68K_SSW_RM            BIT(11)         /* Read-modify-write cycle flag             */
+#define MC68K_SSW_HB            BIT(10)         /* High-byte xfer from data-out -> data-in  */
+#define MC68K_SSW_BY            BIT(9)          /* Byte-transfer flag                       */
+#define MC68K_SSW_RW            BIT(8)          /* Read/write flag: 0=write; 1=read         */
+
+#define MC68K_SSW_FC_MASK       (0x7)           /* } Mask and shift for function            */
+#define MC68K_SSW_FC_SHIFT      (0)             /* } code used during faulted access        */
+
 /* Extract IPL from SR value */
 #define MC68K_SR_IPL(sr) \
     (((sr) >> MC68K_SR_IPL_SHIFT) & MC68K_SR_IPL_MASK)
@@ -201,10 +213,5 @@ extern void irq_router_swi(void);
 
 /* This is implemented in mc68000/syscall.S */
 extern void syscall_dispatcher(void);
-
-
-const char * mc68000_dump_status_register(ku16 sr);
-void mc68000_dump_regs(const regs_t *regs);
-void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const aef);
 
 #endif
