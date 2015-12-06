@@ -168,11 +168,14 @@ blockdev_stats_t g_ata_stats;
 #define ATA_R_DEVICE_CONTROL	ATA_ALT_R(6)
 
 
-#define ATA_REG_DATA(base_addr)    \
- 	*((volatile u16 *) ((u16 *) ((base_addr) + ATA_R_DATA)))
+#define ATA_REG_DATA_ADDR(base_addr)    \
+    ((vu16 *) ((u8 *) (base_addr) + ATA_R_DATA))
+
+#define ATA_REG_DATA(base_addr)         \
+    *(ATA_REG_DATA_ADDR(base_addr))
 
 #define ATA_REG(base_addr, off)	\
-    *((volatile u8 *) ((base_addr) + off))
+    *((vu8 *) ((base_addr) + off))
 
 
 /*

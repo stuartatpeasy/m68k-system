@@ -29,8 +29,8 @@ s32 ata_shut_down(dev_t *dev);
 s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf);
 s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf);
 
-void ata_read_data(const void * const base_addr, void *buf);
-void ata_write_data(void * const base_addr, const void *buf);
+void ata_read_data(vu16 * const ata_data_port, void *buf);
+void ata_write_data(vu16 * const ata_data_port, const void *buf);
 
 s32 ata_control(dev_t *dev, ku32 function, const void *in, void *out);
 s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
@@ -305,7 +305,7 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf)
 	}
 
 	for(; len_--; buf += ATA_SECTOR_SIZE)
-		ata_read_data(base_addr, buf);
+		ata_read_data(ATA_REG_DATA_ADDR(base_addr), buf);
 
 	g_ata_stats.blocks_read += *len;
 	*len -= len_;
@@ -350,7 +350,7 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
 	ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
 
 	for(; len_--; buf += ATA_SECTOR_SIZE)
-		ata_write_data(base_addr, buf);
+		ata_write_data(ATA_REG_DATA_ADDR(base_addr), buf);
 
 	if(!ATA_WAIT_NBSY(base_addr))
 		return ETIME;
@@ -383,12 +383,12 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
 /*
 	ata_read_data() - read from the ATA data buffer
 */
-void ata_read_data(const void * const base_addr, void *buf)
+void ata_read_data(vu16 * const ata_data_port, void *buf)
 {
-	u16 *buf_ = buf;
-	u32 count = (ATA_SECTOR_SIZE / sizeof(u16));
+	u16 *buf_;
+	u32 count;
 
-	for(; count--;)
+	for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
     {
 #ifdef BUG_ATA_BYTE_SWAP
         /*
@@ -411,11 +411,11 @@ void ata_read_data(const void * const base_addr, void *buf)
            If the BUG_ATA_BYTE_SWAP constant is defined, we therefore swap the bytes in each 16-bit
            datum read/written in order to work round the incorrect board design.
         */
-        u16 data = ATA_REG_DATA(base_addr);
+        u16 data = *ata_data_port;
         bswap_16(data);
         *buf_++ = data;
 #else
-		*buf_++ = ATA_REG_DATA(base_addr);
+		*buf_++ = *ata_data_port;
 #endif
     }
 }
@@ -424,12 +424,12 @@ void ata_read_data(const void * const base_addr, void *buf)
 /*
 	ata_write_data() - write to the ATA data buffer
 */
-void ata_write_data(void * const base_addr, const void *buf)
+void ata_write_data(vu16 * const ata_data_port, const void *buf)
 {
-	const u16 *buf_ = buf;
-	u32 count = (ATA_SECTOR_SIZE / sizeof(u16));
+	ku16 *buf_;
+	u32 count;
 
-	for(; count--;)
+	for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
     {
 #ifdef BUG_ATA_BYTE_SWAP
         /*
@@ -454,9 +454,9 @@ void ata_write_data(void * const base_addr, const void *buf)
         */
         u16 data = *buf_++;
         bswap_16(data);
-		ATA_REG_DATA(base_addr) = data;
+		*ata_data_port = data;
 #else
-		ATA_REG_DATA(base_addr) = *buf_++;
+		*ata_data_port = *buf_++;
 #endif
     }
 }
