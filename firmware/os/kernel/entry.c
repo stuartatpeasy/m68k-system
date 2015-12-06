@@ -70,7 +70,7 @@ void _main()
         At this point, minimal configuration has been done.  The scheduler is not yet running,
         but we can now initialise non-critical peripherals and start greeting the user.
     */
-    puts(g_warmup_message);
+    printf("%s\nplatform: %s\n", g_warmup_message, plat_get_name());
 
     printf("%uMB RAM detected\n", (mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM)
             + mem_get_total_size(MEM_EXTENT_KERN | MEM_EXTENT_RAM)) >> 20);

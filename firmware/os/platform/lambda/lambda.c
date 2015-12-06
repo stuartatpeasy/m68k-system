@@ -119,7 +119,7 @@ s32 plat_console_init(void)
             Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
             subsequent revisions it's active-low.
         */
-#if PLATFORM_REV == 0
+#if (PLATFORM_REV == 0)
 		mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
 #else
 		mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
@@ -127,6 +127,19 @@ s32 plat_console_init(void)
 	}
 
 	return ret;
+}
+
+
+/*
+    plat_get_name() - return a string containing the name of the platform.
+*/
+const char *plat_get_name()
+{
+#if (PLATFORM_REV == 0)
+    return "lambda rev0 (prototype)";
+#else
+    return "lambda rev1";
+#endif
 }
 
 

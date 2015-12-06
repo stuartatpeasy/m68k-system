@@ -58,10 +58,12 @@ s32 plat_get_cpu_clock(u32 *clk);   /* Get CPU clock frequency in Hz            
 
 	The platform must provide one red LED and one green LED, to be used as status indicators.  It
 	must provide a means of estimating the system clock frequency, and a means of resetting the CPU.
+	It must provide a function which returns a string containing the name of the platform.
 */
 s32 plat_led_on(ku8 leds);
 s32 plat_led_off(ku8 leds);
 s32 plat_clockfreq_detect();
+const char * plat_get_name();
 void plat_reset() __attribute__((noreturn));
 
 
