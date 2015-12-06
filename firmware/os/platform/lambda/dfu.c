@@ -62,7 +62,7 @@ void write_flash(ku16 *data, ku32 len)
 	}
 
 	/* Reset the system */
-	plat_reset();
+	PLAT_DO_RESET;              /* Won't return */
 }
 
 /*

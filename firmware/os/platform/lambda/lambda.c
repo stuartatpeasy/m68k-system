@@ -252,17 +252,7 @@ s32 plat_get_cpu_clock(u32 *clk)
 */
 void plat_reset()
 {
-    asm volatile
-    (
-        "reset                                              \n"
-        "lea.l      " STRINGIFY(LAMBDA_ROM_START) ", %%a0   \n"
-        "move.l     %%a0@, %%a7                             \n"
-        "addq.l     #4, %%a0\n                              \n"
-        "move.l     %%a0@, %%a0                             \n"
-        "jmp        %%a0@                                   \n"
-        :
-        :
-    );
+    PLAT_DO_RESET;
 
     /* Won't return */
     while(1) ;

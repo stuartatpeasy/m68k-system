@@ -47,4 +47,20 @@
     mc68681_stop_counter(g_lambda_console);                                     \
 }
 
+
+#define PLAT_DO_RESET                                                           \
+    asm volatile                                                                \
+    (                                                                           \
+        "reset                                              \n"                 \
+        "lea.l      " STRINGIFY(LAMBDA_ROM_START) ", %%a0   \n"                 \
+        "move.l     %%a0@, %%a7                             \n"                 \
+        "addq.l     #4, %%a0\n                              \n"                 \
+        "move.l     %%a0@, %%a0                             \n"                 \
+        "jmp        %%a0@                                   \n"                 \
+        :                                                                       \
+        :                                                                       \
+    )
+
+
+
 #endif
