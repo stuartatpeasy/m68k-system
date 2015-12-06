@@ -69,6 +69,16 @@ typedef struct regs regs_t;
 #define MC68K_SR_TRACE_LEVEL(sr) \
     (((sr) >> MC68K_SR_TRACE_SHIFT) & MC68K_SR_TRACE_MASK)
 
+/*
+	MC68010 group 1/2 exception stack frame
+*/
+typedef struct mc68010_short_exc_frame
+{
+	u16 sr;
+	u32 pc;
+	u16 format_offset;
+} mc68010_short_exc_frame_t;
+
 
 /*
 	MC68010 address/bus-error exception stack frame.  NOTE: this struct does not include the SR
@@ -76,7 +86,9 @@ typedef struct regs regs_t;
 */
 typedef struct mc68010_address_exc_frame
 {
-	u16 vector_offset;
+    u16 sr;
+    u32 pc;
+    u16 format_offset;
 	u16 special_status_word;
 	u32 fault_addr;
 	u16 unused_reserved_1;
@@ -89,16 +101,6 @@ typedef struct mc68010_address_exc_frame
 	u16 internal_information[15];
 } mc68010_address_exc_frame_t;
 
-
-/*
-	MC68010 group 1/2 exception stack frame
-*/
-typedef struct mc68010_short_exc_frame
-{
-	u16 sr;
-	u32 pc;
-	u16 format_offset;
-} mc68010_short_exc_frame_t;
 
 /* Definitions for the "format code" field in an MC68010+ exception stack frame */
 #define MC68K_EXC_FMT_SHORT     (0x0000)
@@ -203,6 +205,6 @@ extern void syscall_dispatcher(void);
 
 const char * mc68000_dump_status_register(ku16 sr);
 void mc68000_dump_regs(const regs_t *regs);
-void mc68010_dump_address_exc_frame(mc68010_address_exc_frame_t *aef);
+void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const aef);
 
 #endif

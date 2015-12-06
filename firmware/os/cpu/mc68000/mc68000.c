@@ -49,19 +49,16 @@ void cpu_irq_init_arch_specific(void)
 */
 void mc68000_bus_error_handler(void *dummy)
 {
-    mc68010_short_exc_frame_t *sef;
-    mc68010_address_exc_frame_t *aef;
+    const mc68010_address_exc_frame_t * const aef =
+        (mc68010_address_exc_frame_t *) ((u32) &dummy - 4);
 
     cpu_disable_interrupts();
 
-    sef = (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
-    aef = (mc68010_address_exc_frame_t *) &sef[1];
-
-    ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
+    ksym_format_nearest_prev((void *) aef->pc, g_errsym, sizeof(g_errsym));
 
     printf("\nBus error in process %d\n\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n\n",
-           proc_get_pid(), sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+           proc_get_pid(), aef->pc, g_errsym, aef->sr, mc68000_dump_status_register(aef->sr));
 
     mc68010_dump_address_exc_frame(aef);
 
@@ -74,19 +71,16 @@ void mc68000_bus_error_handler(void *dummy)
 */
 void mc68000_address_error_handler(void *dummy)
 {
-    mc68010_short_exc_frame_t *sef;
-    mc68010_address_exc_frame_t *aef;
+    const mc68010_address_exc_frame_t * const aef =
+        (mc68010_address_exc_frame_t *) ((u32) &dummy - 4);
 
     cpu_disable_interrupts();
 
-    sef = (mc68010_short_exc_frame_t *) ((u32) &dummy - 4);
-    aef = (mc68010_address_exc_frame_t *) &sef[1];
-
-    ksym_format_nearest_prev((void *) sef->pc, g_errsym, sizeof(g_errsym));
+    ksym_format_nearest_prev((void *) aef->pc, g_errsym, sizeof(g_errsym));
 
     printf("\nAddress error in process %d\n\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n\n",
-           proc_get_pid(), sef->pc, g_errsym, sef->sr, mc68000_dump_status_register(sef->sr));
+           proc_get_pid(), aef->pc, g_errsym, aef->sr, mc68000_dump_status_register(aef->sr));
 
     mc68010_dump_address_exc_frame(aef);
 
@@ -290,7 +284,7 @@ const char * mc68000_dump_status_register(ku16 sr)
 /*
 	mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
 */
-void mc68010_dump_address_exc_frame(mc68010_address_exc_frame_t *aef)
+void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const aef)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
