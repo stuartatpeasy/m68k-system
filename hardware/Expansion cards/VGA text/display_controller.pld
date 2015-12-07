@@ -1,0 +1,90 @@
+Name      display_controller;
+PartNo    1;
+Date      2015-12-06;
+Revision  00;
+Designer  swallace;
+Company   ;
+Assembly  None;
+Location  None;
+Device    G16V8AS;  /* god knows why G16V8AS works but G16V8A doesn't */
+
+/*
+Description
+===========
+
+
+PLD pin descriptions
+====================
+
+	[S0..2]		1..3	[in]	State counter inputs
+	nHUR			4	[in]	Host read, upper byte
+	nHLR			5	[in]	Host read, lower byte
+	nHUW			6	[in]	Host write, upper byte
+	nHLW			7	[in]	Host write, lower byte
+	DISPEN			8	[in]	Display enable
+
+	nFBUR			12	[out]	Frame buffer read, upper byte
+	nFBLR			13	[out]	Frame buffer read, lower byte
+	nFBUW			14	[out]	Frame buffer write, upper byte
+	nFBLW			15	[out]	Frame buffer write, lower byte
+	PIXL			16	[out]	Pixel data latch
+	HOSTL			17	[out]	Host data latch
+	PIXABUFEN		18	[out]	Pixel address bus buffer enable
+	HOSTABUFEN		19	[out]	Host address bus buffer enable
+
+	2 more inputs, 0 outputs left
+	- add host chip select + framebuffer chip select?
+	- deal with host DTACK somehow
+
+Target device pinout
+====================
+
+                         16V8
+                      _____ _____
+  SIZ1B      CLK/IN -| 1   U  20 |- VCC
+  SIZ0B          IN -| 2      19 |- I/O    nBOOT
+  SIZ1A          IN -| 3      18 |- I/O	  nROMCS
+  SIZ0A          IN -| 4      17 |- I/O    nERROR  (not implemented)
+  nMODB_DTACK    IN -| 5      16 |- I/O	  nMODB_CS
+  nMODA_DTACK    IN -| 6      15 |- I/O	  nMODA_CS
+  A22            IN -| 7      14 |- I/O	  A21_MODB
+  A21            IN -| 8      13 |- I/O	  A20_MODB
+  A20            IN -| 9      12 |- I/O	  A23
+                GND -| 10     11 |- I/nOE	  nMEMCS
+                      ----------- 
+*/
+
+/* Inputs */
+Pin  [1..3] = [S0..2];
+Pin  4 = !HUR;
+Pin  5 = !HLR;
+Pin  6 = !HUW;
+Pin  7 = !HLW;
+Pin  8 = DISPEN;
+
+/** Outputs **/
+
+Pin 12 = !FBUR;
+Pin 13 = !FBLR;
+Pin 14 = !FBUW;
+Pin 15 = !FBLW;
+Pin 16 = PIXL;
+Pin 17 = HOSTL;
+Pin 18 = !PIXABUFEN;
+Pin 19 = !HOSTABUFEN;
+
+
+/* Address buffer enables */
+HOSTABUFEN = !S2;
+PIXABUFEN  = S2;
+
+PIXL = S0 & !S1 & S2;
+HOSTL = S0 & !S1 & !S2;
+
+FBUR = PIXABUFEN # (HOSTABUFEN & HUR);
+FBLR = PIXABUFEN # (HOSTABUFEN & HLR);
+FBUW = HOSTABUFEN & HUW;
+FBLW = HOSTABUFEN & HLW;
+
+
+

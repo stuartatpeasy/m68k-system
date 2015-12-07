@@ -1,0 +1,27 @@
+Major (prevents design working as manufactured)
+-----------------------------------------------
+
+
+Moderate (makes assembly fiddly, or affects usability)
+------------------------------------------------------
+29	RTC battery holder is too close to CPU
+36	C609 fouls on U402
+
+
+Minor (cosmetic)
+----------------
+37	U205 silkscreen overlaps B801 silk
+
+
+BOM cost reductions
+-------------------
+30	Replace DIL resistor networks with individual resistors
+31	Substitute ADM238 for MAX238
+32	Replace U102 (crystal osc) with crystal + discrete osc
+33	Reduce size of PSU heatsink
+34	Find cheaper/smaller HDD PSU connector
+35	Delete R203 & R206 (data bus pulldowns)
+
+
+Enhancements
+------------

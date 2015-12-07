@@ -54,15 +54,23 @@ void init(void)
 	
 	for(i = 0; i < sizeof(g_registers) / sizeof(g_registers[0]); ++i)
 		g_registers[i] = 0;
+
+	/* Enable INT0 interrupts on falling edge */
+	MCUCR = (MCUCR & ~(_BV(ISC01) | _BV(ISC00))) | _BV(ISC01);
+	GICR |= _BV(INT0);
+	
+	sei();
 }
 
 
 /*
-	set_register() - set a register to a new value, and act on the value if necessary
+	host_reg_write() - handle a register write by the host.
 */
-void set_register(const unsigned char reg, const unsigned char data)
+void host_reg_write(const unsigned char reg, const unsigned char data)
 {
+	cli();
 	g_registers[reg] = data;
+	sei();
 	/* TODO: act on changes to registers as appropriate */
 }
 
@@ -94,7 +102,7 @@ ISR(INT0_vect)
 		}
 		else if(PORTC & nUW)	/* Write cycle */
 		{
-			set_register(addr, DATA_BUS_PIN);
+			host_reg_write(addr, DATA_BUS_PIN);
 			TERMINATE_BUS_CYCLE();
 		}
 	}
@@ -118,7 +126,7 @@ int main(void)
 	init();
 	
 	// TODO - ensure that PUD is 0 in SFIOR
-	// TODO - configure interrupts
+	
     while(1)
     {
 		/* Read keyboard port */

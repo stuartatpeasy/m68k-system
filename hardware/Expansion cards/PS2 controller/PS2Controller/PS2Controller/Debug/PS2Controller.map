@@ -17,8 +17,8 @@ Discarded input sections
  .text          0x00000000        0x0 PS2Controller.o
  .data          0x00000000        0x0 PS2Controller.o
  .bss           0x00000000        0x0 PS2Controller.o
- .text.set_register
-                0x00000000        0xc PS2Controller.o
+ .text.host_reg_write
+                0x00000000       0x10 PS2Controller.o
  .text          0x00000000        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
  .data          0x00000000        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
  .bss           0x00000000        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
@@ -167,7 +167,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x174
+.text           0x00000000      0x188
  *(.vectors)
  .vectors       0x00000000       0x26 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/../../../../avr/lib/avr4/crtm8.o
                 0x00000000                __vector_default
@@ -242,18 +242,18 @@ END GROUP
                 0x00000046                __vector_18
                 0x00000048                . = ALIGN (0x2)
  *(.text.*)
- .text.init     0x00000048       0x22 PS2Controller.o
+ .text.init     0x00000048       0x32 PS2Controller.o
                 0x00000048                init
  .text.__vector_1
-                0x0000006a       0x70 PS2Controller.o
-                0x0000006a                __vector_1
- .text.main     0x000000da       0x96 PS2Controller.o
-                0x000000da                main
-                0x00000170                . = ALIGN (0x2)
+                0x0000007a       0x74 PS2Controller.o
+                0x0000007a                __vector_1
+ .text.main     0x000000ee       0x96 PS2Controller.o
+                0x000000ee                main
+                0x00000184                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x00000170        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
-                0x00000170                _exit
-                0x00000170                exit
+ .fini9         0x00000184        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
+                0x00000184                _exit
+                0x00000184                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -272,11 +272,11 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000170        0x4 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
+ .fini0         0x00000184        0x4 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
  *(.fini0)
-                0x00000174                _etext = .
+                0x00000188                _etext = .
 
-.data           0x00800060        0x0 load address 0x00000174
+.data           0x00800060        0x0 load address 0x00000188
                 0x00800060                PROVIDE (__data_start, .)
  *(.data)
  *(.data*)
@@ -295,8 +295,8 @@ END GROUP
  COMMON         0x00800060       0x10 PS2Controller.o
                 0x00800060                g_registers
                 0x00800070                PROVIDE (__bss_end, .)
-                0x00000174                __data_load_start = LOADADDR (.data)
-                0x00000174                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x00000188                __data_load_start = LOADADDR (.data)
+                0x00000188                __data_load_end = (__data_load_start + SIZEOF (.data))
 
 .noinit         0x00800070        0x0
                 0x00800070                PROVIDE (__noinit_start, .)
@@ -378,18 +378,18 @@ END GROUP
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x15d PS2Controller.o
 
-.debug_line     0x00000000      0x16f
+.debug_line     0x00000000      0x176
  *(.debug_line .debug_line.* .debug_line_end)
- .debug_line    0x00000000      0x16f PS2Controller.o
+ .debug_line    0x00000000      0x176 PS2Controller.o
 
 .debug_frame    0x00000000       0x70
  *(.debug_frame)
  .debug_frame   0x00000000       0x70 PS2Controller.o
 
-.debug_str      0x00000000      0x267
+.debug_str      0x00000000      0x269
  *(.debug_str)
- .debug_str     0x00000000      0x267 PS2Controller.o
-                                0x2a6 (size before relaxing)
+ .debug_str     0x00000000      0x269 PS2Controller.o
+                                0x2a8 (size before relaxing)
 
 .debug_loc      0x00000000      0x1fb
  *(.debug_loc)

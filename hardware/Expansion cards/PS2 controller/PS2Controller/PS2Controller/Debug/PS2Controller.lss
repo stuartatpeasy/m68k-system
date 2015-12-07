@@ -3,34 +3,34 @@ PS2Controller.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00000174  00000000  00000000  00000074  2**1
+  0 .text         00000188  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .bss          00000010  00800060  00800060  000001e8  2**0
+  1 .bss          00000010  00800060  00800060  000001fc  2**0
                   ALLOC
-  2 .comment      00000030  00000000  00000000  000001e8  2**0
+  2 .comment      00000030  00000000  00000000  000001fc  2**0
                   CONTENTS, READONLY
-  3 .debug_aranges 00000038  00000000  00000000  00000218  2**0
+  3 .debug_aranges 00000038  00000000  00000000  0000022c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_info   00000258  00000000  00000000  00000250  2**0
+  4 .debug_info   00000258  00000000  00000000  00000264  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_abbrev 0000015d  00000000  00000000  000004a8  2**0
+  5 .debug_abbrev 0000015d  00000000  00000000  000004bc  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_line   0000016f  00000000  00000000  00000605  2**0
+  6 .debug_line   00000176  00000000  00000000  00000619  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_frame  00000070  00000000  00000000  00000774  2**2
+  7 .debug_frame  00000070  00000000  00000000  00000790  2**2
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_str    00000267  00000000  00000000  000007e4  2**0
+  8 .debug_str    00000269  00000000  00000000  00000800  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_loc    000001fb  00000000  00000000  00000a4b  2**0
+  9 .debug_loc    000001fb  00000000  00000000  00000a69  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_ranges 00000028  00000000  00000000  00000c46  2**0
+ 10 .debug_ranges 00000028  00000000  00000000  00000c64  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
 
 00000000 <__vectors>:
    0:	12 c0       	rjmp	.+36     	; 0x26 <__ctors_end>
-   2:	33 c0       	rjmp	.+102    	; 0x6a <__vector_1>
+   2:	3b c0       	rjmp	.+118    	; 0x7a <__vector_1>
    4:	20 c0       	rjmp	.+64     	; 0x46 <__bad_interrupt>
    6:	1f c0       	rjmp	.+62     	; 0x46 <__bad_interrupt>
    8:	1e c0       	rjmp	.+60     	; 0x46 <__bad_interrupt>
@@ -70,8 +70,8 @@ Disassembly of section .text:
   3c:	a0 37       	cpi	r26, 0x70	; 112
   3e:	b2 07       	cpc	r27, r18
   40:	e1 f7       	brne	.-8      	; 0x3a <.do_clear_bss_loop>
-  42:	4b d0       	rcall	.+150    	; 0xda <main>
-  44:	95 c0       	rjmp	.+298    	; 0x170 <_exit>
+  42:	55 d0       	rcall	.+170    	; 0xee <main>
+  44:	9f c0       	rjmp	.+318    	; 0x184 <_exit>
 
 00000046 <__bad_interrupt>:
   46:	dc cf       	rjmp	.-72     	; 0x0 <__vectors>
@@ -116,352 +116,369 @@ void init(void)
   64:	f9 07       	cpc	r31, r25
   66:	e1 f7       	brne	.-8      	; 0x60 <init+0x18>
 		g_registers[i] = 0;
-}
-  68:	08 95       	ret
 
-0000006a <__vector_1>:
+	/* Enable INT0 interrupts on falling edge */
+	MCUCR = (MCUCR & ~(_BV(ISC01) | _BV(ISC00))) | _BV(ISC01);
+  68:	85 b7       	in	r24, 0x35	; 53
+  6a:	8c 7f       	andi	r24, 0xFC	; 252
+  6c:	82 60       	ori	r24, 0x02	; 2
+  6e:	85 bf       	out	0x35, r24	; 53
+	GICR |= _BV(INT0);
+  70:	8b b7       	in	r24, 0x3b	; 59
+  72:	80 64       	ori	r24, 0x40	; 64
+  74:	8b bf       	out	0x3b, r24	; 59
+	
+	sei();
+  76:	78 94       	sei
+  78:	08 95       	ret
+
+0000007a <__vector_1>:
 /*
 	ISR for INT0 - handles communication with the host processor.
 	This function is called when the host processor asserts nCS.
 */
 ISR(INT0_vect)
 {
-  6a:	1f 92       	push	r1
-  6c:	0f 92       	push	r0
-  6e:	0f b6       	in	r0, 0x3f	; 63
-  70:	0f 92       	push	r0
-  72:	11 24       	eor	r1, r1
-  74:	8f 93       	push	r24
-  76:	ef 93       	push	r30
-  78:	ff 93       	push	r31
+  7a:	1f 92       	push	r1
+  7c:	0f 92       	push	r0
+  7e:	0f b6       	in	r0, 0x3f	; 63
+  80:	0f 92       	push	r0
+  82:	11 24       	eor	r1, r1
+  84:	8f 93       	push	r24
+  86:	ef 93       	push	r30
+  88:	ff 93       	push	r31
 	if(PORTD & nID)
-  7a:	91 9b       	sbis	0x12, 1	; 18
-  7c:	0a c0       	rjmp	.+20     	; 0x92 <__vector_1+0x28>
+  8a:	91 9b       	sbis	0x12, 1	; 18
+  8c:	0a c0       	rjmp	.+20     	; 0xa2 <__vector_1+0x28>
 	{
 		/*
 			This is an ID cycle.  Place the part identity on the data bus, assert nACK, and
 			wait for the cycle to terminate.
 		*/
 		DO_READ_CYCLE(PERIPHERAL_ID);
-  7e:	82 e8       	ldi	r24, 0x82	; 130
-  80:	86 bb       	out	0x16, r24	; 22
-  82:	8f ef       	ldi	r24, 0xFF	; 255
-  84:	87 bb       	out	0x17, r24	; 23
-  86:	90 98       	cbi	0x12, 0	; 18
-  88:	92 99       	sbic	0x12, 2	; 18
-  8a:	fe cf       	rjmp	.-4      	; 0x88 <__vector_1+0x1e>
-  8c:	90 9a       	sbi	0x12, 0	; 18
-  8e:	17 ba       	out	0x17, r1	; 23
-  90:	1c c0       	rjmp	.+56     	; 0xca <__vector_1+0x60>
+  8e:	82 e8       	ldi	r24, 0x82	; 130
+  90:	86 bb       	out	0x16, r24	; 22
+  92:	8f ef       	ldi	r24, 0xFF	; 255
+  94:	87 bb       	out	0x17, r24	; 23
+  96:	90 98       	cbi	0x12, 0	; 18
+  98:	92 99       	sbic	0x12, 2	; 18
+  9a:	fe cf       	rjmp	.-4      	; 0x98 <__vector_1+0x1e>
+  9c:	90 9a       	sbi	0x12, 0	; 18
+  9e:	17 ba       	out	0x17, r1	; 23
+  a0:	1e c0       	rjmp	.+60     	; 0xde <__vector_1+0x64>
 	else
 	{
 		/*
 			This is a register read/write cycle.
 		*/
 		const unsigned char addr = PORTC & 0xF;
-  92:	e5 b3       	in	r30, 0x15	; 21
-  94:	ef 70       	andi	r30, 0x0F	; 15
+  a2:	e5 b3       	in	r30, 0x15	; 21
+  a4:	ef 70       	andi	r30, 0x0F	; 15
 
 		if(PORTC & nUR)			/* Read cycle */
-  96:	ac 9b       	sbis	0x15, 4	; 21
-  98:	0d c0       	rjmp	.+26     	; 0xb4 <__vector_1+0x4a>
+  a6:	ac 9b       	sbis	0x15, 4	; 21
+  a8:	0d c0       	rjmp	.+26     	; 0xc4 <__vector_1+0x4a>
 		{
 			DO_READ_CYCLE(g_registers[addr]);
-  9a:	f0 e0       	ldi	r31, 0x00	; 0
-  9c:	e0 5a       	subi	r30, 0xA0	; 160
-  9e:	ff 4f       	sbci	r31, 0xFF	; 255
-  a0:	80 81       	ld	r24, Z
-  a2:	86 bb       	out	0x16, r24	; 22
-  a4:	8f ef       	ldi	r24, 0xFF	; 255
-  a6:	87 bb       	out	0x17, r24	; 23
-  a8:	90 98       	cbi	0x12, 0	; 18
-  aa:	92 99       	sbic	0x12, 2	; 18
-  ac:	fe cf       	rjmp	.-4      	; 0xaa <__vector_1+0x40>
-  ae:	90 9a       	sbi	0x12, 0	; 18
-  b0:	17 ba       	out	0x17, r1	; 23
-  b2:	0b c0       	rjmp	.+22     	; 0xca <__vector_1+0x60>
+  aa:	f0 e0       	ldi	r31, 0x00	; 0
+  ac:	e0 5a       	subi	r30, 0xA0	; 160
+  ae:	ff 4f       	sbci	r31, 0xFF	; 255
+  b0:	80 81       	ld	r24, Z
+  b2:	86 bb       	out	0x16, r24	; 22
+  b4:	8f ef       	ldi	r24, 0xFF	; 255
+  b6:	87 bb       	out	0x17, r24	; 23
+  b8:	90 98       	cbi	0x12, 0	; 18
+  ba:	92 99       	sbic	0x12, 2	; 18
+  bc:	fe cf       	rjmp	.-4      	; 0xba <__vector_1+0x40>
+  be:	90 9a       	sbi	0x12, 0	; 18
+  c0:	17 ba       	out	0x17, r1	; 23
+  c2:	0d c0       	rjmp	.+26     	; 0xde <__vector_1+0x64>
 		}
 		else if(PORTC & nUW)	/* Write cycle */
-  b4:	ad 9b       	sbis	0x15, 5	; 21
-  b6:	09 c0       	rjmp	.+18     	; 0xca <__vector_1+0x60>
+  c4:	ad 9b       	sbis	0x15, 5	; 21
+  c6:	0b c0       	rjmp	.+22     	; 0xde <__vector_1+0x64>
 		{
-			set_register(addr, DATA_BUS_PIN);
-  b8:	86 b3       	in	r24, 0x16	; 22
+			host_reg_write(addr, DATA_BUS_PIN);
+  c8:	86 b3       	in	r24, 0x16	; 22
 /*
-	set_register() - set a register to a new value, and act on the value if necessary
+	host_reg_write() - handle a register write by the host.
 */
-void set_register(const unsigned char reg, const unsigned char data)
+void host_reg_write(const unsigned char reg, const unsigned char data)
 {
+	cli();
+  ca:	f8 94       	cli
 	g_registers[reg] = data;
-  ba:	f0 e0       	ldi	r31, 0x00	; 0
-  bc:	e0 5a       	subi	r30, 0xA0	; 160
-  be:	ff 4f       	sbci	r31, 0xFF	; 255
-  c0:	80 83       	st	Z, r24
+  cc:	f0 e0       	ldi	r31, 0x00	; 0
+  ce:	e0 5a       	subi	r30, 0xA0	; 160
+  d0:	ff 4f       	sbci	r31, 0xFF	; 255
+  d2:	80 83       	st	Z, r24
+	sei();
+  d4:	78 94       	sei
 			DO_READ_CYCLE(g_registers[addr]);
 		}
 		else if(PORTC & nUW)	/* Write cycle */
 		{
-			set_register(addr, DATA_BUS_PIN);
+			host_reg_write(addr, DATA_BUS_PIN);
 			TERMINATE_BUS_CYCLE();
-  c2:	90 98       	cbi	0x12, 0	; 18
-  c4:	92 99       	sbic	0x12, 2	; 18
-  c6:	fe cf       	rjmp	.-4      	; 0xc4 <__vector_1+0x5a>
-  c8:	90 9a       	sbi	0x12, 0	; 18
+  d6:	90 98       	cbi	0x12, 0	; 18
+  d8:	92 99       	sbic	0x12, 2	; 18
+  da:	fe cf       	rjmp	.-4      	; 0xd8 <__vector_1+0x5e>
+  dc:	90 9a       	sbi	0x12, 0	; 18
 		}
 	}
 }
-  ca:	ff 91       	pop	r31
-  cc:	ef 91       	pop	r30
-  ce:	8f 91       	pop	r24
-  d0:	0f 90       	pop	r0
-  d2:	0f be       	out	0x3f, r0	; 63
-  d4:	0f 90       	pop	r0
-  d6:	1f 90       	pop	r1
-  d8:	18 95       	reti
+  de:	ff 91       	pop	r31
+  e0:	ef 91       	pop	r30
+  e2:	8f 91       	pop	r24
+  e4:	0f 90       	pop	r0
+  e6:	0f be       	out	0x3f, r0	; 63
+  e8:	0f 90       	pop	r0
+  ea:	1f 90       	pop	r1
+  ec:	18 95       	reti
 
-000000da <main>:
+000000ee <main>:
 		kbstate = state_idle,
 		kbdata = 0,
 		mousestate = state_idle,
 		mousedata = 0;
 	
 	init();
-  da:	b6 df       	rcall	.-148    	; 0x48 <init>
+  ee:	ac df       	rcall	.-168    	; 0x48 <init>
 		mouseclk,
 		mouseclk_last = 0,
 		kbstate = state_idle,
 		kbdata = 0,
 		mousestate = state_idle,
 		mousedata = 0;
-  dc:	60 e0       	ldi	r22, 0x00	; 0
+  f0:	60 e0       	ldi	r22, 0x00	; 0
 		kbclk_last = 0,
 		mouseclk,
 		mouseclk_last = 0,
 		kbstate = state_idle,
 		kbdata = 0,
 		mousestate = state_idle,
-  de:	40 e0       	ldi	r20, 0x00	; 0
+  f2:	40 e0       	ldi	r20, 0x00	; 0
 		kbclk,
 		kbclk_last = 0,
 		mouseclk,
 		mouseclk_last = 0,
 		kbstate = state_idle,
 		kbdata = 0,
-  e0:	50 e0       	ldi	r21, 0x00	; 0
+  f4:	50 e0       	ldi	r21, 0x00	; 0
 	register unsigned char
 		kbclk,
 		kbclk_last = 0,
 		mouseclk,
 		mouseclk_last = 0,
 		kbstate = state_idle,
-  e2:	30 e0       	ldi	r19, 0x00	; 0
+  f6:	30 e0       	ldi	r19, 0x00	; 0
 {
 	register unsigned char
 		kbclk,
 		kbclk_last = 0,
 		mouseclk,
 		mouseclk_last = 0,
-  e4:	20 e0       	ldi	r18, 0x00	; 0
+  f8:	20 e0       	ldi	r18, 0x00	; 0
 */
 int main(void)
 {
 	register unsigned char
 		kbclk,
 		kbclk_last = 0,
-  e6:	90 e0       	ldi	r25, 0x00	; 0
+  fa:	90 e0       	ldi	r25, 0x00	; 0
 						break;
 						
 					case state_stop:
 						/* TODO: process received character */
 						cli();
 						g_registers[REG_KB_DATA] = kbdata;
-  e8:	a0 e6       	ldi	r26, 0x60	; 96
-  ea:	b0 e0       	ldi	r27, 0x00	; 0
+  fc:	a0 e6       	ldi	r26, 0x60	; 96
+  fe:	b0 e0       	ldi	r27, 0x00	; 0
 						sei();
 						kbstate = state_idle;
-  ec:	70 e0       	ldi	r23, 0x00	; 0
+ 100:	70 e0       	ldi	r23, 0x00	; 0
 						break;
 					
 					case state_stop:
 						/* TODO: process received character */
 						cli();
 						g_registers[REG_MOUSE_DATA] = mousedata;
-  ee:	e1 e6       	ldi	r30, 0x61	; 97
-  f0:	f0 e0       	ldi	r31, 0x00	; 0
-  f2:	05 c0       	rjmp	.+10     	; 0xfe <main+0x24>
+ 102:	e1 e6       	ldi	r30, 0x61	; 97
+ 104:	f0 e0       	ldi	r31, 0x00	; 0
+ 106:	05 c0       	rjmp	.+10     	; 0x112 <main+0x24>
 		}
 		
 		mouseclk = PORTD & MOUSE_CLK;
 		if(mouseclk != mouseclk_last)
 		{
 			mouseclk_last = mouseclk;
-  f4:	28 2f       	mov	r18, r24
-  f6:	03 c0       	rjmp	.+6      	; 0xfe <main+0x24>
-  f8:	28 2f       	mov	r18, r24
-  fa:	01 c0       	rjmp	.+2      	; 0xfe <main+0x24>
-  fc:	28 2f       	mov	r18, r24
+ 108:	28 2f       	mov	r18, r24
+ 10a:	03 c0       	rjmp	.+6      	; 0x112 <main+0x24>
+ 10c:	28 2f       	mov	r18, r24
+ 10e:	01 c0       	rjmp	.+2      	; 0x112 <main+0x24>
+ 110:	28 2f       	mov	r18, r24
 	// TODO - ensure that PUD is 0 in SFIOR
-	// TODO - configure interrupts
+	
     while(1)
     {
 		/* Read keyboard port */
 		kbclk = PORTD & KB_CLK;
-  fe:	82 b3       	in	r24, 0x12	; 18
- 100:	80 71       	andi	r24, 0x10	; 16
+ 112:	82 b3       	in	r24, 0x12	; 18
+ 114:	80 71       	andi	r24, 0x10	; 16
 		if(kbclk != kbclk_last)
- 102:	89 17       	cp	r24, r25
- 104:	d9 f0       	breq	.+54     	; 0x13c <main+0x62>
+ 116:	89 17       	cp	r24, r25
+ 118:	d9 f0       	breq	.+54     	; 0x150 <main+0x62>
 		{
 			kbclk_last = kbclk;
 			if(!kbclk)
- 106:	81 11       	cpse	r24, r1
- 108:	14 c0       	rjmp	.+40     	; 0x132 <main+0x58>
+ 11a:	81 11       	cpse	r24, r1
+ 11c:	14 c0       	rjmp	.+40     	; 0x146 <main+0x58>
 			{
 				/* Positive-to-negative edge on KB_CLK */
 				switch(++kbstate)
- 10a:	3f 5f       	subi	r19, 0xFF	; 255
- 10c:	32 30       	cpi	r19, 0x02	; 2
- 10e:	98 f0       	brcs	.+38     	; 0x136 <main+0x5c>
- 110:	3a 30       	cpi	r19, 0x0A	; 10
- 112:	18 f0       	brcs	.+6      	; 0x11a <main+0x40>
- 114:	3b 30       	cpi	r19, 0x0B	; 11
- 116:	39 f0       	breq	.+14     	; 0x126 <main+0x4c>
- 118:	0e c0       	rjmp	.+28     	; 0x136 <main+0x5c>
+ 11e:	3f 5f       	subi	r19, 0xFF	; 255
+ 120:	32 30       	cpi	r19, 0x02	; 2
+ 122:	98 f0       	brcs	.+38     	; 0x14a <main+0x5c>
+ 124:	3a 30       	cpi	r19, 0x0A	; 10
+ 126:	18 f0       	brcs	.+6      	; 0x12e <main+0x40>
+ 128:	3b 30       	cpi	r19, 0x0B	; 11
+ 12a:	39 f0       	breq	.+14     	; 0x13a <main+0x4c>
+ 12c:	0e c0       	rjmp	.+28     	; 0x14a <main+0x5c>
 					case state_d3:
 					case state_d4:
 					case state_d5:
 					case state_d6:
 					case state_d7:
 						kbdata >>= 1;
- 11a:	56 95       	lsr	r21
+ 12e:	56 95       	lsr	r21
 						if(PORTD & KB_DATA)
- 11c:	96 9b       	sbis	0x12, 6	; 18
- 11e:	0d c0       	rjmp	.+26     	; 0x13a <main+0x60>
+ 130:	96 9b       	sbis	0x12, 6	; 18
+ 132:	0d c0       	rjmp	.+26     	; 0x14e <main+0x60>
 							kbdata |= 0x80;
- 120:	50 68       	ori	r21, 0x80	; 128
+ 134:	50 68       	ori	r21, 0x80	; 128
     {
 		/* Read keyboard port */
 		kbclk = PORTD & KB_CLK;
 		if(kbclk != kbclk_last)
 		{
 			kbclk_last = kbclk;
- 122:	98 2f       	mov	r25, r24
- 124:	0b c0       	rjmp	.+22     	; 0x13c <main+0x62>
+ 136:	98 2f       	mov	r25, r24
+ 138:	0b c0       	rjmp	.+22     	; 0x150 <main+0x62>
 						/* TODO handle parity */
 						break;
 						
 					case state_stop:
 						/* TODO: process received character */
 						cli();
- 126:	f8 94       	cli
+ 13a:	f8 94       	cli
 						g_registers[REG_KB_DATA] = kbdata;
- 128:	5c 93       	st	X, r21
+ 13c:	5c 93       	st	X, r21
 						sei();
- 12a:	78 94       	sei
+ 13e:	78 94       	sei
     {
 		/* Read keyboard port */
 		kbclk = PORTD & KB_CLK;
 		if(kbclk != kbclk_last)
 		{
 			kbclk_last = kbclk;
- 12c:	98 2f       	mov	r25, r24
+ 140:	98 2f       	mov	r25, r24
 					case state_stop:
 						/* TODO: process received character */
 						cli();
 						g_registers[REG_KB_DATA] = kbdata;
 						sei();
 						kbstate = state_idle;
- 12e:	37 2f       	mov	r19, r23
+ 142:	37 2f       	mov	r19, r23
 						break;
- 130:	05 c0       	rjmp	.+10     	; 0x13c <main+0x62>
+ 144:	05 c0       	rjmp	.+10     	; 0x150 <main+0x62>
     {
 		/* Read keyboard port */
 		kbclk = PORTD & KB_CLK;
 		if(kbclk != kbclk_last)
 		{
 			kbclk_last = kbclk;
- 132:	98 2f       	mov	r25, r24
- 134:	03 c0       	rjmp	.+6      	; 0x13c <main+0x62>
- 136:	98 2f       	mov	r25, r24
- 138:	01 c0       	rjmp	.+2      	; 0x13c <main+0x62>
- 13a:	98 2f       	mov	r25, r24
+ 146:	98 2f       	mov	r25, r24
+ 148:	03 c0       	rjmp	.+6      	; 0x150 <main+0x62>
+ 14a:	98 2f       	mov	r25, r24
+ 14c:	01 c0       	rjmp	.+2      	; 0x150 <main+0x62>
+ 14e:	98 2f       	mov	r25, r24
 						break;
 				}
 			}
 		}
 		
 		mouseclk = PORTD & MOUSE_CLK;
- 13c:	82 b3       	in	r24, 0x12	; 18
- 13e:	80 72       	andi	r24, 0x20	; 32
+ 150:	82 b3       	in	r24, 0x12	; 18
+ 152:	80 72       	andi	r24, 0x20	; 32
 		if(mouseclk != mouseclk_last)
- 140:	82 17       	cp	r24, r18
- 142:	e9 f2       	breq	.-70     	; 0xfe <main+0x24>
+ 154:	82 17       	cp	r24, r18
+ 156:	e9 f2       	breq	.-70     	; 0x112 <main+0x24>
 		{
 			mouseclk_last = mouseclk;
 			if(!mouseclk)
- 144:	81 11       	cpse	r24, r1
- 146:	d6 cf       	rjmp	.-84     	; 0xf4 <main+0x1a>
+ 158:	81 11       	cpse	r24, r1
+ 15a:	d6 cf       	rjmp	.-84     	; 0x108 <main+0x1a>
 			{
 				/* Positive-to-negative edge on MOUSE_CLK */
 				switch(++mousestate)
- 148:	4f 5f       	subi	r20, 0xFF	; 255
- 14a:	42 30       	cpi	r20, 0x02	; 2
- 14c:	a8 f2       	brcs	.-86     	; 0xf8 <main+0x1e>
- 14e:	4a 30       	cpi	r20, 0x0A	; 10
- 150:	18 f0       	brcs	.+6      	; 0x158 <main+0x7e>
- 152:	4b 30       	cpi	r20, 0x0B	; 11
- 154:	39 f0       	breq	.+14     	; 0x164 <main+0x8a>
- 156:	d0 cf       	rjmp	.-96     	; 0xf8 <main+0x1e>
+ 15c:	4f 5f       	subi	r20, 0xFF	; 255
+ 15e:	42 30       	cpi	r20, 0x02	; 2
+ 160:	a8 f2       	brcs	.-86     	; 0x10c <main+0x1e>
+ 162:	4a 30       	cpi	r20, 0x0A	; 10
+ 164:	18 f0       	brcs	.+6      	; 0x16c <main+0x7e>
+ 166:	4b 30       	cpi	r20, 0x0B	; 11
+ 168:	39 f0       	breq	.+14     	; 0x178 <main+0x8a>
+ 16a:	d0 cf       	rjmp	.-96     	; 0x10c <main+0x1e>
 					case state_d3:
 					case state_d4:
 					case state_d5:
 					case state_d6:
 					case state_d7:
 						mousedata >>= 1;
- 158:	66 95       	lsr	r22
+ 16c:	66 95       	lsr	r22
 						if(PORTD & MOUSE_DATA)
- 15a:	97 9b       	sbis	0x12, 7	; 18
- 15c:	cf cf       	rjmp	.-98     	; 0xfc <main+0x22>
+ 16e:	97 9b       	sbis	0x12, 7	; 18
+ 170:	cf cf       	rjmp	.-98     	; 0x110 <main+0x22>
 							mousedata |= 0x80;
- 15e:	60 68       	ori	r22, 0x80	; 128
+ 172:	60 68       	ori	r22, 0x80	; 128
 		}
 		
 		mouseclk = PORTD & MOUSE_CLK;
 		if(mouseclk != mouseclk_last)
 		{
 			mouseclk_last = mouseclk;
- 160:	28 2f       	mov	r18, r24
- 162:	cd cf       	rjmp	.-102    	; 0xfe <main+0x24>
+ 174:	28 2f       	mov	r18, r24
+ 176:	cd cf       	rjmp	.-102    	; 0x112 <main+0x24>
 						/* TODO handle parity */
 						break;
 					
 					case state_stop:
 						/* TODO: process received character */
 						cli();
- 164:	f8 94       	cli
+ 178:	f8 94       	cli
 						g_registers[REG_MOUSE_DATA] = mousedata;
- 166:	60 83       	st	Z, r22
+ 17a:	60 83       	st	Z, r22
 						sei();
- 168:	78 94       	sei
+ 17c:	78 94       	sei
 		}
 		
 		mouseclk = PORTD & MOUSE_CLK;
 		if(mouseclk != mouseclk_last)
 		{
 			mouseclk_last = mouseclk;
- 16a:	28 2f       	mov	r18, r24
+ 17e:	28 2f       	mov	r18, r24
 					case state_stop:
 						/* TODO: process received character */
 						cli();
 						g_registers[REG_MOUSE_DATA] = mousedata;
 						sei();
 						mousestate = state_idle;
- 16c:	47 2f       	mov	r20, r23
+ 180:	47 2f       	mov	r20, r23
 						break;
- 16e:	c7 cf       	rjmp	.-114    	; 0xfe <main+0x24>
+ 182:	c7 cf       	rjmp	.-114    	; 0x112 <main+0x24>
 
-00000170 <_exit>:
- 170:	f8 94       	cli
+00000184 <_exit>:
+ 184:	f8 94       	cli
 
-00000172 <__stop_program>:
- 172:	ff cf       	rjmp	.-2      	; 0x172 <__stop_program>
+00000186 <__stop_program>:
+ 186:	ff cf       	rjmp	.-2      	; 0x186 <__stop_program>

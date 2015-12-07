@@ -5,9 +5,10 @@ Major (prevents design working as manufactured)
 
 Moderate (makes assembly fiddly, or affects usability)
 ------------------------------------------------------
-2	R2 holes too small for selected resistor
-3	R2 pad spacing is 0.3"; should be 0.4"
+2	R13 holes too small for selected resistor
+3	R13 pad spacing is 0.3"; should be 0.4"
 -	Y1 is too close to C16 (and, to a lesser extent, C19)
+
 
 
 Minor (cosmetic)
