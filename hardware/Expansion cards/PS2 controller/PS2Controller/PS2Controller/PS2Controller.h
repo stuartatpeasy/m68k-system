@@ -28,6 +28,7 @@
 
 typedef unsigned char	u8;
 typedef const u8		ku8;
+typedef volatile u8		vu8;
 
 /* PS/2 data transmission/reception states */
 typedef enum data_state
@@ -46,7 +47,18 @@ typedef enum data_state
 	ds_rx_stop		= 11,
 	
 	ds_tx_busrq		= 12,
-	dx_tx_start		= 13,
+	ds_tx_start		= 13,
+	ds_tx_d0		= 14,
+	ds_tx_d1		= 15,
+	ds_tx_d2		= 16,
+	ds_tx_d3		= 17,
+	ds_tx_d4		= 18,
+	ds_tx_d5		= 19,
+	ds_tx_d6		= 20,
+	ds_tx_d7		= 21,
+	ds_tx_parity	= 22,
+	ds_tx_stop		= 23,
+	ds_tx_ack		= 24,
 } data_state_t;
 
 
@@ -73,11 +85,11 @@ typedef enum irq
 } irq_t;
 
 
+/* PS/2 command values (sent from host to device) */
 #define CMD_NONE			(0x00)
 #define KB_CMD_SET_LEDS		(0xed)
 #define KB_CMD_SET_TM_RATE	(0xf3)
 #define KB_CMD_RESET		(0xff)
-
 
 /* Keyboard/mouse data transmission/reception context */
 typedef struct ctx
@@ -85,18 +97,29 @@ typedef struct ctx
 	cmd_state_t		state_cmd;
 	data_state_t	state_data;
 
+	vu8 *			port;
+	vu8 *			pin;
+	vu8 *			ddr;
+	u8				data_pin;
 	u8				data;
 	u8				parity_calc;
 	u8				parity_received;
 	u8				data_regnum;
 	u8				command;
+	u8				data_present;
+	u8				flags;
 } ctx_t;
+
+/* Flags used in ctx_t "flags" member */
+#define KB_RELEASE		_BV(7)			/* Key has been released */
+#define KB_EXT			_BV(6)			/* "Extended" key code flag */
 
 
 void init(void);
 void set_irq_edge(const irq_t irq, const irq_edge_t edge);
 void host_reg_write(ku8 reg, const u8 data);
-void process_clock_edge(ctx_t *ctx, u8 bit);
-
+void process_clock_edge(ctx_t *ctxl);
+void process_data_kb();
+void process_data_mouse();
 
 #endif

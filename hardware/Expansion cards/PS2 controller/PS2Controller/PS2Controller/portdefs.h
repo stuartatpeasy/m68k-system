@@ -47,8 +47,10 @@ PB0		ICP1			14		i/o		D8
 #define DATA_BUS_PIN		PINB
 
 #define KB_PORT				PORTD
+#define KB_PIN				PIND
 #define KB_DDR				DDRD
 #define MOUSE_PORT			PORTD
+#define MOUSE_PIN			PIND
 #define MOUSE_DDR			DDRD
 
 /* Port D (ADDR_PS2) pins */

@@ -11,7 +11,7 @@
 
 #include "PS2Controller.h"
 
-ctx_t kb_ctx, mouse_ctx;
+ctx_t ctx_kb, ctx_mouse;
 u8 g_registers[16];
 
 
@@ -36,19 +36,25 @@ void init(void)
 		g_registers[i] = 0;
 		
 	/* Initialise mouse and keyboard context */
-	kb_ctx.state_data		= ds_idle;
-	kb_ctx.state_cmd		= cs_rx_data;		/* TODO: change to cs_ignore */
-	kb_ctx.data				= 0;
-	kb_ctx.parity_calc		= 0;
-	kb_ctx.data_regnum		= REG_KB_DATA;
-	kb_ctx.command			= CMD_NONE;
+	ctx_kb.state_data		= ds_idle;
+	ctx_kb.state_cmd		= cs_rx_data;		/* TODO: change to cs_ignore */
+	ctx_kb.port				= &KB_PORT;
+	ctx_kb.pin				= &KB_PIN;
+	ctx_kb.ddr				= &KB_DDR;
+	ctx_kb.data_pin			= KB_DATA;
+	ctx_kb.data_regnum		= REG_KB_DATA;
+	ctx_kb.command			= CMD_NONE;
+	ctx_kb.data_present		= 0;
 	
-	mouse_ctx.state_data	= ds_idle;
-	mouse_ctx.state_cmd		= cs_rx_data;		/* TODO: change to cs_ignore */
-	mouse_ctx.data			= 0;
-	mouse_ctx.parity_calc	= 0;
-	mouse_ctx.data_regnum	= REG_MOUSE_DATA;
-	mouse_ctx.command		= CMD_NONE;
+	ctx_mouse.state_data	= ds_idle;
+	ctx_mouse.state_cmd		= cs_rx_data;		/* TODO: change to cs_ignore */
+	ctx_mouse.port			= &MOUSE_PORT;
+	ctx_mouse.pin			= &MOUSE_PIN;
+	ctx_mouse.ddr			= &MOUSE_DDR;
+	ctx_mouse.data_pin		= MOUSE_DATA;
+	ctx_mouse.data_regnum	= REG_MOUSE_DATA;
+	ctx_mouse.command		= CMD_NONE;
+	ctx_mouse.data_present	= 0;
 
 	/* Enable keyboard and mouse interrupts on falling edge */
 	set_irq_edge(irq_keyboard_clk, irq_edge_falling);
@@ -98,46 +104,77 @@ void host_reg_write(ku8 reg, ku8 data)
 }
 
 
-void kb_send_command(u8 cmd)
+/*
+	process_data_kb() - process a byte of data received from the keyboard.
+*/
+void process_data_kb()
 {
-	u8 i;
+	/* TODO - maybe pull clock low to prevent device sending more data until we're finished? */
+	u8 data = ctx_kb.data;
 	
-	// TODO: generate parity of cmd
-
-	for(i = 8; i; --i, cmd >>= 1)
+	ctx_kb.data_present = 0;
+	
+	if(ctx_kb.parity_received != ctx_kb.parity_calc)
 	{
-		/* Wait for device to pull clock line high */
-		while(!(PIND & KB_CLK))
-			;
-			
-		/* Send the next bit of the command */
-		if(cmd & 1)
-			PORTD |= KB_DATA;
-		else
-			PORTD &= ~KB_DATA;
-		
-		/* Wait for device to pull clock line low */
-		while(PIND & KB_CLK)
-			;
+		/* Parity error (TODO: handle this in some way?) */
+		debug_putc('!');
+		return;
 	}
 	
-	/* Wait for device to pull clock line high */
-	while(!(PIND & KB_CLK))
-		;
-	
-	// TODO: send parity
-	
-	/* Wait for device to pull clock line low */
-	while(PIND & KB_CLK)
-		;
+	/* Process received data */
+	switch(ctx_kb.state_cmd)
+	{
+		case cs_ignore:
+			break;
+		
+		case cs_rx_data:
+			if(data == 0xe0)
+				ctx_kb.flags |= KB_EXT;			/* FIXME - nothing unsets this flag */
+			if(data == 0xf0)
+				ctx_kb.flags |= KB_RELEASE;		/* FIXME - nothing unsets this flag */
+			else
+			{
+				if(ctx_kb.flags & KB_RELEASE)
+					data |= 0x80;
 
-	DDRD &= ~KB_CLK;		/* Set data line to input					*/
-	
-	sei();					/* Re-enable interrupts						*/
+				g_registers[ctx_kb.data_regnum] = data;
+				
+				ctx_kb.flags &= ~(KB_EXT | KB_RELEASE);
+				
+				debug_puthexb(data);
+				debug_putc('\n');
+			}
+			break;
+	}
 }
 
 
-void receive_bit(ctx_t *ctx, u8 bit)
+/*
+	process_data_mouse() - process a byte of data received from the mouse.
+*/
+void process_data_mouse()
+{
+	/* TODO - maybe pull clock low to prevent device sending more data until we're finished? */
+	u8 data = ctx_mouse.data;
+	
+	ctx_mouse.data_present = 0;
+	
+	if(ctx_mouse.parity_received != ctx_mouse.parity_calc)
+	{
+		/* Parity error (TODO: handle this in some way?) */
+		debug_putc('!');
+		return;
+	}
+
+	debug_putc('M');
+}
+
+
+/*
+	process_clock_edge() - handle a clock transition on a PS/2 port.
+	This function deals with the transmission and receipt of data on the ports.
+*/
+void process_clock_edge(ctx_t *ctx)
 {
 	switch(++(ctx->state_data))
 	{
@@ -146,7 +183,7 @@ void receive_bit(ctx_t *ctx, u8 bit)
 			break;
 
 		case ds_rx_start:
-			/* TODO: maybe flag start of data reception? */
+			ctx->parity_calc = 1;		/* because odd parity */
 			break;
 
 		case ds_rx_d0:
@@ -158,7 +195,7 @@ void receive_bit(ctx_t *ctx, u8 bit)
 		case ds_rx_d6:
 		case ds_rx_d7:
 			ctx->data >>= 1;
-			if(bit)
+			if(*ctx->pin & ctx->data_pin)
 			{
 				ctx->data |= 0x80;
 				ctx->parity_calc ^= 1;
@@ -166,45 +203,50 @@ void receive_bit(ctx_t *ctx, u8 bit)
 			break;
 		
 		case ds_rx_parity:
-			ctx->parity_received = bit ? 1 : 0;
+			ctx->parity_received = (*ctx->pin & ctx->data_pin) ? 1 : 0;
 			break;
 		
 		case ds_rx_stop:
-			if(ctx->parity_received != ctx->parity_calc)
+			ctx->state_data = ds_idle;
+			ctx->data_present = 1;
+			break;
+			
+		case ds_tx_start:
+			SET_LOW(*ctx->port, ctx->data_pin);
+			ctx->parity_calc = 1;		/* because odd parity */
+			break;
+
+		case ds_tx_d0:
+		case ds_tx_d1:
+		case ds_tx_d2:
+		case ds_tx_d3:
+		case ds_tx_d4:
+		case ds_tx_d5:
+		case ds_tx_d6:
+		case ds_tx_d7:
+			if(ctx->command & 0x1)
 			{
-				debug_puthexb(kb_ctx.data);			/* TODO: process received data */
-				g_registers[ctx->data_regnum] = ctx->data;
+				SET_HIGH(*ctx->port, ctx->data_pin);
+				ctx->parity_calc ^= 1;
 			}
 			else
-			{
-				/* Parity error - drop data */
-				debug_putc('!');
-			}
-			debug_putc('\n');
-
-			ctx->state_data = ds_idle;
-			ctx->parity_calc = 0;
+				SET_LOW(*ctx->port, ctx->data_pin);
+			ctx->command >>= 1;
 			break;
-	}
-}
-
-
-void transmit_bit(ctx_t *ctx, u8 port, u8 pin, u8 bit)
-{
-
-}
-
-
-/*
-	process_clock_edge() - handle a clock transition on a PS/2 port.
-*/
-void process_clock_edge(ctx_t *ctx, u8 bit)
-{
-	switch(ctx->state_cmd)
-	{
-		default:			/* FIXME remove */
-		case cs_rx_data:
-			receive_bit(ctx, bit);
+		
+		case ds_tx_parity:
+			if(ctx->parity_calc)
+				SET_HIGH(*ctx->port, ctx->data_pin);
+			else
+				SET_LOW(*ctx->port, ctx->data_pin);
+		
+		case ds_tx_stop:
+			SET_HIGH(*ctx->port, ctx->data_pin);
+			SET_INPUT(*ctx->ddr, ctx->data_pin);
+			break;
+			
+		case ds_tx_ack:
+			ctx->state_data = ds_idle;
 			break;
 	}
 }
@@ -215,7 +257,7 @@ void process_clock_edge(ctx_t *ctx, u8 bit)
 */
 ISR(INT0_vect)
 {
-	process_clock_edge(&kb_ctx, PIND & KB_DATA);
+	process_clock_edge(&ctx_kb);
 }
 
 
@@ -224,7 +266,7 @@ ISR(INT0_vect)
 */
 ISR(INT1_vect)
 {
-	process_clock_edge(&mouse_ctx, PIND & MOUSE_DATA);
+	process_clock_edge(&ctx_mouse);
 }
 
 
@@ -270,7 +312,7 @@ ISR(TIMER2_OVF_vect)
 void bus_request_keyboard()
 {
 	KB_IRQ_DISABLE();
-	kb_ctx.state_data = ds_idle;		/* Just in case */
+	ctx_kb.state_data = ds_idle;		/* Just in case */
 	
 	/* Start keyboard command transmission */
 	KB_CLK_SET_OUTPUT();		/* Set keyboard clock line to output		*/
@@ -280,14 +322,14 @@ void bus_request_keyboard()
 	TCNT0 = 196;				/* 196 = 256 - 60, ie. overflow (and interrupt) after 60 counts */
 	TCCR0 = _BV(CS01);			/* Set timer clock source to f(clk)/8 (=1MHz)					*/
 
-	kb_ctx.state_data = ds_tx_busrq;
+	ctx_kb.state_data = ds_tx_busrq;
 }
 
 
 void bus_request_mouse()
 {
 	MOUSE_IRQ_DISABLE();
-	mouse_ctx.state_data = ds_idle;		/* Just in case */
+	ctx_mouse.state_data = ds_idle;		/* Just in case */
 	
 	/* Start mouse command transmission */
 	MOUSE_CLK_SET_OUTPUT();		/* Set mouse clock line to output			*/
@@ -297,7 +339,7 @@ void bus_request_mouse()
 	TCNT2 = 196;				/* 196 = 256 - 60, ie. overflow (and interrupt) after 60 counts */
 	TCCR2 = _BV(CS01);			/* Set timer clock source to f(clk)/8 (=1MHz)					*/
 	
-	mouse_ctx.state_data = ds_tx_busrq;
+	ctx_mouse.state_data = ds_tx_busrq;
 }
 
 
@@ -326,16 +368,26 @@ int main(void)
 				}
 				else					/* nW asserted - this is a write cycle */
 				{
-					host_reg_write(addr, DATA_BUS_PIN);
+					ku8 data = DATA_BUS_PIN;
 					TERMINATE_BUS_CYCLE();
+					
+					host_reg_write(addr, data);
 				}
 			}
 		}
+		
+		/* If data has been received from the keyboard or the mouse, process it */
+		if(ctx_kb.data_present)
+			process_data_kb();
+			
+		if(ctx_mouse.data_present)
+			process_data_mouse();
 
-		if((kb_ctx.command != CMD_NONE) && (kb_ctx.state_data == ds_idle))
+		/* If the command register contains a command, and the receiver is idle, send the command */
+		if((ctx_kb.command != CMD_NONE) && (ctx_kb.state_data == ds_idle))
 			bus_request_keyboard();		/* Start keyboard command transmission */
 
-		if((mouse_ctx.command != CMD_NONE) && (mouse_ctx.state_data == ds_idle))
+		if((ctx_mouse.command != CMD_NONE) && (ctx_mouse.state_data == ds_idle))
 			bus_request_mouse();		/* Start mouse command transmission */
     }
 }

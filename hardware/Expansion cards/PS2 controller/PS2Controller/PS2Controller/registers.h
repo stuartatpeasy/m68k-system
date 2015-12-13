@@ -21,11 +21,13 @@
 
 /* Bits in REG_KB_MODIFIERS */
 #define	MOD_LSHIFT			(7)
-#define MOD_RSHIFT			(6)
-#define MOD_LCTRL			(5)
-#define MOD_RCTRL			(4)
-#define MOD_LALT			(3)
-#define MOD_RALT			(2)
+#define MOD_LCTRL			(6)
+#define MOD_LGUI			(5)
+#define MOD_LALT			(4)
+#define MOD_RSHIFT			(3)
+#define MOD_RCTRL			(2)
+#define MOD_GUI				(1)
+#define MOD_RALT			(0)
 
 /* Bits in REG_STATUS */
 #define STATUS_KBRX			(7)

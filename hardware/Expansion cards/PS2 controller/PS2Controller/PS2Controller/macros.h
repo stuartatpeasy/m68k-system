@@ -15,6 +15,13 @@
 #define SET_LOW(port, pins)			((port) &= ~(pins))
 #define SET_HIGH(port, pins)		((port) |= (pins))
 
+/* Set the pin in the specified port as an output or an input */
+#define SET_INPUT(ddr, pin)			SET_LOW((ddr), (pin))
+#define SET_OUTPUT(ddr, pin)		SET_HIGH((ddr), (pin))
+
+/* Read the value of the specified pin in the specified port */
+#define READ_PIN(port, pin)			((port) & (pin))
+
 /* Set the edge on which INT0/INT1 interrupts trigger */
 #define INT0_SET_FALLING_EDGE()	(MCUCR = (MCUCR | _BV(ISC01)) & ~_BV(ISC00))
 #define INT0_SET_RISING_EDGE()	(MCUCR |= _BV(ISC01) | _BV(ISC00))
