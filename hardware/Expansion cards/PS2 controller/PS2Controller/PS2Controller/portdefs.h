@@ -13,21 +13,21 @@
 	Device (ATmega8L) pinout
 	------------------------
 
-PD7		AIN1			13		i		MOUSE_DATA
-PD6		AIN0			12		i		KB_DATA
-PD5		T1				11		i		MOUSE_CLK
-PD4		XCK/T0			 6		i		KB_CLK
-PD3		INT1			 5		i		nIRQ
-PD2		INT0			 4		i		nCS
-PD1		TXD				 3		i		nID
-PD0		RXD				 2		i		nACK
+PD7		AIN1			13		i/o		MOUSE_DATA
+PD6		AIN0			12		i/o		KB_DATA
+PD5		T1				11		i/o		nIRQ
+PD4		XCK/T0			 6		i		nCS
+PD3		INT1			 5		i		MOUSE_CLK
+PD2		INT0			 4		i		KB_CLK
+PD1		TXD				 3		o		nACK			[debug: TXD]
+PD0		RXD				 2		i		nID				[debug: RXD]
 
 PC6		nRESET			 1		i		nRESET
 PC5		ADC5/SCL		28		i		nUW
 PC4		ADC4/SDA		27		i		nUR
 PC3		ADC3			26		i		A4
 PC2		ADC2			25		i		A3
-PC1		ADC1			24		o		A2
+PC1		ADC1			24		i		A2
 PC0		ADC0			23		i		A1
 
 PB7		XTAL2/TOSC2		10		i/o		D15
@@ -50,12 +50,12 @@ PB0		ICP1			14		i/o		D8
 /* Port D (ADDR_PS2) pins */
 #define MOUSE_DATA			_BV(7)		/* PS/2 mouse data					*/
 #define KB_DATA				_BV(6)		/* PS/2 keyboard data				*/
-#define MOUSE_CLK			_BV(5)		/* PS/2 mouse clock					*/
-#define KB_CLK				_BV(4)		/* PS/2 keyboard clock				*/
-#define nIRQ				_BV(3)		/* IRQ request output - open-drain	*/
-#define nCS					_BV(2)		/* Chip select input from host		*/
-#define nID					_BV(1)		/* ID request input from host		*/
-#define nACK				_BV(0)		/* IRQ acknowledge input from host	*/
+#define nIRQ				_BV(5)		/* IRQ request output - open-drain	*/
+#define nCS					_BV(4)		/* Chip select input from host		*/
+#define MOUSE_CLK			_BV(3)		/* PS/2 mouse clock					*/
+#define KB_CLK				_BV(2)		/* PS/2 keyboard clock				*/
+#define nACK				_BV(1)		/* IRQ acknowledge input from host	*/
+#define nID					_BV(0)		/* ID request input from host		*/
 
 #define PORTD_OUTPUTS		(nACK)
 #define PORTD_PULLUPS		(KB_CLK | MOUSE_CLK | KB_DATA | MOUSE_DATA)
@@ -68,6 +68,9 @@ PB0		ICP1			14		i/o		D8
 #define A3					_BV(2)		/* Host address A3					*/
 #define A2					_BV(1)		/* Host address A2					*/
 #define A1					_BV(0)		/* Host address A1					*/
+
+#define PORTC_ADDR_MASK		(A4 | A3 | A2 | A1)
+#define PORTC_ADDR_SHIFT	(0)
 
 /*
 	Note: nIRQ is treated as an input.  nIRQ is an open-drain output, and therefore only becomes an

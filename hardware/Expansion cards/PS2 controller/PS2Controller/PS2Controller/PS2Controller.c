@@ -7,18 +7,22 @@
 	(c) Stuart Wallace <stuartw@atom.net>, November 2015.
  */
 
+#define F_CPU		8000000UL		/* 8MHz CPU clock */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
+#define WITH_DEBUGGING
+
+#include "debug.h"
 #include "macros.h"
 #include "portdefs.h"
 #include "registers.h"
 
-
 #define PERIPHERAL_ID		(0x82)		/* Peripheral identifier */
 
-unsigned char g_registers[16];
+unsigned char check_odd_parity(unsigned char x, const unsigned char parity);
 
 typedef enum state
 {
@@ -35,6 +39,16 @@ typedef enum state
 	state_parity	= 10,
 	state_stop		= 11,
 } state_t;
+
+
+unsigned char	g_registers[16],
+				kbstate = state_idle,
+				mousestate = state_idle,
+				kbdata,
+				kbparity,
+				mousedata,
+				mouseparity;
+
 
 /*
 	init() - initialise the chip following a reset
@@ -55,9 +69,13 @@ void init(void)
 	for(i = 0; i < sizeof(g_registers) / sizeof(g_registers[0]); ++i)
 		g_registers[i] = 0;
 
-	/* Enable INT0 interrupts on falling edge */
-	MCUCR = (MCUCR & ~(_BV(ISC01) | _BV(ISC00))) | _BV(ISC01);
-	GICR |= _BV(INT0);
+	/* Enable INT0 and INT1 interrupts on falling edge */
+	MCUCR = (MCUCR & ~(_BV(ISC11) | _BV(ISC10) | _BV(ISC01) | _BV(ISC00)))
+			| _BV(ISC11) | _BV(ISC01);
+	
+	GICR |= _BV(INT0) | _BV(INT1);
+	
+	debug_init();
 	
 	sei();
 }
@@ -75,131 +93,206 @@ void host_reg_write(const unsigned char reg, const unsigned char data)
 }
 
 
+void kb_send_command(unsigned char cmd)
+{
+	unsigned char i;
+	
+	// TODO: generate parity of cmd
+	
+	/* Wait for any in-progress receive to complete */
+	while(kbstate != state_idle)
+		;
+	
+	cli();					/* Ignore any received data while the command is sent */
+	
+	DDRD |= KB_CLK;			/* Set keyboard clock line to output		*/
+	PORTD &= ~KB_CLK;		/* Pull clock line low						*/
+	
+	_delay_us(60);			/* Wait 60us to get the device's attention	*/
+
+	DDRD |= KB_DATA;		/* Set keyboard data line to output			*/
+	PORTD &= ~KB_DATA;		/* Pull data line low						*/
+
+	DDRD &= ~KB_CLK;		/* Release clock line (set it to input)		*/
+	
+	while(PIND & KB_CLK)	/* Wait for device to pull clock line low	*/
+		;
+
+	for(i = 8; i; --i, cmd >>= 1)
+	{
+		/* Wait for device to pull clock line high */
+		while(!(PIND & KB_CLK))
+			;
+			
+		/* Send the next bit of the command */
+		if(cmd & 1)
+			PORTD |= KB_DATA;
+		else
+			PORTD &= ~KB_DATA;
+		
+		/* Wait for device to pull clock line low */
+		while(PIND & KB_CLK)
+			;
+	}
+	
+	/* Wait for device to pull clock line high */
+	while(!(PIND & KB_CLK))
+		;
+	
+	// TODO: send parity
+	
+	/* Wait for device to pull clock line low */
+	while(PIND & KB_CLK)
+		;
+
+	DDRD &= ~KB_CLK;		/* Set data line to input					*/
+	
+	sei();					/* Re-enable interrupts						*/
+}
+
+
 /*
-	ISR for INT0 - handles communication with the host processor.
-	This function is called when the host processor asserts nCS.
+	ISR for INT0 - handles keyboard clock transitions.
 */
 ISR(INT0_vect)
 {
-	if(PORTD & nID)
+	/* Read keyboard port */
+	switch(++kbstate)
 	{
-		/*
-			This is an ID cycle.  Place the part identity on the data bus, assert nACK, and
-			wait for the cycle to terminate.
-		*/
-		DO_READ_CYCLE(PERIPHERAL_ID);
-	}
-	else
-	{
-		/*
-			This is a register read/write cycle.
-		*/
-		const unsigned char addr = PORTC & 0xF;
+		case state_d0:
+		case state_d1:
+		case state_d2:
+		case state_d3:
+		case state_d4:
+		case state_d5:
+		case state_d6:
+		case state_d7:
+			kbdata >>= 1;
+			if(PIND & KB_DATA)
+				kbdata |= 0x80;
+			break;
+			
+		case state_parity:
+			kbparity = (PIND & KB_DATA) ? 1 : 0;
+			break;
+			
+		case state_stop:
+			if(check_odd_parity(kbdata, kbparity))
+			{
+				debug_puthexb(kbdata);			/* TODO: process received data */
+				g_registers[REG_KB_DATA] = kbdata;
+			}
+			else
+			{
+				/* Parity error - drop data */
+				debug_putc('!');
+				debug_puthexb(kbdata);
+			}
+			debug_putc('\n');
 
-		if(PORTC & nUR)			/* Read cycle */
-		{
-			DO_READ_CYCLE(g_registers[addr]);
-		}
-		else if(PORTC & nUW)	/* Write cycle */
-		{
-			host_reg_write(addr, DATA_BUS_PIN);
-			TERMINATE_BUS_CYCLE();
-		}
+			kbstate = state_idle;
+			break;
 	}
 }
+
+
+/*
+	ISR for INT1 - handles mouse clock transitions.
+*/
+ISR(INT1_vect)
+{
+	/* Read mouse port */
+	switch(++mousestate)
+	{
+		case state_d0:
+		case state_d1:
+		case state_d2:
+		case state_d3:
+		case state_d4:
+		case state_d5:
+		case state_d6:
+		case state_d7:
+			mousedata >>= 1;
+			if(PIND & MOUSE_DATA)
+				mousedata |= 0x80;
+			break;
+					
+		case state_parity:
+			mouseparity = (PIND & MOUSE_DATA) ? 1 : 0;
+			break;
+					
+		case state_stop:
+			if(check_odd_parity(mousedata, mouseparity))
+			{
+				debug_puthexb(mousedata);			/* TODO: process received data */
+				debug_putc('\n');
+				g_registers[REG_MOUSE_DATA] = mousedata;
+			}
+			else
+			{
+				/* Parity error - drop data */
+				debug_putc('!');
+			}
+			
+			mousestate = state_idle;
+			break;
+	}
+}
+
+
+unsigned char check_odd_parity(unsigned char x, const unsigned char parity)
+{
+	unsigned char p;
+	
+	p = x ^ (x >> 1);
+	p ^= (x >> 2);
+	p ^= (x >> 4);
+
+	return (p & 1) != parity;
+}
+
 
 /*
 	main() - main loop: manage communications with the PS/2 devices
 */
 int main(void)
 {
-	register unsigned char
-		kbclk,
-		kbclk_last = 0,
-		mouseclk,
-		mouseclk_last = 0,
-		kbstate = state_idle,
-		kbdata = 0,
-		mousestate = state_idle,
-		mousedata = 0;
-	
 	init();
-	
+	debug_puts("Hello, World!");
+		
 	// TODO - ensure that PUD is 0 in SFIOR
 	
+	// Main loop - handle communication with the CPU.
     while(1)
     {
-		/* Read keyboard port */
-		kbclk = PORTD & KB_CLK;
-		if(kbclk != kbclk_last)
+		if(!(PORTD & nCS))
 		{
-			kbclk_last = kbclk;
-			if(!kbclk)
+			// CPU is addressing a bus cycle to us.
+			if(!(PORTD & nID))
 			{
-				/* Positive-to-negative edge on KB_CLK */
-				switch(++kbstate)
-				{
-					case state_d0:
-					case state_d1:
-					case state_d2:
-					case state_d3:
-					case state_d4:
-					case state_d5:
-					case state_d6:
-					case state_d7:
-						kbdata >>= 1;
-						if(PORTD & KB_DATA)
-							kbdata |= 0x80;
-						break;
-					
-					case state_parity:
-						/* TODO handle parity */
-						break;
-						
-					case state_stop:
-						/* TODO: process received character */
-						cli();
-						g_registers[REG_KB_DATA] = kbdata;
-						sei();
-						kbstate = state_idle;
-						break;
-				}
+				/*
+					This is an ID cycle.  Place the part identity on the data bus, assert nACK, and
+					wait for the cycle to terminate.
+				*/
+				DO_READ_CYCLE(PERIPHERAL_ID);
 			}
-		}
-		
-		mouseclk = PORTD & MOUSE_CLK;
-		if(mouseclk != mouseclk_last)
-		{
-			mouseclk_last = mouseclk;
-			if(!mouseclk)
+			else
 			{
-				/* Positive-to-negative edge on MOUSE_CLK */
-				switch(++mousestate)
+				/*
+					This is a register read/write cycle.
+					
+					TODO: mutex on register read/write
+				*/
+				const unsigned char addr = (PORTC & PORTC_ADDR_MASK) >> PORTC_ADDR_SHIFT;
+
+				if(!(PORTC & nUR))			/* Read cycle */
 				{
-					case state_d0:
-					case state_d1:
-					case state_d2:
-					case state_d3:
-					case state_d4:
-					case state_d5:
-					case state_d6:
-					case state_d7:
-						mousedata >>= 1;
-						if(PORTD & MOUSE_DATA)
-							mousedata |= 0x80;
-						break;
-					
-					case state_parity:
-						/* TODO handle parity */
-						break;
-					
-					case state_stop:
-						/* TODO: process received character */
-						cli();
-						g_registers[REG_MOUSE_DATA] = mousedata;
-						sei();
-						mousestate = state_idle;
-						break;
+					DO_READ_CYCLE(g_registers[addr]);
+				}
+				else if(!(PORTC & nUW))		/* Write cycle */
+				{
+					host_reg_write(addr, DATA_BUS_PIN);
+					TERMINATE_BUS_CYCLE();
 				}
 			}
 		}

@@ -24,10 +24,11 @@
 #define TERMINATE_BUS_CYCLE()		\
 	do								\
 	{								\
-		PORTD &= ~nACK;			\
-		while(PORTD & nCS)	\
-		;							\
-		PORTD |= nACK;			\
+		PORTD &= ~nACK;				\
+		while(PORTD & nCS)			\
+			;						\
+									\
+		PORTD |= nACK;				\
 	} while(0);
 
 /* Respond to a read cycle: write "data" to the data bus outputs, and terminate the cycle */
