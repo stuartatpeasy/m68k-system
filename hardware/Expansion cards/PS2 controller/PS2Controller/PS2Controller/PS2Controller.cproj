@@ -124,6 +124,9 @@
     <Compile Include="PS2Controller.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="PS2Controller.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="registers.h">
       <SubType>compile</SubType>
     </Compile>

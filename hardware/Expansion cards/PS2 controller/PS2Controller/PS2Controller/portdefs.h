@@ -46,6 +46,10 @@ PB0		ICP1			14		i/o		D8
 #define DATA_BUS_DDR		DDRB
 #define DATA_BUS_PIN		PINB
 
+#define KB_PORT				PORTD
+#define KB_DDR				DDRD
+#define MOUSE_PORT			PORTD
+#define MOUSE_DDR			DDRD
 
 /* Port D (ADDR_PS2) pins */
 #define MOUSE_DATA			_BV(7)		/* PS/2 mouse data					*/
@@ -62,8 +66,8 @@ PB0		ICP1			14		i/o		D8
 
 /* Port C (BUS_CTL) pins */
 #define nRESET				_BV(6)		/* nRESET input from host system	*/
-#define nUW					_BV(5)		/* Upper byte write input from host	*/
-#define nUR					_BV(4)		/* Upper byte read input from host	*/
+#define nW					_BV(5)		/* Upper byte write input from host	*/
+/*							_BV(4)		   --- unused ---					*/
 #define A4					_BV(3)		/* Host address A4					*/
 #define A3					_BV(2)		/* Host address A3					*/
 #define A2					_BV(1)		/* Host address A2					*/

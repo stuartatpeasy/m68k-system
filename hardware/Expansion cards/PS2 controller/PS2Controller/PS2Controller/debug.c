@@ -22,8 +22,8 @@ void debug_init()
 	DDRD |= _BV(1);		// Set PD0 (TXD) to output
 	DDRD &= ~(_BV(0));	// Set PD1 (RXD) to input
 		
-	UBRRH = 0;			// } 9600 baud at 8MHz clk
-	UBRRL = 51;			// }
+	UBRRH = 0;			// } 38400 baud at 8MHz clk
+	UBRRL = 12;			// }
 
 	UCSRC = _BV(URSEL) | (3 << UCSZ0);
 	UCSRB = _BV(RXEN) | _BV(TXEN);	
