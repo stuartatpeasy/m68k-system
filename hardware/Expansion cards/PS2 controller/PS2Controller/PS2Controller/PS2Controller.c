@@ -12,7 +12,7 @@
 #include "PS2Controller.h"
 
 ctx_t ctx_kb, ctx_mouse;
-u8 g_registers[16];
+u8 g_registers[8];
 
 
 /*
@@ -97,9 +97,8 @@ void set_irq_edge(const irq_t irq, const irq_edge_t edge)
 */
 void host_reg_write(ku8 reg, ku8 data)
 {
-	cli();
 	g_registers[reg] = data;
-	sei();
+
 	/* TODO: act on changes to registers as appropriate */
 }
 
@@ -116,7 +115,14 @@ void process_data_kb()
 	
 	if(ctx_kb.parity_received != ctx_kb.parity_calc)
 	{
-		/* Parity error (TODO: handle this in some way?) */
+		/* Parity error */
+		g_registers[REG_STATUS] |= STATUS_KBPARERR;
+		if((g_registers[REG_INTCFG] & (INTCFG_IE | INTCFG_KBPARERRIE))
+			== (INTCFG_IE | INTCFG_KBPARERRIE))
+		{
+			/* TODO: assert nIRQ */
+		}
+
 		debug_putc('!');
 		return;
 	}
@@ -130,14 +136,21 @@ void process_data_kb()
 		case cs_rx_data:
 			if(data == 0xe0)
 				ctx_kb.flags |= KB_EXT;			/* FIXME - nothing unsets this flag */
-			if(data == 0xf0)
+			else if(data == 0xf0)
 				ctx_kb.flags |= KB_RELEASE;		/* FIXME - nothing unsets this flag */
 			else
 			{
 				if(ctx_kb.flags & KB_RELEASE)
 					data |= 0x80;
 
-				g_registers[ctx_kb.data_regnum] = data;
+				g_registers[REG_KB_DATA] = data;
+				g_registers[REG_STATUS] |= STATUS_KBRX;
+				
+				if((g_registers[REG_INTCFG] & (INTCFG_IE | INTCFG_KBRXIE))
+					== (INTCFG_IE | INTCFG_KBRXIE))
+				{
+					/* TODO: assert nIRQ */
+				}
 				
 				ctx_kb.flags &= ~(KB_EXT | KB_RELEASE);
 				
@@ -161,12 +174,19 @@ void process_data_mouse()
 	
 	if(ctx_mouse.parity_received != ctx_mouse.parity_calc)
 	{
-		/* Parity error (TODO: handle this in some way?) */
+		/* Parity error */
+		g_registers[REG_STATUS] |= STATUS_MOUSEPARERR;
+		if((g_registers[REG_INTCFG] & (INTCFG_IE | INTCFG_MOUSEPARERRIE))
+			== (INTCFG_IE | INTCFG_MOUSEPARERRIE))
+		{
+			/* TODO: assert nIRQ */
+		}
+
 		debug_putc('!');
 		return;
 	}
 
-	debug_putc('M');
+	debug_puthexb(data);
 }
 
 
@@ -247,6 +267,8 @@ void process_clock_edge(ctx_t *ctx)
 			
 		case ds_tx_ack:
 			ctx->state_data = ds_idle;
+			/* TODO: assert STATUS_xxTXDONE */
+			/* TODO: assert nIRQ if CONFIG_IE and CONFIG_xxTXIE are both set */
 			break;
 	}
 }
