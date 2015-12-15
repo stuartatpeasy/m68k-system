@@ -28,6 +28,12 @@
 #define INT1_SET_FALLING_EDGE()	(MCUCR = (MCUCR | _BV(ISC11)) & ~_BV(ISC10))
 #define INT1_SET_RISING_EDGE()	(MCUCR |= _BV(ISC11) | _BV(ISC10))
 
+/* Assert nIRQ (open-drain output) by making the pin (which is always set low) an output */
+#define HOST_IRQ_ASSERT()		SET_OUTPUT(IRQ_DDR, nIRQ);
+
+/* Release nIRQ (open-drain output) by making the pin an input (high-Z) */
+#define HOST_IRQ_RELEASE()		SET_INPUT(IRQ_DDR, nIRQ);
+
 /* Make the data bus pins outputs */
 #define DATA_BUS_SET_OUTPUT()		\
 	DATA_BUS_DDR = 0xff

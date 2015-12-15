@@ -26,9 +26,11 @@
 #define IRQ_EDGE_FALLING	(0)
 #define IRQ_EDGE_RISING		(1)
 
+
 typedef unsigned char	u8;
 typedef const u8		ku8;
 typedef volatile u8		vu8;
+
 
 /* PS/2 data transmission/reception states */
 typedef enum data_state
@@ -62,21 +64,12 @@ typedef enum data_state
 } data_state_t;
 
 
-/* PS/2 link states */
-typedef enum cmd_state
-{
-	cs_rx_data		= 0,		/* Waiting to receive, or receiving, scan codes (normal state)	*/
-	cs_ignore		= 1,		/* Ignoring junk sent by the device after power-up				*/
-	cs_cmd_pending	= 2,
-	cs_ack_wait		= 3,		/* Waiting for an acknowledgment for a previous command			*/
-} cmd_state_t;
-
-
 typedef enum irq_edge
 {
 	irq_edge_falling	= 0,
 	irq_edge_rising		= 1
 } irq_edge_t;
+
 
 typedef enum irq
 {
@@ -91,10 +84,19 @@ typedef enum irq
 #define KB_CMD_SET_TM_RATE	(0xf3)
 #define KB_CMD_RESET		(0xff)
 
+
+/* FIFO buffer structure - used for buffering received mouse/KB data */
+typedef struct fifo
+{
+	u8				rd;
+	u8				wr;
+	u8				data[256];	/* Hardwired to 256 to simplify buffer-wrapping calcs */
+} fifo_t;
+
+
 /* Keyboard/mouse data transmission/reception context */
 typedef struct ctx
 {
-	cmd_state_t		state_cmd;
 	data_state_t	state_data;
 
 	vu8 *			port;
@@ -106,20 +108,23 @@ typedef struct ctx
 	u8				parity_received;
 	u8				data_regnum;
 	u8				command;
-	u8				data_present;
-	u8				flags;
+	
+	/* These members identify flags in REG_STATUS and REG_INTCFG */
+	u8				flag_rx;		/* Data has been received			*/
+	u8				flag_tx;		/* Data-transmission is complete	*/
+	u8				flag_ovf;		/* FIFO overflow					*/
+	u8				flag_parerr;	/* Receiver parity error			*/
+	fifo_t			fifo;
 } ctx_t;
 
-/* Flags used in ctx_t "flags" member */
-#define KB_RELEASE		_BV(7)			/* Key has been released */
-#define KB_EXT			_BV(6)			/* "Extended" key code flag */
 
-
-void init(void);
+void init();
 void set_irq_edge(const irq_t irq, const irq_edge_t edge);
 void host_reg_write(ku8 reg, const u8 data);
 void process_clock_edge(ctx_t *ctxl);
-void process_data_kb();
-void process_data_mouse();
+void process_data(ctx_t *ctx);
+void start_tx_keyboard();
+void start_tx_mouse();
+int main();
 
 #endif

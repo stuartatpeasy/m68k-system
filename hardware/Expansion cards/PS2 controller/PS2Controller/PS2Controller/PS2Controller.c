@@ -12,7 +12,7 @@
 #include "PS2Controller.h"
 
 ctx_t ctx_kb, ctx_mouse;
-u8 g_registers[8];
+u8 registers[8];
 
 
 /*
@@ -22,6 +22,9 @@ void init(void)
 {
 	u8 i;
 	
+	cli();
+	
+	/* Configure ports */
 	DDRD			= PORTD_OUTPUTS;
 	PORTD			= PORTD_PULLUPS;
 
@@ -32,29 +35,37 @@ void init(void)
 	DATA_BUS		= DATA_BUS_PULLUPS;
 
 	/* Initialise register values */	
-	for(i = 0; i < sizeof(g_registers) / sizeof(g_registers[0]); ++i)
-		g_registers[i] = 0;
+	for(i = 0; i < sizeof(registers) / sizeof(registers[0]); ++i)
+		registers[i] = 0;
 		
 	/* Initialise mouse and keyboard context */
 	ctx_kb.state_data		= ds_idle;
-	ctx_kb.state_cmd		= cs_rx_data;		/* TODO: change to cs_ignore */
 	ctx_kb.port				= &KB_PORT;
 	ctx_kb.pin				= &KB_PIN;
 	ctx_kb.ddr				= &KB_DDR;
 	ctx_kb.data_pin			= KB_DATA;
 	ctx_kb.data_regnum		= REG_KB_DATA;
 	ctx_kb.command			= CMD_NONE;
-	ctx_kb.data_present		= 0;
+	ctx_kb.flag_rx			= FLAG_KBRX;
+	ctx_kb.flag_tx			= FLAG_KBTXDONE;
+	ctx_kb.flag_ovf			= FLAG_KBOVF;
+	ctx_kb.flag_parerr		= FLAG_KBPARERR;
+	ctx_kb.fifo.rd			= 0;
+	ctx_kb.fifo.wr			= 0;
 	
 	ctx_mouse.state_data	= ds_idle;
-	ctx_mouse.state_cmd		= cs_rx_data;		/* TODO: change to cs_ignore */
 	ctx_mouse.port			= &MOUSE_PORT;
 	ctx_mouse.pin			= &MOUSE_PIN;
 	ctx_mouse.ddr			= &MOUSE_DDR;
 	ctx_mouse.data_pin		= MOUSE_DATA;
 	ctx_mouse.data_regnum	= REG_MOUSE_DATA;
 	ctx_mouse.command		= CMD_NONE;
-	ctx_mouse.data_present	= 0;
+	ctx_mouse.flag_rx		= FLAG_MOUSERX;
+	ctx_mouse.flag_tx		= FLAG_MOUSETXDONE;
+	ctx_mouse.flag_ovf		= FLAG_MOUSEOVF;
+	ctx_mouse.flag_parerr	= FLAG_MOUSEPARERR;
+	ctx_mouse.fifo.rd		= 0;
+	ctx_mouse.fifo.wr		= 0;
 
 	/* Enable keyboard and mouse interrupts on falling edge */
 	set_irq_edge(irq_keyboard_clk, irq_edge_falling);
@@ -97,96 +108,51 @@ void set_irq_edge(const irq_t irq, const irq_edge_t edge)
 */
 void host_reg_write(ku8 reg, ku8 data)
 {
-	g_registers[reg] = data;
+	registers[reg] = data;
 
 	/* TODO: act on changes to registers as appropriate */
 }
 
 
 /*
-	process_data_kb() - process a byte of data received from the keyboard.
+	process_data() - process a byte of data received from the keyboard or the mouse.
 */
-void process_data_kb()
+void process_data(ctx_t *ctx)
 {
-	/* TODO - maybe pull clock low to prevent device sending more data until we're finished? */
-	u8 data = ctx_kb.data;
-	
-	ctx_kb.data_present = 0;
-	
-	if(ctx_kb.parity_received != ctx_kb.parity_calc)
+	if(ctx->parity_received == ctx->parity_calc)
+	{
+		ku8 data = ctx->data,
+			fifo_wrnext = ctx->fifo.wr + 1;
+
+		/* Place received data in FIFO */
+		if(fifo_wrnext != ctx->fifo.rd)
+		{
+			ctx->fifo.data[ctx->fifo.wr] = data;
+			ctx->fifo.wr = fifo_wrnext;
+			debug_puthexb(data);
+			debug_putc('\n');
+
+			registers[REG_STATUS] |= ctx->flag_rx;
+			if(registers[REG_INTCFG] & ctx->flag_rx)
+				HOST_IRQ_ASSERT();
+		}
+		else
+		{
+			/* FIFO is full; drop data */
+			registers[REG_STATUS] |= ctx->flag_ovf;
+			if(registers[REG_INTCFG] & ctx->flag_ovf)
+				HOST_IRQ_ASSERT();
+		}
+	}
+	else
 	{
 		/* Parity error */
-		g_registers[REG_STATUS] |= STATUS_KBPARERR;
-		if((g_registers[REG_INTCFG] & (INTCFG_IE | INTCFG_KBPARERRIE))
-			== (INTCFG_IE | INTCFG_KBPARERRIE))
-		{
-			/* TODO: assert nIRQ */
-		}
+		registers[REG_STATUS] |= ctx->flag_parerr;
+		if(registers[REG_INTCFG] & ctx->flag_parerr)
+			HOST_IRQ_ASSERT();
 
 		debug_putc('!');
-		return;
 	}
-	
-	/* Process received data */
-	switch(ctx_kb.state_cmd)
-	{
-		case cs_ignore:
-			break;
-		
-		case cs_rx_data:
-			if(data == 0xe0)
-				ctx_kb.flags |= KB_EXT;			/* FIXME - nothing unsets this flag */
-			else if(data == 0xf0)
-				ctx_kb.flags |= KB_RELEASE;		/* FIXME - nothing unsets this flag */
-			else
-			{
-				if(ctx_kb.flags & KB_RELEASE)
-					data |= 0x80;
-
-				g_registers[REG_KB_DATA] = data;
-				g_registers[REG_STATUS] |= STATUS_KBRX;
-				
-				if((g_registers[REG_INTCFG] & (INTCFG_IE | INTCFG_KBRXIE))
-					== (INTCFG_IE | INTCFG_KBRXIE))
-				{
-					/* TODO: assert nIRQ */
-				}
-				
-				ctx_kb.flags &= ~(KB_EXT | KB_RELEASE);
-				
-				debug_puthexb(data);
-				debug_putc('\n');
-			}
-			break;
-	}
-}
-
-
-/*
-	process_data_mouse() - process a byte of data received from the mouse.
-*/
-void process_data_mouse()
-{
-	/* TODO - maybe pull clock low to prevent device sending more data until we're finished? */
-	u8 data = ctx_mouse.data;
-	
-	ctx_mouse.data_present = 0;
-	
-	if(ctx_mouse.parity_received != ctx_mouse.parity_calc)
-	{
-		/* Parity error */
-		g_registers[REG_STATUS] |= STATUS_MOUSEPARERR;
-		if((g_registers[REG_INTCFG] & (INTCFG_IE | INTCFG_MOUSEPARERRIE))
-			== (INTCFG_IE | INTCFG_MOUSEPARERRIE))
-		{
-			/* TODO: assert nIRQ */
-		}
-
-		debug_putc('!');
-		return;
-	}
-
-	debug_puthexb(data);
 }
 
 
@@ -228,7 +194,7 @@ void process_clock_edge(ctx_t *ctx)
 		
 		case ds_rx_stop:
 			ctx->state_data = ds_idle;
-			ctx->data_present = 1;
+			process_data(ctx);
 			break;
 			
 		case ds_tx_start:
@@ -267,8 +233,9 @@ void process_clock_edge(ctx_t *ctx)
 			
 		case ds_tx_ack:
 			ctx->state_data = ds_idle;
-			/* TODO: assert STATUS_xxTXDONE */
-			/* TODO: assert nIRQ if CONFIG_IE and CONFIG_xxTXIE are both set */
+			registers[REG_STATUS] |= ctx->flag_tx;
+			if(registers[REG_INTCFG] & ctx->flag_tx)
+				HOST_IRQ_ASSERT();
 			break;
 	}
 }
@@ -331,7 +298,7 @@ ISR(TIMER2_OVF_vect)
 }
 
 
-void bus_request_keyboard()
+void start_tx_keyboard()
 {
 	KB_IRQ_DISABLE();
 	ctx_kb.state_data = ds_idle;		/* Just in case */
@@ -348,7 +315,7 @@ void bus_request_keyboard()
 }
 
 
-void bus_request_mouse()
+void start_tx_mouse()
 {
 	MOUSE_IRQ_DISABLE();
 	ctx_mouse.state_data = ds_idle;		/* Just in case */
@@ -386,7 +353,7 @@ int main(void)
 
 				if(PORTC & nW)			/* nW negated - this is a read cycle */
 				{
-					DO_READ_CYCLE(g_registers[addr]);
+					DO_READ_CYCLE(registers[addr]);
 				}
 				else					/* nW asserted - this is a write cycle */
 				{
@@ -398,18 +365,11 @@ int main(void)
 			}
 		}
 		
-		/* If data has been received from the keyboard or the mouse, process it */
-		if(ctx_kb.data_present)
-			process_data_kb();
-			
-		if(ctx_mouse.data_present)
-			process_data_mouse();
-
 		/* If the command register contains a command, and the receiver is idle, send the command */
 		if((ctx_kb.command != CMD_NONE) && (ctx_kb.state_data == ds_idle))
-			bus_request_keyboard();		/* Start keyboard command transmission */
+			start_tx_keyboard();
 
 		if((ctx_mouse.command != CMD_NONE) && (ctx_mouse.state_data == ds_idle))
-			bus_request_mouse();		/* Start mouse command transmission */
+			start_tx_mouse();
     }
 }

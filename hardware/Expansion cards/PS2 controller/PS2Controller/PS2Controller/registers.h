@@ -13,38 +13,27 @@
 /*
 	Register definitions
 */
-#define REG_KB_DATA				_BV(0)
-#define REG_MOUSE_DATA			_BV(1)
-#define REG_KB_MODIFIERS		_BV(2)
-#define REG_STATUS				_BV(3)
-#define REG_CFG					_BV(4)
-#define REG_INTCFG				_BV(5)
+#define REG_KB_DATA				(0)		/* Keyboard received data register		*/
+#define REG_MOUSE_DATA			(1)		/* Mouse received data register			*/
+#define REG_KB_CMD				(2)		/* Keyboard command holding register	*/
+#define REG_MOUSE_CMD			(3)		/* Mouse command holding register		*/
+#define REG_STATUS				(4)		/* Status flags							*/
+#define REG_CFG					(5)		/* Controller configuration				*/
+#define REG_INTCFG				(6)		/* Interrupt-enable flags				*/
 
-/* Bits in REG_KB_MODIFIERS */
-#define	MOD_LSHIFT				_BV(7)
-#define MOD_LCTRL				_BV(6)
-#define MOD_LGUI				_BV(5)
-#define MOD_LALT				_BV(4)
-#define MOD_RSHIFT				_BV(3)
-#define MOD_RCTRL				_BV(2)
-#define MOD_GUI					_BV(1)
-#define MOD_RALT				_BV(0)
-
-/* Bits in REG_STATUS */
-#define STATUS_KBRX				_BV(6)
-#define STATUS_KBTXDONE			_BV(5)
-#define STATUS_KBPARERR			_BV(4)
-#define STATUS_MOUSERX			_BV(3)
-#define STATUS_MOUSETXDONE		_BV(2)
-#define STATUS_MOUSEPARERR		_BV(1)
+/* Flag bits - used in REG_STATUS and REG_INTCFG */
+#define FLAG_KBRX				_BV(7)	/* Byte received from keyboard port		*/
+#define FLAG_KBTXDONE			_BV(6)	/* Keyboard command transmit finished	*/
+#define FLAG_KBPARERR			_BV(5)	/* Keyboard port receiver parity error	*/
+#define FLAG_KBOVF				_BV(4)	/* Keyboard FIFO overflow				*/
+#define FLAG_MOUSERX			_BV(3)	/* Byte received from mouse port		*/
+#define FLAG_MOUSETXDONE		_BV(2)	/* Mouse command transmit finished		*/
+#define FLAG_MOUSEPARERR		_BV(1)	/* Mouse port receiver parity error		*/
+#define FLAG_MOUSEOVF			_BV(0)	/* Mouse FIFO overflow					*/
 
 /* Bits in REG_CONFIG */
-#define INTCFG_IE				_BV(7)	/* Global interrupt enable						*/
-#define INTCFG_KBRXIE			_BV(6)	/* Keyboard data RX interrupt enable			*/
-#define INTCFG_KBTXIE			_BV(5)	/* Keyboard data TX complete interrupt enable	*/
-#define INTCFG_KBPARERRIE		_BV(4)	/* Keyboard RX parity error interrupt enable	*/
-#define INTCFG_MOUSERXIE		_BV(3)	/* Mouse data RX interrupt enable				*/
-#define INTCFG_MOUSETXIE		_BV(2)	/* Mouse data TX complete interrupt enable		*/
-#define INTCFG_MOUSEPARERRIE	_BV(1)	/* Mouse RX parity error interrupt enable		*/
+// TODO: consider adding global interrupt enable flag?
+#define CFG_PWR_KB				_BV(1)		/* Enable/disable power to keyboard	*/
+#define CFG_PWR_MOUSE			_BV(0)		/* Enable/disable power to mouse	*/
 
 #endif
