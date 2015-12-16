@@ -56,11 +56,6 @@ typedef volatile T_S64		vs64;
 /* Memory address type */
 typedef u32 addr_t;
 
-/* Test harnesses may already have defined size_t, so define it conditionally here */
-#ifndef HAVE_SIZE_T
-typedef u32 size_t;
-#endif
-
 /* Wall-clock time */
 typedef struct rtc_time
 {

@@ -62,7 +62,7 @@
 
 
 /* Return the offset of member m in struct st.  Not strictly-valid C. */
-#define offsetof(st, m) ((size_t) (&((st *) 0)->m))
+#define offsetof(st, m) ((s32) (&((st *) 0)->m))
 
 /* Given ptr, pointing to a member of struct "type", return a ptr to the struct */
 #define containerof(ptr, type, member)                  \
