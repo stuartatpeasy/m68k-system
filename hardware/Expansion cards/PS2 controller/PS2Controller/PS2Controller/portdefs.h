@@ -42,7 +42,7 @@ PB0		ICP1			14		i/o		D8
 
 
 /* Port definitions */
-#define DATA_BUS			PORTB
+#define DATA_BUS_PORT		PORTB
 #define DATA_BUS_DDR		DDRB
 #define DATA_BUS_PIN		PINB
 
@@ -54,6 +54,7 @@ PB0		ICP1			14		i/o		D8
 #define MOUSE_DDR			DDRD
 #define IRQ_PORT			PORTD
 #define IRQ_DDR				DDRD
+#define PWR_PORT			PORTC
 
 /* Port D pins */
 #define MOUSE_DATA			_BV(7)		/* PS/2 mouse data					*/

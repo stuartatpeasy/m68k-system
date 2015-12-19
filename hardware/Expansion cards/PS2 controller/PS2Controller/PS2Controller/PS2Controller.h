@@ -33,35 +33,35 @@ typedef volatile u8		vu8;
 
 
 /* PS/2 data transmission/reception states */
-typedef enum data_state
+typedef enum state
 {
-	ds_idle			= 0,
-	ds_rx_start		= 1,
-	ds_rx_d0		= 2,
-	ds_rx_d1		= 3,
-	ds_rx_d2		= 4,
-	ds_rx_d3		= 5,
-	ds_rx_d4		= 6,
-	ds_rx_d5		= 7,
-	ds_rx_d6		= 8,
-	ds_rx_d7		= 9,
-	ds_rx_parity	= 10,
-	ds_rx_stop		= 11,
+	state_idle		= 0,
+	state_rx_start	= 1,
+	state_rx_d0		= 2,
+	state_rx_d1		= 3,
+	state_rx_d2		= 4,
+	state_rx_d3		= 5,
+	state_rx_d4		= 6,
+	state_rx_d5		= 7,
+	state_rx_d6		= 8,
+	state_rx_d7		= 9,
+	state_rx_parity	= 10,
+	state_rx_stop	= 11,
 	
-	ds_tx_busrq		= 12,
-	ds_tx_start		= 13,
-	ds_tx_d0		= 14,
-	ds_tx_d1		= 15,
-	ds_tx_d2		= 16,
-	ds_tx_d3		= 17,
-	ds_tx_d4		= 18,
-	ds_tx_d5		= 19,
-	ds_tx_d6		= 20,
-	ds_tx_d7		= 21,
-	ds_tx_parity	= 22,
-	ds_tx_stop		= 23,
-	ds_tx_ack		= 24,
-} data_state_t;
+	state_tx_busrq	= 12,
+	state_tx_start	= 13,
+	state_tx_d0		= 14,
+	state_tx_d1		= 15,
+	state_tx_d2		= 16,
+	state_tx_d3		= 17,
+	state_tx_d4		= 18,
+	state_tx_d5		= 19,
+	state_tx_d6		= 20,
+	state_tx_d7		= 21,
+	state_tx_parity	= 22,
+	state_tx_stop	= 23,
+	state_tx_ack	= 24,
+} state_t;
 
 
 typedef enum irq_edge
@@ -97,7 +97,7 @@ typedef struct fifo
 /* Keyboard/mouse data transmission/reception context */
 typedef struct ctx
 {
-	data_state_t	state_data;
+	state_t			state;
 
 	vu8 *			port;
 	vu8 *			pin;
@@ -108,6 +108,8 @@ typedef struct ctx
 	u8				parity_received;
 	u8				data_regnum;
 	u8				command;
+	u8				command_pending;
+	void			(*start_tx_fn)(void);
 	
 	/* These members identify flags in REG_STATUS and REG_INTCFG */
 	u8				flag_rx;		/* Data has been received			*/
@@ -120,9 +122,8 @@ typedef struct ctx
 
 void init();
 void set_irq_edge(const irq_t irq, const irq_edge_t edge);
-void host_reg_write(ku8 reg, const u8 data);
-void process_clock_edge(ctx_t *ctxl);
-void process_data(ctx_t *ctx);
+void process_clock_edge(volatile ctx_t *ctxl);
+void process_data(volatile ctx_t *ctx);
 void start_tx_keyboard();
 void start_tx_mouse();
 int main();

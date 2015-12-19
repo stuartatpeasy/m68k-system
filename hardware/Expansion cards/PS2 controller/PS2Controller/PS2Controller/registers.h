@@ -31,9 +31,9 @@
 #define FLAG_MOUSEPARERR		_BV(1)	/* Mouse port receiver parity error		*/
 #define FLAG_MOUSEOVF			_BV(0)	/* Mouse FIFO overflow					*/
 
-/* Bits in REG_CONFIG */
-// TODO: consider adding global interrupt enable flag?
-#define CFG_PWR_KB				_BV(1)		/* Enable/disable power to keyboard	*/
-#define CFG_PWR_MOUSE			_BV(0)		/* Enable/disable power to mouse	*/
+/* Bits in REG_CFG */
+#define CFG_IE					_BV(7)	/* Global interrupt enable				*/
+#define CFG_PWR_KB				_BV(4)	/* Enable/disable power to keyboard		*/
+#define CFG_PWR_MOUSE			_BV(3)	/* Enable/disable power to mouse		*/
 
 #endif

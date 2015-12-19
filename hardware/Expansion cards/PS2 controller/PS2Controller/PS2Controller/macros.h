@@ -47,7 +47,7 @@
 	do								\
 	{								\
 		SET_LOW(PORTD, nACK);		\
-		while(PORTD & nCS)			\
+		while(!(PIND & nCS))		\
 			;						\
 									\
 		SET_HIGH(PORTD, nACK);		\
@@ -57,7 +57,7 @@
 #define DO_READ_CYCLE(data)			\
 	do								\
 	{								\
-		DATA_BUS_PIN = (data);		\
+		DATA_BUS_PORT = (data);		\
 		DATA_BUS_SET_OUTPUT();		\
 		TERMINATE_BUS_CYCLE();		\
 		DATA_BUS_SET_INPUT();		\
