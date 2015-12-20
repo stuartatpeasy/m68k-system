@@ -368,7 +368,11 @@ int main(void)
 								registers[REG_STATUS] &= ~FLAG_KBRX;
 							}
 							else
-								DO_READ_CYCLE(ctx_kb.fifo.rd++);
+							{
+								DO_READ_CYCLE(ctx_kb.fifo.data[ctx_kb.fifo.rd++]);
+								if(ctx_kb.fifo.rd == ctx_kb.fifo.wr)
+									registers[REG_STATUS] &= ~FLAG_KBRX;
+							}
 							sei();
 							break;
 							
@@ -380,7 +384,11 @@ int main(void)
 								registers[REG_STATUS] &= ~FLAG_MOUSERX;
 							}
 							else
-								DO_READ_CYCLE(ctx_mouse.fifo.rd++);
+							{
+								DO_READ_CYCLE(ctx_mouse.fifo.data[ctx_mouse.fifo.rd++]);
+								if(ctx_mouse.fifo.rd == ctx_mouse.fifo.wr)
+									registers[REG_STATUS] &= ~FLAG_KBRX;
+							}
 							sei();
 							break;
 							

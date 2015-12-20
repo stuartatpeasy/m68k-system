@@ -9,6 +9,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, November 2015.
 */
 
+#include <avr/cpufunc.h>
 #include "portdefs.h"
 
 /* Set the specified pins low or high in the specified port */
@@ -68,7 +69,7 @@
 */
 
 /* Read the current address from the address bus inputs */
-#define GET_ADDRESS()			((PORTC & PORTC_ADDR_MASK) >> PORTC_ADDR_SHIFT)
+#define GET_ADDRESS()			((PINC & PORTC_ADDR_MASK) >> PORTC_ADDR_SHIFT)
 
 /* Make the keyboard clock/data line an input or an output */
 #define KB_CLK_SET_OUTPUT()		SET_HIGH(KB_DDR, KB_CLK)
