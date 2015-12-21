@@ -33,6 +33,8 @@ void init(void)
 
 	DATA_BUS_DDR	= DATA_BUS_OUTPUTS;
 	DATA_BUS_PORT	= DATA_BUS_PULLUPS;
+	
+	SET_LOW(PWR_PORT, PWR_KB | PWR_MOUSE);
 
 	/* Initialise register values */	
 	for(i = 0; i < sizeof(registers) / sizeof(registers[0]); ++i)

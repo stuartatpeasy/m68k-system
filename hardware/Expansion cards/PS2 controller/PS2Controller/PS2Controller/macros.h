@@ -11,14 +11,15 @@
 
 #include <avr/cpufunc.h>
 #include "portdefs.h"
+#include "types.h"
 
 /* Set the specified pins low or high in the specified port */
-#define SET_LOW(port, pins)			((port) &= ~(pins))
-#define SET_HIGH(port, pins)		((port) |= (pins))
+#define SET_LOW(port, pins)			((port) &= (u8) ~(pins))
+#define SET_HIGH(port, pins)		((port) |= (u8) (pins))
 
 /* Set the pin in the specified port as an output or an input */
-#define SET_INPUT(ddr, pin)			SET_LOW((ddr), (pin))
-#define SET_OUTPUT(ddr, pin)		SET_HIGH((ddr), (pin))
+#define SET_INPUT(ddr, pins)		SET_LOW((ddr), (pins))
+#define SET_OUTPUT(ddr, pins)		SET_HIGH((ddr), (pins))
 
 /* Read the value of the specified pin in the specified port */
 #define READ_PIN(port, pin)			((port) & (pin))
