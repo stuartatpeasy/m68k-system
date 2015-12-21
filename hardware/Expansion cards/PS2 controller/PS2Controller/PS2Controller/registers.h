@@ -19,9 +19,10 @@
 #define REG_MOUSE_CMD			(3)		/* Mouse command holding register		*/
 #define REG_STATUS				(4)		/* Status flags							*/
 #define REG_CFG					(5)		/* Controller configuration				*/
-#define REG_INTCFG				(6)		/* Interrupt-enable flags				*/
+#define REG_INT_CFG				(6)		/* Interrupt-enable flags				*/
+#define REG_UNUSED				(7)
 
-/* Flag bits - used in REG_STATUS and REG_INTCFG */
+/* Flag bits - used in REG_STATUS and REG_INT_CFG */
 #define FLAG_KBRX				_BV(7)	/* Byte received from keyboard port		*/
 #define FLAG_KBTXDONE			_BV(6)	/* Keyboard command transmit finished	*/
 #define FLAG_KBPARERR			_BV(5)	/* Keyboard port receiver parity error	*/

@@ -34,6 +34,15 @@ void init(void)
 	DATA_BUS_DDR	= DATA_BUS_OUTPUTS;
 	DATA_BUS_PORT	= DATA_BUS_PULLUPS;
 	
+	/* Disable timers */
+	TCCR0	= 0;
+	TCCR1A	= 0;
+	TCCR1B	= 0;
+	TCCR2	= 0;
+	
+	/* TODO: enable timer interrupts, I think */
+	
+	/* Initially disable power to keyboard and mouse */
 	SET_LOW(PWR_PORT, PWR_KB | PWR_MOUSE);
 
 	/* Initialise register values */	
@@ -54,6 +63,7 @@ void init(void)
 	ctx_kb.flag_tx				= FLAG_KBTXDONE;
 	ctx_kb.flag_ovf				= FLAG_KBOVF;
 	ctx_kb.flag_parerr			= FLAG_KBPARERR;
+	ctx_kb.irq					= irq_keyboard_clk;
 	ctx_kb.fifo.rd				= 0;
 	ctx_kb.fifo.wr				= 0;
 	
@@ -70,6 +80,7 @@ void init(void)
 	ctx_mouse.flag_tx			= FLAG_MOUSETXDONE;
 	ctx_mouse.flag_ovf			= FLAG_MOUSEOVF;
 	ctx_mouse.flag_parerr		= FLAG_MOUSEPARERR;
+	ctx_mouse.irq				= irq_mouse_clk;
 	ctx_mouse.fifo.rd			= 0;
 	ctx_mouse.fifo.wr			= 0;
 
@@ -128,14 +139,14 @@ void process_data(volatile ctx_t *ctx)
 			debug_putc('\n');
 
 			registers[REG_STATUS] |= ctx->flag_rx;
-			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INTCFG] & ctx->flag_rx))
+			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_rx))
 				HOST_IRQ_ASSERT();
 		}
 		else
 		{
 			/* FIFO is full; drop data */
 			registers[REG_STATUS] |= ctx->flag_ovf;
-			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INTCFG] & ctx->flag_ovf))
+			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_ovf))
 				HOST_IRQ_ASSERT();
 		}
 	}
@@ -143,7 +154,7 @@ void process_data(volatile ctx_t *ctx)
 	{
 		/* Parity error */
 		registers[REG_STATUS] |= ctx->flag_parerr;
-		if((registers[REG_CFG] & CFG_IE) && (registers[REG_INTCFG] & ctx->flag_parerr))
+		if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_parerr))
 			HOST_IRQ_ASSERT();
 
 		debug_putc('!');
@@ -232,15 +243,16 @@ void process_clock_edge(volatile ctx_t *ctx)
 			
 		case state_tx_ack:
 			registers[REG_STATUS] |= ctx->flag_tx;
-			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INTCFG] & ctx->flag_tx))
+			ctx->state = state_idle;
+			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_tx))
 				HOST_IRQ_ASSERT();
 				
 			if(ctx->command_pending)
 				ctx->start_tx_fn();
-			else
-				ctx->state = state_idle;
 			break;
 	}
+	
+	registers[REG_UNUSED] = ctx->state;
 }
 
 
@@ -276,8 +288,7 @@ ISR(TIMER0_OVF_vect)
 	KB_CLK_SET_HIGH();			/* Pull the keyboard clock line high	*/
 	KB_CLK_SET_INPUT();			/* Set keyboard clock as input			*/
 
-	/* Re-enable interrupts on rising edges of keyboard clock */
-	set_irq_edge(irq_keyboard_clk, irq_edge_rising);
+	/* Re-enable keyboard interrupts */
 	KB_IRQ_ENABLE();
 }
 
@@ -295,8 +306,7 @@ ISR(TIMER2_OVF_vect)
 	MOUSE_CLK_SET_HIGH();		/* Pull the mouse clock line high	*/
 	MOUSE_CLK_SET_INPUT();		/* Set mouse clock as input			*/
 
-	/* Re-enable interrupts on rising edges of mouse clock	*/
-	set_irq_edge(irq_mouse_clk, irq_edge_rising);
+	/* Re-enable mouse interrupts */
 	MOUSE_IRQ_ENABLE();
 }
 
@@ -307,14 +317,16 @@ ISR(TIMER2_OVF_vect)
 void start_tx_keyboard()
 {
 	KB_IRQ_DISABLE();
+	ctx_kb.command_pending = 0;
 	
 	/* Start keyboard command transmission */
-	KB_CLK_SET_OUTPUT();		/* Set keyboard clock line to output		*/
-	KB_CLK_SET_LOW();			/* Pull clock line low						*/
+	KB_CLK_SET_OUTPUT();			/* Set keyboard clock line to output				*/
+	KB_CLK_SET_LOW();				/* Pull PS/2 keyboard clock line low				*/
 
-	/* Generate an interrupt after 60us */
-	TCNT0 = 196;				/* 196 = 256 - 60, ie. overflow (and interrupt) after 60 counts */
-	TCCR0 = _BV(CS01);			/* Set timer clock source to f(clk)/8 (=1MHz)					*/
+	/* Generate an interrupt after 150us */
+	TCNT0 = 106;					/* 106 = 256 - 150, ie. overflow after 150 counts	*/
+	SET_HIGH(TIMSK, _BV(TOIE0));	/* Enable interrupt on timer 0 overflow				*/
+	TCCR0 = _BV(CS01);				/* Set timer clock source to f(clk)/8 (=1MHz)		*/
 
 	ctx_kb.state = state_tx_busrq;
 }
@@ -326,14 +338,16 @@ void start_tx_keyboard()
 void start_tx_mouse()
 {
 	MOUSE_IRQ_DISABLE();
+	ctx_mouse.command_pending = 0;
 	
 	/* Start mouse command transmission */
-	MOUSE_CLK_SET_OUTPUT();		/* Set mouse clock line to output			*/
-	MOUSE_CLK_SET_LOW();		/* Pull clock line low						*/
+	MOUSE_CLK_SET_OUTPUT();			/* Set mouse clock line to output					*/
+	MOUSE_CLK_SET_LOW();			/* Pull clock line low								*/
 	
-	/* Generate an interrupt after 60us */
-	TCNT2 = 196;				/* 196 = 256 - 60, ie. overflow (and interrupt) after 60 counts */
-	TCCR2 = _BV(CS01);			/* Set timer clock source to f(clk)/8 (=1MHz)					*/
+	/* Generate an interrupt after 150us */
+	TCNT2 = 106;					/* 106 = 256 - 150, ie. overflow after 150 counts	*/
+	SET_HIGH(TIMSK, _BV(TOIE2));	/* Enable interrupt on timer 2 overflow				*/
+	TCCR2 = _BV(CS01);				/* Set timer clock source to f(clk)/8 (=1MHz)		*/
 	
 	ctx_mouse.state = state_tx_busrq;
 }
@@ -410,6 +424,7 @@ int main(void)
 					{
 						case REG_KB_CMD:
 							/* Try to start keyboard command transmission */
+							ctx_kb.command = data;
 							if(ctx_kb.state == state_idle)
 								start_tx_keyboard();
 							else
@@ -418,6 +433,7 @@ int main(void)
 							
 						case REG_MOUSE_CMD:
 							/* Try to start mouse command transmission */
+							ctx_mouse.command = data;
 							if(ctx_mouse.state == state_idle)
 								start_tx_mouse();
 							else
@@ -425,7 +441,7 @@ int main(void)
 							break;
 						
 						case REG_STATUS:
-							if(!(registers[REG_STATUS] & registers[REG_INTCFG]))
+							if(!(registers[REG_STATUS] & registers[REG_INT_CFG]))
 								HOST_IRQ_RELEASE();
 							break;
 							

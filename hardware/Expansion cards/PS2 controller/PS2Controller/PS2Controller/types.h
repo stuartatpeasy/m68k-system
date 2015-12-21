@@ -89,6 +89,7 @@ typedef struct ctx
 	u8				flag_tx;		/* Data-transmission is complete	*/
 	u8				flag_ovf;		/* FIFO overflow					*/
 	u8				flag_parerr;	/* Receiver parity error			*/
+	irq_t			irq;
 	fifo_t			fifo;
 } ctx_t;
 
