@@ -72,8 +72,8 @@ PB0		ICP1			14		i/o		D8
 /* Port C pins */
 #define nRESET				_BV(6)		/* nRESET input from host system	*/
 #define nW					_BV(5)		/* Upper byte write input from host	*/
-#define PWR_KB				_BV(4)		/* Keyboard power enable			*/
-#define PWR_MOUSE			_BV(3)		/* Mouse power enable				*/
+#define nPWR_KB				_BV(4)		/* Keyboard power enable			*/
+#define nPWR_MOUSE			_BV(3)		/* Mouse power enable				*/
 #define A3					_BV(2)		/* Host address A3					*/
 #define A2					_BV(1)		/* Host address A2					*/
 #define A1					_BV(0)		/* Host address A1					*/
@@ -85,7 +85,7 @@ PB0		ICP1			14		i/o		D8
 	Note: nIRQ is treated as an input.  nIRQ is an open-drain output, and therefore only becomes an
 	output when it is asserted.  At all other times, it is an input.
 */
-#define PORTC_OUTPUTS		(PWR_KB | PWR_MOUSE)	/* Power switches are outputs */
+#define PORTC_OUTPUTS		(nPWR_KB | nPWR_MOUSE)	/* Power switches are outputs */
 #define PORTC_PULLUPS		(0)			/* All port C pins are driven		*/
 
 /* Port B (DATA_BUS) pins */

@@ -34,6 +34,8 @@ void init(void)
 	DATA_BUS_DDR	= DATA_BUS_OUTPUTS;
 	DATA_BUS_PORT	= DATA_BUS_PULLUPS;
 	
+	SET_HIGH(PORTD, nACK);
+	
 	/* Disable timers */
 	TCCR0	= 0;
 	TCCR1A	= 0;
@@ -43,7 +45,7 @@ void init(void)
 	/* TODO: enable timer interrupts, I think */
 	
 	/* Initially disable power to keyboard and mouse */
-	SET_LOW(PWR_PORT, PWR_KB | PWR_MOUSE);
+	SET_HIGH(PWR_PORT, nPWR_KB | nPWR_MOUSE);
 
 	/* Initialise register values */	
 	for(i = 0; i < sizeof(registers) / sizeof(registers[0]); ++i)
@@ -447,14 +449,14 @@ int main(void)
 							
 						case REG_CFG:
 							if(data & CFG_PWR_KB)
-								PWR_PORT |= PWR_KB;
+								SET_LOW(PWR_PORT, nPWR_KB);
 							else
-								PWR_PORT &= ~PWR_KB;
+								SET_HIGH(PWR_PORT, nPWR_KB);
 							
 							if(data & CFG_PWR_MOUSE)
-								PWR_PORT |= PWR_MOUSE;
+								SET_LOW(PWR_PORT, nPWR_MOUSE);
 							else
-								PWR_PORT &= ~PWR_MOUSE;
+								SET_HIGH(PWR_PORT, nPWR_MOUSE);
 							break;
 					}
 					sei();
