@@ -23,9 +23,9 @@ PD1		TXD				 3		o		nACK			[debug: TXD]
 PD0		RXD				 2		i		nID				[debug: RXD]
 
 PC6		nRESET			 1		i		nRESET
-PC5		ADC5/SCL		28		i		nUW
-PC4		ADC4/SDA		27		i		nUR
-PC3		ADC3			26		i		A4
+PC5		ADC5/SCL		28		i		nW
+PC4		ADC4/SDA		27		i		nPWR_MOUSE
+PC3		ADC3			26		i		nPWR_KB
 PC2		ADC2			25		i		A3
 PC1		ADC1			24		i		A2
 PC0		ADC0			23		i		A1
