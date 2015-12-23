@@ -1,5 +1,5 @@
 /*
-	PS2Controller.c - PS/2 keyboard & mouse controller implementation
+	PS2Controller.c - dual-channel PS/2 controller implementation
 	
 	This module contains firmware for an m68k-bus peripheral controller.
 	
@@ -11,7 +11,7 @@
 
 #include "PS2Controller.h"
 
-volatile ctx_t ctx_kb, ctx_mouse;
+volatile ctx_t ctx_a, ctx_b;
 vu8 registers[8];
 
 
@@ -42,56 +42,52 @@ void init(void)
 	TCCR1B	= 0;
 	TCCR2	= 0;
 	
-	/* TODO: enable timer interrupts, I think */
-	
-	/* Initially disable power to keyboard and mouse */
-	SET_HIGH(PWR_PORT, nPWR_KB | nPWR_MOUSE);
+	/* Initially disable power to both PS/2 channels */
+	SET_HIGH(PWR_PORT, nPWR_A | nPWR_B);
 
 	/* Initialise register values */	
 	for(i = 0; i < sizeof(registers) / sizeof(registers[0]); ++i)
 		registers[i] = 0;
 		
-	/* Initialise mouse and keyboard context */
-	ctx_kb.state				= state_idle;
-	ctx_kb.port					= &KB_PORT;
-	ctx_kb.pin					= &KB_PIN;
-	ctx_kb.ddr					= &KB_DDR;
-	ctx_kb.data_pin				= KB_DATA;
-	ctx_kb.data_regnum			= REG_KB_DATA;
-	ctx_kb.command				= CMD_NONE;
-	ctx_kb.command_pending		= 0;
-	ctx_kb.start_tx_fn			= start_tx_keyboard;
-	ctx_kb.flag_rx				= FLAG_KBRX;
-	ctx_kb.flag_tx				= FLAG_KBTXDONE;
-	ctx_kb.flag_ovf				= FLAG_KBOVF;
-	ctx_kb.flag_parerr			= FLAG_KBPARERR;
-	ctx_kb.irq					= irq_keyboard_clk;
-	ctx_kb.fifo.rd				= 0;
-	ctx_kb.fifo.wr				= 0;
-	
-	ctx_mouse.state				= state_idle;
-	ctx_mouse.port				= &MOUSE_PORT;
-	ctx_mouse.pin				= &MOUSE_PIN;
-	ctx_mouse.ddr				= &MOUSE_DDR;
-	ctx_mouse.data_pin			= MOUSE_DATA;
-	ctx_mouse.data_regnum		= REG_MOUSE_DATA;
-	ctx_mouse.command			= CMD_NONE;
-	ctx_mouse.command_pending	= 0;
-	ctx_mouse.start_tx_fn		= start_tx_mouse;
-	ctx_mouse.flag_rx			= FLAG_MOUSERX;
-	ctx_mouse.flag_tx			= FLAG_MOUSETXDONE;
-	ctx_mouse.flag_ovf			= FLAG_MOUSEOVF;
-	ctx_mouse.flag_parerr		= FLAG_MOUSEPARERR;
-	ctx_mouse.irq				= irq_mouse_clk;
-	ctx_mouse.fifo.rd			= 0;
-	ctx_mouse.fifo.wr			= 0;
+	/* Initialise PS/2 channel context */
+	ctx_a.state				= state_idle;
+	ctx_a.port				= &CHAN_A_PORT;
+	ctx_a.pin				= &CHAN_A_PIN;
+	ctx_a.ddr				= &CHAN_A_DDR;
+	ctx_a.data_pin			= CHAN_A_DATA;
+	ctx_a.data_regnum		= REG_DATA_A;
+	ctx_a.command			= 0;
+	ctx_a.command_pending	= 0;
+	ctx_a.start_tx_fn		= start_tx_chan_a;
+	ctx_a.reg_status		= &registers[REG_STATUS_A];
+	ctx_a.reg_int_cfg		= &registers[REG_INT_CFG_A];
 
-	/* Enable keyboard and mouse interrupts on falling edge */
-	set_irq_edge(irq_keyboard_clk, irq_edge_falling);
-	set_irq_edge(irq_mouse_clk, irq_edge_falling);
+	ctx_a.irq				= irq_clk_a;
+	ctx_a.fifo.rd			= 0;
+	ctx_a.fifo.wr			= 0;
 	
-	KB_IRQ_ENABLE();
-	MOUSE_IRQ_ENABLE();
+	ctx_b.state				= state_idle;
+	ctx_b.port				= &CHAN_B_PORT;
+	ctx_b.pin				= &CHAN_B_PIN;
+	ctx_b.ddr				= &CHAN_B_DDR;
+	ctx_b.data_pin			= CHAN_B_DATA;
+	ctx_b.data_regnum		= REG_DATA_B;
+	ctx_b.command			= 0;
+	ctx_b.command_pending	= 0;
+	ctx_b.start_tx_fn		= start_tx_chan_b;
+	ctx_b.reg_status		= &registers[REG_STATUS_B];
+	ctx_b.reg_int_cfg		= &registers[REG_INT_CFG_B];
+	
+	ctx_b.irq				= irq_clk_b;
+	ctx_b.fifo.rd			= 0;
+	ctx_b.fifo.wr			= 0;
+
+	/* Enable interrupts on falling edge of PS/2 clock inputs */
+	set_irq_edge(irq_clk_a, irq_edge_falling);
+	set_irq_edge(irq_clk_b, irq_edge_falling);
+	
+	CHAN_A_IRQ_ENABLE();
+	CHAN_B_IRQ_ENABLE();
 	
 	debug_init();
 	
@@ -105,14 +101,14 @@ void init(void)
 */
 void set_irq_edge(const irq_t irq, const irq_edge_t edge)
 {
-	if(irq == irq_keyboard_clk)
+	if(irq == irq_clk_a)
 	{
 		if(edge == irq_edge_falling)
 			INT0_SET_FALLING_EDGE();
 		else if(edge == irq_edge_rising)
 			INT0_SET_RISING_EDGE();
 	}
-	else if(irq == irq_mouse_clk)
+	else if(irq == irq_clk_b)
 	{
 		if(edge == irq_edge_falling)
 			INT1_SET_FALLING_EDGE();
@@ -123,7 +119,7 @@ void set_irq_edge(const irq_t irq, const irq_edge_t edge)
 
 
 /*
-	process_data() - process a byte of data received from the keyboard or the mouse.
+	process_data() - process a byte of data received from a PS/2 channel.
 */
 void process_data(volatile ctx_t *ctx)
 {
@@ -140,24 +136,21 @@ void process_data(volatile ctx_t *ctx)
 			debug_puthexb(data);
 			debug_putc('\n');
 
-			registers[REG_STATUS] |= ctx->flag_rx;
-			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_rx))
-				HOST_IRQ_ASSERT();
+			*ctx->reg_status |= FLAG_RX;
+			HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_RX);
 		}
 		else
 		{
 			/* FIFO is full; drop data */
-			registers[REG_STATUS] |= ctx->flag_ovf;
-			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_ovf))
-				HOST_IRQ_ASSERT();
+			*ctx->reg_status |= FLAG_OVF;
+			HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_OVF);
 		}
 	}
 	else
 	{
 		/* Parity error */
-		registers[REG_STATUS] |= ctx->flag_parerr;
-		if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_parerr))
-			HOST_IRQ_ASSERT();
+		*ctx->reg_status |= FLAG_PAR_ERR;
+		HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_PAR_ERR);
 
 		debug_putc('!');
 	}
@@ -244,40 +237,37 @@ void process_clock_edge(volatile ctx_t *ctx)
 			break;
 			
 		case state_tx_ack:
-			registers[REG_STATUS] |= ctx->flag_tx;
+			*ctx->reg_status |= FLAG_TX;
 			ctx->state = state_idle;
-			if((registers[REG_CFG] & CFG_IE) && (registers[REG_INT_CFG] & ctx->flag_tx))
-				HOST_IRQ_ASSERT();
+			HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_TX);
 				
 			if(ctx->command_pending)
 				ctx->start_tx_fn();
 			break;
 	}
-	
-	registers[REG_UNUSED] = ctx->state;
 }
 
 
 /*
-	ISR for INT0 - called on falling edges of keyboard clock; handles incoming data.
+	ISR for INT0 - called on falling edges of channel A clock; handles incoming data.
 */
 ISR(INT0_vect)
 {
-	process_clock_edge(&ctx_kb);
+	process_clock_edge(&ctx_a);
 }
 
 
 /*
-	ISR for INT1 - called on falling edges of mouse clock; handles incoming data.
+	ISR for INT1 - called on falling edges of channel B clock; handles incoming data.
 */
 ISR(INT1_vect)
 {
-	process_clock_edge(&ctx_mouse);
+	process_clock_edge(&ctx_b);
 }
 
 
 /*
-	ISR for timer 0 overflow - handles keyboard data-transmission bus requests.
+	ISR for timer 0 overflow - handles channel A data-transmission bus requests.
 */
 ISR(TIMER0_OVF_vect)
 {
@@ -285,73 +275,73 @@ ISR(TIMER0_OVF_vect)
 	SET_LOW(TIMSK, _BV(TOIE0));
 	SET_LOW(TCCR0, _BV(CS02) | _BV(CS01) | _BV(CS00));
 
-	KB_DATA_SET_LOW();			/* Pull the keyboard data line low		*/
-	KB_DATA_SET_OUTPUT();		/* Set keyboard data line as output		*/
-	KB_CLK_SET_HIGH();			/* Pull the keyboard clock line high	*/
-	KB_CLK_SET_INPUT();			/* Set keyboard clock as input			*/
+	DATA_A_SET_LOW();			/* Pull the channel A  data line low	*/
+	DATA_A_SET_OUTPUT();		/* Set channel A data line as output	*/
+	CLK_A_SET_HIGH();			/* Pull the channel A clock line high	*/
+	CLK_A_SET_INPUT();			/* Set channel A clock as input			*/
 
-	/* Re-enable keyboard interrupts */
-	KB_IRQ_ENABLE();
+	/* Re-enable channel A clock interrupt */
+	CHAN_A_IRQ_ENABLE();
 }
 
 
 /*
-	ISR for timer 2 overflow - handles mouse data-transmission bus requests.
+	ISR for timer 2 overflow - handles channel B data-transmission bus requests.
 */
 ISR(TIMER2_OVF_vect)
 {
 	SET_LOW(TIMSK, _BV(TOIE2));
 	SET_LOW(TCCR2, _BV(CS02) | _BV(CS01) | _BV(CS00));	/* Check this */
 	
-	MOUSE_DATA_SET_LOW();		/* Pull the mouse data line low		*/
-	MOUSE_DATA_SET_OUTPUT();	/* Set mouse data line as output	*/
-	MOUSE_CLK_SET_HIGH();		/* Pull the mouse clock line high	*/
-	MOUSE_CLK_SET_INPUT();		/* Set mouse clock as input			*/
+	DATA_B_SET_LOW();		/* Pull the channel B data line low		*/
+	DATA_B_SET_OUTPUT();	/* Set channel B data line as output	*/
+	CLK_B_SET_HIGH();		/* Pull the channel B clock line high	*/
+	CLK_B_SET_INPUT();		/* Set channel B clock as input			*/
 
-	/* Re-enable mouse interrupts */
-	MOUSE_IRQ_ENABLE();
+	/* Re-enable channel B clock interrupt */
+	CHAN_B_IRQ_ENABLE();
 }
 
 
 /*
-	start_tx_keyboard() - start transmitting a byte to the keyboard.
+	start_tx_chan_a() - start transmitting a byte on channel A.
 */
-void start_tx_keyboard()
+void start_tx_chan_a()
 {
-	KB_IRQ_DISABLE();
-	ctx_kb.command_pending = 0;
+	CHAN_A_IRQ_DISABLE();
+	ctx_a.command_pending = 0;
 	
-	/* Start keyboard command transmission */
-	KB_CLK_SET_OUTPUT();			/* Set keyboard clock line to output				*/
-	KB_CLK_SET_LOW();				/* Pull PS/2 keyboard clock line low				*/
+	/* Start channel A command transmission */
+	CLK_A_SET_OUTPUT();				/* Set channel A clock line to output				*/
+	CLK_A_SET_LOW();				/* Pull PS/2 channel A clock line low				*/
 
 	/* Generate an interrupt after 150us */
 	TCNT0 = 106;					/* 106 = 256 - 150, ie. overflow after 150 counts	*/
 	SET_HIGH(TIMSK, _BV(TOIE0));	/* Enable interrupt on timer 0 overflow				*/
 	TCCR0 = _BV(CS01);				/* Set timer clock source to f(clk)/8 (=1MHz)		*/
 
-	ctx_kb.state = state_tx_busrq;
+	ctx_a.state = state_tx_busrq;
 }
 
 
 /*
-	start_tx_mouse() - start transmitting a byte to the mouse.
+	start_tx_chan_b() - start transmitting a byte on channel B.
 */
-void start_tx_mouse()
+void start_tx_chan_b()
 {
-	MOUSE_IRQ_DISABLE();
-	ctx_mouse.command_pending = 0;
+	CHAN_B_IRQ_DISABLE();
+	ctx_b.command_pending = 0;
 	
-	/* Start mouse command transmission */
-	MOUSE_CLK_SET_OUTPUT();			/* Set mouse clock line to output					*/
-	MOUSE_CLK_SET_LOW();			/* Pull clock line low								*/
+	/* Start channel B command transmission */
+	CLK_B_SET_OUTPUT();				/* Set channel B clock line to output				*/
+	CLK_B_SET_LOW();				/* Pull PS/2 channel B clock line low				*/
 	
 	/* Generate an interrupt after 150us */
 	TCNT2 = 106;					/* 106 = 256 - 150, ie. overflow after 150 counts	*/
 	SET_HIGH(TIMSK, _BV(TOIE2));	/* Enable interrupt on timer 2 overflow				*/
 	TCCR2 = _BV(CS01);				/* Set timer clock source to f(clk)/8 (=1MHz)		*/
 	
-	ctx_mouse.state = state_tx_busrq;
+	ctx_b.state = state_tx_busrq;
 }
 
 
@@ -378,34 +368,34 @@ int main(void)
 				{
 					switch(addr)
 					{
-						case REG_KB_DATA:
+						case REG_DATA_A:
 							cli();
-							if(ctx_kb.fifo.rd == ctx_kb.fifo.wr)
+							if(ctx_a.fifo.rd == ctx_a.fifo.wr)
 							{
 								DO_READ_CYCLE(0);		/* FIFO is empty */
-								registers[REG_STATUS] &= ~FLAG_KBRX;
+								registers[REG_STATUS_A] &= ~FLAG_RX;
 							}
 							else
 							{
-								DO_READ_CYCLE(ctx_kb.fifo.data[ctx_kb.fifo.rd++]);
-								if(ctx_kb.fifo.rd == ctx_kb.fifo.wr)
-									registers[REG_STATUS] &= ~FLAG_KBRX;
+								DO_READ_CYCLE(ctx_a.fifo.data[ctx_a.fifo.rd++]);
+								if(ctx_a.fifo.rd == ctx_a.fifo.wr)
+									registers[REG_STATUS_A] &= ~FLAG_RX;
 							}
 							sei();
 							break;
 							
-						case REG_MOUSE_DATA:
+						case REG_DATA_B:
 							cli();
-							if(ctx_mouse.fifo.rd == ctx_mouse.fifo.wr)
+							if(ctx_b.fifo.rd == ctx_b.fifo.wr)
 							{
 								DO_READ_CYCLE(0);		/* FIFO is empty */
-								registers[REG_STATUS] &= ~FLAG_MOUSERX;
+								registers[REG_STATUS_B] &= ~FLAG_RX;
 							}
 							else
 							{
-								DO_READ_CYCLE(ctx_mouse.fifo.data[ctx_mouse.fifo.rd++]);
-								if(ctx_mouse.fifo.rd == ctx_mouse.fifo.wr)
-									registers[REG_STATUS] &= ~FLAG_KBRX;
+								DO_READ_CYCLE(ctx_b.fifo.data[ctx_b.fifo.rd++]);
+								if(ctx_b.fifo.rd == ctx_b.fifo.wr)
+									registers[REG_STATUS_B] &= ~FLAG_RX;
 							}
 							sei();
 							break;
@@ -424,39 +414,41 @@ int main(void)
 					registers[addr] = data;
 					switch(addr)
 					{
-						case REG_KB_CMD:
-							/* Try to start keyboard command transmission */
-							ctx_kb.command = data;
-							if(ctx_kb.state == state_idle)
-								start_tx_keyboard();
+						case REG_DATA_A:
+							/* Try to start channel A command transmission */
+							ctx_a.command = data;
+							if(ctx_a.state == state_idle)
+								start_tx_chan_a();
 							else
-								ctx_kb.command_pending = 1;
+								ctx_a.command_pending = 1;
 							break;
 							
-						case REG_MOUSE_CMD:
-							/* Try to start mouse command transmission */
-							ctx_mouse.command = data;
-							if(ctx_mouse.state == state_idle)
-								start_tx_mouse();
+						case REG_DATA_B:
+							/* Try to start channel B command transmission */
+							ctx_b.command = data;
+							if(ctx_b.state == state_idle)
+								start_tx_chan_b();
 							else
-								ctx_mouse.command_pending = 1;
+								ctx_b.command_pending = 1;
 							break;
 						
-						case REG_STATUS:
-							if(!(registers[REG_STATUS] & registers[REG_INT_CFG]))
+						case REG_STATUS_A:
+						case REG_STATUS_B:
+							if(!(registers[REG_STATUS_A] & registers[REG_INT_CFG_A]) && 
+							   !(registers[REG_STATUS_B] & registers[REG_INT_CFG_B]))
 								HOST_IRQ_RELEASE();
 							break;
 							
 						case REG_CFG:
-							if(data & CFG_PWR_KB)
-								SET_LOW(PWR_PORT, nPWR_KB);
+							if(data & CFG_PWR_A)
+								SET_LOW(PWR_PORT, nPWR_A);
 							else
-								SET_HIGH(PWR_PORT, nPWR_KB);
+								SET_HIGH(PWR_PORT, nPWR_A);
 							
-							if(data & CFG_PWR_MOUSE)
-								SET_LOW(PWR_PORT, nPWR_MOUSE);
+							if(data & CFG_PWR_B)
+								SET_LOW(PWR_PORT, nPWR_B);
 							else
-								SET_HIGH(PWR_PORT, nPWR_MOUSE);
+								SET_HIGH(PWR_PORT, nPWR_B);
 							break;
 					}
 					sei();

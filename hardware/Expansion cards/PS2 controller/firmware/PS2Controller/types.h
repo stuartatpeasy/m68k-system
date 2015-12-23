@@ -1,7 +1,9 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 /*
-	types.h - Custom type definitions
+	types.h - Custom type definitions for the dual-channel PS/2 controller
+
+	This module contains firmware for an m68k-bus peripheral controller.
 
 
 	(c) Stuart Wallace <stuartw@atom.net>, November 2015.
@@ -53,12 +55,12 @@ typedef enum irq_edge
 
 typedef enum irq
 {
-	irq_keyboard_clk	= 0,
-	irq_mouse_clk		= 1
+	irq_clk_a		= 0,
+	irq_clk_b		= 1
 } irq_t;
 
 
-/* FIFO buffer structure - used for buffering received mouse/KB data */
+/* FIFO buffer structure - used for buffering received PS/2 data */
 typedef struct fifo
 {
 	u8				rd;
@@ -67,7 +69,7 @@ typedef struct fifo
 } fifo_t;
 
 
-/* Keyboard/mouse data transmission/reception context */
+/* PS/2 channel context */
 typedef struct ctx
 {
 	state_t			state;
@@ -84,11 +86,9 @@ typedef struct ctx
 	u8				command_pending;
 	void			(*start_tx_fn)(void);
 	
-	/* These members identify flags in REG_STATUS and REG_INTCFG */
-	u8				flag_rx;		/* Data has been received			*/
-	u8				flag_tx;		/* Data-transmission is complete	*/
-	u8				flag_ovf;		/* FIFO overflow					*/
-	u8				flag_parerr;	/* Receiver parity error			*/
+	vu8 *			reg_status;
+	vu8 *			reg_int_cfg;
+	
 	irq_t			irq;
 	fifo_t			fifo;
 } ctx_t;

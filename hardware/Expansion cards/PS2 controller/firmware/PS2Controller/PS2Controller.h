@@ -1,5 +1,5 @@
 /*
-	PS2Controller.c - PS/2 keyboard & mouse controller implementation
+	PS2Controller.h - dual-channel PS/2 controller implementation
 	
 	This module contains firmware for an m68k-bus peripheral controller.
 	
@@ -28,19 +28,12 @@
 #define IRQ_EDGE_RISING		(1)
 
 
-/* PS/2 command values (sent from host to device) */
-#define CMD_NONE			(0x00)
-#define KB_CMD_SET_LEDS		(0xed)
-#define KB_CMD_SET_TM_RATE	(0xf3)
-#define KB_CMD_RESET		(0xff)
-
-
 void init();
 void set_irq_edge(const irq_t irq, const irq_edge_t edge);
 void process_clock_edge(volatile ctx_t *ctxl);
 void process_data(volatile ctx_t *ctx);
-void start_tx_keyboard();
-void start_tx_mouse();
+void start_tx_chan_a();
+void start_tx_chan_b();
 int main();
 
 #endif
