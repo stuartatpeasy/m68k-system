@@ -13,6 +13,9 @@ typedef unsigned char	u8;
 typedef const u8		ku8;
 typedef volatile u8		vu8;
 
+#define FIFO_SIZE				(256)	/* If size != 256, a lot of code will need to change...	*/
+#define FIFO_HIGH_WATER_MARK	(240)	/* FIFO population at which receiver is disabled		*/
+#define FIFO_LOW_WATER_MARK		(128)	/* Receiver enabled once FIFO empties past this point	*/
 
 /* PS/2 data transmission/reception states */
 typedef enum state
@@ -51,7 +54,7 @@ typedef struct fifo
 {
 	u8				rd;
 	u8				wr;
-	u8				data[256];	/* Hardwired to 256 to simplify buffer-wrapping calcs */
+	u8				data[FIFO_SIZE];	/* Hardwired to 256 to simplify buffer-wrapping calcs */
 } fifo_t;
 
 

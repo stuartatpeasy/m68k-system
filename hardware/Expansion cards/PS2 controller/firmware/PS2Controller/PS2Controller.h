@@ -35,6 +35,8 @@ void timer_start(volatile ctx_t *ctx);
 void timer_stop(volatile ctx_t *ctx);
 void handle_timer_event(volatile ctx_t *ctx);
 void start_tx();
+inline void fifo_read(volatile ctx_t *ctx);
+inline void try_start_tx(volatile ctx_t *ctx, ku8 data);
 int main();
 
 #endif

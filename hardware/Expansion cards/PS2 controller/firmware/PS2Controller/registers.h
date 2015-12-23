@@ -26,7 +26,7 @@
 #define FLAG_RX					_BV(7)	/* Byte received						*/
 #define FLAG_TX					_BV(6)	/* Transmit finished					*/
 #define FLAG_PAR_ERR			_BV(5)	/* Receiver parity error				*/
-#define FLAG_OVF				_BV(4)	/* FIFO overflow						*/
+/*								_BV(4)	   Reserved								*/
 #define FLAG_RX_TIMEOUT			_BV(3)	/* Timeout during receive				*/
 #define FLAG_TX_TIMEOUT			_BV(2)	/* Timeout during transmit				*/
 #define FLAG_START_TIMEOUT		_BV(1)	/* Timeout while waiting for TX clock	*/
