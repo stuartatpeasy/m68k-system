@@ -23,22 +23,16 @@
 /* Read the value of the specified pin in the specified port */
 #define READ_PIN(port, pin)			((port) & (pin))
 
-/* Set the edge on which INT0/INT1 interrupts trigger */
-#define INT0_SET_FALLING_EDGE()	(MCUCR = (MCUCR | _BV(ISC01)) & ~_BV(ISC00))
-#define INT0_SET_RISING_EDGE()	(MCUCR |= _BV(ISC01) | _BV(ISC00))
-#define INT1_SET_FALLING_EDGE()	(MCUCR = (MCUCR | _BV(ISC11)) & ~_BV(ISC10))
-#define INT1_SET_RISING_EDGE()	(MCUCR |= _BV(ISC11) | _BV(ISC10))
-
 /* Assert nIRQ (open-drain output) by making the pin (which is always set low) an output */
 #define HOST_IRQ_ASSERT()		SET_OUTPUT(IRQ_DDR, nIRQ);
 
 /* Assert nIRQ if the supplied condition is true */
-#define HOST_IRQ_ASSERT_IF(cond)	\
-	do								\
-	{								\
-		if(cond)					\
-			HOST_IRQ_ASSERT();		\
-	} while (0);					\
+#define HOST_IRQ_ASSERT_IF(cond)					\
+	do												\
+	{												\
+		if((cond) && (host_regs[REG_CFG] & CFG_IE))	\
+			HOST_IRQ_ASSERT();						\
+	} while (0);
 
 /* Release nIRQ (open-drain output) by making the pin an input (high-Z) */
 #define HOST_IRQ_RELEASE()		SET_INPUT(IRQ_DDR, nIRQ);
@@ -72,41 +66,7 @@
 		DATA_BUS_SET_INPUT();		\
 	} while(0);
 
-/*
-	Macros for reading and manipulating various I/O lines
-*/
-
 /* Read the current address from the address bus inputs */
 #define GET_ADDRESS()			((PINC & PORTC_ADDR_MASK) >> PORTC_ADDR_SHIFT)
-
-/* Make the channel A clock/data line an input or an output */
-#define CLK_A_SET_OUTPUT()		SET_HIGH(CHAN_A_DDR, CHAN_A_CLK)
-#define CLK_A_SET_INPUT()		SET_LOW(CHAN_A_DDR, CHAN_A_CLK)
-#define DATA_A_SET_OUTPUT()		SET_HIGH(CHAN_A_DDR, CHAN_A_DATA)
-#define DATA_A_SET_INPUT()		SET_LOW(CHAN_A_DDR, CHAN_A_DATA)
-
-/* Make the channel B clock/data line an input or an output */
-#define CLK_B_SET_OUTPUT()		SET_HIGH(CHAN_B_DDR, CHAN_B_CLK)
-#define CLK_B_SET_INPUT()		SET_LOW(CHAN_B_DDR, CHAN_B_CLK)
-#define DATA_B_SET_OUTPUT()		SET_HIGH(CHAN_B_DDR, CHAN_B_DATA)
-#define DATA_B_SET_INPUT()		SET_LOW(CHAN_B_DDR, CHAN_B_DATA)
-
-/* Set the channel A clock/data pin values, assuming they have already been set as an output */
-#define CLK_A_SET_LOW()			SET_LOW(CHAN_A_PORT, CHAN_A_CLK)
-#define CLK_A_SET_HIGH()		SET_HIGH(CHAN_A_PORT, CHAN_A_CLK)
-#define DATA_A_SET_LOW()		SET_LOW(CHAN_A_PORT, CHAN_A_DATA)
-#define DATA_A_SET_HIGH()		SET_HIGH(CHAN_A_PORT, CHAN_A_DATA)
-
-/* Set the channel B clock/data pin values, assuming they have already been set as an output */
-#define CLK_B_SET_LOW()			SET_LOW(CHAN_B_PORT, CHAN_B_CLK)
-#define CLK_B_SET_HIGH()		SET_HIGH(CHAN_B_PORT, CHAN_B_CLK)
-#define DATA_B_SET_LOW()		SET_LOW(CHAN_B_PORT, CHAN_B_DATA)
-#define DATA_B_SET_HIGH()		SET_HIGH(CHAN_B_PORT, CHAN_B_DATA)
-
-/* Enable/disable interrupts */
-#define CHAN_A_IRQ_ENABLE()		SET_HIGH(GICR, _BV(INT0))
-#define CHAN_A_IRQ_DISABLE()	SET_LOW(GICR, _BV(INT0))
-#define CHAN_B_IRQ_ENABLE()		SET_HIGH(GICR, _BV(INT1))
-#define CHAN_B_IRQ_DISABLE()	SET_LOW(GICR, _BV(INT1))
 
 #endif

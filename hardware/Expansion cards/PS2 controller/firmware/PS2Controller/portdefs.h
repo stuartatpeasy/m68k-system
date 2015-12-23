@@ -67,7 +67,7 @@ PB0		ICP1			14		i/o		D8
 #define nID					_BV(0)		/* ID request input from host		*/
 
 #define PORTD_OUTPUTS		(nACK)
-#define PORTD_PULLUPS		(CHAN_A_CLK | CHAN_B_CLK | CHAN_A_DATA | CHAN_B_DATA)	// FIXME - remove
+#define PORTD_PULLUPS		(0)
 
 /* Port C pins */
 #define nRESET				_BV(6)		/* nRESET input from host system	*/

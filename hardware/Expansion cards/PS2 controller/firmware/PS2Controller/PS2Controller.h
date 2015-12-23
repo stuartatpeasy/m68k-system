@@ -29,11 +29,12 @@
 
 
 void init();
-void set_irq_edge(const irq_t irq, const irq_edge_t edge);
 void process_clock_edge(volatile ctx_t *ctxl);
 void process_data(volatile ctx_t *ctx);
-void start_tx_chan_a();
-void start_tx_chan_b();
+void timer_start(volatile ctx_t *ctx);
+void timer_stop(volatile ctx_t *ctx);
+void handle_timer_event(volatile ctx_t *ctx);
+void start_tx();
 int main();
 
 #endif

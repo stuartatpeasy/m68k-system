@@ -11,8 +11,107 @@
 
 #include "PS2Controller.h"
 
-volatile ctx_t ctx_a, ctx_b;
-vu8 registers[8];
+vu8 host_regs[8];
+volatile ctx_t
+	ctx_a = {
+		.state					= state_idle,
+		.command				= 0,
+		.command_pending		= 0,
+		.irq_enable_bit			= _BV(INT0),
+
+		.uc_regs = {
+			.io = {
+				.port			= &CHAN_A_PORT,
+				.pin			= &CHAN_A_PIN,
+				.ddr			= &CHAN_A_DDR,
+				.data_pin		= CHAN_A_DATA,
+				.clk_pin		= CHAN_A_CLK
+			},
+			.timer = {
+				.count_reg		= &TCNT0,
+				.clk_reg		= &TCCR0,
+				.irq_enable_bit	= _BV(TOIE0)
+			}
+		},
+
+		.host_regs = {
+			.status				= &host_regs[REG_STATUS_A],
+			.int_cfg			= &host_regs[REG_INT_CFG_A]
+		},
+	
+		.fifo = {
+			.rd					= 0,
+			.wr					= 0
+		}
+	},
+
+	ctx_b = {
+		.state					= state_idle,
+		.command				= 0,
+		.command_pending		= 0,
+		.irq_enable_bit			= _BV(INT1),
+
+		.uc_regs = {
+			.io = {
+				.port			= &CHAN_B_PORT,
+				.pin			= &CHAN_B_PIN,
+				.ddr			= &CHAN_B_DDR,
+				.data_pin		= CHAN_B_DATA,
+				.clk_pin		= CHAN_B_CLK
+			},
+			.timer = {
+				.count_reg		= &TCNT2,
+				.clk_reg		= &TCCR2,
+				.irq_enable_bit	= _BV(TOIE2)
+			}
+		},
+
+		.host_regs = {
+			.status				= &host_regs[REG_STATUS_B],
+			.int_cfg			= &host_regs[REG_INT_CFG_B]
+		},
+		
+		.fifo = {
+			.rd					= 0,
+			.wr					= 0
+		}
+	};
+
+
+/*
+	ISR for INT0 - called on falling edges of channel A clock; handles incoming data.
+*/
+ISR(INT0_vect)
+{
+	process_clock_edge(&ctx_a);
+}
+
+
+/*
+	ISR for INT1 - called on falling edges of channel B clock; handles incoming data.
+*/
+ISR(INT1_vect)
+{
+	process_clock_edge(&ctx_b);
+}
+
+
+/*
+	ISR for timer 0 overflow - handles channel A events.
+*/
+ISR(TIMER0_OVF_vect)
+{
+	handle_timer_event(&ctx_a);
+}
+
+
+/*
+	ISR for timer 2 overflow - handles channel B events.
+*/
+ISR(TIMER2_OVF_vect)
+{
+	handle_timer_event(&ctx_b);
+}
 
 
 /*
@@ -20,8 +119,6 @@ vu8 registers[8];
 */
 void init(void)
 {
-	u8 i;
-	
 	cli();
 	
 	/* Configure ports */
@@ -45,76 +142,15 @@ void init(void)
 	/* Initially disable power to both PS/2 channels */
 	SET_HIGH(PWR_PORT, nPWR_A | nPWR_B);
 
-	/* Initialise register values */	
-	for(i = 0; i < sizeof(registers) / sizeof(registers[0]); ++i)
-		registers[i] = 0;
-		
-	/* Initialise PS/2 channel context */
-	ctx_a.state				= state_idle;
-	ctx_a.port				= &CHAN_A_PORT;
-	ctx_a.pin				= &CHAN_A_PIN;
-	ctx_a.ddr				= &CHAN_A_DDR;
-	ctx_a.data_pin			= CHAN_A_DATA;
-	ctx_a.data_regnum		= REG_DATA_A;
-	ctx_a.command			= 0;
-	ctx_a.command_pending	= 0;
-	ctx_a.start_tx_fn		= start_tx_chan_a;
-	ctx_a.reg_status		= &registers[REG_STATUS_A];
-	ctx_a.reg_int_cfg		= &registers[REG_INT_CFG_A];
-
-	ctx_a.irq				= irq_clk_a;
-	ctx_a.fifo.rd			= 0;
-	ctx_a.fifo.wr			= 0;
-	
-	ctx_b.state				= state_idle;
-	ctx_b.port				= &CHAN_B_PORT;
-	ctx_b.pin				= &CHAN_B_PIN;
-	ctx_b.ddr				= &CHAN_B_DDR;
-	ctx_b.data_pin			= CHAN_B_DATA;
-	ctx_b.data_regnum		= REG_DATA_B;
-	ctx_b.command			= 0;
-	ctx_b.command_pending	= 0;
-	ctx_b.start_tx_fn		= start_tx_chan_b;
-	ctx_b.reg_status		= &registers[REG_STATUS_B];
-	ctx_b.reg_int_cfg		= &registers[REG_INT_CFG_B];
-	
-	ctx_b.irq				= irq_clk_b;
-	ctx_b.fifo.rd			= 0;
-	ctx_b.fifo.wr			= 0;
-
 	/* Enable interrupts on falling edge of PS/2 clock inputs */
-	set_irq_edge(irq_clk_a, irq_edge_falling);
-	set_irq_edge(irq_clk_b, irq_edge_falling);
+	MCUCR = (MCUCR | _BV(ISC01)) & ~_BV(ISC00);
+	MCUCR = (MCUCR | _BV(ISC11)) & ~_BV(ISC10);
 	
-	CHAN_A_IRQ_ENABLE();
-	CHAN_B_IRQ_ENABLE();
+	SET_HIGH(GICR, _BV(INT0) | _BV(INT1));
 	
 	debug_init();
 	
 	sei();
-}
-
-
-/*
-	set_irq_edge() - configure interrupts to trigger on the rising (IRQ_EDGE_RISING) or falling
-	(IRQ_EDGE_FALLING) edge of INT1 and INT0 inputs.
-*/
-void set_irq_edge(const irq_t irq, const irq_edge_t edge)
-{
-	if(irq == irq_clk_a)
-	{
-		if(edge == irq_edge_falling)
-			INT0_SET_FALLING_EDGE();
-		else if(edge == irq_edge_rising)
-			INT0_SET_RISING_EDGE();
-	}
-	else if(irq == irq_clk_b)
-	{
-		if(edge == irq_edge_falling)
-			INT1_SET_FALLING_EDGE();
-		else if(edge == irq_edge_rising)
-			INT1_SET_RISING_EDGE();
-	}
 }
 
 
@@ -136,21 +172,21 @@ void process_data(volatile ctx_t *ctx)
 			debug_puthexb(data);
 			debug_putc('\n');
 
-			*ctx->reg_status |= FLAG_RX;
-			HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_RX);
+			*ctx->host_regs.status |= FLAG_RX;
+			HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_RX);
 		}
 		else
 		{
 			/* FIFO is full; drop data */
-			*ctx->reg_status |= FLAG_OVF;
-			HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_OVF);
+			*ctx->host_regs.status |= FLAG_OVF;
+			HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_OVF);
 		}
 	}
 	else
 	{
 		/* Parity error */
-		*ctx->reg_status |= FLAG_PAR_ERR;
-		HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_PAR_ERR);
+		*ctx->host_regs.status |= FLAG_PAR_ERR;
+		HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_PAR_ERR);
 
 		debug_putc('!');
 	}
@@ -163,6 +199,8 @@ void process_data(volatile ctx_t *ctx)
 */
 void process_clock_edge(volatile ctx_t *ctx)
 {
+	ku8 data_pin = ctx->uc_regs.io.data_pin;
+	
 	switch(++(ctx->state))
 	{
 		case state_idle:		/* Unreachable					*/
@@ -171,6 +209,8 @@ void process_clock_edge(volatile ctx_t *ctx)
 
 		case state_rx_start:
 			ctx->parity_calc = 1;		/* because odd parity */
+			ctx->uc_regs.timer.event = timer_event_rx_bit_wait;
+			timer_start(ctx);
 			break;
 
 		case state_rx_d0:
@@ -182,28 +222,35 @@ void process_clock_edge(volatile ctx_t *ctx)
 		case state_rx_d6:
 		case state_rx_d7:
 			ctx->data >>= 1;
-			if(*ctx->pin & ctx->data_pin)
+			if(*ctx->uc_regs.io.pin & data_pin)
 			{
 				ctx->data |= 0x80;
 				ctx->parity_calc ^= 1;
 			}
+			ctx->uc_regs.timer.event = timer_event_rx_bit_wait;
+			timer_start(ctx);
 			break;
 		
 		case state_rx_parity:
-			ctx->parity_received = (*ctx->pin & ctx->data_pin) ? 1 : 0;
+			ctx->parity_received = (*ctx->uc_regs.io.pin & data_pin) ? 1 : 0;
+			ctx->uc_regs.timer.event = timer_event_rx_bit_wait;
+			timer_start(ctx);
 			break;
 		
 		case state_rx_stop:
 			process_data(ctx);
 			if(ctx->command_pending)
-				ctx->start_tx_fn();
+				start_tx(ctx);
 			else
 				ctx->state = state_idle;
+			timer_stop(ctx);
 			break;
 			
 		case state_tx_start:
-			SET_LOW(*ctx->port, ctx->data_pin);
+			SET_LOW(*ctx->uc_regs.io.port, data_pin);
 			ctx->parity_calc = 1;		/* because odd parity */
+			ctx->uc_regs.timer.event = timer_event_tx_bit_wait;
+			timer_start(ctx);
 			break;
 
 		case state_tx_d0:
@@ -216,132 +263,169 @@ void process_clock_edge(volatile ctx_t *ctx)
 		case state_tx_d7:
 			if(ctx->command & 0x1)
 			{
-				SET_HIGH(*ctx->port, ctx->data_pin);
+				SET_HIGH(*ctx->uc_regs.io.port, data_pin);
 				ctx->parity_calc ^= 1;
 			}
 			else
-				SET_LOW(*ctx->port, ctx->data_pin);
+				SET_LOW(*ctx->uc_regs.io.port, data_pin);
 			ctx->command >>= 1;
+			ctx->uc_regs.timer.event = timer_event_tx_bit_wait;
+			timer_start(ctx);
 			break;
 		
 		case state_tx_parity:
 			if(ctx->parity_calc)
-				SET_HIGH(*ctx->port, ctx->data_pin);
+				SET_HIGH(*ctx->uc_regs.io.port, data_pin);
 			else
-				SET_LOW(*ctx->port, ctx->data_pin);
+				SET_LOW(*ctx->uc_regs.io.port, data_pin);
+			ctx->uc_regs.timer.event = timer_event_tx_bit_wait;
+			timer_start(ctx);
 			break;
 		
 		case state_tx_stop:
-			SET_HIGH(*ctx->port, ctx->data_pin);
-			SET_INPUT(*ctx->ddr, ctx->data_pin);
+			SET_HIGH(*ctx->uc_regs.io.port, data_pin);
+			SET_INPUT(*ctx->uc_regs.io.ddr, data_pin);
+			ctx->uc_regs.timer.event = timer_event_tx_bit_wait;
+			timer_start(ctx);
 			break;
 			
 		case state_tx_ack:
-			*ctx->reg_status |= FLAG_TX;
+			*ctx->host_regs.status |= FLAG_TX;
 			ctx->state = state_idle;
-			HOST_IRQ_ASSERT_IF(*ctx->reg_int_cfg & FLAG_TX);
-				
+			HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_TX);
+			timer_stop(ctx);
+							
 			if(ctx->command_pending)
-				ctx->start_tx_fn();
+				start_tx(ctx);
 			break;
 	}
 }
 
 
 /*
-	ISR for INT0 - called on falling edges of channel A clock; handles incoming data.
+	handle_timer_event() - handle an overflow interrupt from a channel's timer.
 */
-ISR(INT0_vect)
+void handle_timer_event(volatile ctx_t *ctx)
 {
-	process_clock_edge(&ctx_a);
+	/* Disable timer */
+	SET_LOW(TIMSK, ctx->uc_regs.timer.irq_enable_bit);
+	SET_LOW(*ctx->uc_regs.timer.clk_reg, _BV(CS02) | _BV(CS01) | _BV(CS00));
+
+	switch(ctx->uc_regs.timer.event)
+	{
+		case timer_event_tx_rq:
+			/* Host has finished requesting attention from the device */
+			SET_LOW(*ctx->uc_regs.io.port, ctx->uc_regs.io.data_pin);
+			SET_OUTPUT(*ctx->uc_regs.io.ddr, ctx->uc_regs.io.data_pin);
+			SET_HIGH(*ctx->uc_regs.io.port, ctx->uc_regs.io.clk_pin);
+			SET_INPUT(*ctx->uc_regs.io.ddr, ctx->uc_regs.io.clk_pin);
+
+			/* Re-enable channel B clock interrupt */
+			SET_HIGH(GICR, ctx->irq_enable_bit);
+			break;
+
+		case timer_event_tx_clock_start:
+			/* Device did not start generating clock pulses in a timely fashion */
+			ctx->state = state_idle;
+			*ctx->host_regs.status |= FLAG_START_TIMEOUT;
+			HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_START_TIMEOUT);
+			break;
+
+		case timer_event_rx_bit_wait:
+			/* Device did not send the next bit of data in a timely fashion */
+			ctx->state = state_idle;
+			*ctx->host_regs.status |= FLAG_RX_TIMEOUT;
+			HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_RX_TIMEOUT);
+			break;
+
+		case timer_event_tx_bit_wait:
+			/* Device did not receive the next bit of data in a timely fashion */
+			ctx->state = state_idle;
+			*ctx->host_regs.status |= FLAG_TX_TIMEOUT;
+			HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_TX_TIMEOUT);
+			break;
+
+		case timer_event_cmd_response:
+			/* Device did not respond to command transmission in a timely fashion */
+			ctx->state = state_idle;
+			*ctx->host_regs.status |= FLAG_CMD_TIMEOUT;
+			HOST_IRQ_ASSERT_IF(*ctx->host_regs.int_cfg & FLAG_CMD_TIMEOUT);
+			break;
+		
+		case timer_event_none:		/* Should never be reached */
+			break;
+	}
+	ctx->uc_regs.timer.event = timer_event_none;
 }
 
 
 /*
-	ISR for INT1 - called on falling edges of channel B clock; handles incoming data.
+	start_tx() - start transmitting a byte on one of the PS/2 channels.
 */
-ISR(INT1_vect)
+void start_tx(volatile ctx_t *ctx)
 {
-	process_clock_edge(&ctx_b);
-}
-
-
-/*
-	ISR for timer 0 overflow - handles channel A data-transmission bus requests.
-*/
-ISR(TIMER0_OVF_vect)
-{
-	/* Disable timer 0 */
-	SET_LOW(TIMSK, _BV(TOIE0));
-	SET_LOW(TCCR0, _BV(CS02) | _BV(CS01) | _BV(CS00));
-
-	DATA_A_SET_LOW();			/* Pull the channel A  data line low	*/
-	DATA_A_SET_OUTPUT();		/* Set channel A data line as output	*/
-	CLK_A_SET_HIGH();			/* Pull the channel A clock line high	*/
-	CLK_A_SET_INPUT();			/* Set channel A clock as input			*/
-
-	/* Re-enable channel A clock interrupt */
-	CHAN_A_IRQ_ENABLE();
-}
-
-
-/*
-	ISR for timer 2 overflow - handles channel B data-transmission bus requests.
-*/
-ISR(TIMER2_OVF_vect)
-{
-	SET_LOW(TIMSK, _BV(TOIE2));
-	SET_LOW(TCCR2, _BV(CS02) | _BV(CS01) | _BV(CS00));	/* Check this */
+	SET_LOW(GICR, ctx->irq_enable_bit);
+	ctx->command_pending = 0;
 	
-	DATA_B_SET_LOW();		/* Pull the channel B data line low		*/
-	DATA_B_SET_OUTPUT();	/* Set channel B data line as output	*/
-	CLK_B_SET_HIGH();		/* Pull the channel B clock line high	*/
-	CLK_B_SET_INPUT();		/* Set channel B clock as input			*/
-
-	/* Re-enable channel B clock interrupt */
-	CHAN_B_IRQ_ENABLE();
-}
-
-
-/*
-	start_tx_chan_a() - start transmitting a byte on channel A.
-*/
-void start_tx_chan_a()
-{
-	CHAN_A_IRQ_DISABLE();
-	ctx_a.command_pending = 0;
-	
-	/* Start channel A command transmission */
-	CLK_A_SET_OUTPUT();				/* Set channel A clock line to output				*/
-	CLK_A_SET_LOW();				/* Pull PS/2 channel A clock line low				*/
+	/* Start channel A command transmission by pulling the PS/2 clock line low */
+	SET_OUTPUT(*ctx->uc_regs.io.ddr, ctx->uc_regs.io.clk_pin);
+	SET_LOW(*ctx->uc_regs.io.port, ctx->uc_regs.io.clk_pin);
 
 	/* Generate an interrupt after 150us */
-	TCNT0 = 106;					/* 106 = 256 - 150, ie. overflow after 150 counts	*/
-	SET_HIGH(TIMSK, _BV(TOIE0));	/* Enable interrupt on timer 0 overflow				*/
-	TCCR0 = _BV(CS01);				/* Set timer clock source to f(clk)/8 (=1MHz)		*/
-
-	ctx_a.state = state_tx_busrq;
+	ctx->uc_regs.timer.event = timer_event_tx_rq;
+	timer_start(ctx);
+	ctx->state = state_tx_busrq;
 }
 
 
 /*
-	start_tx_chan_b() - start transmitting a byte on channel B.
+	timer_start() - start a timer with a duration approriate for the specified event; cause an
+	interrupt to be raised when the timer expires.
 */
-void start_tx_chan_b()
+void timer_start(volatile ctx_t *ctx)
 {
-	CHAN_B_IRQ_DISABLE();
-	ctx_b.command_pending = 0;
-	
-	/* Start channel B command transmission */
-	CLK_B_SET_OUTPUT();				/* Set channel B clock line to output				*/
-	CLK_B_SET_LOW();				/* Pull PS/2 channel B clock line low				*/
-	
-	/* Generate an interrupt after 150us */
-	TCNT2 = 106;					/* 106 = 256 - 150, ie. overflow after 150 counts	*/
-	SET_HIGH(TIMSK, _BV(TOIE2));	/* Enable interrupt on timer 2 overflow				*/
-	TCCR2 = _BV(CS01);				/* Set timer clock source to f(clk)/8 (=1MHz)		*/
-	
-	ctx_b.state = state_tx_busrq;
+	/* NOTE: the counter calculations in this function assume f(clk) = 8MHz! */
+	switch(ctx->uc_regs.timer.event)
+	{
+		case timer_event_none:
+			break;
+
+		case timer_event_tx_rq:				/* 150us */
+			/* overflow after 150 counts @ f(clk)/8  */
+			*ctx->uc_regs.timer.count_reg = (u8) (256 - 150);
+			*ctx->uc_regs.timer.clk_reg = _BV(CS01);
+			break;
+		
+		case timer_event_rx_bit_wait:			/* 2ms */
+		case timer_event_tx_bit_wait:			/* 2ms */
+			/* overflow after 250 counts @ f(clk)/64 */
+			*ctx->uc_regs.timer.count_reg = (u8) (256 - 250);
+			*ctx->uc_regs.timer.clk_reg = _BV(CS01) | _BV(CS00);
+			break;
+		
+		case timer_event_tx_clock_start:	/* 15ms */
+			/* overflow after 118 counts @ f(clk)/1024 */
+			*ctx->uc_regs.timer.count_reg = (u8) (256 - 118);
+			*ctx->uc_regs.timer.clk_reg = _BV(CS02) | _BV(CS00);
+			break;
+
+		case timer_event_cmd_response:		/* 20ms */
+			/* overflow after 157 counts @ f(clk)/1024 */
+			*ctx->uc_regs.timer.count_reg = (u8) (256 - 157);
+			*ctx->uc_regs.timer.clk_reg = _BV(CS02) | _BV(CS00);
+			break;
+	}
+	SET_HIGH(TIMSK, ctx->uc_regs.timer.irq_enable_bit);
+}
+
+
+/*
+	timer_stop() - stop the timer started with start_timer().
+*/
+void timer_stop(volatile ctx_t *ctx)
+{
+	SET_LOW(TIMSK, ctx->uc_regs.timer.irq_enable_bit);
+	SET_LOW(*ctx->uc_regs.timer.clk_reg, _BV(CS02) | _BV(CS01) | _BV(CS00));
 }
 
 
@@ -373,13 +457,13 @@ int main(void)
 							if(ctx_a.fifo.rd == ctx_a.fifo.wr)
 							{
 								DO_READ_CYCLE(0);		/* FIFO is empty */
-								registers[REG_STATUS_A] &= ~FLAG_RX;
+								host_regs[REG_STATUS_A] &= ~FLAG_RX;
 							}
 							else
 							{
 								DO_READ_CYCLE(ctx_a.fifo.data[ctx_a.fifo.rd++]);
 								if(ctx_a.fifo.rd == ctx_a.fifo.wr)
-									registers[REG_STATUS_A] &= ~FLAG_RX;
+									host_regs[REG_STATUS_A] &= ~FLAG_RX;
 							}
 							sei();
 							break;
@@ -389,19 +473,19 @@ int main(void)
 							if(ctx_b.fifo.rd == ctx_b.fifo.wr)
 							{
 								DO_READ_CYCLE(0);		/* FIFO is empty */
-								registers[REG_STATUS_B] &= ~FLAG_RX;
+								host_regs[REG_STATUS_B] &= ~FLAG_RX;
 							}
 							else
 							{
 								DO_READ_CYCLE(ctx_b.fifo.data[ctx_b.fifo.rd++]);
 								if(ctx_b.fifo.rd == ctx_b.fifo.wr)
-									registers[REG_STATUS_B] &= ~FLAG_RX;
+									host_regs[REG_STATUS_B] &= ~FLAG_RX;
 							}
 							sei();
 							break;
 							
 						default:
-							DO_READ_CYCLE(registers[addr]);
+							DO_READ_CYCLE(host_regs[addr]);
 							break;
 					}
 				}
@@ -411,14 +495,15 @@ int main(void)
 					TERMINATE_BUS_CYCLE();
 					
 					cli();
-					registers[addr] = data;
+					host_regs[addr] = data;
 					switch(addr)
 					{
 						case REG_DATA_A:
 							/* Try to start channel A command transmission */
 							ctx_a.command = data;
+							host_regs[REG_STATUS_A] &= ~FLAG_TX;
 							if(ctx_a.state == state_idle)
-								start_tx_chan_a();
+								start_tx(&ctx_a);
 							else
 								ctx_a.command_pending = 1;
 							break;
@@ -426,16 +511,17 @@ int main(void)
 						case REG_DATA_B:
 							/* Try to start channel B command transmission */
 							ctx_b.command = data;
+							host_regs[REG_STATUS_B] &= ~FLAG_TX;
 							if(ctx_b.state == state_idle)
-								start_tx_chan_b();
+								start_tx(&ctx_b);
 							else
 								ctx_b.command_pending = 1;
 							break;
 						
 						case REG_STATUS_A:
 						case REG_STATUS_B:
-							if(!(registers[REG_STATUS_A] & registers[REG_INT_CFG_A]) && 
-							   !(registers[REG_STATUS_B] & registers[REG_INT_CFG_B]))
+							if(!(host_regs[REG_STATUS_A] & host_regs[REG_INT_CFG_A]) && 
+							   !(host_regs[REG_STATUS_B] & host_regs[REG_INT_CFG_B]))
 								HOST_IRQ_RELEASE();
 							break;
 							

@@ -46,20 +46,6 @@ typedef enum state
 } state_t;
 
 
-typedef enum irq_edge
-{
-	irq_edge_falling	= 0,
-	irq_edge_rising		= 1
-} irq_edge_t;
-
-
-typedef enum irq
-{
-	irq_clk_a		= 0,
-	irq_clk_b		= 1
-} irq_t;
-
-
 /* FIFO buffer structure - used for buffering received PS/2 data */
 typedef struct fifo
 {
@@ -69,27 +55,56 @@ typedef struct fifo
 } fifo_t;
 
 
+/* Timer events - specifies the duration of a timer, and the action to be taken on timeout */
+typedef enum timer_event
+{
+	timer_event_none = 0,
+	timer_event_tx_rq,
+	timer_event_tx_clock_start,
+	timer_event_rx_bit_wait,
+	timer_event_tx_bit_wait,
+	timer_event_cmd_response
+} timer_event_t;
+
+
 /* PS/2 channel context */
 typedef struct ctx
 {
 	state_t			state;
+	
+	struct
+	{
+		struct
+		{
+			vu8 *	port;
+			vu8 *	pin;
+			vu8 *	ddr;
+			u8		data_pin;
+			u8		clk_pin;
+		} io;
+		
+		struct  
+		{
+			vu8				*count_reg;
+			vu8				*clk_reg;
+			u8				irq_enable_bit;
+			timer_event_t	event;
+		} timer;
+	} uc_regs;
+	
+	struct
+	{
+		vu8 *		status;
+		vu8 *		int_cfg;
+	} host_regs;
 
-	vu8 *			port;
-	vu8 *			pin;
-	vu8 *			ddr;
-	u8				data_pin;
 	u8				data;
 	u8				parity_calc;
 	u8				parity_received;
-	u8				data_regnum;
 	u8				command;
 	u8				command_pending;
-	void			(*start_tx_fn)(void);
-	
-	vu8 *			reg_status;
-	vu8 *			reg_int_cfg;
-	
-	irq_t			irq;
+
+	u8				irq_enable_bit;
 	fifo_t			fifo;
 } ctx_t;
 
