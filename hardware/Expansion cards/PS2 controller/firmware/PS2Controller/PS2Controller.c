@@ -122,16 +122,17 @@ void init(void)
 	cli();
 
 	/* Configure ports */
-	DDRD			= PORTD_OUTPUTS;
 	PORTD			= PORTD_PULLUPS;
+	DDRD			= PORTD_OUTPUTS;
 
-	DDRC			= PORTC_OUTPUTS;
 	PORTC			= PORTC_PULLUPS;
+	DDRC			= PORTC_OUTPUTS;
 
-	DATA_BUS_DDR	= DATA_BUS_OUTPUTS;
 	DATA_BUS_PORT	= DATA_BUS_PULLUPS;
+	DATA_BUS_DDR	= DATA_BUS_OUTPUTS;
 
-	SET_HIGH(PORTD, nACK);
+	/* Initially disable power to both PS/2 channels */
+	SET_HIGH(PWR_PORT, nPWR_A | nPWR_B);
 
 	/* Disable timers */
 	TCCR0	= 0;
@@ -139,16 +140,13 @@ void init(void)
 	TCCR1B	= 0;
 	TCCR2	= 0;
 
-	/* Initially disable power to both PS/2 channels */
-	SET_HIGH(PWR_PORT, nPWR_A | nPWR_B);
+	debug_init();
 
 	/* Enable interrupts on falling edge of PS/2 clock inputs */
 	MCUCR = (MCUCR | _BV(ISC01)) & ~_BV(ISC00);
 	MCUCR = (MCUCR | _BV(ISC11)) & ~_BV(ISC10);
 
 	SET_HIGH(GICR, _BV(INT0) | _BV(INT1));
-
-	debug_init();
 
 	sei();
 }
@@ -161,8 +159,8 @@ void process_data(volatile ctx_t *ctx)
 {
 	if(ctx->parity_received == ctx->parity_calc)
 	{
-		ku8 data = ctx->data,
-			fifo_count = ctx->fifo.wr - ctx->fifo.rd;
+		ku8 data		= ctx->data,
+			fifo_count	= ctx->fifo.wr - ctx->fifo.rd;
 
 		/* Place received data in FIFO */
 		ctx->fifo.data[ctx->fifo.wr++] = data;

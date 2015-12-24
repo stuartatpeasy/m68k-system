@@ -67,7 +67,7 @@ PB0		ICP1			14		i/o		D8
 #define nID					_BV(0)		/* ID request input from host		*/
 
 #define PORTD_OUTPUTS		(nACK)
-#define PORTD_PULLUPS		(0)
+#define PORTD_PULLUPS		(nACK)
 
 /* Port C pins */
 #define nRESET				_BV(6)		/* nRESET input from host system	*/
