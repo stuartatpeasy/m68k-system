@@ -5,6 +5,8 @@
 	
 	
 	(c) Stuart Wallace <stuartw@atom.net>, November 2015.
+	
+	TODO: migrate to ATmega88.  Note: debugging code doesn't work as written on the mega88.
  */
 
 //#define WITH_DEBUGGING				/* Enable debugging */

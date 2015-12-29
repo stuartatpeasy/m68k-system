@@ -8,6 +8,7 @@
 #include <avr/io.h>
 //#include "debug.h"
 
+#ifdef WITH_DEBUGGING
 
 /*
 	debug_init() - initialise debug console.  NOTE: this configures PD1 and PD0 as serial IO lines.
@@ -67,3 +68,5 @@ void debug_puthexb(const char c)
 	debug_putc(hex[(c & 0xf0) >> 4]);
 	debug_putc(hex[c & 0x0f]);
 }
+
+#endif
