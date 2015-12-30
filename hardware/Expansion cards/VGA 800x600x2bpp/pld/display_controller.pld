@@ -76,12 +76,12 @@ Pin 14 = !FBUR;
 Pin 15 = !FBLR;
 Pin 16 = !FBUW;
 Pin 17 = !FBLW;
-Pin 18 = !PIXL;
-Pin 19 = HOSTL;
-Pin 20 = !PIXAEN;
-Pin 21 = !HOSTAEN;
-Pin 22 = !CTLCS;
-
+Pin 18 = !ACK;
+Pin 19 = !PIXL;
+Pin 20 = HOSTL;
+Pin 21 = !PIXAEN;
+Pin 22 = !HOSTAEN;
+Pin 23 = !CTLCS;
 
 /* Address buffer enables */
 HOSTAEN = !S2 & FBCS;
@@ -101,3 +101,7 @@ FBLW = HOSTAEN & LW;
 /* Frame buffer / controller chip selects */
 FBCS  = CS & !ID & !CTLADDR;
 CTLCS = CS & !ID & CTLADDR;
+
+ACK.d = LATCHEN & !S2 & (UR # LR # UW # LW);
+ACK.ar = CS;
+ACK.sp = ID;
