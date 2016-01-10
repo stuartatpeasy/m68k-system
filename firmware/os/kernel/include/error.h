@@ -28,4 +28,11 @@
 #define EDEVINITFAILED      (506)   /* Device initialisation failed                     */
 #define EDEVOPFAILED		(507)	/* Command sent to hardware device failed			*/
 
+#define ENOTEXE             (600)   /* Not an executable file                           */
+#define EEXEBADHDR          (601)   /* Bad header in executable file                    */
+#define EEXEENDIAN          (602)   /* Unsupported endianness in executable file        */
+#define EEXEBADARCH         (603)   /* Unsupported machine architecture                 */
+#define EEXENOSECTION       (604)   /* Required section is missing from executable file */
+#define EEXEBADSECTION      (605)   /* Bad section in executable file                   */
+
 #endif

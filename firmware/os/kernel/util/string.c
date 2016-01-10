@@ -80,10 +80,15 @@ ks8 *kstrerror(ks32 errnum)
         case EBADSBLK:          return "Bad superblock";
         case EDEVINITFAILED:    return "Device initialisation failed";
 		case EDEVOPFAILED:		return "Command sent to hardware device failed";
+        case ENOTEXE:           return "Not an executable file";
+        case EEXEBADHDR:        return "Bad header in executable file";
+        case EEXEENDIAN:        return "Unsupported endianness in executable file";
+        case EEXEBADARCH:       return "Unsupported machine architecture";
+        case EEXENOSECTION:     return "Required section is missing from executable file";
+        case EEXEBADSECTION:    return "Bad section in executable file";
         default:                return "Unrecognised error code";
     }
 }
-
 
 /*
     strn_trim_cpy()- copy a string from src, a buffer of length len, into dest.  Trim whitespace

@@ -9,6 +9,7 @@
 
 #include <kernel/elf.h>
 #include <kernel/include/byteorder.h>
+#include <kernel/include/error.h>
 #include <klibc/errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,57 +38,31 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
 	if((ehdr->e_ident[EI_MAG0] != ELFMAG0) || (ehdr->e_ident[EI_MAG1] != ELFMAG1) ||
 		(ehdr->e_ident[EI_MAG2] != ELFMAG2) || (ehdr->e_ident[EI_MAG3] != ELFMAG3))
 	{
-		printf("Bad ELF header: %02x %02x %02x %02x\n",
-				ehdr->e_ident[EI_MAG0], ehdr->e_ident[EI_MAG1],
-				ehdr->e_ident[EI_MAG2], ehdr->e_ident[EI_MAG3]);
-
-		return EINVAL;
+	    return EEXEBADHDR;
 	}
 
 	/* Verify that this is a 32-bit ELF file */
 	if(ehdr->e_ident[EI_CLASS] != ELFCLASS32)
-	{
-		puts("This is not a 32-bit ELF file");
-		return EINVAL;
-	}
+        return EEXEBADARCH;
 
 	/* Get the endianness of the file.  We only support big-endian files. */
-	if(ehdr->e_ident[EI_DATA] == ELFDATA2LSB)
-	{
-		puts("This is a little-endian file");
-		return EINVAL;
-	}
-	else if(ehdr->e_ident[EI_DATA] != ELFDATA2MSB)
-	{
-		printf("Invalid endianness field value %02x\n", ehdr->e_ident[EI_DATA]);
-		return EINVAL;
-	}
+	if(ehdr->e_ident[EI_DATA] != ELFDATA2MSB)
+        return EEXEENDIAN;
 
 	/* Verify that this is an executable image (vs. an object file, etc.) */
 	if(BE2N16(ehdr->e_type) != ET_EXEC)
-	{
-		printf("This is not an executable file (e_type=%d)\n", BE2N16(ehdr->e_type));
-		return EINVAL;
-	}
+        return ENOTEXE;
 
 	/* Verify that this file matches our architecture */
-	if(BE2N16(ehdr->e_machine) != EM_68K)
-	{
-		printf("This is not a m68k-family executable (e_machine=%d)\n", BE2N16(ehdr->e_machine));
-		return EINVAL;
-	}
-
-	if((BE2N32(ehdr->e_flags) & EF_M68K_ARCH_MASK) != EF_M68K_M68000)
-	{
-		printf("This is not an mc68000 executable (e_flags=%08x)\n", BE2N32(ehdr->e_flags));
-		return EINVAL;
-	}
+	/* FIXME: architecture-specific */
+	if((BE2N16(ehdr->e_machine) != EM_68K) ||
+        ((BE2N32(ehdr->e_flags) & EF_M68K_ARCH_MASK) != EF_M68K_M68000))
+    {
+        return EEXEBADARCH;
+    }
 
 	if(!ehdr->e_phoff)
-	{
-		puts("Image has no program header table");
-		return EINVAL;
-	}
+        return EEXENOSECTION;   /* Program header table missing */
 
 	/* Parse section headers */
 	shdr = (Elf32_Shdr *) ((u8 *) buf + BE2N32(ehdr->e_shoff));
@@ -95,10 +70,7 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
 
 	/* Check that the section headers don't run past the end of the file */
 	if((u8 *) &shdr[nshdr] > ((u8 *) buf + len))
-	{
-		printf("Invalid section header table offset %08x\n", (u32) ((u8 *) shdr - (u8 *) buf));
-		return EINVAL;
-	}
+        return EEXEBADSECTION;
 
 	/* Search the section headers for the string table */
 	for(strtab = NULL, sh = shdr; sh < &shdr[nshdr]; ++sh)
@@ -106,10 +78,7 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
 			strtab = (s8 *) buf + BE2N32(sh->sh_offset);		/* Found the string table */
 
 	if(strtab == NULL)
-	{
-		puts("Couldn't find string table in executable image");
-		return EINVAL;
-	}
+        return EEXENOSECTION;   /* String table missing */
 
 	/* Search the section headers for program sections */
 	vaddr_start = 0xffffffff;
