@@ -43,6 +43,9 @@ mem_extent_t *g_mem_extents_end;
     for_each_mem_extent(p)                                                  \
         if(((fl) == MEM_EXTENT_MASK_ANY) || ((p->flags & (fl)) == (fl)))
 
+/* Helper macros */
+#define MEM_EXTENT_IS_RAM(ext)  ((ext)->flags & MEM_EXTENT_RAM)
+
 mem_extent_t *mem_get_largest_extent(ku32 flags);
 void mem_zero_extents(ku32 flags);
 u32 mem_get_total_size(ku32 flags);

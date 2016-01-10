@@ -19,6 +19,7 @@ void mc68000_dump_regs(const regs_t *regs);
 void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const aef);
 const char * mc68000_dump_ssw(ku16 ssw);
 const char * mc68000_dump_fc(ku16 fc);
+void mc68000_try_stack_dump(ku32 sp, u32 nbytes);
 
 
 char g_errsym[128];
@@ -105,7 +106,7 @@ void cpu_default_irq_handler(ku32 irql, void *data)
 
     cpu_disable_interrupts();
 
-	printf("\nUnhandled exception in process %d: ", proc_get_pid());
+	printf("\n\nUnhandled exception in process %d: ", proc_get_pid());
 	if((irql >= 25) && (irql <= 31))
 		printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
 	else if((irql >= 32) && (irql <= 47))
@@ -148,6 +149,12 @@ void cpu_default_irq_handler(ku32 irql, void *data)
 
     putchar('\n');
     mc68000_dump_regs(regs);
+
+    puts("\n-- Supervisor stack --");
+    mc68000_try_stack_dump(regs->a[7], 16);
+
+    puts("\n-- User stack --");
+    mc68000_try_stack_dump(regs->usp, 16);
 
 	cpu_halt();
 }
@@ -367,11 +374,44 @@ void mc68000_dump_regs(const regs_t *regs)
            "D4=%08x  D5=%08x  D6=%08x  D7=%08x\n"
            "A0=%08x  A1=%08x  A2=%08x  A3=%08x\n"
            "A4=%08x  A5=%08x  A6=%08x  A7=%08x\n"
-           "                                      USP=%08x\n\n"
+           "                                      USP=%08x\n"
            "PC=%08x  %s\nSR=%04x  [%s]\n",
            regs->d[0], regs->d[1], regs->d[2], regs->d[3],
            regs->d[4], regs->d[5], regs->d[6], regs->d[7],
            regs->a[0], regs->a[1], regs->a[2], regs->a[3],
            regs->a[4], regs->a[5], regs->a[6], regs->a[7], regs->usp,
            regs->pc, g_errsym, regs->sr, mc68000_dump_status_register(regs->sr));
+}
+
+
+/*
+    mc68000_try_stack_dump() - attempt to dump nwords words, starting at the address in sp.
+    Fail if sp is misaligned, or if the requested range doesn't lie within a single, valid
+    memory extent.
+*/
+void mc68000_try_stack_dump(ku32 sp, ku32 nwords)
+{
+    u32 *psp;
+    mem_extent_t *extent;
+
+    if(sp & 3)
+    {
+        puts("(SP misaligned)");
+        return;
+    }
+
+    psp = (u32 *) sp;
+
+    if(nwords)
+    {
+        extent = mem_get_containing_extent(psp + nwords);
+        if((extent == NULL) || !MEM_EXTENT_IS_RAM(extent)
+           || (extent != mem_get_containing_extent(psp)))
+        {
+            puts("(SP invalid)");
+            return;
+        }
+
+        dump_hex(psp, sizeof(u32), 0, nwords * sizeof(u32));
+    }
 }
