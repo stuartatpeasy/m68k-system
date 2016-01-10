@@ -10,7 +10,7 @@ DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES:=	cpu/$(CPU)/$(CPU).c \
-			driver/ds17485.c driver/encx24j600.c driver/mc68681.c \
+			driver/ds17485.c driver/encx24j600.c driver/mc68681.c driver/ps2controller.c \
 			kernel/device/ata.c kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
 			kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
@@ -111,6 +111,10 @@ driver/encx24j600.o: \
 
 driver/mc68681.o: \
 	driver/mc68681.c driver/mc68681.h kernel/include/defs.h kernel/include/error.h \
+	kernel/include/types.h
+
+driver/ps2controller.o: \
+	driver/ps2controller.c driver/ps2controller.h kernel/include/defs.h kernel/include/error.h \
 	kernel/include/types.h
 
 kernel/boot.o: \

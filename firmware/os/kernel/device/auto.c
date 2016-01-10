@@ -11,6 +11,7 @@
 
 /* Include the files containing drivers appearing in driver_map[], below */
 #include <driver/encx24j600.h>
+#include <driver/ps2controller.h>
 
 
 typedef struct driver_map_entry
@@ -33,6 +34,15 @@ const driver_map_entry_t driver_map[] =
         .name       = "eth",
         .human_name = "ENCx24J600 Ethernet controller",
         .init_fn    = encx24j600_init
+    },
+
+    {
+        .hw_id      = 0x82,
+        .type       = DEV_TYPE_CHARACTER,
+        .subtype    = DEV_SUBTYPE_NONE,
+        .name       = "ps2",
+        .human_name = "PS/2 port controller",
+        .init_fn    = ps2controller_init
     }
 };
 

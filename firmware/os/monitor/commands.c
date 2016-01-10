@@ -383,8 +383,8 @@ MONITOR_CMD_HANDLER(free)
     UNUSED(num_args);
     UNUSED(args);
 
-	printf("kernel: %9d bytes free\n"
-           "  user: %9d bytes free\n", kfreemem(), ufreemem());
+	printf("kernel: %6dKB free\n"
+           "  user: %6dKB free\n", kfreemem() >> 10, ufreemem() >> 10);
 	return SUCCESS;
 }
 
@@ -924,6 +924,39 @@ MONITOR_CMD_HANDLER(test)
         printf("ARP resolving address %u\n", ip);
 */
 //        arp_lookup_ip(ip, iface, &macaddr);
+    }
+    else if(testnum == 4)
+    {
+        u8 i = 0;
+        vu8 * const kbdata = (vu8 *) 0xa00000;
+        vu8 * const status = (vu8 *) 0xa00002;
+        while((++i < 10) && (*status & 0x80))
+            printf("ps2_a: %02x\n", *kbdata);
+    }
+    else if(testnum == 5)
+    {
+        /* Try to switch on keyboard LEDs */
+        vu8 * const kbdata   = (vu8 *) 0xa00000;
+        vu8 * const kbstatus = (vu8 *) 0xa00002;
+
+        *kbstatus = 0;
+        *kbdata = 0xed;
+
+        // wait for command TX to complete
+        while(!(*kbstatus & 0x40))
+            ;
+
+        // wait for response byte
+        while(!(*kbstatus & 0x80))
+            ;
+
+        printf("response: %02x\n", *kbdata);
+
+
+        *kbstatus = 0;
+        *kbdata = 0x01;
+        while(!(*kbstatus & 0x40))
+            ;
     }
 
     return SUCCESS;

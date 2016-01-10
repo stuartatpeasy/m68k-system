@@ -105,6 +105,9 @@ s32 plat_dev_enumerate()
 
 /*
     expansion_init() - identify and initialise devices in expansion card slots
+
+    FIXME: bus error if a peripheral asserts nPD but does not respond to an ID request.
+    Use an alternative bus error handler when running the ID request cycle.
 */
 void expansion_init()
 {
@@ -128,7 +131,6 @@ void expansion_init()
 
             /* Negate nEID */
             mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_EXP_ID));
-
 
             printf("slot %d (%x-%x, irq %u): ", i, (u32) base_addr,
                     (u32) base_addr + LAMBDA_EXP_ADDR_LEN - 1, LAMBDA_EXP_IRQ(i));
