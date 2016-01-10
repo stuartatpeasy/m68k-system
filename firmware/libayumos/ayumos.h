@@ -7,12 +7,14 @@
 
 /* System call numbers */
 /* TODO: read these from the os/ dir, instead of having a copy of them here */
-#define SYS_exit    	        0
-#define SYS_console_putchar     1
-#define SYS_console_getchar	    2
-#define SYS_leds                3
-#define SYS_yield				4
+#define SYS_invalid				0
+#define SYS_exit    	        1
+#define SYS_console_putchar     2
+#define SYS_console_getchar	    3
+#define SYS_leds                4
+#define SYS_yield				5
 
+#define sys_invalid()					syscall0(SYS_invalid)
 #define sys_exit(arg1)					syscall1(SYS_exit, (arg1))
 #define sys_console_getchar()			syscall0(SYS_console_getchar)
 #define sys_console_putchar(arg1)		syscall1(SYS_console_putchar, (arg1))

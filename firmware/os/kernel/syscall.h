@@ -24,6 +24,7 @@ typedef struct syscall_table_entry
 const syscall_table_entry_t g_syscalls[MAX_SYSCALL + 1];
 
 
+s32 syscall_invalid();
 s32 syscall_console_putchar(u32 c);
 s32 syscall_console_getchar();
 s32 syscall_leds(u32 state);

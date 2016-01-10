@@ -131,9 +131,9 @@ proc_t *proc_current()
 
 
 /*
-    proc_do_exit() - terminate the current process and clean up.
+    proc_destroy() - terminate the current process and clean up.
 */
-void proc_do_exit(s32 exit_code)
+void proc_destroy(s32 exit_code)
 {
     proc_t * const g_exiting = g_current_proc;
 

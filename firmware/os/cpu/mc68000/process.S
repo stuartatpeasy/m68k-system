@@ -18,8 +18,6 @@
 .include "cpu/mc68000/macros.S"
 
 .text
-.global syscall_yield
-.global syscall_exit
 .global cpu_preempt
 .global cpu_switch_process
 
@@ -37,56 +35,36 @@
 
     "Other junk" refers to additional data stacked for bus and address error exceptions.
 
-    cpu_preempt is used as the timer interrupt handler.  syscall_yield is the handler for the TRAP
-    call used to yield a time-slice.  cpu_preempt saves CPU context in the proc_t structure pointed
-    to by g_current_proc, then calls the sched() function.  That function decides which process to
-    run next, and updates g_current_proc accordingly.  cpu_preempt then restores CPU state for the
-    incoming process and resumes execution.
-
-    syscall_yield handles the "yield" system call.  It unwinds the syscall_dispatcher stack frame,
-    restoring trashed registers, then falls through to cpu_preempt.
+    cpu_preempt is used as the timer interrupt handler.  It saves CPU context in the proc_t
+    structure pointed to by g_current_proc, then calls the sched() function.  That function decides
+    which process to run next, and updates g_current_proc accordingly.  cpu_preempt then restores
+    CPU state for the incoming process and resumes execution.
 */
 
-syscall_yield:
-    addq.l      #4, sp
-    movem.l     sp@+, d1/a0-a2
-
-    /* fall through */
-
 cpu_preempt:
+    DISABLE_INTERRUPTS
     DO_CONTEXT_SWITCH
-
+    ENABLE_INTERRUPTS
     rte
 
 
-syscall_exit:
+/*
+    cpu_switch_process switches to a new process context by:
+        - converting the stack frame (which contains only the return address for the call to
+          cpu_switch_process) into a short-form exception stack frame,
+        - switching context using the DO_CONTEXT_SWITCH macro (which modifies the exception stack
+          frame),
+        - issuing an RTE to begin execution of the incoming process.
+*/
+cpu_switch_process:
     DISABLE_INTERRUPTS
 
-    /*
-        The syscall_dispatcher stack frame consists of four saved registers d1/a0-a2 (16 bytes),
-        the one argument to syscall_exit (4 bytes) and the return address for the jsr used to invoke
-        the syscall handler (4 bytes).  The total stack frame size is therefore 24 bytes.
-    */
-    adda.w      #24, sp             /* Unwind the syscall_dispatcher stack frame */
-    move.l      sp@(-20), sp@       /* Reposition exit() arg immediately below exception frame */
-
-    jsr         proc_do_exit
-
-    addq.l      #4, sp
-
-    RESTORE_CONTEXT
-    ENABLE_INTERRUPTS
-
-    rte
-
-
-cpu_switch_process:
     move.w      sr, sp@(-4)
-    subq.l      #2, sp
-    move.l      sp@(2), sp@
-    subq.l      #2, sp
-    clr.w       sp@(6)
+    move.l      sp@, sp@(-2)
+    clr.w       sp@(2)
+    subq.l      #4, sp
 
     DO_CONTEXT_SWITCH
+    ENABLE_INTERRUPTS
 
     rte

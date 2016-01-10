@@ -10,9 +10,12 @@
 #include <cpu/mc68000/regs.h>
 #include <kernel/syscalls.h>
 #include <klibc/errors.h>
+.include "cpu/mc68000/macros.S"
 
 .text
 .global syscall_dispatcher
+.global syscall_exit
+.global syscall_yield
 
 /*
     On entry, the stacks will look like this:
@@ -51,10 +54,11 @@ syscall_dispatcher:
         /* Retrieve the requested syscall number from the stack, and check that it is valid */
         move.l      a0@(4), d0
         cmpi.l      #MAX_SYSCALL, d0
-        bgt         syscall_handler_invalid_syscall
+        ble         sd0
+        clr.l       d0          /* Invalid syscall num: force it to 0 (=syscall_invalid) */
 
         /* Calculate the offset of the call entry in syscall_table */
-        lea.l       g_syscalls, a1
+sd0:    lea.l       g_syscalls, a1
         lsl.l       #3, d0
         adda.l      d0, a1
 
@@ -91,6 +95,43 @@ sdL3:   movea.l     a2, sp
         /* syscall retval will be in d0 */
         rte
 
-syscall_handler_invalid_syscall:
-		moveq.l	    #-ENOSYS, d0
-		rte
+
+/*
+    syscall_yield unwinds the syscall_dispatcher stack frame and performs a context switch.  When
+    control returns to syscall yield (at the start of the next time-slice for the yielding process)
+    syscall_yield returns 0.  It is necessary to unwind the syscall_dispatcher stack frame because
+    DO_CONTEXT_SWITCH requires a short-form exception stack frame to be at the top of the stack.
+*/
+syscall_yield:
+    DISABLE_INTERRUPTS
+    addq.l      #4, sp
+    movem.l     sp@+, d1/a0-a2
+    clr.l       d0              /* syscall_yield() always returns 0 */
+
+    DO_CONTEXT_SWITCH
+    ENABLE_INTERRUPTS
+    rte
+
+
+/*
+
+*/
+syscall_exit:
+    DISABLE_INTERRUPTS
+
+    /*
+        The syscall_dispatcher stack frame consists of four saved registers d1/a0-a2 (16 bytes),
+        the one argument to syscall_exit (4 bytes) and the return address for the jsr used to invoke
+        the syscall handler (4 bytes).  The total stack frame size is therefore 24 bytes.
+    */
+    adda.w      #24, sp             /* Unwind the syscall_dispatcher stack frame */
+    move.l      sp@(-20), sp@       /* Reposition exit() arg immediately below exception frame */
+
+    jsr         proc_destroy
+
+    addq.l      #4, sp
+
+    RESTORE_CONTEXT
+    ENABLE_INTERRUPTS
+
+    rte

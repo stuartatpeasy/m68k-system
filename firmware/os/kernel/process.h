@@ -71,7 +71,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img
 
 pid_t proc_get_pid();
 proc_t *proc_current();
-void proc_do_exit(s32 exit_code);
+void proc_destroy(s32 exit_code);
 void proc_sleep();
 void proc_sleep_until(s32 when);
 void proc_sleep_for(s32 secs);

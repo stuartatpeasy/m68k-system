@@ -20,12 +20,22 @@
 */
 const syscall_table_entry_t g_syscalls[MAX_SYSCALL + 1] =
 {
+    {0,     syscall_invalid},
     {1,     syscall_exit},              /* Implemented in arch-specific asm */
     {1,     syscall_console_putchar},
     {0,     syscall_console_getchar},
     {1,     syscall_leds},
     {0,     syscall_yield}
 };
+
+
+/*
+    syscall_invalid() - handles all calls specifying an invalid syscall number.
+*/
+s32 syscall_invalid()
+{
+    return -ENOSYS;
+}
 
 
 /*

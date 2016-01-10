@@ -107,11 +107,9 @@
     the context of the new process.
 */
 .macro DO_CONTEXT_SWITCH
-    DISABLE_INTERRUPTS
     SAVE_CONTEXT
 
     jsr         sched       /* Choose next process to run, update g_current_proc accordingly */
 
     RESTORE_CONTEXT
-    ENABLE_INTERRUPTS
 .endm
