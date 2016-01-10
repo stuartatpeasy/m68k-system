@@ -74,40 +74,62 @@
 /*
     DS17485 register numbers
 */
-#define DS17485_SECONDS                 (0x00)
-#define DS17485_SECONDS_ALARM           (0x01)
-#define DS17485_MINUTES                 (0x02)
-#define DS17485_MINUTES_ALARM           (0x03)
-#define DS17485_HOURS                   (0x04)
-#define DS17485_HOURS_ALARM             (0x05)
-#define DS17485_DAY_OF_WEEK             (0x06)
-#define DS17485_DAY                     (0x07)
-#define DS17485_MONTH                   (0x08)
-#define DS17485_YEAR                    (0x09)
+enum DS17485_Reg
+{
+    DS17485_SECONDS             = 0x00,
+    DS17485_SECONDS_ALARM       = 0x01,
+    DS17485_MINUTES             = 0x02,
+    DS17485_MINUTES_ALARM       = 0x03,
+    DS17485_HOURS               = 0x04,
+    DS17485_HOURS_ALARM         = 0x05,
+    DS17485_DAY_OF_WEEK         = 0x06,
+    DS17485_DAY                 = 0x07,
+    DS17485_MONTH               = 0x08,
+    DS17485_YEAR                = 0x09,
 
-#define DS17485_REG_A                   (0x0A)
-#define DS17485_REG_B                   (0x0B)
-#define DS17485_REG_C                   (0x0C)
-#define DS17485_REG_D                   (0x0D)
+    DS17485_REG_A               = 0x0A,
+    DS17485_REG_B               = 0x0B,
+    DS17485_REG_C               = 0x0C,
+    DS17485_REG_D               = 0x0D,
 
-#define DS17485_MODEL_NUMBER            (0x40)
+    DS17485_MODEL_NUMBER        = 0x40,
 
-#define DS17485_SERIAL_NUM_1            (0x41)
-#define DS17485_SERIAL_NUM_2            (0x42)
-#define DS17485_SERIAL_NUM_3            (0x43)
-#define DS17485_SERIAL_NUM_4            (0x44)
-#define DS17485_SERIAL_NUM_5            (0x45)
-#define DS17485_SERIAL_NUM_6            (0x46)
+    DS17485_SERIAL_NUM_1        = 0x41,
+    DS17485_SERIAL_NUM_2        = 0x42,
+    DS17485_SERIAL_NUM_3        = 0x43,
+    DS17485_SERIAL_NUM_4        = 0x44,
+    DS17485_SERIAL_NUM_5        = 0x45,
+    DS17485_SERIAL_NUM_6        = 0x46,
 
-#define DS17485_REG_4A                  (0x4A)
-#define DS17485_REG_4B                  (0x4B)
+    DS17485_REG_4A              = 0x4A,
+    DS17485_REG_4B              = 0x4B,
 
-#define DS17485_CENTURY                 (0x48)
-#define DS17485_DATE_ALARM              (0x49)
+    DS17485_CENTURY             = 0x48,
+    DS17485_DATE_ALARM          = 0x49,
 
-#define DS17485_EXTRAM_LSB              (0x50)
-#define DS17485_EXTRAM_MSB              (0x51)
-#define DS17485_EXTRAM_DATA             (0x53)
+    DS17485_EXTRAM_LSB          = 0x50,
+    DS17485_EXTRAM_MSB          = 0x51,
+    DS17485_EXTRAM_DATA         = 0x53
+};
+
+/* Square-wave output frequencies (-> DS17485_REG_A[3-0]) */
+enum DS17485_SqwFreq
+{
+    DS17485_SQW_NONE            = 0,
+    DS17485_SQW_2HZ             = 15,
+    DS17485_SQW_4HZ             = 14,
+    DS17485_SQW_8HZ             = 13,
+    DS17485_SQW_16HZ            = 12,
+    DS17485_SQW_32HZ            = 11,
+    DS17485_SQW_64HZ            = 10,
+    DS17485_SQW_128HZ           = 2,
+    DS17485_SQW_256HZ           = 1,
+    DS17485_SQW_512HZ           = 7,
+    DS17485_SQW_1024HZ          = 6,
+    DS17485_SQW_2048HZ          = 5,
+    DS17485_SQW_4096HZ          = 4,
+    DS17485_SQW_8192HZ          = 3,
+};
 
 
 /* Register A bits */
@@ -115,10 +137,9 @@
 #define DS17485_DV2             BIT(6)  /* 0 = enable countdown chain; 1 = reset if DV1 */
 #define DS17485_DV1             BIT(5)  /* Oscillator enable                            */
 #define DS17485_DV0             BIT(4)  /* Register bank select: 0 = original, 1 = ext. */
-#define DS17485_RS3             BIT(3)  /* } Square-wave output rate select             */
-#define DS17485_RS2             BIT(2)  /* } see data sheet for frequencies             */
-#define DS17485_RS1             BIT(1)  /* }                                            */
-#define DS17485_RS0             BIT(0)  /* }                                            */
+
+#define DS17485_REG_A_RS_MASK   (0x0f)  /* } Rate-select bit-mask / shift count         */
+#define DS17485_REG_A_RS_SHIFT  (0)     /* }                                            */
 
 /* Register B bits */
 #define DS17485_SET             BIT(7)  /* 1 = Inhibit update transfers during init.    */
@@ -168,6 +189,7 @@
     Function declarations
 */
 s32 ds17485_init(dev_t * const dev);
+void ds17485_irq(ku32 irql, void *data);
 s32 ds17485_rtc_init(dev_t * const dev);
 s32 ds17485_user_ram_init(dev_t * const dev);
 s32 ds17485_ext_ram_init(dev_t * const dev);

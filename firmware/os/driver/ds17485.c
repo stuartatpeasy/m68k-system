@@ -8,6 +8,7 @@
 */
 
 #include <driver/ds17485.h>
+#include <kernel/cpu.h>
 #include <kernel/util/kutil.h>
 
 
@@ -16,12 +17,24 @@
 */
 s32 ds17485_rtc_init(dev_t * const dev)
 {
+    void * const base_addr = dev->base_addr;
+    u8 reg_a_val;
+
     dev->read = ds17485_rtc_read;
     dev->write = ds17485_rtc_write;
     dev->len = sizeof(rtc_time_t);
     dev->block_size = 1;
 
     dev->data = dev->parent->data;
+
+    /* Configure and enable 2Hz periodic interrupt */
+    cpu_irq_add_handler(dev->irql, dev, ds17485_irq);
+
+    reg_a_val = DS17485_REG_READ(base_addr, DS17485_REG_A) & ~DS17485_REG_A_RS_MASK;
+    reg_a_val |= DS17485_SQW_2HZ << DS17485_REG_A_RS_SHIFT;
+    DS17485_REG_WRITE(base_addr, DS17485_REG_A, reg_a_val);
+
+    DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_PIE);
 
     return SUCCESS;
 }
@@ -68,16 +81,16 @@ s32 ds17485_init(dev_t * const dev)
 
     /*
         Write register A:
-            UIP   = 0       (ignored; read only)
-            DV2   = 0       Enable countdown chain
-            DV1   = 1       Oscillator on, VCC power-up state
-            DV0   = 1       Select extended register bank
-            RS3   = 0       }
-            RS2   = 0       } disable periodic interrupts;
-            RS1   = 0       } disable square-wave output
-            RS0   = 0       }
+            UIP      = 0    (ignored; read only)
+            DV2      = 0    Enable countdown chain
+            DV1      = 1    Oscillator on, VCC power-up state
+            DV0      = 0    Select standard register bank
+            RS[3..0] = [x]  Set rate-select bits for 2Hz square wave / periodic interrupt
     */
-    DS17485_REG_WRITE(base_addr, DS17485_REG_A, DS17485_DV1 | DS17485_DV0);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_A, DS17485_DV1);
+
+    /* Set up extended registers */
+    DS17485_SELECT_EXT_REG(base_addr);
 
     /* Write register 4A: enable extended RAM burst mode */
     DS17485_REG_WRITE(base_addr, DS17485_REG_4A, DS17485_BME);
@@ -85,8 +98,7 @@ s32 ds17485_init(dev_t * const dev)
     /* Write register 4B: enable RAM clear input pin; select 12.5pF crystal load capacitance */
     DS17485_REG_WRITE(base_addr, DS17485_REG_4B, DS17485_RCE | DS17485_CS);
 
-    /* Write register A: select standard registers */
-    DS17485_REG_WRITE(base_addr, DS17485_REG_A, DS17485_DV1);
+    DS17485_SELECT_STD_REG(base_addr);  /* Switch back to standard registers */
 
     /*
         Write register B.  We may end up changing the data format with this write, so it's
@@ -102,14 +114,35 @@ s32 ds17485_init(dev_t * const dev)
             24/12 = 1       Use 24h format
             DSE   = 0       Disable daylight saving time
     */
-    DS17485_REG_WRITE(base_addr, DS17485_REG_B, DS17485_DM | DS17485_2412 | DS17485_SET);
-
-    /* Second write - same as first, but with SET bit negated. */
     DS17485_REG_WRITE(base_addr, DS17485_REG_B, DS17485_DM | DS17485_2412);
 
     ds17485_force_valid_time(dev);
 
     return SUCCESS;
+}
+
+
+/*
+    ds17485_irq() - interrupt service routine
+*/
+void ds17485_irq(ku32 irql, void *data)
+{
+    dev_t * const dev = (dev_t *) data;
+    void * const base_addr = dev->base_addr;
+    UNUSED(irql);
+
+    /* Read register C to clear the interrupt conditions */
+    ku8 intflags = DS17485_REG_READ(base_addr, DS17485_REG_C);
+
+    if(intflags & DS17485_PF)
+    {
+        /* Periodic interrupt */
+    }
+
+    if(intflags & DS17485_AF)
+    {
+        /* Alarm interrupt */
+    }
 }
 
 
