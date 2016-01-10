@@ -93,6 +93,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="driver/mc68681.h" />
+		<Unit filename="driver/ps2controller.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="driver/ps2controller.h" />
 		<Unit filename="global.mk" />
 		<Unit filename="kernel/boot.c">
 			<Option compilerVar="CC" />
