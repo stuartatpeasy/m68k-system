@@ -318,14 +318,14 @@ enum ENC624J600_PHYReg
 #define ECON1_RXEN          (8)         /* RX enable                                (RW-0) */
 
 /* ECON2 register */
-#define ECON2_ETHEN         (7)        /* Ethernet enable                          (RW-1) */
-#define ECON2_STRCH         (6)        /* LED stretching enable                    (RW-1) */
-#define ECON2_TXMAC         (5)        /* Automatically transmit MAC address       (RW-0) */
-#define ECON2_SHA1MD5       (4)        /* SHA-1/MD5 hash control                   (RW-0) */
-#define ECON2_AUTOFC        (15)         /* Automatic flow control enable            (RW-0) */
-#define ECON2_TXRST         (14)         /* Transmit logic reset                     (RW-0) */
-#define ECON2_RXRST         (13)         /* Receive logic reset                      (RW-0) */
-#define ECON2_ETHRST        (12)         /* Master Ethernet reset                    (RW-0) */
+#define ECON2_ETHEN         (7)         /* Ethernet enable                          (RW-1) */
+#define ECON2_STRCH         (6)         /* LED stretching enable                    (RW-1) */
+#define ECON2_TXMAC         (5)         /* Automatically transmit MAC address       (RW-0) */
+#define ECON2_SHA1MD5       (4)         /* SHA-1/MD5 hash control                   (RW-0) */
+#define ECON2_AUTOFC        (15)        /* Automatic flow control enable            (RW-0) */
+#define ECON2_TXRST         (14)        /* Transmit logic reset                     (RW-0) */
+#define ECON2_RXRST         (13)        /* Receive logic reset                      (RW-0) */
+#define ECON2_ETHRST        (12)        /* Master Ethernet reset                    (RW-0) */
 
 #define ECON2_COCON_MASK    (0x000f)    /* CLKOUT frequency control bits mask    (RW-1011) */
 #define ECON2_COCON_SHIFT   (0)
