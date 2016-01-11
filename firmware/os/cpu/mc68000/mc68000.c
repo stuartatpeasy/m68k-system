@@ -101,7 +101,8 @@ void mc68000_address_error_handler(void *dummy)
 */
 void cpu_default_irq_handler(ku32 irql, void *data)
 {
-    const regs_t * const regs = &proc_current()->regs;
+    const proc_t * const proc = proc_current();
+    const regs_t * const regs = &proc->regs;
     UNUSED(data);
 
     cpu_disable_interrupts();
@@ -150,10 +151,10 @@ void cpu_default_irq_handler(ku32 irql, void *data)
     putchar('\n');
     mc68000_dump_regs(regs);
 
-    puts("\n-- Supervisor stack --");
+    printf("\n-- Supervisor stack (base: %p) --\n", proc->kstack);
     mc68000_try_stack_dump(regs->a[7], 16);
 
-    puts("\n-- User stack --");
+    printf("\n-- User stack (base: %p) --\n", proc->ustack);
     mc68000_try_stack_dump(regs->usp, 16);
 
 	cpu_halt();
