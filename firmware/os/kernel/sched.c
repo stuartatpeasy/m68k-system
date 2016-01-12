@@ -57,8 +57,6 @@ void sched()
 
     ++g_current_proc->quanta;
 
-    cpu_disable_interrupts();       /* FIXME - may be unnecessary; added for debug */
-
     if(list_is_last(&g_current_proc->queue, &g_run_queue))
         g_current_proc = list_first_entry(&g_run_queue, proc_t, queue);
     else
@@ -68,8 +66,6 @@ void sched()
 
     if(g_prev_proc->state == ps_sleeping)
         list_move_insert(&g_prev_proc->queue, &g_sleep_queue);
-
-    cpu_enable_interrupts();        /* FIXME - see above; added for debug */
 
     ++g_ncontext_switches;
 
