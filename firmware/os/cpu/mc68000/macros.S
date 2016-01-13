@@ -72,37 +72,6 @@
 
 
 /*
-    Save minimal context in g_current_proc->regs.  Minimal context is d0-d1 and a0-a1.
-
-    Trashes a0.
-*/
-.macro SAVE_CONTEXT_SHORT
-    /* Stack a0 and point it at the first hword after g_current_proc->regs */
-    move.l      %a0, %sp@-
-
-    movea.l     g_current_proc, %a0
-
-    /* Save throwaway registers */
-    move.l      %a1, %a0@(36)       /* save a1          */
-    move.l      %sp@, %a0@(32)      /* save a0          */
-    addq.l      #8, %a0
-    movem.l     %d0-%d1, %a0@-      /* save d1-d0       */
-.endm
-
-
-/*
-    Restore minimal context from g_current_proc->regs.  Minimal context is d0-d1 and a0-a1.
-*/
-.macro RESTORE_CONTEXT_SHORT
-    movea.l     g_current_proc, %a0
-    movem.l     %a0@+, %d0-%d1      /* restore d0-d1    */
-
-    move.l      %a0@(28), %a1       /* restore a1       */
-    move.l      %a0@(24), %a0       /* restore a0       */
-.endm
-
-
-/*
     Save full context of the current process, call sched() to select a new process to run, restore
     the context of the new process.
 */

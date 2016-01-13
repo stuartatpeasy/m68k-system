@@ -44,7 +44,7 @@ void cpu_irq_init_arch_specific(void)
 
 	/* Point all other exception vectors at the generic IRQ handler code initially */
 	for(u = V_illegal_instruction; u <= CPU_MAX_IRQL; ++u)
-        CPU_EXC_VPTR_SET(u, irq_router_full);
+        CPU_EXC_VPTR_SET(u, irq_router_fast);
 
     /* System calls use TRAP #0 */
 	CPU_EXC_VPTR_SET(V_trap_0, syscall_dispatcher);
