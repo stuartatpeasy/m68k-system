@@ -108,9 +108,6 @@ struct irq_handler_table_entry
 };
 
 
-/* The IRQ indirection table */
-irq_handler_table_entry_t g_interrupt_handlers[CPU_MAX_IRQL];
-
 s32 cpu_set_interrupt_handler(ku32 irql, void *data, irq_handler handler);
 
 #undef IN_CPU_H
