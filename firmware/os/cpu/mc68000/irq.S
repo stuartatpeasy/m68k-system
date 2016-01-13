@@ -161,13 +161,15 @@ irq_router_full:
 
 irq_router_fast:
     DISABLE_INTERRUPTS
-    SAVE_CONTEXT_SHORT
+
+	/* Save minimal context */
+	movem.l		d0-d1/a0-a1, sp@-
 
     /*
         Retrieve format/offset word, extract offset, convert to IRQ number and extend to word len.
         Stack it and call the IRQ handler.
     */
-    move.w      sp@(6), d0
+    move.w      sp@(22), d0
     andi.w      #0x03ff, d0
     ext.l       d0
 
@@ -178,8 +180,8 @@ irq_router_fast:
 
     /* Unwind the stack and resume normal processing */
     addq.l      #4, sp
+	movem.l		sp@+, d0-d1/a0-a1
 
-    RESTORE_CONTEXT_SHORT
     ENABLE_INTERRUPTS
 
     rte
