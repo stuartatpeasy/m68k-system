@@ -297,11 +297,13 @@ ks8 *strerror(ks32 errnum)
 /*
     strlen()
 */
-u32 strlen(const s8 *s)
+u32 strlen(ks8 *s)
 {
-	const s8 *s_ = s;
-	for(s_ = s; *s; ++s) ;
-	return s - s_;
+	ks8 *s_ = s;
+
+	for(s_ = s; *s++;)
+		;
+	return s - s_ - 1;
 }
 
 
