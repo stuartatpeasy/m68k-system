@@ -13,6 +13,21 @@
 
 
 /*
+	str_sum() - return the sum of all the bytes in a string
+*/
+u32 str_sum(ks8 *s)
+{
+	u32 ret;
+	ku8 *s_ = (ku8 *) s;
+
+	for(ret = 0; *s_; ret += *s_++)
+		;
+
+	return ret;
+}
+
+
+/*
     str_trim() - copy src into dest, trimming leading and trailing whitespace
 */
 s8 *str_trim(s8 *dest, ks8 *src)
