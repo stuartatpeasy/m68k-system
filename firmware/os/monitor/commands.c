@@ -628,12 +628,13 @@ MONITOR_CMD_HANDLER(mount)
     if(num_args == 0)
     {
         /* Display mount table */
-        u32 u;
-        for(u = 0; u < g_max_mounts; ++u)
+        mount_ent_t *ent;
+        extern mount_ent_t *g_mount_table;
+        for(ent = g_mount_table; ent; ent = ent->next)
         {
-            if(g_mount_table[u].vfs)
-                printf("%-10s %-10s %s\n", g_mount_table[u].vfs->dev->name,
-                       g_mount_table[u].vfs->driver->name, g_mount_table[u].mount_point);
+            if(ent->vfs)
+                printf("%-10s %-10s %s\n", ent->vfs->dev->name,
+                       ent->vfs->driver->name, ent->mount_point);
         }
 
     }

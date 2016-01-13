@@ -15,21 +15,16 @@
 #include <strings.h>
 
 
-#define MOUNT_INITIAL_NUM_MOUNT_POINTS		(16)
-#define MOUNT_ADDITIONAL_MOUNT_POINTS		(8)
+struct mount_ent;
+typedef struct mount_ent mount_ent_t;
 
 struct mount_ent
 {
-	s8 *mount_point;
-	u32 mount_point_len;
-	vfs_t *vfs;
+	s8 *            mount_point;
+	u32             mount_point_len;
+	vfs_t *         vfs;
+	mount_ent_t *   next;
 };
-
-typedef struct mount_ent mount_ent_t;
-
-mount_ent_t *g_mount_table;
-u32 g_max_mounts;
-u32 g_mount_end;
 
 
 s32 mount_init();
