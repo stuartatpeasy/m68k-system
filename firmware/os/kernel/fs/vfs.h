@@ -15,8 +15,6 @@
 #include <stdio.h>
 
 
-#define MAX_FILESYSTEMS         (16)
-
 typedef u16 file_perm_t;
 
 struct vfs;

@@ -14,8 +14,6 @@
 #include <kernel/fs/mount.h>
 
 
-vfs_t *g_filesystems[MAX_FILESYSTEMS];
-
 /*
     #include driver registration function declarations here
 */
