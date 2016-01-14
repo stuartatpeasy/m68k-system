@@ -307,10 +307,10 @@ typedef struct
     u8          imr;        /* Interrupt mask register value                                    */
     u32         baud_a;     /* Channel A baud rate                                              */
     u32         baud_b;     /* Channel B baud rate                                              */
-    circbuf_t   rxa_buf;
-    circbuf_t   txa_buf;
-    circbuf_t   rxb_buf;
-    circbuf_t   txb_buf;
+    CIRCBUF(u8) rxa_buf;
+    CIRCBUF(u8) txa_buf;
+    CIRCBUF(u8) rxb_buf;
+    CIRCBUF(u8) txb_buf;
 } mc68681_state_t;
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22];

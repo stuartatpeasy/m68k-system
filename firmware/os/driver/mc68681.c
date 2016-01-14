@@ -55,20 +55,10 @@ s32 mc68681_init(dev_t *dev)
     void * const base_addr = dev->base_addr;
     mc68681_state_t *state = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
 
-    /* Allocate and set up circular buffers */
-    if((circbuf_alloc(MC68681_RX_BUF_LEN, &state->rxa_buf) != SUCCESS) ||
-       (circbuf_alloc(MC68681_TX_BUF_LEN, &state->txa_buf) != SUCCESS) ||
-       (circbuf_alloc(MC68681_RX_BUF_LEN, &state->rxb_buf) != SUCCESS) ||
-       (circbuf_alloc(MC68681_TX_BUF_LEN, &state->txb_buf) != SUCCESS))
-    {
-        circbuf_free(&state->rxa_buf);
-        circbuf_free(&state->txa_buf);
-        circbuf_free(&state->rxb_buf);
-        circbuf_free(&state->txb_buf);
-
-        kfree(state);
-        return ENOMEM;
-    }
+    CIRCBUF_INIT(state->rxa_buf);
+    CIRCBUF_INIT(state->txa_buf);
+    CIRCBUF_INIT(state->rxb_buf);
+    CIRCBUF_INIT(state->txb_buf);
 
     dev->data = state;
 
@@ -258,7 +248,8 @@ void mc68681_serial_a_irq_handler(ku32 irql, void *arg)
             Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
             the character will be dropped.
         */
-        circbuf_write(&state->rxa_buf, MC68681_REG(base_addr, MC68681_RHRA));
+        if(!CIRCBUF_IS_FULL(state->rxa_buf))
+            CIRCBUF_WRITE(state->rxa_buf, MC68681_REG(base_addr, MC68681_RHRA));
     }
 
     if(irq & BIT(MC68681_IMR_TXRDY_A))
@@ -267,11 +258,8 @@ void mc68681_serial_a_irq_handler(ku32 irql, void *arg)
             Transmitter ready.  If there is another character to transmit, do so; if not, disable
             this interrupt.
         */
-        u8 byte;
-        if(circbuf_read(&state->txa_buf, &byte) == SUCCESS)
-        {
-            MC68681_REG(base_addr, MC68681_THRA) = byte;        /* Transmit next character */
-        }
+        if(!CIRCBUF_IS_EMPTY(state->txa_buf))
+            MC68681_REG(base_addr, MC68681_THRA) = CIRCBUF_READ(state->txa_buf);
         else
         {
             state->imr &= ~BIT(MC68681_IMR_TXRDY_A);
@@ -323,7 +311,7 @@ void mc68681_serial_b_irq_handler(ku32 irql, void *arg)
             Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
             the character will be dropped.
         */
-        circbuf_write(&state->rxb_buf, MC68681_REG(base_addr, MC68681_RHRB));
+        CIRCBUF_WRITE(state->rxb_buf, MC68681_REG(base_addr, MC68681_RHRB));
     }
 
     if(irq & BIT(MC68681_IMR_TXRDY_B))
@@ -332,11 +320,8 @@ void mc68681_serial_b_irq_handler(ku32 irql, void *arg)
             Transmitter ready.  If there is another character to transmit, do so; if not, disable
             this interrupt.
         */
-        u8 byte;
-        if(circbuf_read(&state->txb_buf, &byte) == SUCCESS)
-        {
-            MC68681_REG(base_addr, MC68681_THRB) = byte;        /* Transmit next character */
-        }
+        if(!CIRCBUF_IS_EMPTY(state->txb_buf))
+            MC68681_REG(base_addr, MC68681_THRA) = CIRCBUF_READ(state->txb_buf);
         else
         {
             state->imr &= ~BIT(MC68681_IMR_TXRDY_B);
@@ -365,13 +350,6 @@ void mc68681_irq_handler(ku32 irql, void *arg)
 */
 s32 mc68681_shut_down(dev_t *dev)
 {
-    mc68681_state_t *state = (mc68681_state_t *) dev->data;
-
-    circbuf_free(&state->rxa_buf);
-    circbuf_free(&state->txa_buf);
-    circbuf_free(&state->rxb_buf);
-    circbuf_free(&state->txb_buf);
-
     kfree(dev->data);
 
     return SUCCESS;
