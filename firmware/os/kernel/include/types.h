@@ -94,6 +94,8 @@ typedef u16 reg16_t;
 typedef u32 reg32_t;
 typedef u64 reg64_t;
 
+/* Time-related definitions */
+typedef s32 time_t;
 
 /* This probably isn't the right place to define NULL, but I don't think it warrants its
    own header file. */

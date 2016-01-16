@@ -18,7 +18,7 @@ list_t g_exited_queue = LIST_INIT(g_exited_queue);
 
 proc_t *g_current_proc = NULL;
 pid_t g_next_pid = 0;
-extern s32 g_current_timestamp;
+extern time_t g_current_timestamp;
 
 
 /*
@@ -185,7 +185,7 @@ void proc_sleep()
 */
 void proc_sleep_for(s32 secs)
 {
-    s32 wakeup_time = g_current_timestamp + secs;
+    const time_t wakeup_time = g_current_timestamp + secs;
 
     while(g_current_timestamp < wakeup_time)
         cpu_switch_process();

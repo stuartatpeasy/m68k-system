@@ -16,7 +16,7 @@
 
 #define DATETIME_TS_MAX (S32_MAX)
 
-s32 g_current_timestamp = 0;     /* Current timestamp (approx.) - updated by housekeeper process */
+time_t g_current_timestamp = 0;     /* Current timestamp (approx.) */
 
 const char * const g_day_names_long[] =
 {
@@ -303,7 +303,7 @@ s32 is_leap_year(ks32 year)
 
 
 /* Convert a Unix timestamp to a rtc_time_t */
-s32 timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt)
+s32 timestamp_to_rtc_time(const time_t timestamp, rtc_time_t *dt)
 {
     s32 step, t_;
     u32 year_index;
@@ -393,7 +393,7 @@ s32 timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt)
 
 
 /* Convert a rtc_time_t to a Unix timestamp */
-s32 rtc_time_to_timestamp(const rtc_time_t *dt, s32 *timestamp)
+s32 rtc_time_to_timestamp(const rtc_time_t *dt, time_t *timestamp)
 {
     s32 ts;
 

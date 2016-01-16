@@ -76,7 +76,7 @@ typedef struct arp_cache_item
     const net_iface_t * iface;
     mac_addr_t          hw_addr;
     u32                 ipv4_addr;
-    s32                 etime;
+    time_t              etime;
 } arp_cache_item_t;
 
 #endif

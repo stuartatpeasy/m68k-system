@@ -34,9 +34,9 @@ s32     day_of_week(ks32 year, ks32 month, ks32 day);
 s32     get_time(rtc_time_t *tm);
 s32     is_leap_year(ks32 year);
 s32     rtc_time_from_str(const char * const str, rtc_time_t * const tm);
-s32     rtc_time_to_timestamp(const rtc_time_t *dt, s32 *timestamp);
+s32     rtc_time_to_timestamp(const rtc_time_t *dt, time_t *timestamp);
 s32     time_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len);
-s32     timestamp_to_rtc_time(ks32 timestamp, rtc_time_t *dt);
+s32     timestamp_to_rtc_time(const time_t timestamp, rtc_time_t *dt);
 
 
 #define VALID_RTC_DATE(d)                                   \

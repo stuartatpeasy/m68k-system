@@ -43,10 +43,10 @@ typedef struct vfs_dirent
     file_perm_t     permissions;    /* e.g. rwxsrwxsrwx */
     u16             flags;          /* read-only, hidden, system, ... */
     u32             size;
-    u32             ctime;
-    u32             mtime;
-    u32             atime;
-    u32             first_node;
+    time_t          ctime;
+    time_t          mtime;
+    time_t          atime;
+    time_t          first_node;
     /* how to link to clusters? */
 } vfs_dirent_t;
 

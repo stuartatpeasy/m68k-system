@@ -15,7 +15,7 @@
 
 
 arp_cache_item_t *g_arp_cache = NULL;
-extern s32 g_current_timestamp;
+extern time_t g_current_timestamp;
 
 s32 arp_cache_add(const net_iface_t * const iface, const mac_addr_t hw_addr, const ipv4_addr_t ip);
 arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface, const ipv4_addr_t ip);

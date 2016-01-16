@@ -13,7 +13,7 @@
 #include <kernel/process.h>
 
 
-extern s32 g_current_timestamp;
+extern time_t g_current_timestamp;
 
 
 /*
