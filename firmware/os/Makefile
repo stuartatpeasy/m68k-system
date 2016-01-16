@@ -14,7 +14,7 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/device/ata.c kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
 			kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
-			kernel/fs/fat/fat.c \
+			kernel/fs/fat/fat.c kernel/fs/romfs.c \
 			kernel/boot.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/housekeeper.c \
 			kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c kernel/syscall.c \
 			kernel/user.c kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c \
@@ -163,6 +163,10 @@ kernel/fs/fat/fat.o: \
 	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/fs/vfs.h kernel/include/byteorder.h \
 	kernel/include/defs.h kernel/include/error.h kernel/include/types.h klibc/strings.h \
 	kernel/util/kutil.h
+
+kernel/fs/romfs.o: \
+	kernel/fs/romfs.c kernel/fs/romfs.h kernel/fs/vfs.h kernel/include/defs.h \
+	kernel/include/error.h kernel/include/types.h
 
 kernel/fs/file.o: \
 	kernel/fs/file.c kernel/fs/file.h kernel/fs/vfs.h kernel/include/defs.h kernel/include/types.h

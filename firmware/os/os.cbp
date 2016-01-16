@@ -152,6 +152,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/fs/mount.h" />
+		<Unit filename="kernel/fs/romfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/fs/romfs.h" />
 		<Unit filename="kernel/fs/vfs.c">
 			<Option compilerVar="CC" />
 		</Unit>
