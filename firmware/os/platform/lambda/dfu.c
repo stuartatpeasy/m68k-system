@@ -65,6 +65,7 @@ void write_flash(ku16 *data, ku32 len)
 	PLAT_DO_RESET;              /* Won't return */
 }
 
+
 /*
     dfu() - initiate an in-system firmware update.
 

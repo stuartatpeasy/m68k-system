@@ -104,7 +104,7 @@ s32 plat_console_init(void)
     }
 
 	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A",
-                        LAMBDA_MC68681_IRQL, LAMBDA_MC68681_BASE, &g_lambda_console);
+                        IRQL_NONE, LAMBDA_MC68681_BASE, &g_lambda_console);
 	if(ret == SUCCESS)
 	{
 	    g_lambda_console->parent = g_lambda_duart;

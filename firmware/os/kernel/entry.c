@@ -66,6 +66,9 @@ void _main()
 	/* By default, all exceptions cause a context-dump followed by a halt. */
 	cpu_irq_init_table();
 
+    /* =============== NEED TO ENABLE INTERRUPTS HERE =============== */
+    cpu_enable_interrupts();
+
     /*
         At this point, minimal configuration has been done.  The scheduler is not yet running,
         but we can now initialise non-critical peripherals and start greeting the user.
@@ -139,7 +142,8 @@ void _main()
     if(ret != SUCCESS)
         printf("net: init failed: %s\n", kstrerror(ret));
 
-    cpu_enable_interrupts();
+// FIXME remove
+//    cpu_enable_interrupts();
 
     /* Startup complete - activate green LED */
 	plat_led_off(LED_RED);

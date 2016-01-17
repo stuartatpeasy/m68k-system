@@ -21,15 +21,15 @@
         u8 wr;          \
     }
 
-#define CIRCBUF_INIT(buf)           { buf.rd = 0; buf.wr = 0; }
+#define CIRCBUF_INIT(buf)           { (buf).rd = 0; (buf).wr = 0; }
 
-#define CIRCBUF_WRITE(buf, val)     (buf.data[buf.wr++] = (val))
-#define CIRCBUF_READ(buf)           (buf.data[buf.rd++])
+#define CIRCBUF_WRITE(buf, val)     ((buf).data[(u8) ((buf).wr++)] = (val))
+#define CIRCBUF_READ(buf)           ((buf).data[(u8) ((buf).rd++)])
 
-#define CIRCBUF_IS_EMPTY(buf)       (buf.rd == buf.wr)
-#define CIRCBUF_IS_FULL(buf)        (buf.rd == (buf.wr + 1))
+#define CIRCBUF_IS_EMPTY(buf)       ((buf).rd == (buf).wr)
+#define CIRCBUF_IS_FULL(buf)        ((buf).rd == (u8) ((buf).wr + 1))
 
-#define CIRCBUF_COUNT(buf)          (buf.wr - buf.rd)
+#define CIRCBUF_COUNT(buf)          ((buf).wr - (buf).rd)
 
 
 /* Byte-oriented circular buffer structure */

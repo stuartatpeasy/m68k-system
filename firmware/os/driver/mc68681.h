@@ -307,10 +307,10 @@ typedef struct
     u8          imr;        /* Interrupt mask register value                                    */
     u32         baud_a;     /* Channel A baud rate                                              */
     u32         baud_b;     /* Channel B baud rate                                              */
-    CIRCBUF(u8) rxa_buf;
-    CIRCBUF(u8) txa_buf;
-    CIRCBUF(u8) rxb_buf;
-    CIRCBUF(u8) txb_buf;
+    volatile CIRCBUF(u8) rxa_buf;
+    volatile CIRCBUF(u8) txa_buf;
+    volatile CIRCBUF(u8) rxb_buf;
+    volatile CIRCBUF(u8) txb_buf;
 } mc68681_state_t;
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22];
@@ -325,8 +325,6 @@ void mc68681_reset(void * const base_addr);
 s32 mc68681_reset_tx(void * const base_addr, ku16 channel);
 s32 mc68681_reset_rx(void * const base_addr, ku16 channel);
 
-s32 mc68681_getc(void * const base_addr, ku16 channel, char *c);
-s32 mc68681_putc(void * const base_addr, ku16 channel, const char c);
 s32 mc68681_set_baud_rate(dev_t * dev, ku16 channel, ku32 rate);
 u32 mc68681_get_baud_rate(dev_t * dev, ku16 channel);
 s32 mc68681_control(dev_t *dev, ku32 channel, const devctl_fn_t fn, const void *in, void *out);
@@ -346,7 +344,7 @@ u8 mc68681_read_ip(dev_t *dev);
 void mc68681_set_op_bits(dev_t *dev, ku8 bits);
 void mc68681_reset_op_bits(dev_t *dev, ku8 bits);
 
-void mc68681_irq_handler(ku32 irql, void *arg);
+
 /*
     mc68681_start_counter() - start the MC68681 counter/timer.
 
