@@ -37,7 +37,7 @@ typedef struct vfs_dirent
 {
     vfs_t           *vfs;
     fsnode_type_t   type;           /* dir, file, etc. */
-    s8              name[NAME_MAX_LEN + 1];
+    char            name[NAME_MAX_LEN + 1];
     u16             uid;
     u16             gid;
     file_perm_t     permissions;    /* e.g. rwxsrwxsrwx */

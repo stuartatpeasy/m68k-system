@@ -20,8 +20,8 @@ typedef struct romfs_superblock
 {
     u32     magic;
     u32     len;
-    char    label[16];
     time_t  cdate;
+    char    label[16];
 } romfs_superblock_t;
 
 #endif
