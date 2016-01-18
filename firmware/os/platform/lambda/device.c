@@ -132,15 +132,15 @@ void expansion_init()
             /* Negate nEID */
             mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_EXP_ID));
 
-            printf("slot %d (%x-%x, irq %u): ", i, (u32) base_addr,
-                    (u32) base_addr + LAMBDA_EXP_ADDR_LEN - 1, LAMBDA_EXP_IRQ(i));
+//            printf("slot %d (%x-%x, irq %u): ", i, (u32) base_addr,
+//                    (u32) base_addr + LAMBDA_EXP_ADDR_LEN - 1, LAMBDA_EXP_IRQ(i));
 
             ret = dev_auto_init(id, base_addr, LAMBDA_EXP_IRQ(i), NULL, &dev);
 
-            if(ret == SUCCESS)
-                puts(dev->human_name);
-            else if(ret == ENOENT)
-                printf("unknown peripheral (hardware ID %02x)\n", id);
+//            if(ret == SUCCESS)
+//                puts(dev->human_name);
+//            else if(ret == ENOENT)
+//                printf("unknown peripheral (hardware ID %02x)\n", id);
         }
     }
 }
