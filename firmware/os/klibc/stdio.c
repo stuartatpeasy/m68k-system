@@ -8,6 +8,7 @@
 */
 
 #include <klibc/stdio.h>
+#include <kernel/platform.h>
 
 
 /*

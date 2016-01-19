@@ -9,6 +9,7 @@
 
 #include <cpu/mc68000/mc68000.h>
 #include <kernel/process.h>
+#include <kernel/memory/extents.h>
 #include <klibc/stdio.h>
 
 
