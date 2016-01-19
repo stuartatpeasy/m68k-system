@@ -6,6 +6,7 @@
 
 #include <driver/ds17485.h>
 #include <driver/mc68681.h>
+#include <kernel/console.h>
 #include <kernel/device/device.h>
 #include <kernel/platform.h>
 #include <platform/lambda/lambda.h>
@@ -115,6 +116,8 @@ s32 plat_console_init(void)
 			g_lambda_console = NULL;
 		}
 
+        console_init(g_lambda_console);
+
         /*
             Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
             subsequent revisions it's active-low.
@@ -150,28 +153,6 @@ const char *plat_get_name()
 #else
     return "lambda rev1";
 #endif
-}
-
-
-/*
-    plat_console_putc() - write a character to the console.
-*/
-s16 plat_console_putc(const char c)
-{
-    mc68681_channel_a_putc(g_lambda_console, c);
-    return c;
-}
-
-
-/*
-    plat_console_getc() - read a character from the console.
-*/
-s16 plat_console_getc()
-{
-    char c;
-    mc68681_channel_a_getc(g_lambda_console, &c);
-
-    return c;
 }
 
 

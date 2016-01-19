@@ -212,8 +212,9 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
                  dev_t *parent_dev, s32 (*init_fn)(dev_t *))
 {
     s32 ret;
+    dev_t *d;
 
-    ret = dev_create(type, subtype, dev_name, human_name, irql, base_addr, dev);
+    ret = dev_create(type, subtype, dev_name, human_name, irql, base_addr, &d);
     if(ret != SUCCESS)
     {
         printf("%s: %s device creation failed: %s\n", dev_name, human_name, kstrerror(ret));
@@ -222,24 +223,27 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
 
     if(init_fn != NULL)
     {
-        ret = init_fn(*dev);
+        ret = init_fn(d);
         if(ret != SUCCESS)
         {
-            kfree(*dev);
-            printf("%s: %s device init failed: %s\n", (*dev)->name, human_name, kstrerror(ret));
+            kfree(d);
+            printf("%s: %s device init failed: %s\n", d->name, human_name, kstrerror(ret));
             return ret;
         }
     }
 
-    ret = dev_add_child(parent_dev, *dev);
+    ret = dev_add_child(parent_dev, d);
     if(ret != SUCCESS)
     {
-        (*dev)->shut_down(*dev);
-        kfree(*dev);
-        printf("%s: failed to add %s to device tree: %s\n", (*dev)->name, human_name,
+        d->shut_down(d);
+        kfree(d);
+        printf("%s: failed to add %s to device tree: %s\n", d->name, human_name,
                 kstrerror(ret));
         return ret;
     }
+
+    if(dev != NULL)
+        *dev = d;
 
     return SUCCESS;
 }
@@ -290,10 +294,9 @@ s32 dev_control_unimplemented(dev_t * const dev, ku32 function, const void *in, 
 /*
     dev_getc_unimplemented() - default handler for dev->getc() calls
 */
-s32 dev_getc_unimplemented(dev_t * const dev, char *c)
+s16 dev_getc_unimplemented(dev_t * const dev)
 {
     UNUSED(dev);
-    UNUSED(c);
 
     return ENOSYS;
 }

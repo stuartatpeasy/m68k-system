@@ -92,7 +92,7 @@ MONITOR_CMD_HANDLER(dfu)
 
     printf("Send %u bytes\n", len);
 	for(i = 0; i < len; i++)
-		data[i] = plat_console_getc();
+		data[i] = console_getc();
 
     if(len & 1)
         data[i] = 0x00;     /* Add padding byte - see above */
@@ -663,7 +663,7 @@ MONITOR_CMD_HANDLER(raw)
 	puts("Dumping raw output.  Use ctrl-A to stop.\n");
 	for(;;)
 	{
-		char c = plat_console_getc();
+		char c = console_getc();
 		printf("0x%02x ", c);
 
 		if(c == 0x01 /* ctrl-A */)
@@ -995,7 +995,7 @@ MONITOR_CMD_HANDLER(upload)
 		return ENOMEM;
 
 	for(data_ = data; len--;)
-		*data_++ = plat_console_getc();
+		*data_++ = console_getc();
 
 	printf("Uploaded %li bytes at %p\n", data_ - data, data);
 

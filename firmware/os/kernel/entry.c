@@ -63,12 +63,12 @@ void _main()
     /* Initialise kernel heap */
     kmeminit(g_slab_end, mem_get_highest_addr(MEM_EXTENT_KERN | MEM_EXTENT_RAM) - KERNEL_STACK_LEN);
 
+	/* By default, all exceptions cause a context-dump followed by a halt. */
+	cpu_irq_init_table();
+
     /* Initialise the console */
     if(plat_console_init() != SUCCESS)
         boot_early_fail(3);
-
-	/* By default, all exceptions cause a context-dump followed by a halt. */
-	cpu_irq_init_table();
 
     /* === Initialise peripherals - phase 2 === */
     if(dev_enumerate() != SUCCESS)

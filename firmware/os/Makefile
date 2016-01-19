@@ -15,10 +15,10 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
 			kernel/fs/fat/fat.c kernel/fs/romfs.c \
-			kernel/boot.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/housekeeper.c \
-			kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c kernel/syscall.c \
-			kernel/user.c kernel/net/arp.c kernel/net/ethernet.c kernel/net/ipv4.c \
-			kernel/net/net.c kernel/net/udp.c \
+			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c \
+			kernel/housekeeper.c kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c \
+			kernel/syscall.c kernel/user.c kernel/net/arp.c kernel/net/ethernet.c \
+			kernel/net/ipv4.c kernel/net/net.c kernel/net/udp.c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
 			kernel/memory/kmalloc.c kernel/memory/slab.c
 
@@ -120,6 +120,9 @@ driver/ps2controller.o: \
 kernel/boot.o: \
 	kernel/boot.c kernel/boot.h kernel/include/defs.h kernel/include/types.h \
 	kernel/device/devctl.h kernel/device/device.h klibc/stdio.h kernel/platform.h
+
+kernel/console.o: \
+	kernel/console.c kernel/console.h kernel/include/defs.h kernel/include/types.h
 
 kernel/cpu/cpu.o: \
 	kernel/cpu/cpu.c kernel/cpu.h cpu/arch_specific.h kernel/include/types.h

@@ -82,8 +82,6 @@ void plat_reset() __attribute__((noreturn));
 */
 
 s32 plat_console_init();			    /* Initialise console									*/
-s16 plat_console_putc(const char c);    /* Write a character to the console.  May block.		*/
-s16 plat_console_getc(void);		    /* Read a character from the console.  Must block.  	*/
 
 #undef IN_PLATFORM_H
 

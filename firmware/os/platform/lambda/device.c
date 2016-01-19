@@ -41,7 +41,7 @@ dev_t *g_lambda_console;    /* Console device - stored separately for early init
 */
 s32 plat_dev_enumerate()
 {
-	dev_t *dev, *sub_dev;
+	dev_t *dev;
 
     /*
         MC68681 DUART
@@ -64,16 +64,16 @@ s32 plat_dev_enumerate()
     {
         /* Child device: RTC */
         dev_register(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", LAMBDA_DS17485_IRQL,
-                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 RTC", dev, ds17485_rtc_init);
+                     LAMBDA_DS17485_BASE, NULL, "DS17485 RTC", dev, ds17485_rtc_init);
 
         /* Child device: user NVRAM */
         dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE,
-                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 user NVRAM", dev,
+                     LAMBDA_DS17485_BASE, NULL, "DS17485 user NVRAM", dev,
                      ds17485_user_ram_init);
 
         /* Child device: extendd NVRAM */
         dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE,
-                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 extended NVRAM", dev,
+                     LAMBDA_DS17485_BASE, NULL, "DS17485 extended NVRAM", dev,
                      ds17485_ext_ram_init);
     }
 
@@ -87,11 +87,11 @@ s32 plat_dev_enumerate()
     {
         /* Child device: primary ATA channel */
         dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE,
-                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 0", dev, ata_master_init);
+                     LAMBDA_ATA_BASE, NULL, "ATA channel 0", dev, ata_master_init);
 
         /* Child device: secondary ATA channel */
         dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE,
-                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 1", dev, ata_slave_init);
+                     LAMBDA_ATA_BASE, NULL, "ATA channel 1", dev, ata_slave_init);
     }
 
     /* Memory device */

@@ -7,6 +7,7 @@
     (c) Stuart Wallace, June 2015.
 */
 
+#include <kernel/device/device.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/limits.h>
 #include <kernel/include/types.h>

@@ -635,28 +635,26 @@ s32 mc68681_putc(void * const base_addr, ku16 channel, const char c)
 /*
     mc68681_channel_a_getc() - read a character from serial channel A, blocking until done.
 */
-s32 mc68681_channel_a_getc(dev_t *dev, char *c)
+s16 mc68681_channel_a_getc(dev_t *dev)
 {
     while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
 		;
 
-    *c = MC68681_REG(dev->base_addr, MC68681_RHRA);
-    return SUCCESS;
+    return MC68681_REG(dev->base_addr, MC68681_RHRA);
 }
 
 
 /*
     mc68681_channel_b_getc() - read a character from serial channel B, blocking until done.
 */
-s32 mc68681_channel_b_getc(dev_t *dev, char *c)
+s16 mc68681_channel_b_getc(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
 
     while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
 		;
 
-    *c = MC68681_REG(base_addr, MC68681_RHRB);
-    return SUCCESS;
+    return MC68681_REG(base_addr, MC68681_RHRB);
 }
 
 
