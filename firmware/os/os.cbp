@@ -125,6 +125,10 @@
 		</Unit>
 		<Unit filename="kernel/device/device.h" />
 		<Unit filename="kernel/device/mbr.h" />
+		<Unit filename="kernel/device/memconsole.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/device/memconsole.h" />
 		<Unit filename="kernel/device/nvram.c">
 			<Option compilerVar="CC" />
 		</Unit>

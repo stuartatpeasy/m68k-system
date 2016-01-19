@@ -104,6 +104,8 @@ s32 dev_add_child(dev_t *parent, dev_t *child);
 s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
                const char * const human_name, ku32 irql, void *base_addr, dev_t **dev);
 
+s32 dev_destroy(dev_t *dev);
+
 s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
                  ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
                  dev_t *parent_dev, s32 (*init_fn)(dev_t *));

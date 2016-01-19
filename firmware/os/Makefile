@@ -11,8 +11,8 @@ FLASHPROGDEV=/dev/ttyS1
 
 CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			driver/ds17485.c driver/encx24j600.c driver/mc68681.c driver/ps2controller.c \
-			kernel/device/ata.c kernel/device/auto.c kernel/device/device.c kernel/device/nvram.c \
-			kernel/device/partition.c \
+			kernel/device/ata.c kernel/device/auto.c kernel/device/device.c \
+			kernel/device/memconsole.c kernel/device/nvram.c kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
 			kernel/fs/fat/fat.c kernel/fs/romfs.c \
 			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c \
@@ -139,6 +139,10 @@ kernel/device/auto.o: \
 kernel/device/device.o: \
 	kernel/device/device.c kernel/device/devctl.h kernel/device/device.h kernel/util/kutil.h \
 	kernel/device/ata.h kernel/device/partition.h kernel/include/types.h klibc/errno.h
+
+kernel/device/memconsole.o: \
+	kernel/device/memconsole.c kernel/device/memconsole.h kernel/include/defs.h \
+	kernel/include/types.h
 
 kernel/device/nvram.o: \
 	kernel/device/nvram.c kernel/device/nvram.h driver/ds17485.h kernel/include/defs.h \

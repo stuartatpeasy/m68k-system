@@ -1,7 +1,7 @@
 #ifndef KERNEL_CONSOLE_H_INC
 #define KERNEL_CONSOLE_H_INC
 /*
-	Console-related function definitions
+	Console-related declarations
 
 	Part of ayumos
 

@@ -205,6 +205,21 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
 
 
 /*
+    dev_destroy() - destroy a device allocated with dev_create() or via dev_register().
+*/
+s32 dev_destroy(dev_t *dev)
+{
+    /* FIXME FIXME FIXME FIXME - also destroy child devices!! */
+    ks32 ret = dev->shut_down(dev);
+    if((ret != SUCCESS) && (ret != ENOSYS))
+        return ret;
+
+    kfree(dev);
+    return SUCCESS;
+}
+
+
+/*
     dev_register() - create and initialise a new device
 */
 s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
@@ -235,8 +250,7 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
     ret = dev_add_child(parent_dev, d);
     if(ret != SUCCESS)
     {
-        d->shut_down(d);
-        kfree(d);
+        dev_destroy(d);
         printf("%s: failed to add %s to device tree: %s\n", d->name, human_name,
                 kstrerror(ret));
         return ret;
