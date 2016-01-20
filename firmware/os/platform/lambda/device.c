@@ -45,14 +45,30 @@ s32 plat_dev_enumerate()
 
     /*
         MC68681 DUART
-
-        The parent device (duart0) and the first serial port (ser0) are initialised by
-        plat_console_init().  Only the second serial port (ser1) is initialised here.
     */
+    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", LAMBDA_MC68681_IRQL,
+                    LAMBDA_MC68681_BASE, &dev, "MC68681 DUART", NULL, mc68681_init) == SUCCESS)
+    {
+        g_lambda_duart = dev;
 
-    /* Child device: serial channel B */
-    dev_register(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
-                 &dev, "MC68681 serial port B", g_lambda_duart, mc68681_serial_b_init);
+        /* Child device: serial channel A */
+        dev_register(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
+                     &g_lambda_console, "MC68681 serial port A", dev, mc68681_serial_a_init);
+
+        /* Child device: serial channel B */
+        dev_register(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
+                     NULL, "MC68681 serial port B", dev, mc68681_serial_b_init);
+
+        /*
+            Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
+            subsequent revisions it's active-low.
+        */
+#if (PLATFORM_REV == 0)
+		mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+#else
+		mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+#endif
+    }
 
 
     /*
@@ -71,7 +87,7 @@ s32 plat_dev_enumerate()
                      LAMBDA_DS17485_BASE, NULL, "DS17485 user NVRAM", dev,
                      ds17485_user_ram_init);
 
-        /* Child device: extendd NVRAM */
+        /* Child device: extended NVRAM */
         dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE,
                      LAMBDA_DS17485_BASE, NULL, "DS17485 extended NVRAM", dev,
                      ds17485_ext_ram_init);
@@ -132,15 +148,15 @@ void expansion_init()
             /* Negate nEID */
             mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_EXP_ID));
 
-//            printf("slot %d (%x-%x, irq %u): ", i, (u32) base_addr,
-//                    (u32) base_addr + LAMBDA_EXP_ADDR_LEN - 1, LAMBDA_EXP_IRQ(i));
+            printf("slot %d (%x-%x, irq %u): ", i, (u32) base_addr,
+                    (u32) base_addr + LAMBDA_EXP_ADDR_LEN - 1, LAMBDA_EXP_IRQ(i));
 
             ret = dev_auto_init(id, base_addr, LAMBDA_EXP_IRQ(i), NULL, &dev);
 
-//            if(ret == SUCCESS)
-//                puts(dev->human_name);
-//            else if(ret == ENOENT)
-//                printf("unknown peripheral (hardware ID %02x)\n", id);
+            if(ret == SUCCESS)
+                puts(dev->human_name);
+            else if(ret == ENOENT)
+                printf("unknown peripheral (hardware ID %02x)\n", id);
         }
     }
 }

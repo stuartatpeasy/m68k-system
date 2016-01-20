@@ -16,8 +16,9 @@
 
 dev_t *g_console_dev;
 
-void console_init(dev_t * const console_dev);
-
+dev_t *console_set_device(dev_t * const console_dev);
+s32 early_boot_console_init();
+void early_boot_console_close();
 
 /*
     console_putc() - write a character to the kernel console device.  May block.

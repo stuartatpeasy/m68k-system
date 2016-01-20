@@ -81,55 +81,12 @@ s32 plat_mem_detect()
 
 
 /*
-    plat_console_init() - initialise the boot console.  This happens early in the boot process -
-    before the main hardware-enumeration step.  This code therefore builds two dev_t objects in
-    global variables (g_lambda_duart, g_lambda_console); these are later added to the device tree in
-    plat_dev_enumerate().
+    plat_console_init() - activate the platform's boot console.  This is MC68681 serial channel A.
 */
 s32 plat_console_init(void)
 {
-    s32 ret;
-
-    /* Initialise the console */
-    ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", "MC68681 DUART",
-                     LAMBDA_MC68681_IRQL, LAMBDA_MC68681_BASE, &g_lambda_duart);
-    if(ret != SUCCESS)
-        return ret;
-
-    ret = mc68681_init(g_lambda_duart);
-    if(ret != SUCCESS)
-    {
-        kfree(g_lambda_duart);
-        g_lambda_duart = NULL;
-        return ret;
-    }
-
-	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A",
-                        LAMBDA_MC68681_IRQL, LAMBDA_MC68681_BASE, &g_lambda_console);
-	if(ret == SUCCESS)
-	{
-	    g_lambda_console->parent = g_lambda_duart;
-		ret = mc68681_serial_a_init(g_lambda_console);
-		if(ret != SUCCESS)
-		{
-			kfree(g_lambda_console);
-			g_lambda_console = NULL;
-		}
-
-        console_init(g_lambda_console);
-
-        /*
-            Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
-            subsequent revisions it's active-low.
-        */
-#if (PLATFORM_REV == 0)
-		mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
-#else
-		mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
-#endif
-	}
-
-	return ret;
+    console_set_device(g_lambda_console);
+    return SUCCESS;
 }
 
 

@@ -23,6 +23,9 @@
 s32 memconsole_init(dev_t *dev)
 {
     memconsole_state_t *state = (memconsole_state_t *) kmalloc(sizeof(memconsole_state_t));
+
+    dev->data = 0;
+
     if(!state)
         return ENOMEM;
 
@@ -52,7 +55,7 @@ s16 memconsole_getc(dev_t *dev)
 {
     memconsole_state_t * const state = (memconsole_state_t *) dev->data;
 
-    if(state->rd_ptr < state->wr_ptr)
+    if(state && (state->rd_ptr < state->wr_ptr))
         return state->buffer[state->rd_ptr++];
 
     return -EAGAIN;
@@ -67,7 +70,7 @@ s32 memconsole_putc(dev_t *dev, const char c)
 {
     memconsole_state_t * const state = (memconsole_state_t *) dev->data;
 
-    if(state->wr_ptr < state->end)
+    if(state && (state->wr_ptr < state->end))
     {
         state->buffer[state->wr_ptr++] = c;
         return SUCCESS;

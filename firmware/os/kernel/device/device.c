@@ -26,12 +26,25 @@ const char * const g_device_sub_names = "0123456789abcdefghijklmnopqrstuv"
 static dev_t *root_dev = NULL;
 
 
+/*
+    dev_init() - initialise device support
+*/
+s32 dev_init()
+{
+    root_dev = kcalloc(1, sizeof(dev_t));
+
+    /* FIXME - init root_dev as an actual device, duh. */
+
+    return root_dev ? SUCCESS : ENOMEM;
+}
+
+
+/*
+    dev_enumerate() - enumerate platform and kernel devices
+*/
 s32 dev_enumerate()
 {
     s32 ret;
-
-    /* Root device is implicit */
-    root_dev = CHECKED_KCALLOC(1, sizeof(dev_t));
 
     /* Populating the device tree is a board-specific operation */
     ret = plat_dev_enumerate();
@@ -209,6 +222,7 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
 */
 s32 dev_destroy(dev_t *dev)
 {
+    /* FIXME - fix device tree (i.e. move sibling across) */
     /* FIXME FIXME FIXME FIXME - also destroy child devices!! */
     ks32 ret = dev->shut_down(dev);
     if((ret != SUCCESS) && (ret != ENOSYS))

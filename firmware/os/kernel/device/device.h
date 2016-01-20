@@ -97,6 +97,7 @@ typedef s32 (*driver_init_fn)(dev_t *);
 /*
     Function declarations
 */
+s32 dev_init();
 s32 dev_enumerate();
 dev_t *dev_get_root();
 s32 dev_add_child(dev_t *parent, dev_t *child);

@@ -11,7 +11,6 @@
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 */
 
-
 #include <kernel/boot.h>
 #include <kernel/device/memconsole.h>
 #include <kernel/fs/vfs.h>
@@ -36,7 +35,6 @@ const char * const g_warmup_message = "\n  \\   ayumos"
 void _main()
 {
     mem_extent_t *ramext;
-    dev_t *mem_console;
     u8 sn[6];
     u32 cpu_clk_hz = 0;
     rtc_time_t tm;
@@ -68,24 +66,31 @@ void _main()
 	/* By default, all exceptions cause a context-dump followed by a halt. */
 	cpu_irq_init_table();
 
+    /* Initialise device tree */
+	if(dev_init() != SUCCESS)
+        boot_early_fail(3);
+
 	/*
         It's not yet possible to initialise the real (platform) console because devices haven't
         been enumerated and interrupts are disabled.  In the meantime, create a temporary in-memory
         kernel console device to capture output from the boot process.
     */
-    if(dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_NONE, "con", "Boot console", IRQL_NONE,
-                  (void *) 0, &mem_console) != SUCCESS)
-        boot_early_fail(3);
 
-    console_init(mem_console);
-
-    /* Initialise the console */
-    if(plat_console_init() != SUCCESS)
+    if(early_boot_console_init() != SUCCESS)
         boot_early_fail(4);
+
+    printf("%s\nplatform: %s\n", g_warmup_message, plat_get_name());
+
+    printf("%uMB RAM detected\n", (mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM)
+            + mem_get_total_size(MEM_EXTENT_KERN | MEM_EXTENT_RAM)) >> 20);
 
     /* === Initialise peripherals - phase 2 === */
     if(dev_enumerate() != SUCCESS)
         boot_early_fail(5);
+
+    /* Initialise the console */
+    if(plat_console_init() != SUCCESS)
+        boot_early_fail(6);
 
     ret = sched_init("[sys]");      /* Init scheduler and create system process */
 
@@ -94,8 +99,8 @@ void _main()
     */
     cpu_enable_interrupts();
 
-    /* TODO: enable the real (platform) console */
-    /* TODO: copy the contents of the temporary console to the real console, now that it's available */
+    /* Copy the contents of the temporary console to the real console; close the temp console. */
+    early_boot_console_close();
 
     /* Activate red LED while the boot process continues */
 	plat_led_off(LED_ALL);
@@ -107,10 +112,6 @@ void _main()
         Device enumeration is done; interrupts are enabled, and the console should be functional.
         Booting continues...
     */
-    printf("%s\nplatform: %s\n", g_warmup_message, plat_get_name());
-
-    printf("%uMB RAM detected\n", (mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM)
-            + mem_get_total_size(MEM_EXTENT_KERN | MEM_EXTENT_RAM)) >> 20);
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
     put("Clearing user RAM: ");
