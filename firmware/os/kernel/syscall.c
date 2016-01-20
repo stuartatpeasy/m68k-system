@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015
 */
 
-#include <kernel/platform.h>      /* for plat_console_putc() */
+#include <kernel/console.h>
 #include <kernel/process.h>
 #include <kernel/syscall.h>
 #include <klibc/stdio.h>
@@ -43,7 +43,7 @@ s32 syscall_invalid()
 */
 s32 syscall_console_putchar(u32 c)
 {
-    return plat_console_putc(c);
+    return console_putc(c);
 }
 
 
@@ -52,7 +52,7 @@ s32 syscall_console_putchar(u32 c)
 */
 s32 syscall_console_getchar()
 {
-    return plat_console_getc();
+    return console_getc();
 }
 
 

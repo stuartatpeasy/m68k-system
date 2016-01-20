@@ -41,18 +41,34 @@ dev_t *g_lambda_console;    /* Console device - stored separately for early init
 */
 s32 plat_dev_enumerate()
 {
-	dev_t *dev, *sub_dev;
+	dev_t *dev;
 
     /*
         MC68681 DUART
-
-        The parent device (duart0) and the first serial port (ser0) are initialised by
-        plat_console_init().  Only the second serial port (ser1) is initialised here.
     */
+    if(dev_register(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", LAMBDA_MC68681_IRQL,
+                    LAMBDA_MC68681_BASE, &dev, "MC68681 DUART", NULL, mc68681_init) == SUCCESS)
+    {
+        g_lambda_duart = dev;
 
-    /* Child device: serial channel B */
-    dev_register(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
-                 &dev, "MC68681 serial port B", g_lambda_duart, mc68681_serial_b_init);
+        /* Child device: serial channel A */
+        dev_register(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
+                     &g_lambda_console, "MC68681 serial port A", dev, mc68681_serial_a_init);
+
+        /* Child device: serial channel B */
+        dev_register(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", IRQL_NONE, LAMBDA_MC68681_BASE,
+                     NULL, "MC68681 serial port B", dev, mc68681_serial_b_init);
+
+        /*
+            Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
+            subsequent revisions it's active-low.
+        */
+#if (PLATFORM_REV == 0)
+		mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+#else
+		mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+#endif
+    }
 
 
     /*
@@ -64,16 +80,16 @@ s32 plat_dev_enumerate()
     {
         /* Child device: RTC */
         dev_register(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", LAMBDA_DS17485_IRQL,
-                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 RTC", dev, ds17485_rtc_init);
+                     LAMBDA_DS17485_BASE, NULL, "DS17485 RTC", dev, ds17485_rtc_init);
 
         /* Child device: user NVRAM */
         dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE,
-                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 user NVRAM", dev,
+                     LAMBDA_DS17485_BASE, NULL, "DS17485 user NVRAM", dev,
                      ds17485_user_ram_init);
 
-        /* Child device: extendd NVRAM */
+        /* Child device: extended NVRAM */
         dev_register(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE,
-                     LAMBDA_DS17485_BASE, &sub_dev, "DS17485 extended NVRAM", dev,
+                     LAMBDA_DS17485_BASE, NULL, "DS17485 extended NVRAM", dev,
                      ds17485_ext_ram_init);
     }
 
@@ -87,11 +103,11 @@ s32 plat_dev_enumerate()
     {
         /* Child device: primary ATA channel */
         dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE,
-                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 0", dev, ata_master_init);
+                     LAMBDA_ATA_BASE, NULL, "ATA channel 0", dev, ata_master_init);
 
         /* Child device: secondary ATA channel */
         dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_MASS_STORAGE, "ata", IRQL_NONE,
-                     LAMBDA_ATA_BASE, &sub_dev, "ATA channel 1", dev, ata_slave_init);
+                     LAMBDA_ATA_BASE, NULL, "ATA channel 1", dev, ata_slave_init);
     }
 
     /* Memory device */

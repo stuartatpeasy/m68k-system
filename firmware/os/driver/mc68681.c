@@ -555,8 +555,8 @@ s32 mc68681_channel_a_putc(dev_t *dev, const char c)
     mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
     /* FIXME: return EAGAIN if FIFO is full? */
-//    while(CIRCBUF_IS_FULL(state->txa_buf))
-//        ;
+    while(CIRCBUF_IS_FULL(state->txa_buf))
+        ;
 
     CIRCBUF_WRITE(state->txa_buf, c);
     state->imr |= BIT(MC68681_IMR_TXRDY_A);
@@ -588,7 +588,7 @@ s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 /*
     mc68681_channel_a_getc() - read a character from serial channel A, blocking until done.
 */
-s32 mc68681_channel_a_getc(dev_t *dev, char *c)
+s16 mc68681_channel_a_getc(dev_t *dev)
 {
     mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
@@ -596,15 +596,14 @@ s32 mc68681_channel_a_getc(dev_t *dev, char *c)
     while(CIRCBUF_IS_EMPTY(state->rxa_buf))
         ;
 
-    *c = CIRCBUF_READ(state->rxa_buf);
-    return SUCCESS;
+    return CIRCBUF_READ(state->rxa_buf);
 }
 
 
 /*
     mc68681_channel_b_getc() - read a character from serial channel B, blocking until done.
 */
-s32 mc68681_channel_b_getc(dev_t *dev, char *c)
+s16 mc68681_channel_b_getc(dev_t *dev)
 {
     mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
@@ -612,8 +611,7 @@ s32 mc68681_channel_b_getc(dev_t *dev, char *c)
     while(CIRCBUF_IS_EMPTY(state->rxb_buf))
         ;
 
-    *c = CIRCBUF_READ(state->rxb_buf);
-    return SUCCESS;
+    return CIRCBUF_READ(state->rxb_buf);
 }
 
 

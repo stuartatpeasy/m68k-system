@@ -15,7 +15,6 @@
 
 #include <kernel/include/limits.h>
 #include <kernel/include/types.h>
-#include <kernel/platform.h>
 
 
 s32 printf(const char *format, ...)

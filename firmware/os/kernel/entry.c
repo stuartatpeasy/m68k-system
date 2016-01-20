@@ -11,8 +11,8 @@
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 */
 
-
 #include <kernel/boot.h>
+#include <kernel/device/memconsole.h>
 #include <kernel/fs/vfs.h>
 #include <kernel/housekeeper.h>
 #include <kernel/include/defs.h>
@@ -40,6 +40,10 @@ void _main()
     rtc_time_t tm;
     s32 ret;
 
+    /*
+        This section runs with interrupts disabled.  The boot console is not available in this
+        section.
+    */
     cpu_disable_interrupts();   /* Just in case we were called manually */
 
     /* Copy kernel read/write data areas into kernel RAM */
@@ -59,44 +63,71 @@ void _main()
     /* Initialise kernel heap */
     kmeminit(g_slab_end, mem_get_highest_addr(MEM_EXTENT_KERN | MEM_EXTENT_RAM) - KERNEL_STACK_LEN);
 
-    /* Initialise the console */
-    if(plat_console_init() != SUCCESS)
-        boot_early_fail(3);
-
 	/* By default, all exceptions cause a context-dump followed by a halt. */
 	cpu_irq_init_table();
 
-    /* =============== NEED TO ENABLE INTERRUPTS HERE =============== */
-    cpu_enable_interrupts();
+    /* Initialise device tree */
+	if(dev_init() != SUCCESS)
+        boot_early_fail(3);
 
-    /*
-        At this point, minimal configuration has been done.  The scheduler is not yet running,
-        but we can now initialise non-critical peripherals and start greeting the user.
+	/*
+        It's not yet possible to initialise the real (platform) console because devices haven't
+        been enumerated and interrupts are disabled.  In the meantime, create a temporary in-memory
+        kernel console device to capture output from the boot process.
     */
+
+    if(early_boot_console_init() != SUCCESS)
+        boot_early_fail(4);
+
     printf("%s\nplatform: %s\n", g_warmup_message, plat_get_name());
 
     printf("%uMB RAM detected\n", (mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM)
             + mem_get_total_size(MEM_EXTENT_KERN | MEM_EXTENT_RAM)) >> 20);
 
+    /* === Initialise peripherals - phase 2 === */
+    if(dev_enumerate() != SUCCESS)
+        boot_early_fail(5);
+
+    /* Initialise the console */
+    if(plat_console_init() != SUCCESS)
+        boot_early_fail(6);
+
+    ret = sched_init("[sys]");      /* Init scheduler and create system process */
+
+    /*
+        Enable interrupts and continue booting
+    */
+    cpu_enable_interrupts();
+
+    /* Copy the contents of the temporary console to the real console; close the temp console. */
+    early_boot_console_close();
+
     /* Activate red LED while the boot process continues */
 	plat_led_off(LED_ALL);
 	plat_led_on(LED_RED);
+
+	plat_list_devices();
+
+    /*
+        Device enumeration is done; interrupts are enabled, and the console should be functional.
+        Booting continues...
+    */
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
     put("Clearing user RAM: ");
     mem_zero_extents(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     puts("done");
 
+    boot_list_mass_storage();
+    boot_list_partitions();
+
+    /* ret is set by the call to sched_init(), above */
+    if(ret != SUCCESS)
+        printf("sched: init failed: %s\n", kstrerror(ret));
+
     /* Initialise user heap.  Place it in the largest user RAM extent. */
     ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     umeminit(ramext->base, ramext->base + ramext->len);
-
-    /* === Initialise peripherals - phase 2 === */
-    if(dev_enumerate() != SUCCESS)
-        boot_early_fail(4);
-
-    boot_list_mass_storage();
-    boot_list_partitions();
 
     ret = vfs_init();
 	if(ret != SUCCESS)
@@ -130,10 +161,6 @@ void _main()
             puts("Date/time invalid - please set clock");
     }
 
-    ret = sched_init("[sys]");      /* Init scheduler and create system process */
-    if(ret != SUCCESS)
-        printf("sched: init failed: %s\n", kstrerror(ret));
-
     /* Create housekeeper process */
     proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);
 
@@ -141,9 +168,6 @@ void _main()
     ret = net_init();
     if(ret != SUCCESS)
         printf("net: init failed: %s\n", kstrerror(ret));
-
-// FIXME remove
-//    cpu_enable_interrupts();
 
     /* Startup complete - activate green LED */
 	plat_led_off(LED_RED);

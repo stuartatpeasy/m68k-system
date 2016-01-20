@@ -8,6 +8,7 @@
 */
 
 #include <klibc/stdio.h>
+#include <kernel/console.h>
 
 
 /*
@@ -15,7 +16,7 @@
 */
 s32 putchar(s32 c)
 {
-	plat_console_putc(c);
+	console_putc(c);
 
 	return c;
 }
@@ -27,7 +28,7 @@ s32 putchar(s32 c)
 s32 put(ks8 *s)
 {
 	while(*s)
-		plat_console_putc(*s++);
+		console_putc(*s++);
 
 	return SUCCESS;
 }
@@ -39,8 +40,8 @@ s32 put(ks8 *s)
 s32 puts(ks8 *s)
 {
 	while(*s)
-		plat_console_putc(*s++);
-	plat_console_putc('\n');
+		console_putc(*s++);
+	console_putc('\n');
 
 	return SUCCESS;
 }

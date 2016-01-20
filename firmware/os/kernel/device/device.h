@@ -81,7 +81,7 @@ struct dev
     s32             (*control)(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
     s32             (*read)(dev_t *dev, ku32 offset, u32 *len, void *buf);
     s32             (*write)(dev_t *dev, ku32 offset, u32 *len, const void *buf);
-    s32             (*getc)(dev_t *dev, char *c);
+    s16             (*getc)(dev_t *dev);
     s32             (*putc)(dev_t *dev, const char c);
     s32             (*shut_down)(dev_t *dev);
 
@@ -97,12 +97,15 @@ typedef s32 (*driver_init_fn)(dev_t *);
 /*
     Function declarations
 */
+s32 dev_init();
 s32 dev_enumerate();
 dev_t *dev_get_root();
 s32 dev_add_child(dev_t *parent, dev_t *child);
 
 s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
                const char * const human_name, ku32 irql, void *base_addr, dev_t **dev);
+
+s32 dev_destroy(dev_t *dev);
 
 s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
                  ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
@@ -117,7 +120,7 @@ s32 dev_add_suffix(char * const name);
 s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, u32 *len, void *buf);
 s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, u32 *len, const void *buf);
 s32 dev_control_unimplemented(dev_t * const dev, const devctl_fn_t fn, const void *in, void *out);
-s32 dev_getc_unimplemented(dev_t *dev, char *c);
+s16 dev_getc_unimplemented(dev_t *dev);
 s32 dev_putc_unimplemented(dev_t *dev, const char c);
 s32 dev_shut_down_unimplemented(dev_t * const dev);
 

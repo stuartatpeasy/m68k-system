@@ -6,6 +6,7 @@
 
 #include <driver/ds17485.h>
 #include <driver/mc68681.h>
+#include <kernel/console.h>
 #include <kernel/device/device.h>
 #include <kernel/platform.h>
 #include <platform/lambda/lambda.h>
@@ -80,53 +81,22 @@ s32 plat_mem_detect()
 
 
 /*
-    plat_console_init() - initialise the boot console.  This happens early in the boot process -
-    before the main hardware-enumeration step.  This code therefore builds two dev_t objects in
-    global variables (g_lambda_duart, g_lambda_console); these are later added to the device tree in
-    plat_dev_enumerate().
+    plat_console_init() - activate the platform's boot console.  This is MC68681 serial channel A.
 */
 s32 plat_console_init(void)
 {
-    s32 ret;
+    console_set_device(g_lambda_console);
+    return SUCCESS;
+}
 
-    /* Initialise the console */
-    ret = dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "duart", "MC68681 DUART",
-                     LAMBDA_MC68681_IRQL, LAMBDA_MC68681_BASE, &g_lambda_duart);
-    if(ret != SUCCESS)
-        return ret;
 
-    ret = mc68681_init(g_lambda_duart);
-    if(ret != SUCCESS)
-    {
-        kfree(g_lambda_duart);
-        g_lambda_duart = NULL;
-        return ret;
-    }
+/*
+    plat_list_devices() - list (ie. write details to the console of) devices found during the boot
+    process.
+*/
+void plat_list_devices()
+{
 
-	ret = dev_create(DEV_TYPE_SERIAL, DEV_SUBTYPE_NONE, "ser", "MC68681 serial port A",
-                        IRQL_NONE, LAMBDA_MC68681_BASE, &g_lambda_console);
-	if(ret == SUCCESS)
-	{
-	    g_lambda_console->parent = g_lambda_duart;
-		ret = mc68681_serial_a_init(g_lambda_console);
-		if(ret != SUCCESS)
-		{
-			kfree(g_lambda_console);
-			g_lambda_console = NULL;
-		}
-
-        /*
-            Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
-            subsequent revisions it's active-low.
-        */
-#if (PLATFORM_REV == 0)
-		mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
-#else
-		mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
-#endif
-	}
-
-	return ret;
 }
 
 
@@ -140,28 +110,6 @@ const char *plat_get_name()
 #else
     return "lambda rev1";
 #endif
-}
-
-
-/*
-    plat_console_putc() - write a character to the console.
-*/
-s16 plat_console_putc(const char c)
-{
-    mc68681_channel_a_putc(g_lambda_console, c);
-    return c;
-}
-
-
-/*
-    plat_console_getc() - read a character from the console.
-*/
-s16 plat_console_getc()
-{
-    char c;
-    mc68681_channel_a_getc(g_lambda_console, &c);
-
-    return c;
 }
 
 

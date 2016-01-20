@@ -301,16 +301,16 @@ typedef enum mc68681_pin_fn
 
 typedef struct
 {
-    u8          acr;        /* ACR is write-only, so we store its current val here              */
-    u8          opcr;       /* ditto OPCR                                                       */
-    u8          brg_test;   /* BRG test mode toggles with each read of the corresponding reg    */
-    u8          imr;        /* Interrupt mask register value                                    */
-    u32         baud_a;     /* Channel A baud rate                                              */
-    u32         baud_b;     /* Channel B baud rate                                              */
-    volatile CIRCBUF(u8) rxa_buf;
-    volatile CIRCBUF(u8) txa_buf;
-    volatile CIRCBUF(u8) rxb_buf;
-    volatile CIRCBUF(u8) txb_buf;
+    u8                      acr;        /* ACR is write-only, so we store its current val here  */
+    u8                      opcr;       /* ditto OPCR                                           */
+    u8                      brg_test;   /* BRG test mode toggles with each read of the BRG reg  */
+    u8                      imr;        /* Interrupt mask register value                        */
+    u32                     baud_a;     /* Channel A baud rate                                  */
+    u32                     baud_b;     /* Channel B baud rate                                  */
+    volatile CIRCBUF(u8)    rxa_buf;
+    volatile CIRCBUF(u8)    txa_buf;
+    volatile CIRCBUF(u8)    rxb_buf;
+    volatile CIRCBUF(u8)    txb_buf;
 } mc68681_state_t;
 
 const mc68681_baud_rate_entry g_mc68681_baud_rates[22];
@@ -329,13 +329,13 @@ s32 mc68681_set_baud_rate(dev_t * dev, ku16 channel, ku32 rate);
 u32 mc68681_get_baud_rate(dev_t * dev, ku16 channel);
 s32 mc68681_control(dev_t *dev, ku32 channel, const devctl_fn_t fn, const void *in, void *out);
 
-s32 mc68681_channel_a_getc(dev_t *dev, char *c);
+s16 mc68681_channel_a_getc(dev_t *dev);
 s32 mc68681_channel_a_putc(dev_t *dev, const char c);
 s32 mc68681_channel_a_set_baud_rate(dev_t *dev, ku32 rate);
 u32 mc68681_channel_a_get_baud_rate(dev_t *dev);
 s32 mc68681_channel_a_control(dev_t *dev, ku32 function, const void *in, void *out);
 
-s32 mc68681_channel_b_getc(dev_t *dev, char *c);
+s16 mc68681_channel_b_getc(dev_t *dev);
 s32 mc68681_channel_b_putc(dev_t *dev, const char c);
 s32 mc68681_channel_b_set_baud_rate(dev_t *dev, ku32 rate);
 u32 mc68681_channel_b_get_baud_rate(dev_t *dev);

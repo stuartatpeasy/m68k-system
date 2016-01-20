@@ -26,12 +26,25 @@ const char * const g_device_sub_names = "0123456789abcdefghijklmnopqrstuv"
 static dev_t *root_dev = NULL;
 
 
+/*
+    dev_init() - initialise device support
+*/
+s32 dev_init()
+{
+    root_dev = kcalloc(1, sizeof(dev_t));
+
+    /* FIXME - init root_dev as an actual device, duh. */
+
+    return root_dev ? SUCCESS : ENOMEM;
+}
+
+
+/*
+    dev_enumerate() - enumerate platform and kernel devices
+*/
 s32 dev_enumerate()
 {
     s32 ret;
-
-    /* Root device is implicit */
-    root_dev = CHECKED_KCALLOC(1, sizeof(dev_t));
 
     /* Populating the device tree is a board-specific operation */
     ret = plat_dev_enumerate();
@@ -205,6 +218,22 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
 
 
 /*
+    dev_destroy() - destroy a device allocated with dev_create() or via dev_register().
+*/
+s32 dev_destroy(dev_t *dev)
+{
+    /* FIXME - fix device tree (i.e. move sibling across) */
+    /* FIXME FIXME FIXME FIXME - also destroy child devices!! */
+    ks32 ret = dev->shut_down(dev);
+    if((ret != SUCCESS) && (ret != ENOSYS))
+        return ret;
+
+    kfree(dev);
+    return SUCCESS;
+}
+
+
+/*
     dev_register() - create and initialise a new device
 */
 s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
@@ -212,8 +241,9 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
                  dev_t *parent_dev, s32 (*init_fn)(dev_t *))
 {
     s32 ret;
+    dev_t *d;
 
-    ret = dev_create(type, subtype, dev_name, human_name, irql, base_addr, dev);
+    ret = dev_create(type, subtype, dev_name, human_name, irql, base_addr, &d);
     if(ret != SUCCESS)
     {
         printf("%s: %s device creation failed: %s\n", dev_name, human_name, kstrerror(ret));
@@ -222,24 +252,26 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
 
     if(init_fn != NULL)
     {
-        ret = init_fn(*dev);
+        ret = init_fn(d);
         if(ret != SUCCESS)
         {
-            kfree(*dev);
-            printf("%s: %s device init failed: %s\n", (*dev)->name, human_name, kstrerror(ret));
+            kfree(d);
+            printf("%s: %s device init failed: %s\n", d->name, human_name, kstrerror(ret));
             return ret;
         }
     }
 
-    ret = dev_add_child(parent_dev, *dev);
+    ret = dev_add_child(parent_dev, d);
     if(ret != SUCCESS)
     {
-        (*dev)->shut_down(*dev);
-        kfree(*dev);
-        printf("%s: failed to add %s to device tree: %s\n", (*dev)->name, human_name,
+        dev_destroy(d);
+        printf("%s: failed to add %s to device tree: %s\n", d->name, human_name,
                 kstrerror(ret));
         return ret;
     }
+
+    if(dev != NULL)
+        *dev = d;
 
     return SUCCESS;
 }
@@ -290,10 +322,9 @@ s32 dev_control_unimplemented(dev_t * const dev, ku32 function, const void *in, 
 /*
     dev_getc_unimplemented() - default handler for dev->getc() calls
 */
-s32 dev_getc_unimplemented(dev_t * const dev, char *c)
+s16 dev_getc_unimplemented(dev_t * const dev)
 {
     UNUSED(dev);
-    UNUSED(c);
 
     return ENOSYS;
 }
