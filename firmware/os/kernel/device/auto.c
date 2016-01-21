@@ -61,8 +61,8 @@ s32 dev_auto_init(ku8 hw_id, void *base_addr, ku32 irql, dev_t *parent_dev, dev_
             s32 ret;
             dev_t *d;
 
-            ret = dev_register(p->type, p->subtype, p->name, irql, base_addr, &d, p->human_name,
-                                NULL, p->init_fn);
+            ret = dev_create(p->type, p->subtype, p->name, irql, base_addr, &d, p->human_name,
+                             NULL, p->init_fn);
 
             if((ret == SUCCESS) && (dev != NULL))
                 *dev = d;
