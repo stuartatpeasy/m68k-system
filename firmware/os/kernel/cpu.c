@@ -33,6 +33,9 @@ void cpu_irq_init_table()
 }
 
 
+/*
+    cpu_irq_set_default_handler() - install the default handler for the specified IRQ level
+*/
 s32 cpu_irq_set_default_handler(ku32 irql)
 {
     irq_handler_table_entry_t *ent;
