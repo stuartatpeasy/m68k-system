@@ -255,10 +255,8 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     mc68681_state_t *state = (mc68681_state_t *) dev->data;
     UNUSED(irql);
 
-    ku8 irq_state = MC68681_REG(base_addr, MC68681_ISR);
-
     /* Serial channel A "receiver ready" interrupt */
-    while(irq_state & BIT(MC68681_IMR_RXRDY_FFULL_A))
+    while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_A))
     {
         /*
             Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
@@ -270,7 +268,7 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     }
 
     /* Serial channel A "transmitter ready" interrupt */
-    if(irq_state & BIT(MC68681_IMR_TXRDY_A))
+    if(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_TXRDY_A))
     {
         /*
             Transmitter ready.  If there is another character to transmit, do so; if not, disable
@@ -286,7 +284,7 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     }
 
     /* Serial channel B "receiver ready" interrupt */
-    while(irq_state & BIT(MC68681_IMR_RXRDY_FFULL_B))
+    while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_B))
     {
         /*
             Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
@@ -296,7 +294,7 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     }
 
     /* Serial channel B "transmitter ready" interrupt */
-    if(irq_state & BIT(MC68681_IMR_TXRDY_B))
+    if(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_TXRDY_B))
     {
         /*
             Transmitter ready.  If there is another character to transmit, do so; if not, disable
@@ -319,6 +317,7 @@ void mc68681_irq_handler(ku32 irql, void *arg)
 */
 s32 mc68681_shut_down(dev_t *dev)
 {
+    MC68681_REG(dev->base_addr, MC68681_IMR) = 0;   /* Disable all MC68681 interrupts */
     kfree(dev->data);
 
     return SUCCESS;
@@ -552,7 +551,7 @@ u32 mc68681_channel_b_get_baud_rate(dev_t *dev)
 */
 s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
 
     /* FIXME: return EAGAIN if FIFO is full? */
     while(CIRCBUF_IS_FULL(state->txa_buf))
@@ -571,7 +570,7 @@ s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 */
 s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
 
     /* FIXME: return EAGAIN if FIFO is full? */
     while(CIRCBUF_IS_FULL(state->txb_buf))
@@ -590,7 +589,7 @@ s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 */
 s16 mc68681_channel_a_getc(dev_t *dev)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
 
     /* FIXME: return EAGAIN if FIFO is empty? */
     while(CIRCBUF_IS_EMPTY(state->rxa_buf))
@@ -605,7 +604,7 @@ s16 mc68681_channel_a_getc(dev_t *dev)
 */
 s16 mc68681_channel_b_getc(dev_t *dev)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
 
     /* FIXME: return EAGAIN if FIFO is empty? */
     while(CIRCBUF_IS_EMPTY(state->rxb_buf))
