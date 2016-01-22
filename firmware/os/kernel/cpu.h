@@ -93,6 +93,9 @@ void cpu_irq_handler(ku32 irql);
 /* Add a handler for the specified IRQ */
 s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler);
 
+/* De-register/remove a handler for the specified IRQ */
+s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler);
+
 /*
     An entry in the IRQ indirection table.  Consists of a ptr to a handler fn, and an arbitrary
     data item.

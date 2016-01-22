@@ -67,8 +67,8 @@ s32 partition_init()
 
             data = CHECKED_KCALLOC(1, sizeof(partition_data_t));
 
-            if(dev_register(DEV_TYPE_BLOCK, DEV_SUBTYPE_PARTITION, dev->name, IRQL_NONE, NULL,
-                            &part_dev, "partition", dev, NULL) != SUCCESS)
+            if(dev_create(DEV_TYPE_BLOCK, DEV_SUBTYPE_PARTITION, dev->name, IRQL_NONE, NULL,
+                          &part_dev, "partition", dev, NULL) != SUCCESS)
             {
                 kfree(data);
                 continue;

@@ -13,28 +13,44 @@
 
 irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL];
 
+s32 cpu_irq_set_default_handler(ku32 irql);
 
 /*
     cpu_irq_init_table() - initialise the IRQ handler table
 */
 void cpu_irq_init_table()
 {
-    irq_handler_table_entry_t *irqent,
-                              *const irqent_last = &g_irq_handlers[CPU_MAX_IRQL];
+    u32 irql;
 
-    for(irqent = g_irq_handlers; irqent < irqent_last; ++irqent)
-    {
-        irqent->handler = cpu_default_irq_handler;
-        irqent->data    = NULL;
-        irqent->flags   = IRQ_HANDLER_DEFAULT;
-        irqent->next    = NULL;
-    }
+    for(irql = 0; irql <= CPU_MAX_IRQL; ++irql)
+        cpu_irq_set_default_handler(irql);
 
     /*
         Perform architecture-specific init, e.g. init CPU IRQ vector table, set any specific
         handler functions, etc.
     */
     cpu_irq_init_arch_specific();
+}
+
+
+/*
+    cpu_irq_set_default_handler() - install the default handler for the specified IRQ level
+*/
+s32 cpu_irq_set_default_handler(ku32 irql)
+{
+    irq_handler_table_entry_t *ent;
+
+    if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
+        return EINVAL;
+
+    ent = &g_irq_handlers[irql];
+
+    ent->handler    = cpu_default_irq_handler;
+    ent->data       = NULL;
+    ent->flags      = IRQ_HANDLER_DEFAULT;
+    ent->next       = NULL;
+
+    return SUCCESS;
 }
 
 
@@ -70,6 +86,59 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
     ent->next = NULL;
 
 	return SUCCESS;
+}
+
+
+/*
+    cpu_irq_remove_handler() - de-register (remove) an interrupt handler function
+*/
+s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler)
+{
+    irq_handler_table_entry_t *ent, *ent_prev;
+
+    if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
+        return EINVAL;
+
+    for(ent_prev = NULL, ent = &g_irq_handlers[irql]; ent; ent_prev = ent, ent = ent->next)
+    {
+        if(ent->handler == handler)
+        {
+            if(ent_prev)
+            {
+                /* This is not the first handler in a chain */
+                ent_prev->next = ent->next;
+                kfree(ent);
+                return SUCCESS;
+            }
+            else
+            {
+                /* This is the first handler in a chain */
+                if(ent->next)
+                {
+                    /*
+                        There are subsequent handlers: replace the handler with the next one in the
+                        chain, then free the memory associated with the next handler.
+                    */
+                    irq_handler_table_entry_t *next = ent->next;
+
+                    ent->handler = next->handler;
+                    ent->data = next->data;
+                    ent->flags = next->flags;
+                    ent->next = next->next;
+
+                    kfree(next);
+                    return SUCCESS;
+                }
+                else
+                {
+                    /* There are no subsequent handlers: install the default handler */
+                    return cpu_irq_set_default_handler(irql);
+                }
+            }
+        }
+    }
+
+    return ENOENT;
 }
 
 

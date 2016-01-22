@@ -189,11 +189,13 @@ s32 dev_add_suffix(char * const name)
 
 
 /*
-	dev_create() - create a new device
+    dev_create() - create and initialise a new device
 */
-s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
-               const char * const human_name, ku32 irql, void *base_addr, dev_t **dev)
+s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
+                 ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
+                 dev_t *parent_dev, s32 (*init_fn)(dev_t *))
 {
+    s32 ret;
     dev_t *d = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
 
 	d->type		    = type;
@@ -209,44 +211,12 @@ s32 dev_create(dev_type_t type, dev_subtype_t subtype, const char * const name,
 	d->putc         = dev_putc_unimplemented;
 	d->shut_down    = dev_shut_down_unimplemented;
 
-	strcpy(d->name, name);
+	strcpy(d->name, dev_name);
 
-	*dev = d;
-
-    return dev_add_suffix(d->name);
-}
-
-
-/*
-    dev_destroy() - destroy a device allocated with dev_create() or via dev_register().
-*/
-s32 dev_destroy(dev_t *dev)
-{
-    /* FIXME - fix device tree (i.e. move sibling across) */
-    /* FIXME FIXME FIXME FIXME - also destroy child devices!! */
-    ks32 ret = dev->shut_down(dev);
-    if((ret != SUCCESS) && (ret != ENOSYS))
-        return ret;
-
-    kfree(dev);
-    return SUCCESS;
-}
-
-
-/*
-    dev_register() - create and initialise a new device
-*/
-s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
-                 ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
-                 dev_t *parent_dev, s32 (*init_fn)(dev_t *))
-{
-    s32 ret;
-    dev_t *d;
-
-    ret = dev_create(type, subtype, dev_name, human_name, irql, base_addr, &d);
+    ret = dev_add_suffix(d->name);
     if(ret != SUCCESS)
     {
-        printf("%s: %s device creation failed: %s\n", dev_name, human_name, kstrerror(ret));
+        kfree(d);
         return ret;
     }
 
@@ -273,6 +243,34 @@ s32 dev_register(const dev_type_t type, const dev_subtype_t subtype, const char 
     if(dev != NULL)
         *dev = d;
 
+    return SUCCESS;
+}
+
+
+/*
+    dev_destroy() - destroy a device allocated with dev_create() or via dev_register().
+*/
+s32 dev_destroy(dev_t *dev)
+{
+    /* TODO: lock device tree */
+    /* Destroy the device's child devices */
+    while(dev->first_child)
+        dev_destroy(dev->first_child);
+
+    ks32 ret = dev->shut_down(dev);
+    if((ret != SUCCESS) && (ret != ENOSYS))
+        return ret;
+
+    if(dev->parent && (dev->parent->first_child == dev))
+        dev->parent->first_child = dev->next_sibling;
+
+    if(dev->prev_sibling)
+        dev->prev_sibling->next_sibling = dev->next_sibling;
+
+    if(dev->next_sibling)
+        dev->next_sibling->prev_sibling = dev->prev_sibling;
+
+    kfree(dev);
     return SUCCESS;
 }
 

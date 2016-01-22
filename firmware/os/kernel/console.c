@@ -38,8 +38,8 @@ s32 early_boot_console_init()
 {
     s32 ret;
 
-    ret = dev_register(DEV_TYPE_CHARACTER, DEV_SUBTYPE_NONE, "con", IRQL_NONE, NULL,
-                       &g_early_boot_console, "Early-boot console", NULL, memconsole_init);
+    ret = dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_NONE, "con", IRQL_NONE, NULL,
+                     &g_early_boot_console, "Early-boot console", NULL, memconsole_init);
     if(ret != SUCCESS)
         return ret;
 
@@ -60,6 +60,5 @@ void early_boot_console_close()
     while((c = g_early_boot_console->getc(g_early_boot_console)) >= 0)
         console_putc(c);
 
-// FIXME - uncomment this call to dev_destroy() once dev_destroy() actually works
-//    dev_destroy(g_early_boot_console);
+    dev_destroy(g_early_boot_console);
 }
