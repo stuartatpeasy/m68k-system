@@ -100,7 +100,6 @@ typedef s32 (*driver_init_fn)(dev_t *);
 s32 dev_init();
 s32 dev_enumerate();
 dev_t *dev_get_root();
-s32 dev_add_child(dev_t *parent, dev_t *child);
 
 s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
                  ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,

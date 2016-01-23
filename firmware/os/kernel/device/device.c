@@ -65,38 +65,6 @@ dev_t *dev_get_root()
 
 
 /*
-    dev_add_child() - add a node to the device tree
-*/
-s32 dev_add_child(dev_t *parent, dev_t *child)
-{
-    /* TODO - mutex */
-    /* Check that no device with a matching name exists */
-    if(dev_find(child->name) != NULL)
-        return EEXIST;
-
-    if(parent == NULL)
-        parent = root_dev;
-
-	child->parent = parent;
-
-	if(parent->first_child == NULL)
-		parent->first_child = child;
-	else
-	{
-    	dev_t *p;
-
-    	for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
-        	;
-
-	    p->next_sibling = child;
-    	child->prev_sibling = p;
-	}
-
-    return SUCCESS;
-}
-
-
-/*
     dev_get_next() - used to iterate over all nodes in the device tree
 */
 dev_t *dev_get_next(dev_t *node)
@@ -193,11 +161,15 @@ s32 dev_add_suffix(char * const name)
 */
 s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * const dev_name,
                  ku32 irql, void *base_addr, dev_t **dev, const char * const human_name,
-                 dev_t *parent_dev, s32 (*init_fn)(dev_t *))
+                 dev_t *parent, s32 (*init_fn)(dev_t *))
 {
     s32 ret;
     dev_t *d = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
 
+    if(parent == NULL)
+        parent = root_dev;
+
+    d->parent       = parent;
 	d->type		    = type;
 	d->subtype		= subtype;
 	d->irql		    = irql;
@@ -220,6 +192,7 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
         return ret;
     }
 
+    /* Execute the device's init function, if one was supplied */
     if(init_fn != NULL)
     {
         ret = init_fn(d);
@@ -231,14 +204,19 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
         }
     }
 
-    ret = dev_add_child(parent_dev, d);
-    if(ret != SUCCESS)
-    {
-        dev_destroy(d);
-        printf("%s: failed to add %s to device tree: %s\n", d->name, human_name,
-                kstrerror(ret));
-        return ret;
-    }
+    /* Add the new device to the device tree */
+	if(parent->first_child == NULL)
+		parent->first_child = d;
+	else
+	{
+    	dev_t *p;
+
+    	for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
+        	;
+
+	    p->next_sibling = d;
+    	d->prev_sibling = p;
+	}
 
     if(dev != NULL)
         *dev = d;
