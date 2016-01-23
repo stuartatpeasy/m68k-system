@@ -109,7 +109,8 @@ s32 mc68681_init(dev_t *dev)
         (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
     /* Set output control register to defaults (all pins = general-purpose outputs) */
-	MC68681_REG(base_addr, MC68681_OPCR) = 0;
+    state->opcr = 0x00;
+	MC68681_REG(base_addr, MC68681_OPCR) = state->opcr;
 
 	/*
 		Set OPR - output port bits
@@ -140,8 +141,8 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
 		----------------------------------------------------------------------
 			7		0		OP7 - 0: complement of OPR7; 1: TxRDYB interrupt
 			6		0		OP6 - 0: complement of OPR6; 1: TxRDYA interrupt
-			5		0		OP5 - 0: complement of OPR5; 1: TxB interrupt
-			4		0		OP4 - 0: complement of OPR4; 1: TxA interrupt
+			5		0		OP5 - 0: complement of OPR5; 1: RxB/FFULLB interrupt
+			4		0		OP4 - 0: complement of OPR4; 1: RxA/FFULLA interrupt
 			3		0		} OP3 - 00: complement of OPR3; 01: C/T output
 			2		1		}       10: ch B Tx clk; 11: ch B Rx clk
 			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
@@ -210,12 +211,16 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
 */
 s32 mc68681_serial_a_init(dev_t *dev)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
+    mc68681_state_t *state;
+
+    dev->data = dev->parent->data;
 
     dev->getc = mc68681_channel_a_getc;
     dev->putc = mc68681_channel_a_putc;
     dev->block_size = 1;
     dev->len = 1;
+
+    state = (mc68681_state_t *) dev->data;
 
     /* Enable serial port A "receiver ready" interrupt */
     state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_A) | BIT(MC68681_IMR_TXRDY_A);
@@ -230,12 +235,16 @@ s32 mc68681_serial_a_init(dev_t *dev)
 */
 s32 mc68681_serial_b_init(dev_t *dev)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
+    mc68681_state_t *state;
+
+    dev->data = dev->parent->data;
 
     dev->getc = mc68681_channel_b_getc;
     dev->putc = mc68681_channel_b_putc;
     dev->block_size = 1;
     dev->len = 1;
+
+    state = (mc68681_state_t *) dev->parent->data;
 
     /* Enable serial port B "receiver ready" interrupt */
     state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_B) | BIT(MC68681_IMR_TXRDY_B);
@@ -255,20 +264,26 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     mc68681_state_t *state = (mc68681_state_t *) dev->data;
     UNUSED(irql);
 
+    ku8 irq_status = MC68681_REG(base_addr, MC68681_ISR);
+
     /* Serial channel A "receiver ready" interrupt */
-    while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_A))
+    if(irq_status & BIT(MC68681_IMR_RXRDY_FFULL_A))
     {
-        /*
-            Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
-            the character will be dropped.
-        */
-        ku8 data = MC68681_REG(base_addr, MC68681_RHRA);
-        if(!CIRCBUF_IS_FULL(state->rxa_buf))
-            CIRCBUF_WRITE(state->rxa_buf, data);
+        do
+        {
+            /*
+                Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is
+                full, the character will be dropped.
+            */
+            ku8 data = MC68681_REG(base_addr, MC68681_RHRA);
+            if(!CIRCBUF_IS_FULL(state->rxa_buf))
+                CIRCBUF_WRITE(state->rxa_buf, data);
+        }
+        while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_A));
     }
 
     /* Serial channel A "transmitter ready" interrupt */
-    if(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_TXRDY_A))
+    if(irq_status & BIT(MC68681_IMR_TXRDY_A))
     {
         /*
             Transmitter ready.  If there is another character to transmit, do so; if not, disable
@@ -284,17 +299,21 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     }
 
     /* Serial channel B "receiver ready" interrupt */
-    while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_B))
+    if(irq_status & BIT(MC68681_IMR_RXRDY_FFULL_B))
     {
-        /*
-            Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is full,
-            the character will be dropped.
-        */
-        CIRCBUF_WRITE(state->rxb_buf, MC68681_REG(base_addr, MC68681_RHRB));
+        do
+        {
+            /*
+                Transfer a byte from the receive FIFO to the RX buffer.  Note: if the buffer is
+                full, the character will be dropped.
+            */
+            CIRCBUF_WRITE(state->rxb_buf, MC68681_REG(base_addr, MC68681_RHRB));
+        }
+        while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_B));
     }
 
     /* Serial channel B "transmitter ready" interrupt */
-    if(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_TXRDY_B))
+    if(irq_status & BIT(MC68681_IMR_TXRDY_B))
     {
         /*
             Transmitter ready.  If there is another character to transmit, do so; if not, disable
