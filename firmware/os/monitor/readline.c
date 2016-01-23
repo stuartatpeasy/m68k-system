@@ -30,7 +30,7 @@
 #define KEY_CTRL_w			(0x17)		/* Kill word backwards						*/
 
 #define READLINE_GETC()			console_getc()
-#define READLINE_PUTC(x, echo)	{ if(echo) console_putc(x); }
+#define READLINE_PUTC(x, echo)	{ if(echo) while(console_putc(x) == -EAGAIN) ; }
 
 
 void readline(char *buffer, s32 buffer_len, ku32 echo)
@@ -40,7 +40,10 @@ void readline(char *buffer, s32 buffer_len, ku32 echo)
 	buffer[0] = '\0';
 	while(1)
 	{
-		const char c = READLINE_GETC();
+		char c;
+
+		while((c = READLINE_GETC()) == -EAGAIN)
+            ;
 
 		switch(c)
 		{
@@ -137,13 +140,22 @@ void readline(char *buffer, s32 buffer_len, ku32 echo)
 
 			case 0x1b:							/* Esc ... */
 				{
-					switch(READLINE_GETC())
+                    while((c = READLINE_GETC()) == -EAGAIN)
+                        ;
+
+					switch(c)
 					{
 						case 0x5b:				/* [ */
-							switch(READLINE_GETC())
+                            while((c = READLINE_GETC()) == -EAGAIN)
+                                ;
+
+							switch(c)
 							{
                                 case 0x31:
-                                    switch(READLINE_GETC())
+                                    while((c = READLINE_GETC()) == -EAGAIN)
+                                        ;
+
+                                    switch(c)
                                     {
                                         case 0x7e:
                                             for(; pos; --pos)
@@ -156,7 +168,10 @@ void readline(char *buffer, s32 buffer_len, ku32 echo)
 									break;
 
                                 case 0x34:
-                                    switch(READLINE_GETC())
+                                    while((c = READLINE_GETC()) == -EAGAIN)
+                                        ;
+
+                                    switch(c)
                                     {
                                         case 0x7e:
                                             for(; pos < line_length; ++pos)

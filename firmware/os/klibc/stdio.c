@@ -16,7 +16,8 @@
 */
 s32 putchar(s32 c)
 {
-	console_putc(c);
+	while(console_putc(c) == -EAGAIN)
+        ;
 
 	return c;
 }
@@ -27,8 +28,9 @@ s32 putchar(s32 c)
 */
 s32 put(ks8 *s)
 {
-	while(*s)
-		console_putc(*s++);
+    for(; *s; ++s)
+        while(console_putc(*s) == -EAGAIN)
+            ;
 
 	return SUCCESS;
 }
@@ -39,9 +41,12 @@ s32 put(ks8 *s)
 */
 s32 puts(ks8 *s)
 {
-	while(*s)
-		console_putc(*s++);
-	console_putc('\n');
+    for(; *s; ++s)
+        while(console_putc(*s) == -EAGAIN)
+            ;
+
+    while(console_putc('\n') == -EAGAIN)
+        ;
 
 	return SUCCESS;
 }

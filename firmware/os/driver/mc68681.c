@@ -384,7 +384,7 @@ static void mc68681_set_brg(dev_t *dev, ku8 brg_set, ku8 brg_test)
     if((brg_test && !s->brg_test) || (!brg_test && s->brg_test))
     {
         u8 dummy = MC68681_REG(base_addr, MC68681_BRG_TEST);
-        dummy += 0;     /* silence "set but not used" compiler warning */
+        UNUSED(dummy);
         s->brg_test = ~s->brg_test;
     }
 }
@@ -572,9 +572,8 @@ s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 {
     mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
-    /* FIXME: return EAGAIN if FIFO is full? */
-    while(CIRCBUF_IS_FULL(state->txa_buf))
-        ;
+    if(CIRCBUF_IS_FULL(state->txa_buf))
+        return -EAGAIN;
 
     CIRCBUF_WRITE(state->txa_buf, c);
     state->imr |= BIT(MC68681_IMR_TXRDY_A);
@@ -591,9 +590,8 @@ s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 {
     mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
-    /* FIXME: return EAGAIN if FIFO is full? */
-    while(CIRCBUF_IS_FULL(state->txb_buf))
-        ;
+    if(CIRCBUF_IS_FULL(state->txb_buf))
+        return -EAGAIN;
 
     CIRCBUF_WRITE(state->txb_buf, c);
     state->imr |= BIT(MC68681_IMR_TXRDY_B);
@@ -610,9 +608,8 @@ s16 mc68681_channel_a_getc(dev_t *dev)
 {
     mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
-    /* FIXME: return EAGAIN if FIFO is empty? */
-    while(CIRCBUF_IS_EMPTY(state->rxa_buf))
-        ;
+    if(CIRCBUF_IS_EMPTY(state->rxa_buf))
+        return -EAGAIN;
 
     return CIRCBUF_READ(state->rxa_buf);
 }
@@ -625,9 +622,8 @@ s16 mc68681_channel_b_getc(dev_t *dev)
 {
     mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
-    /* FIXME: return EAGAIN if FIFO is empty? */
-    while(CIRCBUF_IS_EMPTY(state->rxb_buf))
-        ;
+    if(CIRCBUF_IS_EMPTY(state->rxb_buf))
+        return -EAGAIN;
 
     return CIRCBUF_READ(state->rxb_buf);
 }
