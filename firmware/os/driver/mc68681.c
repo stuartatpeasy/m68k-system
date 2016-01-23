@@ -570,7 +570,7 @@ u32 mc68681_channel_b_get_baud_rate(dev_t *dev)
 */
 s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
     /* FIXME: return EAGAIN if FIFO is full? */
     while(CIRCBUF_IS_FULL(state->txa_buf))
@@ -589,7 +589,7 @@ s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 */
 s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
     /* FIXME: return EAGAIN if FIFO is full? */
     while(CIRCBUF_IS_FULL(state->txb_buf))
@@ -608,7 +608,7 @@ s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 */
 s16 mc68681_channel_a_getc(dev_t *dev)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
     /* FIXME: return EAGAIN if FIFO is empty? */
     while(CIRCBUF_IS_EMPTY(state->rxa_buf))
@@ -623,7 +623,7 @@ s16 mc68681_channel_a_getc(dev_t *dev)
 */
 s16 mc68681_channel_b_getc(dev_t *dev)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->parent->data;
+    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
 
     /* FIXME: return EAGAIN if FIFO is empty? */
     while(CIRCBUF_IS_EMPTY(state->rxb_buf))
