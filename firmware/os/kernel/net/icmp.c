@@ -12,15 +12,15 @@
 #include <klibc/string.h>
 
 
-s32 icmp_handle_echo_request(net_iface_t *iface, const icmp_echo_request_t *packet, u32 len);
+s32 icmp_handle_echo_request(net_packet_t *packet, net_packet_t **reply);
 
 
 /*
     icmp_handle_packet() - handle an incoming ICMP packet.
 */
-s32 icmp_handle_packet(net_iface_t *iface, const void *packet, u32 len)
+s32 icmp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **reply)
 {
-    const icmp_fixed_hdr_t * const icmp_hdr = (const icmp_fixed_hdr_t *) packet;
+    const icmp_fixed_hdr_t * const icmp_hdr = (const icmp_fixed_hdr_t *) packet->data;
     UNUSED(iface);
 
     /*
@@ -28,13 +28,13 @@ s32 icmp_handle_packet(net_iface_t *iface, const void *packet, u32 len)
         will already have verified the checksum of the whole (e.g. Ethernet) frame.
     */
 #if(ICMP_VERIFY_CHECKSUM)
-    if(net_cksum(packet, len) != 0x0000)
+    if(net_cksum(packet->data, packet->len) != 0x0000)
         return SUCCESS;     /* Drop packet */
 #endif
     switch(icmp_hdr->type)
     {
         case icmp_echo_request:
-            return icmp_handle_echo_request(iface, packet, len);
+            return icmp_handle_echo_request(packet, reply);
     }
 
     return SUCCESS;
@@ -44,23 +44,20 @@ s32 icmp_handle_packet(net_iface_t *iface, const void *packet, u32 len)
 /*
     icmp_handle_echo_request() - handle an incoming ICMP echo request packet.
 */
-s32 icmp_handle_echo_request(net_iface_t *iface, const icmp_echo_request_t *packet, u32 len)
+s32 icmp_handle_echo_request(net_packet_t *packet, net_packet_t **reply)
 {
-    icmp_echo_reply_t *reply;
-    UNUSED(iface);
+    s32 ret;
+    net_packet_t *r;
 
-    if(packet->hdr.code != 0)   /* "code" field must be 0 */
-        return SUCCESS;         /* drop packet */
+    if(((icmp_echo_request_t *) packet->data)->hdr.code != 0)    /* "code" field must be 0 */
+        return SUCCESS;     /* drop packet */
 
-    reply = (icmp_echo_reply_t *) kmalloc(len);
-    if(!reply)
-        return ENOMEM;
+    ret = net_packet_dup(packet, &r);
+    if(ret != SUCCESS)
+        return ret;
 
-    memcpy(reply, packet, len);
-    reply->hdr.type = icmp_echo_reply;
-
-    /* TODO: work out how to send the packet back up through the protocol layer */
-    puts("ping");
+    ((icmp_echo_reply_t *) r->data)->hdr.type = icmp_echo_reply;
+    *reply = r;
 
     return SUCCESS;
 }

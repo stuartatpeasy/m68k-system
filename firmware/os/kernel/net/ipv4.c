@@ -26,10 +26,16 @@ void ip_print_addr(ipv4_addr_t addr)
     ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
     returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
 */
-s32 ipv4_handle_packet(net_iface_t *iface, const void *packet, u32 len)
+s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response)
 {
-    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet;
-    void *payload = (void *) ((u8 *) packet + sizeof(ipv4_hdr_t));
+    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->data;
+    net_packet_t payload, *proto_response = NULL;
+    s32 ret;
+    UNUSED(iface);
+    UNUSED(response);
+
+    payload.data = (void *) &hdr[1];
+    payload.len = packet->len - sizeof(ipv4_hdr_t);
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -40,17 +46,33 @@ s32 ipv4_handle_packet(net_iface_t *iface, const void *packet, u32 len)
         return SUCCESS;     /* Drop packet */
 #endif
 
-    len -= sizeof(ipv4_hdr_t);
     switch(hdr->protocol)
     {
         case ipv4_proto_icmp:
-            return icmp_handle_packet(iface, payload, len);
+            ret = icmp_handle_packet(iface, &payload, &proto_response);
+            break;
 
         case ipv4_proto_tcp:
-            return tcp_handle_packet(iface, payload, len);
+            ret = tcp_handle_packet(iface, &payload, &proto_response);
+            break;
 
         case ipv4_proto_udp:
-            return udp_handle_packet(iface, payload, len);
+            ret = udp_handle_packet(iface, &payload, &proto_response);
+            break;
+
+        default:
+            return SUCCESS;     /* Drop packet */
+    }
+
+    if(ret != SUCCESS)
+        return ret;
+
+    if(proto_response != NULL)
+    {
+        /* Encapsulate packet, free original response packet, and respond */
+        puts("[trying to do an IPv4 response; ENOSYS]");
+
+        net_packet_free(proto_response);
     }
 
     return SUCCESS;

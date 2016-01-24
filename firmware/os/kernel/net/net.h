@@ -48,10 +48,20 @@ struct net_iface
     net_addr_t      proto_addr;         /* Protocol address (e.g. IPv4 addr) of the interface   */
 };
 
+/* Packet (or partial packet) data buffer */
+typedef struct net_packet
+{
+    u32             len;
+    void *          data;
+} net_packet_t;
+
 
 s32 net_init();
 net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *addr);
 s32 net_transmit(net_iface_t *iface, const void *buffer, u32 len);
 s16 net_cksum(const void *buf, u32 len);
+s32 net_packet_alloc(ku32 len, net_packet_t **p);
+s32 net_packet_free(net_packet_t *p);
+s32 net_packet_dup(const net_packet_t *packet, net_packet_t **copy);
 
 #endif

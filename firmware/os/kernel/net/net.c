@@ -125,20 +125,24 @@ s32 net_transmit(net_iface_t *iface, const void *buffer, u32 len)
 */
 void net_receive(void *arg)
 {
+    s32 ret;
     net_iface_t * const iface = (net_iface_t *) arg;
-    u8 *buf;
-    u32 len = 1500;
+    net_packet_t *packet;
 
-    buf = kmalloc(len);
+    if(net_packet_alloc(1500, &packet) != SUCCESS)
+    {
+        kernel_warning("Failed to allocate packet buffer");
+        return;
+    }
 
     while(1)
     {
-        u32 nread = len;
-        s32 ret = iface->dev->read(iface->dev, 0, &nread, buf);
+        packet->len = 1500;
+        ret = iface->dev->read(iface->dev, 0, &packet->len, packet->data);
 
         /* TODO - this assumes we're working with an Ethernet interface - genericise */
         if(ret == SUCCESS)
-            eth_handle_packet(iface, buf, nread);
+            eth_handle_packet(iface, packet);
     }
 }
 
@@ -176,4 +180,68 @@ s16 net_cksum(const void *buf, u32 len)
         sum += *p++;
 
     return ~(sum + (sum >> 16));
+}
+
+
+/*
+    net_packet_alloc() - create a new net_packet object.
+*/
+s32 net_packet_alloc(ku32 len, net_packet_t **p)
+{
+    net_packet_t *packet;
+
+    if(!len)
+        return EINVAL;
+
+    packet = (net_packet_t *) kmalloc(sizeof(net_packet_t));
+    if(packet == NULL)
+        return ENOMEM;
+
+    packet->data = kmalloc(len);
+    if(packet->data == NULL)
+    {
+        kfree(packet);
+        return ENOMEM;
+    }
+
+    packet->len = len;
+    *p = packet;
+
+    return SUCCESS;
+}
+
+
+/*
+    net_packet_free() - release (free) a net_packet object.
+*/
+s32 net_packet_free(net_packet_t *p)
+{
+    kfree(p->data);
+    kfree(p);
+
+    return SUCCESS;
+}
+
+
+/*
+    net_packet_dup() - duplicate net_packet object "packet" into *copy.
+*/
+s32 net_packet_dup(const net_packet_t *packet, net_packet_t **copy)
+{
+    net_packet_t *p = (net_packet_t *) kmalloc(sizeof(net_packet_t));
+    if(p == NULL)
+        return ENOMEM;
+
+    p->data = kmalloc(packet->len);
+    if(p->data == NULL)
+    {
+        kfree(p);
+        return ENOMEM;
+    }
+
+    p->len = packet->len;
+    memcpy(p->data, packet->data, packet->len);
+    *copy = p;
+
+    return SUCCESS;
 }
