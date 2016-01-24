@@ -10,9 +10,7 @@
 */
 
 #include <driver/encx24j600.h>
-#include <klibc/stdio.h>			/* TODO remove */
 #include <kernel/net/ethernet.h>
-#include <kernel/net/ipv4.h>        /* TODO remove */
 #include <kernel/net/net.h>
 #include <kernel/process.h>
 
@@ -172,7 +170,7 @@ s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 *len)
     if(hdr.rsv.status & BIT(ENCX24_RSV_STAT_OK))
     {
         /* Packet received successfully */
-        ku16 packet_len = N2LE16(hdr.rsv.byte_count_le);
+        ku16 packet_len = N2LE16(hdr.rsv.byte_count_le) - sizeof(eth_cksum_t);
 
         if(*len < packet_len)
         {
@@ -185,7 +183,7 @@ s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 *len)
         encx24j600_rx_buf_advance_ptr(dev, sizeof(hdr));
 
         encx24j600_rx_buf_peek(dev, packet_len, buf);
-        encx24j600_rx_buf_advance_ptr(dev, packet_len);
+        encx24j600_rx_buf_advance_ptr(dev, packet_len + sizeof(eth_cksum_t));
 
         state->rx_read_ptr = (u16 *) ((u32) base_addr + N2LE16(hdr.next_packet_ptr));
         ENCX24_REG(base_addr, ECON1) |= BIT(ECON1_PKTDEC);
