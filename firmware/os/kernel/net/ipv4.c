@@ -9,6 +9,8 @@
 
 #include <kernel/net/icmp.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/net.h>
+#include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
 #include <klibc/stdio.h>        /* TODO remove */
 
@@ -29,10 +31,27 @@ s32 ipv4_handle_packet(net_iface_t *iface, const void *packet, u32 len)
     ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet;
     void *payload = (void *) ((u8 *) packet + sizeof(ipv4_hdr_t));
 
-    UNUSED(iface);
-    UNUSED(len);
-    UNUSED(hdr);
-    UNUSED(payload);
+    /*
+        It's usually not necessary to verify the IPv4 header checksum on received packets, as the
+        hardware will already have verified the checksum of the whole (e.g. Ethernet) frame.
+    */
+#if(IPV4_VERIFY_CHECKSUM)
+    if(net_cksum(hdr, (hdr->version_hdr_len & 0xf) << 2) != 0x0000)
+        return SUCCESS;     /* Drop packet */
+#endif
+
+    len -= sizeof(ipv4_hdr_t);
+    switch(hdr->protocol)
+    {
+        case ipv4_proto_icmp:
+            return icmp_handle_packet(iface, payload, len);
+
+        case ipv4_proto_tcp:
+            return tcp_handle_packet(iface, payload, len);
+
+        case ipv4_proto_udp:
+            return udp_handle_packet(iface, payload, len);
+    }
 
     return SUCCESS;
 }

@@ -8,6 +8,7 @@
 */
 
 #include <kernel/device/device.h>
+#include <kernel/error.h>
 #include <kernel/net/arp.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/net.h>
@@ -153,4 +154,26 @@ net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *ad
     /* TODO */
 
     return NULL;
+}
+
+
+/*
+    net_cksum() - calculate the "Internet checksum" of the specified buffer.
+    See RFC 791 & RFC 1071.
+*/
+s16 net_cksum(const void *buf, u32 len)
+{
+    u32 sum = 0;
+    u16 *p;
+
+    if((addr_t) buf & 1)
+        kernel_fatal("net_cksum(): supplied buffer is not 2^1-aligned");
+
+    if(len > 65535)
+        kernel_fatal("net_cksum(): supplied buffer is >65535 bytes");
+
+    for(p = (u16 *) buf, len >>= 1; len--;)
+        sum += *p++;
+
+    return ~(sum + (sum >> 16));
 }
