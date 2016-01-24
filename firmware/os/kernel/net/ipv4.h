@@ -15,10 +15,16 @@
 #include <kernel/net/net.h>
 
 
+#define IPV4_SRC_ADDR_DEFAULT       ((ipv4_addr_t) 0)
+
+#define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag             */
+#define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag             */
+
+#define IPV4_DEFAULT_TTL            (64)
+
+
 /* IPv4 address */
 typedef u32 ipv4_addr_t;
-
-#define IPV4_SRC_ADDR_DEFAULT       ((ipv4_addr_t) 0)
 
 
 /* IPv4 protocol IDs */
@@ -45,9 +51,6 @@ typedef struct ipv4_hdr
     u32             dest;
 } ipv4_hdr_t;
 
-
-#define IPV4_HDR_FLAG_DF        BIT(14)     /* Don't Fragment (DF) flag             */
-#define IPV4_HDR_FLAG_MF        BIT(13)     /* More Fragments (MF) flag             */
 
 typedef struct ipv4_route_ent
 {

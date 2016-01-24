@@ -47,17 +47,19 @@ s32 icmp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
 s32 icmp_handle_echo_request(net_packet_t *packet, net_packet_t **reply)
 {
     s32 ret;
-    net_packet_t *r;
+    icmp_echo_reply_t *r;
 
     if(((icmp_echo_request_t *) packet->data)->hdr.code != 0)    /* "code" field must be 0 */
         return SUCCESS;     /* drop packet */
 
-    ret = net_packet_dup(packet, &r);
+    ret = net_packet_dup(packet, reply);
     if(ret != SUCCESS)
         return ret;
 
-    ((icmp_echo_reply_t *) r->data)->hdr.type = icmp_echo_reply;
-    *reply = r;
+    r = (*reply)->data;
+    r->hdr.checksum = 0;
+    r->hdr.type = icmp_echo_reply;
+    r->hdr.checksum = net_cksum(r, packet->len);
 
     return SUCCESS;
 }
