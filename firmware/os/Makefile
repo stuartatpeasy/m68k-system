@@ -15,10 +15,10 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/device/memconsole.c kernel/device/nvram.c kernel/device/partition.c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
 			kernel/fs/fat/fat.c kernel/fs/romfs.c \
-			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c \
+			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/error.c \
 			kernel/housekeeper.c kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c \
 			kernel/syscall.c kernel/user.c kernel/net/arp.c kernel/net/ethernet.c \
-			kernel/net/ipv4.c kernel/net/net.c kernel/net/udp.c \
+			kernel/net/icmp.c kernel/net/ipv4.c kernel/net/net.c kernel/net/tcp.c kernel/net/udp.c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
 			kernel/memory/kmalloc.c kernel/memory/slab.c
 
@@ -162,6 +162,9 @@ kernel/entry.o: \
 	klibc/strings.h kernel/util/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h \
 	kernel/memory/slab.h monitor/monitor.h kernel/device/device.o kernel/sched.h
 
+kernel/error.o: \
+	kernel/error.c kernel/error.h kernel/include/defs.h kernel/include/types.h
+
 kernel/fs/ext2/ext2.o: \
 	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h kernel/include/defs.h klibc/errno.h klibc/stdio.h \
 	klibc/string.h kernel/util/kutil.h kernel/memory/kmalloc.h
@@ -217,25 +220,29 @@ kernel/memory/slab.o: \
 
 kernel/net/arp.o: \
 	kernel/net/arp.c kernel/net/arp.h kernel/include/byteorder.h kernel/include/defs.h \
-	kernel/include/error.h kernel/include/types.h kernel/net/ethernet.h
+	kernel/include/error.h kernel/include/types.h kernel/net/net.h kernel/net/ethernet.h
 
 kernel/net/ethernet.o: \
 	kernel/net/ethernet.c kernel/net/ethernet.h kernel/include/byteorder.h kernel/include/defs.h \
-	kernel/include/types.h kernel/net/ipv4.h
+	kernel/include/types.h kernel/net/ipv4.h kernel/net/net.h
 
 kernel/net/icmp.o: \
-	kernel/net/icmp.c kernel/net/icmp.h kernel/include/defs.h kernel/include/types.h
+	kernel/net/icmp.c kernel/net/icmp.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/net.h
 
 kernel/net/ipv4.o: \
 	kernel/net/ipv4.c kernel/net/ipv4.h kernel/include/byteorder.h kernel/include/defs.h \
-	kernel/include/types.h kernel/net/ethernet.h
+	kernel/include/types.h kernel/net/net.h kernel/net/ethernet.h
 
 kernel/net/net.o: \
 	kernel/net/net.c kernel/net/net.h kernel/include/defs.h kernel/include/types.h \
 	kernel/memory/kmalloc.h kernel/net/arp.h
 
+kernel/net/tcp.o: \
+	kernel/net/tcp.c kernel/net/tcp.h kernel/net/net.h kernel/include/defs.h kernel/include/types.h
+
 kernel/net/udp.o: \
-	kernel/net/udp.c kernel/net/udp.h kernel/include/defs.h kernel/include/types.h
+	kernel/net/udp.c kernel/net/udp.h kernel/net/net.h kernel/include/defs.h kernel/include/types.h
 
 kernel/process.o: \
 	kernel/process.c kernel/process.h kernel/include/defs.h kernel/include/types.h
