@@ -12,14 +12,6 @@
 #include <kernel/net/net.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
-#include <klibc/stdio.h>        /* TODO remove */
-
-
-void ip_print_addr(ipv4_addr_t addr)
-{
-    printf("%u.%u.%u.%u",
-           ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), addr & 0xff);
-}
 
 
 /*

@@ -167,7 +167,7 @@ net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *ad
 */
 s16 net_cksum(const void *buf, u32 len)
 {
-    u32 sum = 0;
+    u32 x, sum = 0;
     u16 *p;
 
     if((addr_t) buf & 1)
@@ -176,8 +176,11 @@ s16 net_cksum(const void *buf, u32 len)
     if(len > 65535)
         kernel_fatal("net_cksum(): supplied buffer is >65535 bytes");
 
-    for(p = (u16 *) buf, len >>= 1; len--;)
+    for(p = (u16 *) buf, x = len >> 1; x--;)
         sum += *p++;
+
+    if(len & 1)
+        sum += *((u8 *) p) << 8;
 
     return ~(sum + (sum >> 16));
 }
