@@ -23,7 +23,7 @@
 
 #define CIRCBUF_INIT(buf)           { (buf).rd = 0; (buf).wr = 0; }
 
-#define CIRCBUF_WRITE(buf, val)     ((buf).data[(u8) ((buf).wr++)] = (val))
+#define CIRCBUF_WRITE(buf, val)     (((buf).data[(u8) ((buf).wr)] = (val)), ++(buf).wr)
 #define CIRCBUF_READ(buf)           ((buf).data[(u8) ((buf).rd++)])
 
 #define CIRCBUF_IS_EMPTY(buf)       ((buf).rd == (buf).wr)

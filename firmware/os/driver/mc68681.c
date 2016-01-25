@@ -223,7 +223,7 @@ s32 mc68681_serial_a_init(dev_t *dev)
     state = (mc68681_state_t *) dev->data;
 
     /* Enable serial port A "receiver ready" interrupt */
-    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_A) | BIT(MC68681_IMR_TXRDY_A);
+    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_A);
     MC68681_REG(dev->base_addr, MC68681_IMR) = state->imr;
 
     return SUCCESS;
@@ -244,10 +244,10 @@ s32 mc68681_serial_b_init(dev_t *dev)
     dev->block_size = 1;
     dev->len = 1;
 
-    state = (mc68681_state_t *) dev->parent->data;
+    state = (mc68681_state_t *) dev->data;
 
     /* Enable serial port B "receiver ready" interrupt */
-    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_B) | BIT(MC68681_IMR_TXRDY_B);
+    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_B);
     MC68681_REG(dev->base_addr, MC68681_IMR) = state->imr;
 
     return SUCCESS;
@@ -566,7 +566,8 @@ u32 mc68681_channel_b_get_baud_rate(dev_t *dev)
 
 
 /*
-    mc68681_channel_a_putc() - write a character to serial channel A, blocking until done.
+    mc68681_channel_a_putc() - write a character to serial channel A.
+	Return -EAGAIN if the channel A TX FIFO is full.
 */
 s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 {
@@ -584,7 +585,8 @@ s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 
 
 /*
-    mc68681_channel_b_putc() - write a character to serial channel B, blocking until done.
+    mc68681_channel_b_putc() - write a character to serial channel B.
+	Return -EAGAIN if the channel A TX FIFO is full.
 */
 s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 {
