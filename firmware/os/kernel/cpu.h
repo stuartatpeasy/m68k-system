@@ -26,7 +26,7 @@ typedef struct regs regs_t;     /* struct regs must hold a complete CPU context 
     "Intrinsic" functions
     ---------------------
 */
-void cpu_halt(void);                            /* Halt processing, pending an interrupt        */
+void cpu_halt(void) __attribute__((noreturn));  /* Halt processing, pending an interrupt        */
 void cpu_swi();                                 /* Raise a software IRQ (=TRAP #x on the 680x0) */
 
 /*

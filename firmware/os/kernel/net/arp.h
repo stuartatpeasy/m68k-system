@@ -24,7 +24,7 @@
 #define ARP_REQUEST_INTERVAL        (2)         /* #secs between ARP requests for a given addr  */
 
 s32 arp_init();
-s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len);
+s32 arp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response_packet);
 s32 arp_lookup_ip(const ipv4_addr_t ip, net_iface_t *iface, mac_addr_t *hw_addr);
 
 

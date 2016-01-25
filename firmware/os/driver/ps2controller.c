@@ -36,7 +36,9 @@ void ps2controller_irq(ku32 irql, void *data)
 s32 ps2controller_init(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
-    UNUSED(base_addr);
+
+    /* Switch port power on */
+    PS2CTRLR_REG(base_addr, PS2_CFG) = BIT(PS2_CFG_PWR_A) | BIT(PS2_CFG_PWR_B);
 
     /* Note: interrupts are disabled during initialisation.  We therefore poll for peripherals. */
 

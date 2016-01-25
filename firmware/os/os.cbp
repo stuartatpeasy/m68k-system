@@ -144,6 +144,10 @@
 		<Unit filename="kernel/entry.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="kernel/error.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/error.h" />
 		<Unit filename="kernel/fs/ext2/ext2.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -226,6 +230,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/net.h" />
+		<Unit filename="kernel/net/tcp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/tcp.h" />
 		<Unit filename="kernel/net/udp.c">
 			<Option compilerVar="CC" />
 		</Unit>

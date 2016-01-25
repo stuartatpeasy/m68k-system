@@ -24,6 +24,6 @@ typedef struct udp_hdr
 } udp_hdr_t;
 
 
-s32 udp_handle_packet(net_iface_t *iface, const void *packet, u32 len);
+s32 udp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response);
 
 #endif

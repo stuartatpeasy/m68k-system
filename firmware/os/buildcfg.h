@@ -15,6 +15,11 @@
 #define DEBUG_KMALLOC
 #define DEBUG_KSYM
 
+
+#define IPV4_VERIFY_CHECKSUM 1      /* Verify checksum on incoming IPv4 packets                 */
+#define ICMP_VERIFY_CHECKSUM 1      /* Verify checksum on incoming ICMP packets                 */
+
+
 /* FIXME - target arch should be defined in platform/platform_specific.h, not here */
 #define TARGET_MC68010
 

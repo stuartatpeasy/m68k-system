@@ -43,13 +43,14 @@ s32 arp_init()
     returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
     Currently only supports Ethernet+IP responses.
 */
-s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
+s32 arp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response_packet)
 {
-    const arp_hdr_t * const hdr = (arp_hdr_t *) packet;
-    const arp_payload_t * const payload = (arp_payload_t *) ((u8 *) packet + sizeof(arp_hdr_t));
+    const arp_hdr_t * const hdr = (arp_hdr_t *) packet->data;
+    const arp_payload_t * const payload = (arp_payload_t *) &hdr[1];
+    s32 ret;
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
-    if(len < sizeof(arp_hdr_t))
+    if(packet->len < sizeof(arp_hdr_t))
         return EINVAL;      /* Incomplete packet */
 
     /* Only interested in ARP packets containing Ethernet+IPv4 addresses */
@@ -64,30 +65,38 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
         return SUCCESS;     /* Discard - inappropriate packet type, or IPv4 unconfigured */
 
     /* Check that we have a full ARP payload */
-    if(len < (sizeof(arp_hdr_t) + sizeof(arp_payload_t)))
+    if(packet->len < (sizeof(arp_hdr_t) + sizeof(arp_payload_t)))
         return EINVAL;      /* Incomplete packet */
 
     if(hdr->opcode == BE2N16(arp_request)
        && payload->dst_ip == *((ipv4_addr_t *) &iface->proto_addr))
     {
         /* This is an Ethernet+IPv4 request addressed to this interface */
-        arp_eth_ipv4_packet_t p;
-        u32 len = sizeof(p);
+        net_packet_t *r;
+        arp_eth_ipv4_packet_t *p;
+
+        ret = net_packet_alloc(sizeof(arp_eth_ipv4_packet_t), &r);
+        if(ret != SUCCESS)
+            return ret;
 
         arp_cache_add(iface, payload->src_mac, payload->src_ip);
 
-        p.hdr.hw_type           = arp_hw_type_ethernet;
-        p.hdr.proto_type        = ethertype_ipv4;
-        p.hdr.hw_addr_len       = sizeof(mac_addr_t);
-        p.hdr.proto_addr_len    = sizeof(ipv4_addr_t);
-        p.hdr.opcode            = arp_reply;
+        p = (arp_eth_ipv4_packet_t *) r->data;
 
-        p.payload.dst_ip        = payload->src_ip;
-        p.payload.dst_mac       = payload->src_mac;
-        p.payload.src_ip        = *((ipv4_addr_t *) &iface->proto_addr);
-        p.payload.src_mac       = *((mac_addr_t *) &iface->hw_addr);
+        p->hdr.hw_type          = arp_hw_type_ethernet;
+        p->hdr.proto_type       = ethertype_ipv4;
+        p->hdr.hw_addr_len      = sizeof(mac_addr_t);
+        p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
+        p->hdr.opcode           = arp_reply;
 
-        return eth_transmit(iface, &p.payload.dst_mac, ethertype_arp, &p, len);
+        p->payload.dst_ip       = payload->src_ip;
+        p->payload.dst_mac      = payload->src_mac;
+        p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr);
+        p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr);
+
+        *response_packet = r;
+
+        return SUCCESS;
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
@@ -105,21 +114,28 @@ s32 arp_handle_packet(net_iface_t *iface, const void * const packet, u32 len)
 */
 s32 arp_send_request(net_iface_t *iface, const ipv4_addr_t ip)
 {
-    arp_eth_ipv4_packet_t p;
-    u32 len = sizeof(p);
+    net_packet_t *packet;
+    arp_eth_ipv4_packet_t *p;
+    s32 ret;
 
-    p.hdr.hw_type           = arp_hw_type_ethernet;
-    p.hdr.proto_type        = ethertype_ipv4;
-    p.hdr.hw_addr_len       = sizeof(mac_addr_t);
-    p.hdr.proto_addr_len    = sizeof(ipv4_addr_t);
-    p.hdr.opcode            = arp_request;
+    ret = net_packet_alloc(sizeof(arp_eth_ipv4_packet_t), &packet);
+    if(ret != SUCCESS)
+        return ret;
 
-    p.payload.src_ip        = *((ipv4_addr_t *) &iface->proto_addr);
-    p.payload.src_mac       = *((mac_addr_t *) &iface->hw_addr);
-    p.payload.dst_ip        = ip;
-    p.payload.dst_mac       = g_mac_broadcast;
+    p = (arp_eth_ipv4_packet_t *) packet->data;
 
-    return eth_transmit(iface, &p.payload.dst_mac, ethertype_arp, &p, len);
+    p->hdr.hw_type          = arp_hw_type_ethernet;
+    p->hdr.proto_type       = ethertype_ipv4;
+    p->hdr.hw_addr_len      = sizeof(mac_addr_t);
+    p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
+    p->hdr.opcode           = arp_request;
+
+    p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr);
+    p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr);
+    p->payload.dst_ip       = ip;
+    p->payload.dst_mac      = g_mac_broadcast;
+
+    return eth_transmit(iface, &p->payload.dst_mac, ethertype_arp, packet);
 }
 
 

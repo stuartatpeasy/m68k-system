@@ -35,24 +35,42 @@ void eth_print_mac(const mac_addr_t * const mac)
 /*
     eth_handle_packet() - handle a received Ethernet packet
 */
-s32 eth_handle_packet(net_iface_t *iface, const void *packet, u32 len)
+s32 eth_handle_packet(net_iface_t *iface, net_packet_t *packet)
 {
-    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet;
-    const void * const payload = ((u8 *) packet) + sizeof(eth_hdr_t);
+    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->data;
+    net_packet_t proto_packet, *response_packet = NULL;
+    s32 ret;
 
-    len -= sizeof(eth_hdr_t);
+    proto_packet.len = packet->len - sizeof(eth_hdr_t);
+    proto_packet.data = (void *) &ehdr[1];
 
+    /* TODO - get rid of this jump-table; replace with per-proto funcptr table? */
     switch(ehdr->type)
     {
         case ethertype_ipv4:
-            return ipv4_handle_packet(iface, payload, len);
+            ret = ipv4_handle_packet(iface, &proto_packet, &response_packet);
+            break;
 
         case ethertype_arp:
-            return arp_handle_packet(iface, payload, len);
+            ret = arp_handle_packet(iface, &proto_packet, &response_packet);
+            break;
 
         default:
             return SUCCESS;
     }
+
+    if(ret != SUCCESS)
+        return ret;
+
+    if(response_packet != NULL)
+    {
+        ret = eth_transmit(iface, &ehdr->src, ehdr->type, response_packet);
+        net_packet_free(response_packet);
+
+        return ret;
+    }
+
+    return SUCCESS;
 }
 
 
@@ -60,21 +78,23 @@ s32 eth_handle_packet(net_iface_t *iface, const void *packet, u32 len)
     eth_transmit() - add an Ethernet header to the supplied frame and transmit it on the specified
     interface.
 */
-s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et, void *packet,
-                 u32 len)
+s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et,
+                 net_packet_t *packet)
 {
-    void *buf = CHECKED_KMALLOC(sizeof(eth_hdr_t) + len);
+    void *buf = CHECKED_KMALLOC(sizeof(eth_hdr_t) + packet->len);
     eth_hdr_t * const hdr = (eth_hdr_t *) buf;
     s32 ret;
+
+    /* TODO - rewrite this a bit; make fuller use of net_packet_t */
 
     memcpy(&hdr->dest, dest, sizeof(mac_addr_t));
     memcpy(&hdr->src, &iface->hw_addr, sizeof(mac_addr_t));
 
     hdr->type = et;
 
-    memcpy((void *) (hdr + 1), packet, len);
+    memcpy((void *) (hdr + 1), packet->data, packet->len);
 
-    ret = net_transmit(iface, buf, sizeof(eth_hdr_t) + len);
+    ret = net_transmit(iface, buf, sizeof(eth_hdr_t) + packet->len);
 
     kfree(buf);
 
