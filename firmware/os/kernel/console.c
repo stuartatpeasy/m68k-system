@@ -58,7 +58,8 @@ void early_boot_console_close()
     char c;
 
     while((c = g_early_boot_console->getc(g_early_boot_console)) >= 0)
-        console_putc(c);
+        while(console_putc(c) == -EAGAIN)
+            ;
 
     dev_destroy(g_early_boot_console);
 }
