@@ -8,6 +8,9 @@
 
 
 	This module manages the process of re-flashing system ROMs.
+
+	Note: The reprogramming algorithm is designed to suit AMIC A29040B/C 512KBx8 Flash ROMs.
+	It may not be suitable for other devices.
 */
 
 #include <kernel/platform.h>
@@ -81,8 +84,6 @@ s32 dfu(ku16 *data, ku32 len)
 	void (*p_write_flash)(ku16 *, ku32);
 	ku32 write_flash_len = (ku32) dfu - (ku32) write_flash;
 
-    cpu_disable_interrupts();
-
 	if(!len || (len > LAMBDA_ROM_LENGTH) || (len & 1))
 		return EINVAL;
 
@@ -92,6 +93,8 @@ s32 dfu(ku16 *data, ku32 len)
 
 	/* Copy the Flash-update routine into RAM */
 	memcpy(p_write_flash, write_flash, write_flash_len);
+
+    cpu_disable_interrupts();
 
 	/* This shouldn't return */
 	p_write_flash(data, len);
