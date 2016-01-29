@@ -114,9 +114,9 @@ void _main()
     */
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
-    put("Clearing user RAM: ");
-    mem_zero_extents(MEM_EXTENT_USER | MEM_EXTENT_RAM);
-    puts("done");
+//    put("Clearing user RAM: ");
+//    mem_zero_extents(MEM_EXTENT_USER | MEM_EXTENT_RAM);
+//    puts("done");
 
     boot_list_mass_storage();
     boot_list_partitions();

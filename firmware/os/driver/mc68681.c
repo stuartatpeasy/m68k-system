@@ -66,6 +66,10 @@ s32 mc68681_init(dev_t *dev)
     state->imr = 0x00;
     MC68681_REG(base_addr, MC68681_IMR) = state->imr;    /* Disable all interrupts during init */
 
+    /* Reset MR pointer so that we can address mode register 1A */
+    MC68681_REG(base_addr, MC68681_CRA) =
+        (MC68681_CMD_RESET_MR_PTR << MC68681_CR_MISC_CMD_SHIFT) & MC68681_CR_MISC_CMD_MASK;
+
 	/* Set mode register 1A */
 	MC68681_REG(base_addr, MC68681_MRA) = /* 0x93 */
         BIT(MC68681_MR1_RXRTS) |                                        /* Enable RX RTS        */
@@ -82,6 +86,10 @@ s32 mc68681_init(dev_t *dev)
         (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
         BIT(MC68681_MR2_CTS) |
         (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
+
+    /* Reset MR pointer so that we can address mode register 1A */
+    MC68681_REG(base_addr, MC68681_CRB) =
+        (MC68681_CMD_RESET_MR_PTR << MC68681_CR_MISC_CMD_SHIFT) & MC68681_CR_MISC_CMD_MASK;
 
     /* Set mode register 1B */
     MC68681_REG(base_addr, MC68681_MRB) = /* 0x93 */
@@ -211,7 +219,7 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
 */
 s32 mc68681_serial_a_init(dev_t *dev)
 {
-    mc68681_state_t *state;
+//    mc68681_state_t *state;
 
     dev->data = dev->parent->data;
 
@@ -220,11 +228,11 @@ s32 mc68681_serial_a_init(dev_t *dev)
     dev->block_size = 1;
     dev->len = 1;
 
-    state = (mc68681_state_t *) dev->data;
+//    state = (mc68681_state_t *) dev->data;
 
     /* Enable serial port A "receiver ready" interrupt */
-    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_A);
-    MC68681_REG(dev->base_addr, MC68681_IMR) = state->imr;
+//    state->imr |= BIT(MC68681_IMR_RXRDY_FFULL_A);
+//    MC68681_REG(dev->base_addr, MC68681_IMR) = state->imr;
 
     return SUCCESS;
 }
@@ -267,6 +275,7 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     ku8 irq_status = MC68681_REG(base_addr, MC68681_ISR);
 
     /* Serial channel A "receiver ready" interrupt */
+#if 0
     if(irq_status & BIT(MC68681_IMR_RXRDY_FFULL_A))
     {
         do
@@ -277,10 +286,14 @@ void mc68681_irq_handler(ku32 irql, void *arg)
             */
             ku8 data = MC68681_REG(base_addr, MC68681_RHRA);
             if(!CIRCBUF_IS_FULL(state->rxa_buf))
+            {
+                /* BUG: the buffer fills up, then characters are lost */
                 CIRCBUF_WRITE(state->rxa_buf, data);
+            }
         }
-        while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_A));
+        while(MC68681_REG(base_addr, MC68681_SRA) & BIT(MC68681_SR_RXRDY));
     }
+#endif
 
     /* Serial channel A "transmitter ready" interrupt */
     if(irq_status & BIT(MC68681_IMR_TXRDY_A))
@@ -299,6 +312,7 @@ void mc68681_irq_handler(ku32 irql, void *arg)
     }
 
     /* Serial channel B "receiver ready" interrupt */
+#if 0
     if(irq_status & BIT(MC68681_IMR_RXRDY_FFULL_B))
     {
         do
@@ -309,8 +323,9 @@ void mc68681_irq_handler(ku32 irql, void *arg)
             */
             CIRCBUF_WRITE(state->rxb_buf, MC68681_REG(base_addr, MC68681_RHRB));
         }
-        while(MC68681_REG(base_addr, MC68681_ISR) & BIT(MC68681_IMR_RXRDY_FFULL_B));
+        while(MC68681_REG(base_addr, MC68681_SRB) & BIT(MC68681_SR_RXRDY));
     }
+#endif
 
     /* Serial channel B "transmitter ready" interrupt */
     if(irq_status & BIT(MC68681_IMR_TXRDY_B))
@@ -608,12 +623,18 @@ s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 */
 s16 mc68681_channel_a_getc(dev_t *dev)
 {
-    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
+//    mc68681_state_t * const state = (mc68681_state_t *) dev->data;
+    void * const base_addr = dev->base_addr;
 
-    if(CIRCBUF_IS_EMPTY(state->rxa_buf))
-        return -EAGAIN;
+    if(MC68681_REG(base_addr, MC68681_SRA) & BIT(MC68681_SR_RXRDY))
+        return MC68681_REG(base_addr, MC68681_RHRA);
 
-    return CIRCBUF_READ(state->rxa_buf);
+    return -EAGAIN;
+
+//    if(CIRCBUF_IS_EMPTY(state->rxa_buf))
+//        return -EAGAIN;
+
+//    return CIRCBUF_READ(state->rxa_buf);
 }
 
 

@@ -91,6 +91,7 @@ MONITOR_CMD_HANDLER(dfu)
 		return ENOMEM;
 
     printf("Send %u bytes\n", len);
+
 	for(i = 0; i < len; i++)
     {
         s16 c;
