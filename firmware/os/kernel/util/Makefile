@@ -2,7 +2,7 @@ include ../../global.mk
 
 LIBNAME=../../libkutil.a
 
-CSOURCES=bvec.c checksum.c circbuf.c dump.c hash.c ktime.c numeric.c string.c
+CSOURCES=bvec.c buffer.c checksum.c dump.c hash.c ktime.c numeric.c string.c
 
 OBJECTS=$(CSOURCES:.c=.o)
 
@@ -26,11 +26,11 @@ clean:
 bvec.o: \
 	bvec.c bvec.h kutil.h $(STDDEPS) ../../klibc/errno.h ../../klibc/string.h ../memory/kmalloc.h
 
+buffer.o: \
+	buffer.c buffer.h $(STDDEPS)
+
 checksum.o: \
 	checksum.c $(STDDEPS)
-
-circbuf.o: \
-	circbuf.c circbuf.h $(STDDEPS)
 
 dump.o: \
 	dump.c kutil.h $(STDDEPS) ../../klibc/ctype.h ../memory/kmalloc.h
