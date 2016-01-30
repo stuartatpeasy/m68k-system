@@ -13,7 +13,7 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/error.h>
 #include <kernel/include/types.h>
-#include <kernel/util/circbuf.h>
+#include <kernel/util/buffer.h>
 
 
 /*

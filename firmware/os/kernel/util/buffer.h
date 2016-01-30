@@ -1,7 +1,7 @@
-#ifndef KERNEL_UTIL_CIRCBUF_H_INC
-#define KERNEL_UTIL_CIRCBUF_H_INC
+#ifndef KERNEL_UTIL_BUFFER_H_INC
+#define KERNEL_UTIL_BUFFER_H_INC
 /*
-    Circular buffer implementation
+    Utility functions and macros implementing various memory buffer functions
 
     Part of ayumos
 

@@ -1,7 +1,22 @@
-Note: the "old" (gcc-2.9x) toolchain was built for the targets "m68k-coff" / "m68k-elf", i.e. no
-platform was specified.  Gcc now appears to require a named platform at build-time, hence this
-more recent toolchain builds for the target "m68k-linux-elf".  This means that global.mk must be
-edited to specify the correct tool names, e.g.
+Setting up a toolchain to build ayumos for the m68k architecture
+================================================================
+
+Stuart Wallace, 2011-2016.
+
+Last updated 2016-01-29: updated to binutils v2.26.
+Updated 2016-01-24: updated to gcc v5.3.
+
+
+These instructions have been tested on Debian jessie/sid, specifically Ubuntu 14.04.3 LTS (trusty).
+
+
+Notes on the "old" toolchain
+----------------------------
+
+The "old" (gcc-2.9x) m68k toolchain was built for the targets "m68k-coff" / "m68k-elf", i.e. no
+platform was specified.  Gcc now appears to require a named platform at build-time, hence this more
+recent toolchain builds for the target "m68k-linux-elf".  This means that global.mk must be edited
+to specify the correct tool names, e.g.
 
 	old toolchain: CC=m68k-elf-gcc
                    (...etc for other tools)
@@ -15,6 +30,9 @@ using older versions of gcc (<3.0) and binutils (<2.23) didn't seem to allow thi
 viable C++ code for the m68k platform would be *very* nice!
 
 
+Building the toolchain
+----------------------
+
 0. Configure build environment
 
 0a. install necessary packages
@@ -24,36 +42,43 @@ viable C++ code for the m68k platform would be *very* nice!
 	- libmpfr-dev
 	- libmpc-dev
 
+    e.g.
+
+	$ sudo apt-get install flex libgmp-dev limbpfr-dev libmpc-dev
+
+
 0b. create installation root and build directory
 
 	$ sudo mkdir /opt/m68k
 	$ mkdir tools
 	$ cd tools
 
-1. Build and install binutils-2.25.1.tar.bz2
 
-	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.25.1.tar.bz2
-	$ tar xf binutils-2.25.1.tar.bz2
-	$ cd binutils-2.25.1
+1. Build and install binutils-2.26
+
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.26.tar.bz2
+	$ tar xf binutils-2.26.tar.bz2
+	$ cd binutils-2.26
 	$ ./configure --prefix=/opt/m68k --target=m68k-linux-elf
-	$ make -j4
+	$ make -j8
 	$ sudo make install
 	$ cd ..
 
-2. build and install gcc-5.2.0
 
-	$ wget https://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-5.2.0/gcc-5.2.0.tar.bz2
-	$ tar xf gcc-5.2.0.tar.bz2
+2. build and install gcc-5.3.0
+
+	$ wget https://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-5.3.0/gcc-5.3.0.tar.bz2
+	$ tar xf gcc-5.3.0.tar.bz2
 	$ mkdir gcc-build
 	$ cd gcc-build
-	$ ../gcc-5.2.0/configure --prefix=/opt/m68k --target=m68k-linux-elf --enable-languages=c,c++
-	$ make -j4 all-gcc all-target-libgcc
+	$ ../gcc-5.3.0/configure --prefix=/opt/m68k --target=m68k-linux-elf --enable-languages=c,c++
+	$ make -j8 all-gcc all-target-libgcc
 	$ sudo make install-gcc install-target-libgcc
 	$ cd ..
+
 
 3. tidy up
 
 	$ cd ..
 	$ rm -rf tools
-
 

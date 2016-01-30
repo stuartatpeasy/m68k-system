@@ -1,5 +1,5 @@
 /*
-    Circular buffer implementation
+    Utility functions and macros implementing various memory buffer functions
 
     Part of ayumos
 
@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, November 2015
 */
 
-#include <kernel/util/circbuf.h>
+#include <kernel/util/buffer.h>
 #include <kernel/memory/kmalloc.h>
 
 
