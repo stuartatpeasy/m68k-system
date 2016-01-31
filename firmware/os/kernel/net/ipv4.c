@@ -14,20 +14,31 @@
 #include <kernel/net/udp.h>
 
 
+s32 ipv4_rx(net_packet_t *packet);
+
+s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
+                     const void *packet, u32 len);
+
+
+/*
+    arp_init() - initialise ARP cache
+*/
+s32 ipv4_init(net_proto_driver_t *driver)
+{
+    driver->rx = ipv4_rx;
+
+    return SUCCESS;
+}
+
+
 /*
     ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
     returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
 */
-s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response)
+s32 ipv4_rx(net_packet_t *packet)
 {
-    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->data;
-    net_packet_t payload, *proto_response = NULL;
+    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->payload;
     s32 ret;
-    UNUSED(iface);
-    UNUSED(response);
-
-    payload.data = (void *) &hdr[1];
-    payload.len = packet->len - sizeof(ipv4_hdr_t);
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -38,18 +49,21 @@ s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
         return SUCCESS;     /* Drop packet */
 #endif
 
+    packet->payload = &hdr[1];
+    packet->payload_len -= sizeof(ipv4_hdr_t);
+
     switch(hdr->protocol)
     {
         case ipv4_proto_icmp:
-            ret = icmp_handle_packet(iface, &payload, &proto_response);
+            ret = icmp_rx(packet);
             break;
 
         case ipv4_proto_tcp:
-            ret = tcp_handle_packet(iface, &payload, &proto_response);
+            ret = tcp_rx(packet);
             break;
 
         case ipv4_proto_udp:
-            ret = udp_handle_packet(iface, &payload, &proto_response);
+            ret = udp_rx(packet);
             break;
 
         default:
@@ -58,7 +72,7 @@ s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
 
     if(ret != SUCCESS)
         return ret;
-
+#if 0
     if(proto_response != NULL)
     {
         /* Encapsulate packet, free original response packet, and respond */
@@ -92,6 +106,7 @@ s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
 
         *response = r;
     }
+#endif
 
     return SUCCESS;
 }

@@ -62,9 +62,6 @@ typedef struct ipv4_route_ent
     u8              metric;
 } ipv4_route_ent_t;
 
-
-s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response);
-s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
-                     const void *packet, u32 len);
+s32 ipv4_init(net_proto_driver_t *driver);
 
 #endif

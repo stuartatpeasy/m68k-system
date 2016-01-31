@@ -16,6 +16,7 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
+#include <kernel/util/buffer.h>
 
 
 #define ARP_CACHE_SIZE              (16)        /* Number of slots in ARP cache                 */
@@ -23,8 +24,8 @@
 #define ARP_MAX_REQUESTS            (5)         /* Max num of consecutive requests for an addr  */
 #define ARP_REQUEST_INTERVAL        (2)         /* #secs between ARP requests for a given addr  */
 
-s32 arp_init();
-s32 arp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response_packet);
+s32 arp_init(net_proto_driver_t *driver);
+s32 arp_handle_packet(net_packet_t *packet);
 s32 arp_lookup_ip(const ipv4_addr_t ip, net_iface_t *iface, mac_addr_t *hw_addr);
 
 

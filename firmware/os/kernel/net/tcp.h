@@ -14,6 +14,6 @@
 #include <kernel/net/net.h>
 
 
-s32 tcp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response);
+s32 tcp_rx(net_packet_t *packet);
 
 #endif

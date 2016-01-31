@@ -8,15 +8,16 @@
 */
 
 #include <kernel/net/arp.h>
-#include <kernel/net/ethernet.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/process.h>
+#include <klibc/stdio.h>            // FIXME remove
 #include <klibc/stdlib.h>
 
 
 arp_cache_item_t *g_arp_cache = NULL;
 extern time_t g_current_timestamp;
 
+s32 arp_rx(net_packet_t *packet);
 s32 arp_cache_add(const net_iface_t * const iface, const mac_addr_t hw_addr, const ipv4_addr_t ip);
 arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface, const ipv4_addr_t ip);
 arp_cache_item_t *arp_cache_get_entry_for_insert();
@@ -25,7 +26,7 @@ arp_cache_item_t *arp_cache_get_entry_for_insert();
 /*
     arp_init() - initialise ARP cache
 */
-s32 arp_init()
+s32 arp_init(net_proto_driver_t *driver)
 {
     if(g_arp_cache != NULL)
         kfree(g_arp_cache);
@@ -34,23 +35,24 @@ s32 arp_init()
     if(g_arp_cache == NULL)
         return ENOMEM;
 
+    driver->rx = arp_rx;
+
     return SUCCESS;
 }
 
 
 /*
-    arp_handle_packet() - handle an incoming ARP packet.  Return EINVAL if the packet is invalid;
-    returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
-    Currently only supports Ethernet+IP responses.
+    arp_rx() - handle an incoming ARP packet.  Returns EINVAL if the packet is invalid; returns
+    ESUCCESS if the packet was successfully processed, or if the packet was ignored.  Currently
+    only supports Ethernet+IP responses.
 */
-s32 arp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response_packet)
+s32 arp_rx(net_packet_t *packet)
 {
-    const arp_hdr_t * const hdr = (arp_hdr_t *) packet->data;
-    const arp_payload_t * const payload = (arp_payload_t *) &hdr[1];
-    s32 ret;
+    arp_hdr_t * const hdr = (arp_hdr_t *) packet->payload;
+    arp_payload_t * const payload = (arp_payload_t *) &hdr[1];
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
-    if(packet->len < sizeof(arp_hdr_t))
+    if(packet->payload_len < sizeof(arp_hdr_t))
         return EINVAL;      /* Incomplete packet */
 
     /* Only interested in ARP packets containing Ethernet+IPv4 addresses */
@@ -61,47 +63,34 @@ s32 arp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **r
         Ensure that the interface protocol is IPv4, and it is configured (i.e. it has a non-zero
         IPv4 address)
     */
-    if((iface->proto_addr_type != na_ipv4) || !*((ipv4_addr_t *) &iface->proto_addr))
-        return SUCCESS;     /* Discard - inappropriate packet type, or IPv4 unconfigured */
+    if(packet->iface->proto_addr.type != na_ipv4)
+        return SUCCESS;     /* Discard - inappropriate protocol type */
 
     /* Check that we have a full ARP payload */
-    if(packet->len < (sizeof(arp_hdr_t) + sizeof(arp_payload_t)))
+    if(packet->payload_len < (sizeof(arp_hdr_t) + sizeof(arp_payload_t)))
         return EINVAL;      /* Incomplete packet */
 
     if(hdr->opcode == BE2N16(arp_request)
-       && payload->dst_ip == *((ipv4_addr_t *) &iface->proto_addr))
+       && payload->dst_ip == *((ipv4_addr_t *) &packet->iface->proto_addr.addr))
     {
         /* This is an Ethernet+IPv4 request addressed to this interface */
-        net_packet_t *r;
-        arp_eth_ipv4_packet_t *p;
+        arp_cache_add(packet->iface, payload->src_mac, payload->src_ip);
 
-        ret = net_packet_alloc(sizeof(arp_eth_ipv4_packet_t), &r);
-        if(ret != SUCCESS)
-            return ret;
+        hdr->opcode = arp_reply;
 
-        arp_cache_add(iface, payload->src_mac, payload->src_ip);
+        payload->dst_ip = payload->src_ip;
+        payload->dst_mac = payload->src_mac;
 
-        p = (arp_eth_ipv4_packet_t *) r->data;
+        payload->src_ip = *((ipv4_addr_t *) &packet->iface->proto_addr.addr);
+        payload->src_mac = *((mac_addr_t *) &packet->iface->hw_addr.addr);
 
-        p->hdr.hw_type          = arp_hw_type_ethernet;
-        p->hdr.proto_type       = ethertype_ipv4;
-        p->hdr.hw_addr_len      = sizeof(mac_addr_t);
-        p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
-        p->hdr.opcode           = arp_reply;
+        return eth_reply(packet);
 
-        p->payload.dst_ip       = payload->src_ip;
-        p->payload.dst_mac      = payload->src_mac;
-        p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr);
-        p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr);
-
-        *response_packet = r;
-
-        return SUCCESS;
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
         /* This is an Ethernet+IPv4 ARP reply.  Add the data to the cache. */
-        return arp_cache_add(iface, payload->src_mac, payload->src_ip);
+        return arp_cache_add(packet->iface, payload->src_mac, payload->src_ip);
     }
 
     return SUCCESS;     /* Discard - not an ARP request/response opcode */
@@ -114,15 +103,18 @@ s32 arp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **r
 */
 s32 arp_send_request(net_iface_t *iface, const ipv4_addr_t ip)
 {
-    net_packet_t *packet;
+    UNUSED(iface);
+    UNUSED(ip);
+/*
+    buffer_t *packet;
     arp_eth_ipv4_packet_t *p;
     s32 ret;
 
-    ret = net_packet_alloc(sizeof(arp_eth_ipv4_packet_t), &packet);
+    ret = buffer_alloc(sizeof(arp_eth_ipv4_packet_t), &packet);
     if(ret != SUCCESS)
         return ret;
 
-    p = (arp_eth_ipv4_packet_t *) packet->data;
+    p = (arp_eth_ipv4_packet_t *) buffer_dptr(packet);
 
     p->hdr.hw_type          = arp_hw_type_ethernet;
     p->hdr.proto_type       = ethertype_ipv4;
@@ -136,6 +128,8 @@ s32 arp_send_request(net_iface_t *iface, const ipv4_addr_t ip)
     p->payload.dst_mac      = g_mac_broadcast;
 
     return eth_transmit(iface, &p->payload.dst_mac, ethertype_arp, packet);
+*/
+    return SUCCESS;
 }
 
 

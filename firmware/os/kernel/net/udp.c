@@ -11,13 +11,12 @@
 
 
 /*
-    udp_handle_packet() - handle an incoming UDP packet.
+    udp_rx() - handle an incoming UDP packet.
 */
-s32 udp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response)
+s32 udp_rx(net_packet_t *packet)
 {
-    UNUSED(iface);
     UNUSED(packet);
-    UNUSED(response);
+    puts("udp_rx");
 
     return SUCCESS;
 }

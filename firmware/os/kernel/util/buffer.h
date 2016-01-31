@@ -32,13 +32,29 @@
 #define CIRCBUF_COUNT(buf)          (buf.wr - buf.rd)
 
 
+/* Buffer of a known length */
+typedef struct buffer
+{
+    u32     len;
+    u8      data_start;
+} buffer_t;
+
+/* Obtain a pointer (of type void *) to the data area in a buffer object */
+#define buffer_dptr(buf)        ((void *) &((buf)->data_start))
+
+
+s32 buffer_alloc(ku32 len, buffer_t **buf);
+void buffer_free(buffer_t *buf);
+s32 buffer_dup(const buffer_t * const buf, buffer_t **newbuf);
+
+
 /* Byte-oriented circular buffer structure */
 typedef struct circbuf
 {
-    u8 *buf;
-    u8 *buf_end;
-    u8 *read_ptr;
-    u8 *write_ptr;
+    u8 *    buf;
+    u8 *    buf_end;
+    u8 *    read_ptr;
+    u8 *    write_ptr;
 } circbuf_t;
 
 

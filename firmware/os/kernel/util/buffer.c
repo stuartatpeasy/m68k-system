@@ -9,6 +9,54 @@
 
 #include <kernel/util/buffer.h>
 #include <kernel/memory/kmalloc.h>
+#include <klibc/string.h>
+
+
+/*
+    buffer_alloc() - allocate a buffer object
+*/
+s32 buffer_alloc(ku32 len, buffer_t **buf)
+{
+    buffer_t *buffer;
+
+    if(!len)
+        return EINVAL;
+
+    buffer = (buffer_t *) kmalloc(membersize(buffer_t, len) + len);
+    if(buffer == NULL)
+        return ENOMEM;
+
+    buffer->len = len;
+
+    *buf = buffer;
+    return SUCCESS;
+}
+
+
+/*
+    buffer_free() - free a buffer object
+*/
+void buffer_free(buffer_t *buf)
+{
+    kfree(buf);
+}
+
+
+/*
+    buffer_dup() - duplicate a buffer object
+*/
+s32 buffer_dup(const buffer_t * const buf, buffer_t **newbuf)
+{
+    buffer_t *b = (buffer_t *) kmalloc(membersize(buffer_t, len) + buf->len);
+    if(b == NULL)
+        return ENOMEM;
+
+    b->len = buf->len;
+    memcpy(buffer_dptr(b), buffer_dptr(buf), buf->len);
+    *newbuf = b;
+
+    return SUCCESS;
+}
 
 
 /*
