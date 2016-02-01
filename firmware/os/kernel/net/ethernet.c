@@ -38,32 +38,34 @@ s32 eth_init(net_proto_driver_t *driver)
 }
 
 /*
-    eth_identify_proto() - identify the protocol of data within an Ethernet packet.
+    eth_rx() - identify the protocol of data within an Ethernet packet.
 */
-s32 eth_identify_proto(net_packet_t *packet)
+s32 eth_rx(net_packet_t *packet)
 {
-    const eth_hdr_t * const ehdr = (eth_hdr_t *) buffer_dptr(packet->raw);
-    net_protocol_t proto;
+    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
+    net_packet_t inner;
 
     switch(ehdr->type)
     {
         case ethertype_ipv4:
-            proto = np_ipv4;
+            inner.proto = np_ipv4;
             break;
 
         case ethertype_arp:
-            proto = np_arp;
+            inner.proto = np_arp;
             break;
 
         default:
             return EPROTONOSUPPORT;
     }
 
-    packet->proto = proto;
-    packet->payload = (void *) &ehdr[1];
-    packet->payload_len = packet->raw->len - sizeof(eth_hdr_t);
+    inner.iface = packet->iface;
+    inner.raw.len = packet->raw.len - sizeof(eth_hdr_t);
+    inner.raw.data = (void *) &ehdr[1];
+    inner.driver = net_get_proto_driver(inner.proto);////// FIXME - should be eth_get_proto_driver() ??? maybe not
+    inner.parent = packet;
 
-    return SUCCESS;
+    return inner.driver->rx(&inner);
 }
 
 
@@ -81,14 +83,14 @@ s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload)
     if(ret != SUCCESS)
         return ret;
 
-    hdr = buffer_dptr(p->raw);
+    hdr = p->raw.data;
     hdr->dest = *((mac_addr_t *) dest);
     hdr->src = *((mac_addr_t *) &iface->hw_addr.addr);
     hdr->type = type;
-    p->payload = &hdr[1];
-    p->payload_len = payload->len;
+    p->raw.data = &hdr[1];
+    p->raw.len = payload->len;
 
-    memcpy(p->payload, buffer_dptr(payload), payload->len);
+    memcpy(p->raw.data, payload->data, payload->len);
 
     ret = net_transmit(p);
 
@@ -104,7 +106,7 @@ s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload)
 */
 s32 eth_reply(net_packet_t *packet)
 {
-    eth_hdr_t * const ehdr = (eth_hdr_t *) buffer_dptr(packet->raw);
+    eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
 
     ehdr->dest = ehdr->src;
     ehdr->src = *((mac_addr_t *) &packet->iface->hw_addr.addr);

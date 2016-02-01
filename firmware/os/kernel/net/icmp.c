@@ -20,14 +20,14 @@ s32 icmp_handle_echo_request(net_packet_t *packet);
 */
 s32 icmp_rx(net_packet_t *packet)
 {
-    const icmp_fixed_hdr_t * const icmp_hdr = (const icmp_fixed_hdr_t *) packet->payload;
+    const icmp_fixed_hdr_t * const icmp_hdr = (const icmp_fixed_hdr_t *) packet->raw.data;
 
     /*
         It's usually not necessary to verify the ICMP checksum on received packets, as the hardware
         will already have verified the checksum of the whole (e.g. Ethernet) frame.
     */
 #if(ICMP_VERIFY_CHECKSUM)
-    if(net_cksum(packet->payload, packet->payload_len) != 0x0000)
+    if(net_cksum(packet->raw.data, packet->raw.len) != 0x0000)
     {
         ++packet->iface->stats.rx_checksum_err;
         ++packet->iface->stats.rx_dropped;
@@ -50,20 +50,14 @@ s32 icmp_rx(net_packet_t *packet)
 */
 s32 icmp_handle_echo_request(net_packet_t *packet)
 {
-//    s32 ret;
-    icmp_echo_reply_t *r = packet->payload;
+    icmp_echo_reply_t *r = packet->raw.data;
 
-    if(((icmp_echo_request_t *) packet->payload)->hdr.code != 0)    /* "code" field must be 0 */
+    if(((icmp_echo_request_t *) packet->raw.data)->hdr.code != 0)    /* "code" field must be 0 */
         return SUCCESS;     /* drop packet */
-
-    puts("icmp_handle_echo_request");
-
 
     r->hdr.checksum = 0;
     r->hdr.type = icmp_echo_reply;
-    r->hdr.checksum = net_cksum(r, packet->payload_len);
+    r->hdr.checksum = net_cksum(r, packet->raw.len);
 
-    // FIXME - send packet
-
-    return SUCCESS;
+    return packet->parent->driver->reply(packet->parent);
 }

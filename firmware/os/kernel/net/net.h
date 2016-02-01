@@ -106,15 +106,16 @@ struct net_iface
 /* Network packet object */
 struct net_packet
 {
-    net_iface_t *   iface;
-    net_protocol_t  proto;
-    void *          payload;
-    u32             payload_len;
-    buffer_t *      raw;
+    net_iface_t *           iface;
+    net_protocol_t          proto;
+    net_proto_driver_t *    driver;
+    net_packet_t *          parent;
+    buffer_t                raw;
 };
 
 
 s32 net_init();
+net_proto_driver_t *net_get_proto_driver(const net_protocol_t proto);
 s32 net_register_proto_driver(s32 (*init_fn)(net_proto_driver_t *));
 net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *addr);
 s32 net_alloc_packet(ku32 len, net_packet_t **packet);

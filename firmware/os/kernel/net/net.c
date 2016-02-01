@@ -19,8 +19,6 @@
 
 
 s32 net_add_interface(dev_t *dev);
-net_proto_driver_t *net_get_proto_driver(const net_protocol_t proto);
-s32 net_handle_packet(net_packet_t *packet);
 void net_receive(void *arg);
 s32 net_rx_unimplemented(net_packet_t *packet);
 s32 net_tx_unimplemented(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
@@ -202,12 +200,14 @@ s32 net_alloc_packet(ku32 len, net_packet_t **packet)
     net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
     s32 ret;
 
-    ret = buffer_alloc(len, &p->raw);
+    ret = buffer_init(len, &p->raw);
     if(ret != SUCCESS)
     {
         kfree(p);
         return ret;
     }
+
+    p->parent = NULL;
 
     *packet = p;
     return SUCCESS;
@@ -219,7 +219,7 @@ s32 net_alloc_packet(ku32 len, net_packet_t **packet)
 */
 void net_free_packet(net_packet_t *packet)
 {
-    buffer_free(packet->raw);
+    buffer_deinit(&packet->raw);
     kfree(packet);
 }
 
@@ -229,13 +229,13 @@ void net_free_packet(net_packet_t *packet)
 */
 s32 net_transmit(net_packet_t *packet)
 {
-    u32 len = packet->raw->len;
+    u32 len = packet->raw.len;
     dev_t * const dev = packet->iface->dev;
 
     ++packet->iface->stats.tx_packets;
     packet->iface->stats.tx_bytes += len;
 
-    return dev->write(dev, 0, &len, buffer_dptr(packet->raw));
+    return dev->write(dev, 0, &len, packet->raw.data);
 }
 
 
@@ -256,46 +256,30 @@ void net_receive(void *arg)
     }
 
     packet->iface = iface;
+    packet->driver = iface->driver;
     packet->proto = iface->driver->proto;
 
     while(1)
     {
         /* TODO - ensure that the interface is configured before calling eth_handle_packet() */
 
-        packet->raw->len = 1500;
-        ret = iface->dev->read(iface->dev, 0, &packet->raw->len, buffer_dptr(packet->raw));
+        packet->raw.len = 1500;
+        packet->parent = NULL;
+        ret = iface->dev->read(iface->dev, 0, &packet->raw.len, packet->raw.data);
 
         /* TODO - this assumes we're working with an Ethernet interface - genericise */
         /* TODO - statistics */
         if(ret == SUCCESS)
         {
-            if(eth_identify_proto(packet) == SUCCESS)
-                net_handle_packet(packet);
+            if(eth_rx(packet) == SUCCESS)
+            {
+                ++iface->stats.rx_packets;
+                iface->stats.rx_bytes += packet->raw.len;
+            }
+            else
+                ++iface->stats.rx_dropped;
         }
     }
-}
-
-
-/*
-    net_handle_packet() - invoke a handler appropriate to the protocol of a packet.
-*/
-s32 net_handle_packet(net_packet_t *packet)
-{
-    net_proto_driver_t *driver;
-    net_iface_stats_t * const stats = &packet->iface->stats;
-
-    ++stats->rx_packets;
-    stats->rx_bytes += packet->raw->len;
-
-    for(driver = g_net_proto_drivers; driver; driver = driver->next)
-    {
-        if(driver->proto == packet->proto)
-            return driver->rx(packet);
-    }
-
-    ++stats->rx_dropped;
-
-    return EPROTONOSUPPORT;
 }
 
 
