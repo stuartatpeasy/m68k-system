@@ -47,10 +47,9 @@ typedef struct eth_hdr
 typedef u32 eth_cksum_t;    /* Ethernet checksum (the last four bytes of an Ethernet frame) */
 
 
+s32 eth_init(net_proto_driver_t *driver);
 s32 eth_identify_proto(net_packet_t *packet);
-s32 eth_tx(net_packet_t *packet);
+s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
 s32 eth_reply(net_packet_t *packet);
-s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et,
-                 buffer_t *packet);
 
 #endif

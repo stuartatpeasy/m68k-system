@@ -36,6 +36,7 @@ typedef enum net_addr_type
 typedef enum net_protocol
 {
     np_unknown,
+    np_ethernet,
     np_arp,
     np_ipv4
 } net_protocol_t;
@@ -75,28 +76,30 @@ typedef struct net_address
 } net_address_t;
 
 
-/* Network interface. */
-struct net_iface
-{
-    net_iface_t *       next;
-    dev_t *             dev;                /* The hw device implementing this interface    */
-    net_iface_type_t    type;               /* Type of interface                            */
-    net_address_t       hw_addr;            /* Hardware address                             */
-    net_address_t       proto_addr;         /* Protocol address                             */
-    net_iface_stats_t   stats;
-    s32                 (*tx)(net_packet_t *packet);
-};
-
-
+/* Network protocol driver */
 typedef struct net_proto_driver net_proto_driver_t;
 struct net_proto_driver
 {
     net_protocol_t          proto;
     const char *            name;
     s32                     (*rx)(net_packet_t *packet);
-    s32                     (*tx)(net_addr_t *src, net_addr_t *dest, buffer_t *payload);
-    s32                     (*reply)(net_packet_t *packet, buffer_t *payload);
+    s32                     (*tx)(net_iface_t *iface, net_addr_t *dest, ku16 type,
+                                  buffer_t *payload);
+    s32                     (*reply)(net_packet_t *packet);
     net_proto_driver_t *    next;
+};
+
+
+/* Network interface. */
+struct net_iface
+{
+    net_iface_t *       next;
+    dev_t *             dev;                /* The hw device implementing this interface    */
+    net_proto_driver_t *driver;             /* Protocol driver                              */
+    net_iface_type_t    type;               /* Type of interface                            */
+    net_address_t       hw_addr;            /* Hardware address                             */
+    net_address_t       proto_addr;         /* Protocol address                             */
+    net_iface_stats_t   stats;
 };
 
 
@@ -112,10 +115,11 @@ struct net_packet
 
 
 s32 net_init();
-s32 net_register_proto_driver(const net_protocol_t proto, const char * const name,
-                              s32 (*init_fn)(net_proto_driver_t *));
+s32 net_register_proto_driver(s32 (*init_fn)(net_proto_driver_t *));
 net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *addr);
-s32 net_transmit(net_iface_t *iface, const void *buffer, u32 len);
+s32 net_alloc_packet(ku32 len, net_packet_t **packet);
+void net_free_packet(net_packet_t *packet);
+s32 net_transmit(net_packet_t *packet);
 s16 net_cksum(const void *buf, u32 len);
 
 #endif

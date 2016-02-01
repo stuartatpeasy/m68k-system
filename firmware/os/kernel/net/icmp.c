@@ -50,24 +50,20 @@ s32 icmp_rx(net_packet_t *packet)
 */
 s32 icmp_handle_echo_request(net_packet_t *packet)
 {
-    s32 ret;
-    icmp_echo_reply_t *r;
+//    s32 ret;
+    icmp_echo_reply_t *r = packet->payload;
 
     if(((icmp_echo_request_t *) packet->payload)->hdr.code != 0)    /* "code" field must be 0 */
         return SUCCESS;     /* drop packet */
 
     puts("icmp_handle_echo_request");
 
-#if 0
-    ret = net_packet_dup(packet, reply);
-    if(ret != SUCCESS)
-        return ret;
 
-    r = (*reply)->data;
     r->hdr.checksum = 0;
     r->hdr.type = icmp_echo_reply;
-    r->hdr.checksum = net_cksum(r, packet->len);
-#endif
+    r->hdr.checksum = net_cksum(r, packet->payload_len);
+
+    // FIXME - send packet
 
     return SUCCESS;
 }

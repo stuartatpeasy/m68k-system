@@ -35,6 +35,8 @@ s32 arp_init(net_proto_driver_t *driver)
     if(g_arp_cache == NULL)
         return ENOMEM;
 
+    driver->name = "ARP";
+    driver->proto = np_arp;
     driver->rx = arp_rx;
 
     return SUCCESS;

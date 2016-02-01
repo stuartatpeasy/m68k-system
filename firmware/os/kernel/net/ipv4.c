@@ -25,6 +25,8 @@ s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_p
 */
 s32 ipv4_init(net_proto_driver_t *driver)
 {
+    driver->name = "IPv4";
+    driver->proto = np_ipv4;
     driver->rx = ipv4_rx;
 
     return SUCCESS;
@@ -118,6 +120,14 @@ s32 ipv4_rx(net_packet_t *packet)
 s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
                      const void *packet, u32 len)
 {
+    ////////////////////// FIXME - reimplement this in terms of net_packet_t //////////////////
+    UNUSED(src);
+    UNUSED(dest);
+    UNUSED(proto);
+    UNUSED(packet);
+    UNUSED(len);
+#if 0
+
     ipv4_hdr_t *hdr;
     ipv4_addr_t srcaddr;
     void *buffer;
@@ -155,4 +165,6 @@ s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_p
     memcpy((u8 *) buffer + sizeof(ipv4_hdr_t), packet, len);
 
     return net_transmit(iface, buffer, total_len);
+#endif
+    return SUCCESS;
 }
