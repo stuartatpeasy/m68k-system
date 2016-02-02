@@ -320,3 +320,12 @@ s16 net_cksum(const void *buf, u32 len)
 
     return ~(sum + (sum >> 16));
 }
+
+
+/*
+    net_address_compare() - compare two net_address_t objects.  Same semantics as memcmp().
+*/
+s32 net_address_compare(const net_address_t *a1, const net_address_t *a2)
+{
+    return memcmp(a1, a2, sizeof(net_address_t));
+}

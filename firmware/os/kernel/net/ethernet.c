@@ -10,6 +10,7 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/arp.h>
+#include <klibc/strings.h>
 
 
 const mac_addr_t g_mac_broadcast =
@@ -73,7 +74,7 @@ s32 eth_rx(net_packet_t *packet)
     eth_tx() - add an Ethernet header to the supplied frame and transmit it on the specified
     interface.
 */
-s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload)
+s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
 {
     net_packet_t *p;
     eth_hdr_t *hdr;
@@ -84,9 +85,24 @@ s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload)
         return ret;
 
     hdr = p->raw.data;
+
+    switch(proto)
+    {
+        case np_ipv4:
+            hdr->type = ethertype_ipv4;
+            break;
+
+        case np_arp:
+            hdr->type = ethertype_arp;
+            break;
+
+        default:
+            net_free_packet(p);
+            return EPROTONOSUPPORT;
+    }
+
     hdr->dest = *((mac_addr_t *) dest);
     hdr->src = *((mac_addr_t *) &iface->hw_addr.addr);
-    hdr->type = type;
     p->raw.data = &hdr[1];
     p->raw.len = payload->len;
 
@@ -112,4 +128,15 @@ s32 eth_reply(net_packet_t *packet)
     ehdr->src = *((mac_addr_t *) &packet->iface->hw_addr.addr);
 
     return net_transmit(packet);
+}
+
+
+/*
+    eth_make_addr() - populate a net_address_t object with a MAC address.
+*/
+void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
+{
+    addr->type = na_ethernet;
+    bzero(&addr->addr, sizeof(net_addr_t));
+    memcpy(&addr->addr, mac, sizeof(mac_addr_t));
 }

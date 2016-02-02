@@ -51,5 +51,6 @@ s32 eth_init(net_proto_driver_t *driver);
 s32 eth_rx(net_packet_t *packet);
 s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
 s32 eth_reply(net_packet_t *packet);
+void eth_make_addr(mac_addr_t *mac, net_address_t *addr);
 
 #endif

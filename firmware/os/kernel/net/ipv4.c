@@ -12,6 +12,7 @@
 #include <kernel/net/net.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
+#include <klibc/strings.h>
 
 
 s32 ipv4_rx(net_packet_t *packet);
@@ -126,9 +127,9 @@ s32 ipv4_rx(net_packet_t *packet)
 /*
     ipv4_tx() - transmit an IPv4 packet
 */
-s32 ipv4_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload)
+s32 ipv4_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
 {
-    UNUSED(iface); UNUSED(dest); UNUSED(type); UNUSED(payload);
+    UNUSED(iface); UNUSED(dest); UNUSED(proto); UNUSED(payload);
     puts("ipv4_tx");
     return SUCCESS;
 }
@@ -203,4 +204,15 @@ s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_p
     return net_transmit(iface, buffer, total_len);
 #endif
     return SUCCESS;
+}
+
+
+/*
+    ipv4_make_addr() - populate a net_address_t object with an IPv4 address.
+*/
+void ipv4_make_addr(ipv4_addr_t ipv4, net_address_t *addr)
+{
+    addr->type = na_ipv4;
+    bzero(&addr->addr, sizeof(net_addr_t));
+    *((u32 *) &addr->addr) = ipv4;
 }

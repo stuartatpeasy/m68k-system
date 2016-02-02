@@ -26,8 +26,7 @@
 
 s32 arp_init(net_proto_driver_t *driver);
 s32 arp_handle_packet(net_packet_t *packet);
-s32 arp_lookup_ip(const ipv4_addr_t ip, net_iface_t *iface, mac_addr_t *hw_addr);
-
+s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr);
 
 typedef struct arp_hdr
 {
@@ -75,7 +74,8 @@ typedef enum arp_hw_type
 typedef struct arp_cache_item
 {
     const net_iface_t * iface;
-    mac_addr_t          hw_addr;
+    net_address_t       hw_addr;
+    net_address_t       proto_addr;
     u32                 ipv4_addr;
     time_t              etime;
 } arp_cache_item_t;

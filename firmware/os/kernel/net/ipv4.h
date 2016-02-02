@@ -62,6 +62,8 @@ typedef struct ipv4_route_ent
     u8              metric;
 } ipv4_route_ent_t;
 
+
 s32 ipv4_init(net_proto_driver_t *driver);
+void ipv4_make_addr(ipv4_addr_t ipv4, net_address_t *addr);
 
 #endif
