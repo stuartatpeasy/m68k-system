@@ -62,7 +62,6 @@ s32 plat_get_cpu_clock(u32 *clk);   /* Get CPU clock frequency in Hz            
 */
 s32 plat_led_on(ku8 leds);
 s32 plat_led_off(ku8 leds);
-void plat_list_devices();
 s32 plat_clockfreq_detect();
 const char * plat_get_name();
 void plat_reset() __attribute__((noreturn));

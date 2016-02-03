@@ -91,16 +91,6 @@ s32 plat_console_init(void)
 
 
 /*
-    plat_list_devices() - list (ie. write details to the console of) devices found during the boot
-    process.
-*/
-void plat_list_devices()
-{
-
-}
-
-
-/*
     plat_get_name() - return a string containing the name of the platform.
 */
 const char *plat_get_name()
