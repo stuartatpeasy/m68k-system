@@ -56,7 +56,7 @@ blockdev_stats_t g_ata_stats;
 
 /*
 	Macros which wait for the ATA device's BSY flag to be asserted (ATA_WAIT_BSY()) or negated
-	(ATA_WAIT_NBSY).
+	(ATA_WAIT_NBSY), or for the DRDY flag to be asserted (ATA_WAIT_DRDY).
 */
 #define ATA_WAIT_BSY(base_addr)													\
     (__extension__ ({														    \
@@ -74,6 +74,13 @@ blockdev_stats_t g_ata_stats;
         t_;																        \
     }))
 
+#define ATA_WAIT_DRDY(base_addr)												\
+    (__extension__ ({														    \
+        u32 t_ = ATA_TIMEOUT_VAL;											    \
+        for(; !(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_DRDY) && --t_;)	\
+            ;	                                                                \
+        t_;																        \
+    }))
 /*
     The constants ATA_REG_BASE, ATA_REG_OFFSET and ATA_REG_SHIFT can be used to cater for different
     ATA bus implementations.  The offset of byte-wide ATA register 'reg' from the ATA bus base

@@ -36,8 +36,8 @@
     #endif
 
     /* Definitions not dependent on hardware revision */
-    #define ATA_REG_BASE        (0x20)
-    #define ATA_ALT_REG_BASE    (0x10)
+    #define ATA_REG_BASE        (0x0)
+    #define ATA_ALT_REG_BASE    (0x10000)
     #define ATA_REG_SHIFT       (1)
 
     #include <platform/lambda/lambda.h>
