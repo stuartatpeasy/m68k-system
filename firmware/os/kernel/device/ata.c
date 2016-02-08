@@ -11,9 +11,9 @@
 #include <kernel/include/byteorder.h>
 #include <kernel/include/error.h>
 #include <kernel/util/kutil.h>
-
-#include <string.h>
-#include <strings.h>
+#include <klibc/stdio.h>            // FIXME REMOVE
+#include <klibc/string.h>
+#include <klibc/strings.h>
 
 
 /*
@@ -111,26 +111,37 @@ s32 ata_drive_do_init(dev_t *dev)
     u16 *p;
     ata_identify_device_ret_t id;
 
-    if(drive == ata_drive_master)
-        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
-    else if(drive == ata_drive_slave)
-        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
-    else
-        return EINVAL;
+    /* Ensure that the software reset bit is cleared, and interrupts are disabled */
+    ATA_REG(base_addr, ATA_R_DEVICE_CONTROL) = ATA_DEVICE_CONTROL_NIEN;
+
+    /* Check whether anything is plugged in */
+    if((ATA_REG(base_addr, ATA_R_STATUS) & 0x7f) == 0x7f)
+        return ENOMEDIUM;       /* Nothing plugged in - bus floating high */
 
     /* Wait for BSY to become low */
     if(!ATA_WAIT_NBSY(base_addr))
         return ETIME;
 
-    ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_IDENTIFY_DEVICE;
+    /* Wait for DRDY to become high */
+    if(!ATA_WAIT_DRDY(base_addr))
+        return ENODATA;     // FIXME - better error here
 
-        /* Wait for BSY to go high */
-    if(!ATA_WAIT_BSY(base_addr))
-        return ENOMEDIUM;   /* No response from device; presumably nothing plugged in to the port */
+    if(drive == ata_drive_master)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = 0;
+    else if(drive == ata_drive_slave)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = ATA_DH_DEV;
+    else
+        return EINVAL;
+
+    ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_IDENTIFY_DEVICE;
 
     /* A device is present. Wait for BSY to go low */
     if(!ATA_WAIT_NBSY(base_addr))
         return ETIME;	/* Device did not negate BSY in a timely fashion */
+
+    /* Wait for DRDY to go high */
+    if(!ATA_WAIT_DRDY(base_addr))
+        return ENODATA;
 
     /* Did an error occur? */
     if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
@@ -154,31 +165,36 @@ s32 ata_drive_do_init(dev_t *dev)
         return EUNKNOWN;
     }
 
-    ata_read_data(base_addr, &id);
+    if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_DRQ)
+    {
+        ata_read_data(base_addr, &id);
 
-    /*
-        For some reason, the strings returned in the IDENTIFY DEVICE structure are big-
-        endian.  All of the rest of the data in the response is little-endian.  Why not?
-    */
-    for(p = (u16 *) &id.model_number;
-        p < (u16 *) (&id.model_number[sizeof(id.model_number)]); ++p)
-        *p = LE2N16(*p);
+        /*
+            For some reason, the strings returned in the IDENTIFY DEVICE structure are big-
+            endian.  All of the rest of the data in the response is little-endian.  Why not?
+        */
+        for(p = (u16 *) &id.model_number;
+            p < (u16 *) (&id.model_number[sizeof(id.model_number)]); ++p)
+            *p = LE2N16(*p);
 
-    for(p = (u16 *) &id.serial_number;
-        p < (u16 *) (&id.serial_number[sizeof(id.serial_number)]); ++p)
-        *p = LE2N16(*p);
+        for(p = (u16 *) &id.serial_number;
+            p < (u16 *) (&id.serial_number[sizeof(id.serial_number)]); ++p)
+            *p = LE2N16(*p);
 
-    for(p = (u16 *) &id.firmware_revision;
-        p < (u16 *) (&id.firmware_revision[sizeof(id.firmware_revision)]); ++p)
-        *p = LE2N16(*p);
+        for(p = (u16 *) &id.firmware_revision;
+            p < (u16 *) (&id.firmware_revision[sizeof(id.firmware_revision)]); ++p)
+            *p = LE2N16(*p);
 
-    strn_trim_cpy(dev_data->model, id.model_number, sizeof(id.model_number));
-    strn_trim_cpy(dev_data->serial, id.serial_number, sizeof(id.serial_number));
-    strn_trim_cpy(dev_data->firmware, id.firmware_revision, sizeof(id.firmware_revision));
+        strn_trim_cpy(dev_data->model, id.model_number, sizeof(id.model_number));
+        strn_trim_cpy(dev_data->serial, id.serial_number, sizeof(id.serial_number));
+        strn_trim_cpy(dev_data->firmware, id.firmware_revision, sizeof(id.firmware_revision));
 
-    dev->len = LE2N16(id.log_cyls) * LE2N16(id.log_heads) * LE2N16(id.log_sects_per_log_track);
+        dev->len = LE2N16(id.log_cyls) * LE2N16(id.log_heads) * LE2N16(id.log_sects_per_log_track);
 
-    return SUCCESS;
+        return SUCCESS;
+    }
+
+    return ENODATA;
 }
 
 
@@ -195,7 +211,6 @@ s32 ata_shut_down(dev_t *dev)
 /*
     ata_irq() - interrupt service routine
 */
-#include <klibc/stdio.h>        // FIXME remove
 void ata_irq(ku32 irql, void *data)
 {
     u8 dummy;
@@ -262,9 +277,9 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf)
 
 	/* Select master / slave device */
 	if(drive == ata_drive_master)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
+		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = 0;
 	else if(drive == ata_drive_slave)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
+		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = ATA_DH_DEV;
 	else
 		return ENODEV;
 

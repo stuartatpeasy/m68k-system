@@ -81,6 +81,8 @@ blockdev_stats_t g_ata_stats;
             ;	                                                                \
         t_;																        \
     }))
+
+
 /*
     The constants ATA_REG_BASE, ATA_REG_OFFSET and ATA_REG_SHIFT can be used to cater for different
     ATA bus implementations.  The offset of byte-wide ATA register 'reg' from the ATA bus base
