@@ -14,13 +14,19 @@
 #include <kernel/net/net.h>
 #include <kernel/process.h>
 #include <kernel/util/kutil.h>
-#include <stdio.h>
+#include <klibc/strings.h>
+#include <klibc/stdio.h>
 
 
 s32 net_add_interface(dev_t *dev);
 void net_receive(void *arg);
+s32 net_rx_unimplemented(net_packet_t *packet);
+s32 net_tx_unimplemented(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
+s32 net_reply_unimplemented(net_packet_t *packet);
 
 net_iface_t *g_net_ifaces = NULL;
+
+net_proto_driver_t *g_net_proto_drivers;
 
 
 /*
@@ -29,32 +35,98 @@ net_iface_t *g_net_ifaces = NULL;
 s32 net_init()
 {
     dev_t *dev = NULL;
-    s32 ret;
+
+    /* Register protocols */
+    net_register_proto_driver(arp_init);
+    net_register_proto_driver(ipv4_init);
+    net_register_proto_driver(eth_init);
 
     /* Iterate over hardware devices; look for any which identify as network interfaces. */
     while((dev = dev_get_next(dev)) != NULL)
-    {
         if(dev->type == DEV_TYPE_NET)
         {
-            if(dev->subtype == DEV_SUBTYPE_ETHERNET)
-            {
-                ks32 ret = net_add_interface(dev);
+            ks32 ret = net_add_interface(dev);
 
-                if(ret != SUCCESS)
-                    printf("net: failed to add %s: %s\n", dev->name, kstrerror(ret));
-            }
-            else
-            {
-                printf("net: ignoring unsupported network device %s\n", dev->name);
-            }
+            if(ret != SUCCESS)
+                printf("net: failed to add %s: %s\n", dev->name, kstrerror(ret));
         }
-    }
-
-    ret = arp_init();
-    if(ret != SUCCESS)
-        printf("net: arp: failed to initialise: %s\n", kstrerror(ret));
 
     return SUCCESS;
+}
+
+
+/*
+    net_register_proto_driver() - register a driver for a particular network protocol
+*/
+s32 net_register_proto_driver(s32 (*init_fn)(net_proto_driver_t *))
+{
+    s32 ret;
+    net_proto_driver_t *driver = (net_proto_driver_t *) CHECKED_KMALLOC(sizeof(net_proto_driver_t)),
+                        *p;
+
+    driver->rx = net_rx_unimplemented;
+    driver->tx = net_tx_unimplemented;
+    driver->reply = net_reply_unimplemented;
+
+    driver->next = NULL;
+
+    ret = init_fn(driver);
+    if(ret != SUCCESS)
+    {
+        kfree(driver);
+        return ret;
+    }
+
+    if(g_net_proto_drivers)
+    {
+        for(p = g_net_proto_drivers; p->next; p = p->next)
+            ;
+
+        p->next = driver;
+    }
+    else
+        g_net_proto_drivers = driver;
+
+    printf("net: registered protocol %s\n", driver->name);
+    return SUCCESS;
+}
+
+
+/*
+    net_get_proto_driver() - look up a protocol driver by protocol
+*/
+net_proto_driver_t *net_get_proto_driver(const net_protocol_t proto)
+{
+    net_proto_driver_t *d;
+
+    for(d = g_net_proto_drivers; d && (d->proto != proto); d = d->next)
+        ;
+
+    return d;
+}
+
+
+s32 net_rx_unimplemented(net_packet_t *packet)
+{
+    UNUSED(packet);
+    return ENOSYS;
+}
+
+
+s32 net_tx_unimplemented(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload)
+{
+    UNUSED(iface);
+    UNUSED(dest);
+    UNUSED(type);
+    UNUSED(payload);
+    return ENOSYS;
+}
+
+
+s32 net_reply_unimplemented(net_packet_t *packet)
+{
+    UNUSED(packet);
+    return ENOSYS;
 }
 
 
@@ -64,58 +136,106 @@ s32 net_init()
 s32 net_add_interface(dev_t *dev)
 {
     net_iface_t **p, *iface;
+    net_addr_type_t addr_type;
+
     mac_addr_t *ma;
     s32 ret;
 
-    iface = (net_iface_t *) CHECKED_KCALLOC(1, sizeof(net_iface_t));
-    iface->dev = dev;
-
-    ret = dev->control(dev, dc_get_hw_addr_type, NULL, &iface->hw_addr_type);
+    ret = dev->control(dev, dc_get_hw_addr_type, NULL, &addr_type);
     if(ret != SUCCESS)
-    {
-        kfree(iface);
         return ret;
-    }
 
-    if(iface->hw_addr_type != na_ethernet)
+    if(addr_type == na_ethernet)    /* Ethernet interface */
     {
-        kfree(iface);
+        iface = (net_iface_t *) CHECKED_KMALLOC(sizeof(net_iface_t));
+        iface->next = NULL;
+        iface->dev = dev;
+        iface->hw_addr.type = addr_type;
+        iface->type = ni_ethernet;
+        iface->driver = net_get_proto_driver(np_ethernet);
+
+        if(!iface->driver)
+        {
+            kfree(iface);
+            return EPROTONOSUPPORT;
+        }
+
+        bzero(&iface->stats, sizeof(net_iface_stats_t));
+
+        ret = dev->control(dev, dc_get_hw_addr, NULL, &iface->hw_addr.addr);
+        if(ret != SUCCESS)
+        {
+            kfree(iface);
+            return ret;
+        }
+
+        for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
+            ;
+
+        *p = iface;
+
+        ma = (mac_addr_t *) &iface->hw_addr.addr;
+        printf("net: added %s: %02x:%02x:%02x:%02x:%02x:%02x\n", dev->name,
+               ma->b[0], ma->b[1], ma->b[2], ma->b[3], ma->b[4], ma->b[5]);
+
+        /* FIXME - remove (hardwiring IPv4 addr to 172.16.0.200) */
+        ipv4_addr_t addr = 0xac1000c8;      /* = 172.16.0.200 */
+        iface->proto_addr.type = na_ipv4;
+        memcpy(&iface->proto_addr.addr, &addr, sizeof(addr));
+
+        return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL,
+                           NULL);
+    }
+    else
         return EPROTONOSUPPORT;
-    }
+}
 
-    ret = dev->control(dev, dc_get_hw_addr, NULL, &iface->hw_addr);
+
+/*
+    net_alloc_packet() - create a packet object and allocate a buffer of the specified length for
+    the payload.
+*/
+s32 net_alloc_packet(ku32 len, net_packet_t **packet)
+{
+    net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
+    s32 ret;
+
+    ret = buffer_init(len, &p->raw);
     if(ret != SUCCESS)
     {
-        kfree(iface);
+        kfree(p);
         return ret;
     }
 
-    for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
-        ;
+    p->parent = NULL;
 
-    *p = iface;
-
-    ma = (mac_addr_t *) &iface->hw_addr;
-    printf("net: added %s: %02x:%02x:%02x:%02x:%02x:%02x\n", dev->name,
-           ma->b[0], ma->b[1], ma->b[2], ma->b[3], ma->b[4], ma->b[5]);
-
-    /* FIXME - remove (hardwiring IPv4 addr to 172.16.0.200) */
-    ipv4_addr_t addr = 0xac1000c8;      /* = 172.16.0.200 */
-    iface->proto_addr_type = na_ipv4;
-    memcpy(&iface->proto_addr, &addr, sizeof(addr));
-
-    proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL, NULL);
-
+    *packet = p;
     return SUCCESS;
+}
+
+
+/*
+    net_free_packet() - free the memory associated with a packet created by net_alloc_packet().
+*/
+void net_free_packet(net_packet_t *packet)
+{
+    buffer_deinit(&packet->raw);
+    kfree(packet);
 }
 
 
 /*
     net_transmit() - send a packet over an interface.
 */
-s32 net_transmit(net_iface_t *iface, const void *buffer, u32 len)
+s32 net_transmit(net_packet_t *packet)
 {
-    return iface->dev->write(iface->dev, 0, &len, buffer);
+    u32 len = packet->raw.len;
+    dev_t * const dev = packet->iface->dev;
+
+    ++packet->iface->stats.tx_packets;
+    packet->iface->stats.tx_bytes += len;
+
+    return dev->write(dev, 0, &len, packet->raw.data);
 }
 
 
@@ -129,20 +249,36 @@ void net_receive(void *arg)
     net_iface_t * const iface = (net_iface_t *) arg;
     net_packet_t *packet;
 
-    if(net_packet_alloc(1500, &packet) != SUCCESS)
+    if(net_alloc_packet(1500, &packet) != SUCCESS)
     {
         kernel_warning("Failed to allocate packet buffer");
         return;
     }
 
+    packet->iface = iface;
+    packet->driver = iface->driver;
+    packet->proto = iface->driver->proto;
+
     while(1)
     {
-        packet->len = 1500;
-        ret = iface->dev->read(iface->dev, 0, &packet->len, packet->data);
+        /* TODO - ensure that the interface is configured before calling eth_handle_packet() */
+
+        packet->raw.len = 1500;
+        packet->parent = NULL;
+        ret = iface->dev->read(iface->dev, 0, &packet->raw.len, packet->raw.data);
 
         /* TODO - this assumes we're working with an Ethernet interface - genericise */
+        /* TODO - statistics */
         if(ret == SUCCESS)
-            eth_handle_packet(iface, packet);
+        {
+            if(eth_rx(packet) == SUCCESS)
+            {
+                ++iface->stats.rx_packets;
+                iface->stats.rx_bytes += packet->raw.len;
+            }
+            else
+                ++iface->stats.rx_dropped;
+        }
     }
 }
 
@@ -187,64 +323,9 @@ s16 net_cksum(const void *buf, u32 len)
 
 
 /*
-    net_packet_alloc() - create a new net_packet object.
+    net_address_compare() - compare two net_address_t objects.  Same semantics as memcmp().
 */
-s32 net_packet_alloc(ku32 len, net_packet_t **p)
+s32 net_address_compare(const net_address_t *a1, const net_address_t *a2)
 {
-    net_packet_t *packet;
-
-    if(!len)
-        return EINVAL;
-
-    packet = (net_packet_t *) kmalloc(sizeof(net_packet_t));
-    if(packet == NULL)
-        return ENOMEM;
-
-    packet->data = kmalloc(len);
-    if(packet->data == NULL)
-    {
-        kfree(packet);
-        return ENOMEM;
-    }
-
-    packet->len = len;
-    *p = packet;
-
-    return SUCCESS;
-}
-
-
-/*
-    net_packet_free() - release (free) a net_packet object.
-*/
-s32 net_packet_free(net_packet_t *p)
-{
-    kfree(p->data);
-    kfree(p);
-
-    return SUCCESS;
-}
-
-
-/*
-    net_packet_dup() - duplicate net_packet object "packet" into *copy.
-*/
-s32 net_packet_dup(const net_packet_t *packet, net_packet_t **copy)
-{
-    net_packet_t *p = (net_packet_t *) kmalloc(sizeof(net_packet_t));
-    if(p == NULL)
-        return ENOMEM;
-
-    p->data = kmalloc(packet->len);
-    if(p->data == NULL)
-    {
-        kfree(p);
-        return ENOMEM;
-    }
-
-    p->len = packet->len;
-    memcpy(p->data, packet->data, packet->len);
-    *copy = p;
-
-    return SUCCESS;
+    return memcmp(a1, a2, sizeof(net_address_t));
 }

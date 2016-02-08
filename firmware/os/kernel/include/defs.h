@@ -38,7 +38,7 @@
 #define TICK_RATE       (100)
 
 /* Length of kernel stack */
-#define KERNEL_STACK_LEN        (32 * 1024)     /* Kernel stack is 32KB */
+#define KERNEL_STACK_LEN        (8 * 1024)          /* Kernel stack is 8KB */
 
 /* "Stringification" macros - see https://gcc.gnu.org/onlinedocs/cpp/Stringification.html */
 #define STRINGIFY(s)    STRINGIFY_(s)
@@ -70,6 +70,9 @@
     const typeof(((type *) 0)->member) *mptr = (ptr);   \
     (type *) ((char *) mptr - offsetof(type, member));  \
 })
+
+/* Obtain the size of a struct member */
+#define membersize(type, member)        sizeof(((type *) 0)->member)
 
 /* Return the minimum of two values; accesses each value exactly once. */
 #define MIN(a, b)           \

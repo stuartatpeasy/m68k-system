@@ -12,22 +12,41 @@
 #include <kernel/net/net.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
+#include <klibc/strings.h>
+
+
+s32 ipv4_rx(net_packet_t *packet);
+s32 ipv4_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
+s32 ipv4_reply(net_packet_t *packet);
+
+s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
+                     const void *packet, u32 len);
+
+
+/*
+    ipv4_init() - initialise the IPv4 protocol driver
+*/
+s32 ipv4_init(net_proto_driver_t *driver)
+{
+    driver->name = "IPv4";
+    driver->proto = np_ipv4;
+    driver->rx = ipv4_rx;
+    driver->tx = ipv4_tx;
+    driver->reply = ipv4_reply;
+
+    return SUCCESS;
+}
 
 
 /*
     ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
     returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
 */
-s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response)
+s32 ipv4_rx(net_packet_t *packet)
 {
-    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->data;
-    net_packet_t payload, *proto_response = NULL;
+    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->raw.data;
+    net_packet_t ipv4packet;
     s32 ret;
-    UNUSED(iface);
-    UNUSED(response);
-
-    payload.data = (void *) &hdr[1];
-    payload.len = packet->len - sizeof(ipv4_hdr_t);
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -38,18 +57,25 @@ s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
         return SUCCESS;     /* Drop packet */
 #endif
 
+    ipv4packet.iface = packet->iface;
+    ipv4packet.proto = np_ipv4;
+    ipv4packet.raw.len = packet->raw.len - sizeof(ipv4_hdr_t);
+    ipv4packet.raw.data = (void *) &hdr[1];
+    ipv4packet.driver = net_get_proto_driver(np_ipv4);
+    ipv4packet.parent = packet;
+
     switch(hdr->protocol)
     {
         case ipv4_proto_icmp:
-            ret = icmp_handle_packet(iface, &payload, &proto_response);
+            ret = icmp_rx(&ipv4packet);
             break;
 
         case ipv4_proto_tcp:
-            ret = tcp_handle_packet(iface, &payload, &proto_response);
+            ret = tcp_rx(&ipv4packet);
             break;
 
         case ipv4_proto_udp:
-            ret = udp_handle_packet(iface, &payload, &proto_response);
+            ret = udp_rx(&ipv4packet);
             break;
 
         default:
@@ -58,7 +84,7 @@ s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
 
     if(ret != SUCCESS)
         return ret;
-
+#if 0
     if(proto_response != NULL)
     {
         /* Encapsulate packet, free original response packet, and respond */
@@ -92,8 +118,36 @@ s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
 
         *response = r;
     }
+#endif
 
     return SUCCESS;
+}
+
+
+/*
+    ipv4_tx() - transmit an IPv4 packet
+*/
+s32 ipv4_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
+{
+    UNUSED(iface); UNUSED(dest); UNUSED(proto); UNUSED(payload);
+    puts("ipv4_tx");
+    return SUCCESS;
+}
+
+
+/*
+    ipv4_reply() - reply to an IPv4 packet
+*/
+s32 ipv4_reply(net_packet_t *packet)
+{
+    ipv4_hdr_t *hdr = packet->raw.data;
+    ipv4_addr_t tmp;
+
+    tmp = hdr->src;
+    hdr->src = hdr->dest;
+    hdr->dest = tmp;
+
+    return packet->parent->driver->reply(packet->parent);
 }
 
 
@@ -103,6 +157,14 @@ s32 ipv4_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **
 s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
                      const void *packet, u32 len)
 {
+    ////////////////////// FIXME - reimplement this in terms of net_packet_t //////////////////
+    UNUSED(src);
+    UNUSED(dest);
+    UNUSED(proto);
+    UNUSED(packet);
+    UNUSED(len);
+#if 0
+
     ipv4_hdr_t *hdr;
     ipv4_addr_t srcaddr;
     void *buffer;
@@ -140,4 +202,17 @@ s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_p
     memcpy((u8 *) buffer + sizeof(ipv4_hdr_t), packet, len);
 
     return net_transmit(iface, buffer, total_len);
+#endif
+    return SUCCESS;
+}
+
+
+/*
+    ipv4_make_addr() - populate a net_address_t object with an IPv4 address.
+*/
+void ipv4_make_addr(ipv4_addr_t ipv4, net_address_t *addr)
+{
+    addr->type = na_ipv4;
+    bzero(&addr->addr, sizeof(net_addr_t));
+    *((u32 *) &addr->addr) = ipv4;
 }

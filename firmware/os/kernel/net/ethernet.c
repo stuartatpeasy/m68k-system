@@ -10,10 +10,10 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/arp.h>
-#include <klibc/stdio.h>            /* FIXME remove */
+#include <klibc/strings.h>
 
 
-mac_addr_t g_mac_broadcast =
+const mac_addr_t g_mac_broadcast =
 {
     .b[0] = 0xff,
     .b[1] = 0xff,
@@ -24,79 +24,119 @@ mac_addr_t g_mac_broadcast =
 };
 
 
-/* TODO: eth_print_mac() is special-case/useless.  do this differently */
-void eth_print_mac(const mac_addr_t * const mac)
-{
-    printf("%02x:%02x:%02x:%02x:%02x:%02x",
-           mac->b[0], mac->b[1], mac->b[2], mac->b[3], mac->b[4], mac->b[5]);
-}
-
-
 /*
-    eth_handle_packet() - handle a received Ethernet packet
+    eth_init() - initialise Ethernet protocol driver
 */
-s32 eth_handle_packet(net_iface_t *iface, net_packet_t *packet)
+s32 eth_init(net_proto_driver_t *driver)
 {
-    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->data;
-    net_packet_t proto_packet, *response_packet = NULL;
-    s32 ret;
-
-    proto_packet.len = packet->len - sizeof(eth_hdr_t);
-    proto_packet.data = (void *) &ehdr[1];
-
-    /* TODO - get rid of this jump-table; replace with per-proto funcptr table? */
-    switch(ehdr->type)
-    {
-        case ethertype_ipv4:
-            ret = ipv4_handle_packet(iface, &proto_packet, &response_packet);
-            break;
-
-        case ethertype_arp:
-            ret = arp_handle_packet(iface, &proto_packet, &response_packet);
-            break;
-
-        default:
-            return SUCCESS;
-    }
-
-    if(ret != SUCCESS)
-        return ret;
-
-    if(response_packet != NULL)
-    {
-        ret = eth_transmit(iface, &ehdr->src, ehdr->type, response_packet);
-        net_packet_free(response_packet);
-
-        return ret;
-    }
+    driver->name = "Ethernet";
+    driver->proto = np_ethernet;
+//    driver->rx = eth_rx;          // FIXME
+    driver->tx = eth_tx;
+    driver->reply = eth_reply;
 
     return SUCCESS;
 }
 
+/*
+    eth_rx() - identify the protocol of data within an Ethernet packet.
+*/
+s32 eth_rx(net_packet_t *packet)
+{
+    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
+    net_packet_t inner;
+
+    switch(ehdr->type)
+    {
+        case ethertype_ipv4:
+            inner.proto = np_ipv4;
+            break;
+
+        case ethertype_arp:
+            inner.proto = np_arp;
+            break;
+
+        default:
+            return EPROTONOSUPPORT;
+    }
+
+    inner.iface = packet->iface;
+    inner.raw.len = packet->raw.len - sizeof(eth_hdr_t);
+    inner.raw.data = (void *) &ehdr[1];
+    inner.driver = net_get_proto_driver(inner.proto);////// FIXME - should be eth_get_proto_driver() ??? maybe not
+    inner.parent = packet;
+
+    return inner.driver->rx(&inner);
+}
+
 
 /*
-    eth_transmit() - add an Ethernet header to the supplied frame and transmit it on the specified
+    eth_tx() - add an Ethernet header to the supplied frame and transmit it on the specified
     interface.
 */
-s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et,
-                 net_packet_t *packet)
+s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
 {
-    void *buf = CHECKED_KMALLOC(sizeof(eth_hdr_t) + packet->len);
-    eth_hdr_t * const hdr = (eth_hdr_t *) buf;
+    net_packet_t *p;
+    eth_hdr_t *hdr;
     s32 ret;
 
-    /* TODO - rewrite this a bit; make fuller use of net_packet_t */
+    ret = net_alloc_packet(sizeof(eth_hdr_t) + payload->len, &p);
+    if(ret != SUCCESS)
+        return ret;
 
-    memcpy(&hdr->dest, dest, sizeof(mac_addr_t));
-    memcpy(&hdr->src, &iface->hw_addr, sizeof(mac_addr_t));
+    hdr = p->raw.data;
 
-    hdr->type = et;
+    switch(proto)
+    {
+        case np_ipv4:
+            hdr->type = ethertype_ipv4;
+            break;
 
-    memcpy((void *) (hdr + 1), packet->data, packet->len);
+        case np_arp:
+            hdr->type = ethertype_arp;
+            break;
 
-    ret = net_transmit(iface, buf, sizeof(eth_hdr_t) + packet->len);
+        default:
+            net_free_packet(p);
+            return EPROTONOSUPPORT;
+    }
 
-    kfree(buf);
+    hdr->dest = *((mac_addr_t *) dest);
+    hdr->src = *((mac_addr_t *) &iface->hw_addr.addr);
+    p->raw.data = &hdr[1];
+    p->raw.len = payload->len;
+
+    memcpy(p->raw.data, payload->data, payload->len);
+
+    ret = net_transmit(p);
+
+    net_free_packet(p);
 
     return ret;
+}
+
+
+/*
+    eth_reply() - assume that *packet contains a received packet which has been modified in some
+    way; swap its source and destination addresses and transmit it.
+*/
+s32 eth_reply(net_packet_t *packet)
+{
+    eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
+
+    ehdr->dest = ehdr->src;
+    ehdr->src = *((mac_addr_t *) &packet->iface->hw_addr.addr);
+
+    return net_transmit(packet);
+}
+
+
+/*
+    eth_make_addr() - populate a net_address_t object with a MAC address.
+*/
+void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
+{
+    addr->type = na_ethernet;
+    bzero(&addr->addr, sizeof(net_addr_t));
+    memcpy(&addr->addr, mac, sizeof(mac_addr_t));
 }

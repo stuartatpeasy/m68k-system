@@ -14,7 +14,7 @@
 #include <kernel/net/net.h>
 
 
-s32 icmp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **reply);
+s32 icmp_rx(net_packet_t *packet);
 
 
 /* Incomplete list of ICMP message types */

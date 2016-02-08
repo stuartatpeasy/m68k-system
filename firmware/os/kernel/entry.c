@@ -106,8 +106,6 @@ void _main()
 	plat_led_off(LED_ALL);
 	plat_led_on(LED_RED);
 
-	plat_list_devices();
-
     /*
         Device enumeration is done; interrupts are enabled, and the console should be functional.
         Booting continues...

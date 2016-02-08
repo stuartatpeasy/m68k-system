@@ -13,11 +13,10 @@
 /*
     tcp_handle_packet() - handle an incoming TCP packet.
 */
-s32 tcp_handle_packet(net_iface_t *iface, net_packet_t *packet, net_packet_t **response)
+s32 tcp_rx(net_packet_t *packet)
 {
-    UNUSED(iface);
     UNUSED(packet);
-    UNUSED(response);
+    puts("tcp_rx");
 
     return SUCCESS;
 }

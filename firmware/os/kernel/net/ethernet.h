@@ -15,6 +15,7 @@
 #include <kernel/include/types.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
+#include <kernel/util/buffer.h>
 
 
 /* Six-byte MAC address. NOTE: bytes stored in network order. */
@@ -24,7 +25,7 @@ typedef union mac_addr
     u16 w[3];
 } mac_addr_t;
 
-mac_addr_t g_mac_broadcast;
+const mac_addr_t g_mac_broadcast;
 
 
 /* Enumeration of Ethertype values */
@@ -46,8 +47,10 @@ typedef struct eth_hdr
 typedef u32 eth_cksum_t;    /* Ethernet checksum (the last four bytes of an Ethernet frame) */
 
 
-s32 eth_handle_packet(net_iface_t *iface, net_packet_t *packet);
-s32 eth_transmit(net_iface_t *iface, const mac_addr_t *dest, const ethertype_t et,
-                 net_packet_t *packet);
+s32 eth_init(net_proto_driver_t *driver);
+s32 eth_rx(net_packet_t *packet);
+s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
+s32 eth_reply(net_packet_t *packet);
+void eth_make_addr(mac_addr_t *mac, net_address_t *addr);
 
 #endif
