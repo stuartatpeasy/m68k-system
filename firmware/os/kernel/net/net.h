@@ -123,5 +123,6 @@ void net_free_packet(net_packet_t *packet);
 s32 net_transmit(net_packet_t *packet);
 s16 net_cksum(const void *buf, u32 len);
 s32 net_address_compare(const net_address_t *a1, const net_address_t *a2);
+s32 net_print_addr(const net_address_t *addr, char *buf, s32 len);
 
 #endif

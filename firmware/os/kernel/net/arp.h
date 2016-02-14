@@ -24,10 +24,6 @@
 #define ARP_MAX_REQUESTS            (5)         /* Max num of consecutive requests for an addr  */
 #define ARP_REQUEST_INTERVAL        (2)         /* #secs between ARP requests for a given addr  */
 
-s32 arp_init(net_proto_driver_t *driver);
-s32 arp_handle_packet(net_packet_t *packet);
-s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr);
-
 typedef struct arp_hdr
 {
     u16             hw_type;
@@ -79,5 +75,10 @@ typedef struct arp_cache_item
     u32                 ipv4_addr;
     time_t              etime;
 } arp_cache_item_t;
+
+s32 arp_init(net_proto_driver_t *driver);
+arp_cache_item_t *arp_cache_get_item(ku32 n);
+s32 arp_handle_packet(net_packet_t *packet);
+s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr);
 
 #endif

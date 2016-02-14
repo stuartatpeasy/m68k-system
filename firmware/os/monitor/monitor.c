@@ -20,6 +20,7 @@ u32 g_echo;
 
 const struct command g_commands[] =
 {
+    {"arp",             cmd_arp},
     {"date",            cmd_date},
 	{"dfu",				cmd_dfu},
 	{"disassemble",		cmd_disassemble},

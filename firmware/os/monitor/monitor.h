@@ -18,6 +18,7 @@
 #include <kernel/include/version.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
+#include <kernel/net/arp.h>
 #include <kernel/util/kutil.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>
@@ -55,6 +56,7 @@ void monitor_main(void);
 void dispatch_command(char *cmdline);
 
 /* command handler declarations */
+MONITOR_CMD_HANDLER(arp);
 MONITOR_CMD_HANDLER(date);
 MONITOR_CMD_HANDLER(dfu);
 MONITOR_CMD_HANDLER(disassemble);

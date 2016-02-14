@@ -34,9 +34,12 @@ s32 arp_init(net_proto_driver_t *driver)
     if(g_arp_cache != NULL)
         kfree(g_arp_cache);
 
+    /*
+        Attempt to allocate ARP cache.  Note that we don't check for errors here: the only possible
+        error is ENOMEM, in which case g_arp_cache will be set to NULL (i.e. "cache uninitialised").
+        In this case, the cache is disabled but ARP will still work.
+    */
     g_arp_cache = kcalloc(ARP_CACHE_SIZE, sizeof(arp_cache_item_t));
-    if(g_arp_cache == NULL)
-        return ENOMEM;
 
     driver->name = "ARP";
     driver->proto = np_arp;
@@ -209,6 +212,7 @@ s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
 {
     /* TODO - obtain lock on ARP cache during cache-add operation */
     arp_cache_item_t *p = arp_cache_get_entry_for_insert();
+
     if(p == NULL)
         return SUCCESS;     /* Cache disabled; fail silently */
 
@@ -223,23 +227,43 @@ s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
 
 /*
     arp_cache_get_entry_for_insert() - return a ptr to an ARP cache entry which can be overwritten
-    with a new entry.  Selects an entry at random if the cache is full.  Returns NULL if the ARP
-    cache is disabled or uninitialised.
+    with a new entry.  If the cache is full, returns the item expiring soonest.  Returns NULL if the
+    ARP cache is disabled or uninitialised.
 */
 arp_cache_item_t *arp_cache_get_entry_for_insert()
 {
-    arp_cache_item_t *p;
+    arp_cache_item_t *p, *expiring_soonest;
+    time_t shortest_expiry;
 
     if(g_arp_cache == NULL)
         return NULL;
 
-    for(p = g_arp_cache; p < (g_arp_cache + ARP_CACHE_SIZE); ++p)
+    for(shortest_expiry = TIME_T_MAX, expiring_soonest = NULL, p = g_arp_cache;
+        p < (g_arp_cache + ARP_CACHE_SIZE); ++p)
     {
         /* Is the item either unused or expired? */
         if((p->iface == NULL) || (p->etime <= g_current_timestamp))
             return p;
+
+        if(p->etime < shortest_expiry)
+        {
+            shortest_expiry = p->etime;
+            expiring_soonest = p;
+        }
     }
 
-    /* No unused/expired items found; pick an item at random (=random replacement algorithm) */
-    return g_arp_cache + (rand() % ARP_CACHE_SIZE);
+    /* No unused/expired items found; return the one that expires soonest */
+    return expiring_soonest;
+}
+
+
+/*
+    arp_cache_get_item() - return the specified ARP cache entry.
+*/
+arp_cache_item_t *arp_cache_get_item(ku32 n)
+{
+    if((g_arp_cache == NULL) || (n >= ARP_CACHE_SIZE))
+        return NULL;
+
+    return g_arp_cache + n;
 }
