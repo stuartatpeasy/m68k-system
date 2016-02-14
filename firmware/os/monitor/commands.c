@@ -38,14 +38,12 @@ MONITOR_CMD_HANDLER(arp)
                            item->etime - g_current_timestamp);
                 }
             }
-        }
-        else
-            return EINVAL;
-    }
-    else
-        return EINVAL;
 
-    return SUCCESS;
+            return SUCCESS;
+        }
+    }
+
+    return EINVAL;
 }
 
 
