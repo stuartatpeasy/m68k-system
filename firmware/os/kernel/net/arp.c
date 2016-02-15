@@ -117,39 +117,34 @@ s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
     buffer_t buffer;
     s32 ret;
 
-    if(iface->driver->proto == np_ethernet)
+    if((iface->driver->proto == np_ethernet) && (addr->type == na_ipv4))
     {
-        if(addr->type == na_ipv4)
-        {
-            arp_eth_ipv4_packet_t *p;
+        arp_eth_ipv4_packet_t *p;
 
-            ret = buffer_init(sizeof(arp_eth_ipv4_packet_t), &buffer);
-            if(ret != SUCCESS)
-                return ret;
-
-            p = (arp_eth_ipv4_packet_t *) buffer.data;
-
-            p->hdr.hw_type          = arp_hw_type_ethernet;
-            p->hdr.proto_type       = ethertype_ipv4;
-            p->hdr.hw_addr_len      = sizeof(mac_addr_t);
-            p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
-            p->hdr.opcode           = arp_request;
-
-            p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr);
-            p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr);
-            p->payload.dst_ip       = *((ipv4_addr_t *) &addr->addr);
-            p->payload.dst_mac      = g_mac_broadcast;
-
-            ret = iface->driver->tx(iface, (net_addr_t *) &g_mac_broadcast, np_arp, &buffer);
-            buffer_deinit(&buffer);
-
+        ret = buffer_init(sizeof(arp_eth_ipv4_packet_t), &buffer);
+        if(ret != SUCCESS)
             return ret;
-        }
-        else
-            return EPROTONOSUPPORT;
+
+        p = (arp_eth_ipv4_packet_t *) buffer.data;
+
+        p->hdr.hw_type          = arp_hw_type_ethernet;
+        p->hdr.proto_type       = ethertype_ipv4;
+        p->hdr.hw_addr_len      = sizeof(mac_addr_t);
+        p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
+        p->hdr.opcode           = arp_request;
+
+        p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr);
+        p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr);
+        p->payload.dst_ip       = *((ipv4_addr_t *) &addr->addr);
+        p->payload.dst_mac      = g_mac_broadcast;
+
+        ret = iface->driver->tx(iface, (net_addr_t *) &g_mac_broadcast, np_arp, &buffer);
+        buffer_deinit(&buffer);
+
+        return ret;
     }
-    else
-        return EPROTONOSUPPORT;
+
+    return EPROTONOSUPPORT;
 }
 
 
