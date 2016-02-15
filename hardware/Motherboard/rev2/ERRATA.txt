@@ -25,3 +25,6 @@ BOM cost reductions
 
 Enhancements
 ------------
+Pull RS232 inputs (RX + CTS) low on the input to the MAX driver chip, to hold these signals in a known state when connector is disconnected
+Consider adding MOVs on RS232 inputs
+
