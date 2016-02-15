@@ -15,7 +15,9 @@
 #include <kernel/net/net.h>
 
 
-#define IPV4_SRC_ADDR_DEFAULT       ((ipv4_addr_t) 0)
+#define IPV4_ADDR_NONE              ((ipv4_addr_t) 0)
+#define IPV4_ADDR_BROADCAST         ((ipv4_addr_t) 0xffffffff)
+#define IPV4_SRC_ADDR_DEFAULT       IPV4_ADDR_NONE
 
 #define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag             */
 #define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag             */
@@ -26,6 +28,8 @@
 /* IPv4 address */
 typedef u32 ipv4_addr_t;
 
+/* IPv4 port number */
+typedef u16 ipv4_port_t;
 
 /* IPv4 protocol IDs */
 typedef enum ipv4_protocol

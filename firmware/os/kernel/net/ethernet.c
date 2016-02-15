@@ -31,15 +31,16 @@ s32 eth_init(net_proto_driver_t *driver)
 {
     driver->name = "Ethernet";
     driver->proto = np_ethernet;
-//    driver->rx = eth_rx;          // FIXME
+    driver->rx = eth_rx;
     driver->tx = eth_tx;
     driver->reply = eth_reply;
 
     return SUCCESS;
 }
 
+
 /*
-    eth_rx() - identify the protocol of data within an Ethernet packet.
+    eth_rx() - handle an incoming Ethernet packet.
 */
 s32 eth_rx(net_packet_t *packet)
 {

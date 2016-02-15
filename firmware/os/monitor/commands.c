@@ -11,6 +11,43 @@
 
 
 /*
+    arp
+
+    Work with the ARP cache
+*/
+MONITOR_CMD_HANDLER(arp)
+{
+    if(num_args == 1)
+    {
+        if(!strcmp(args[0], "list"))
+        {
+            arp_cache_item_t *item;
+            extern time_t g_current_timestamp;
+            char hw_addrbuf[24], proto_addrbuf[24];
+            u32 n;
+
+            puts("Iface  Hardware address   Protocol address   Expires in");
+            for(n = 0; (item = arp_cache_get_item(n)) != NULL; ++n)
+            {
+                if(item->iface && (item->etime > g_current_timestamp))
+                {
+                    net_print_addr(&item->hw_addr, hw_addrbuf, sizeof(hw_addrbuf));
+                    net_print_addr(&item->proto_addr, proto_addrbuf, sizeof(proto_addrbuf));
+
+                    printf("%6s %18s %18s %d\n", item->iface->dev->name, hw_addrbuf, proto_addrbuf,
+                           item->etime - g_current_timestamp);
+                }
+            }
+
+            return SUCCESS;
+        }
+    }
+
+    return EINVAL;
+}
+
+
+/*
     date
 
     Get/set the date
@@ -1003,7 +1040,7 @@ MONITOR_CMD_HANDLER(upload)
 	if(*endptr || !len)
 		return EINVAL;
 
-	if((data = kmalloc(len)) == NULL)
+	if((data = umalloc(len)) == NULL)
 		return ENOMEM;
 
 	for(data_ = data; len--;)

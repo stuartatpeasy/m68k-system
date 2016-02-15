@@ -28,5 +28,9 @@
 #define S64_MIN			    (−LLONG_MAX - 1LL)
 #define U64_MAX			    (18446744073709551615ULL)
 
+/* time_t is an s32 */
+#define TIME_T_MAX          S32_MAX
+#define TIME_T_MIN          S32_MIN
+
 #endif
 

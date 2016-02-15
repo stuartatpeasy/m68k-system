@@ -329,3 +329,27 @@ s32 net_address_compare(const net_address_t *a1, const net_address_t *a2)
 {
     return memcmp(a1, a2, sizeof(net_address_t));
 }
+
+
+/*
+    net_print_addr() - print a human-readable form of addr into buf.
+*/
+s32 net_print_addr(const net_address_t *addr, char *buf, s32 len)
+{
+    if(addr->type == na_ethernet)
+    {
+        const mac_addr_t *ma = (mac_addr_t *) &addr->addr.addr;
+
+        return snprintf(buf, len, "%02x:%02x:%02x:%02x:%02x:%02x",
+                    ma->b[0], ma->b[1], ma->b[2], ma->b[3], ma->b[4], ma->b[5]);
+    }
+    else if(addr->type == na_ipv4)
+    {
+        const ipv4_addr_t *ia = (ipv4_addr_t *) &addr->addr.addr;
+
+        return snprintf(buf, len, "%u.%u.%u.%u", *ia >> 24, (*ia >> 16) & 0xff, (*ia >> 8) & 0xff,
+                            *ia & 0xff);
+    }
+    else
+        return -EINVAL;
+}

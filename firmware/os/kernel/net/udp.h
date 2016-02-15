@@ -11,6 +11,7 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
+#include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
 
 
@@ -25,5 +26,7 @@ typedef struct udp_hdr
 
 
 s32 udp_rx(net_packet_t *packet);
+s32 udp_send(net_iface_t *iface, const net_address_t *src_addr, const ipv4_port_t src_port,
+             const net_address_t *dest_addr, const ipv4_port_t dest_port, buffer_t *payload);
 
 #endif

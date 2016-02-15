@@ -17,8 +17,9 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/fs/fat/fat.c kernel/fs/romfs.c \
 			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/error.c \
 			kernel/housekeeper.c kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c \
-			kernel/syscall.c kernel/user.c kernel/net/arp.c kernel/net/ethernet.c \
-			kernel/net/icmp.c kernel/net/ipv4.c kernel/net/net.c kernel/net/tcp.c kernel/net/udp.c \
+			kernel/syscall.c kernel/user.c kernel/net/arp.c kernel/net/dhcp.c \
+			kernel/net/ethernet.c kernel/net/icmp.c kernel/net/ipv4.c kernel/net/net.c \
+			kernel/net/tcp.c kernel/net/udp.c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
 			kernel/memory/kmalloc.c kernel/memory/slab.c
 
@@ -221,6 +222,11 @@ kernel/memory/slab.o: \
 kernel/net/arp.o: \
 	kernel/net/arp.c kernel/net/arp.h kernel/include/byteorder.h kernel/include/defs.h \
 	kernel/include/error.h kernel/include/types.h kernel/net/net.h kernel/net/ethernet.h
+
+kernel/net/dhcp.o: \
+	kernel/net/dhcp.c kernel/net/dhcp.h kernel/include/byteorder.h kernel/include/defs.h \
+	kernel/include/types.h kernel/net/ethernet.h kernel/net/ipv4.h kernel/net/net.h \
+	kernel/net/udp.h
 
 kernel/net/ethernet.o: \
 	kernel/net/ethernet.c kernel/net/ethernet.h kernel/include/byteorder.h kernel/include/defs.h \
