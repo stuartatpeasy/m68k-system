@@ -214,6 +214,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/arp.h" />
+		<Unit filename="kernel/net/dhcp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/dhcp.h" />
 		<Unit filename="kernel/net/ethernet.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -230,6 +234,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/net.h" />
+		<Unit filename="kernel/net/route.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/route.h" />
 		<Unit filename="kernel/net/tcp.c">
 			<Option compilerVar="CC" />
 		</Unit>

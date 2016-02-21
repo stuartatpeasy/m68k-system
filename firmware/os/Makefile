@@ -19,7 +19,7 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/housekeeper.c kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c \
 			kernel/syscall.c kernel/user.c kernel/net/arp.c kernel/net/dhcp.c \
 			kernel/net/ethernet.c kernel/net/icmp.c kernel/net/ipv4.c kernel/net/net.c \
-			kernel/net/tcp.c kernel/net/udp.c \
+			kernel/net/route.c kernel/net/tcp.c kernel/net/udp.c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c\
 			kernel/memory/kmalloc.c kernel/memory/slab.c
 
@@ -243,6 +243,10 @@ kernel/net/ipv4.o: \
 kernel/net/net.o: \
 	kernel/net/net.c kernel/net/net.h kernel/include/defs.h kernel/include/types.h \
 	kernel/memory/kmalloc.h kernel/net/arp.h
+
+kernel/net/route.o: \
+	kernel/net/route.c kernel/net/route.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/ethernet.h kernel/net/ipv4.h kernel/net/net.h
 
 kernel/net/tcp.o: \
 	kernel/net/tcp.c kernel/net/tcp.h kernel/net/net.h kernel/include/defs.h kernel/include/types.h
