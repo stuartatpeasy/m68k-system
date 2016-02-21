@@ -202,6 +202,21 @@ s32 net_add_interface(dev_t *dev)
 
 
 /*
+    net_get_iface_by_dev() - look up a network interface by device name.
+*/
+net_iface_t *net_get_iface_by_dev(const char * const name)
+{
+    net_iface_t **p;
+
+    for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
+        if(!strcmp((*p)->dev->name, name))
+            return *p;
+
+    return NULL;
+}
+
+
+/*
     net_alloc_packet() - allocate a packet object and allocate a buffer of the specified length for
     the payload.
 */

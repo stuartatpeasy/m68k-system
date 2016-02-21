@@ -1006,6 +1006,16 @@ MONITOR_CMD_HANDLER(test)
         while(!(*kbstatus & 0x40))
             ;
     }
+    else if(testnum == 6)
+    {
+        net_iface_t *iface = net_get_iface_by_dev("eth0");
+        if(iface)
+        {
+            return dhcp_discover(iface);
+        }
+        else
+            puts("Interface eth0 not found");
+    }
 
     return SUCCESS;
 }

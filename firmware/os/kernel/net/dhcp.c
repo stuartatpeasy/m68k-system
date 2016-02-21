@@ -8,7 +8,9 @@
 */
 
 #include <kernel/net/dhcp.h>
+#include <kernel/net/udp.h>
 #include <klibc/strings.h>
+
 
 /*
     dhcp_discover() - send a DHCPDISCOVER packet on the specified interface
@@ -16,9 +18,10 @@
 */
 s32 dhcp_discover(net_iface_t *iface)
 {
-    u8 *opts;
     dhcpdiscover_msg_t *msg;
     net_packet_t *pkt;
+    net_address_t src, dest;
+    u8 *opts;
     s32 ret;
 
     if((iface->hw_addr.type != na_ethernet) || (iface->proto_addr.type != na_ipv4))
@@ -29,8 +32,9 @@ s32 dhcp_discover(net_iface_t *iface)
         return ret;
 
     msg = (dhcpdiscover_msg_t *) pkt->start;
-
     opts = (u8 *) &(msg[1]);
+
+    bzero(msg, DHCP_DISCOVER_BUFFER_LEN);
 
     msg->op             = bo_request;
     msg->htype          = 0x01;                     /* Hardware type = Ethernet */
@@ -56,7 +60,6 @@ s32 dhcp_discover(net_iface_t *iface)
 
     pkt->len = opts - (u8 *) pkt->start;
 
-//    udp_send(IPV4_ADDR_NONE, IPV4_ADDR_BROADCAST, )
-
-    return SUCCESS;
+    return udp_tx(ipv4_make_addr(IPV4_ADDR_NONE, DHCP_CLIENT_PORT, &src),
+                    ipv4_make_addr(IPV4_ADDR_BROADCAST, DHCP_SERVER_PORT, &dest), pkt);
 }

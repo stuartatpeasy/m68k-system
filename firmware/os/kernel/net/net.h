@@ -38,7 +38,10 @@ typedef enum net_protocol
     np_unknown,
     np_ethernet,
     np_arp,
-    np_ipv4
+    np_ipv4,
+    np_tcp,
+    np_udp,
+    np_icmp
 } net_protocol_t;
 
 
@@ -55,11 +58,11 @@ typedef struct net_iface_stats
 
 
 /* Lengths of the various supported network address types */
-#define NET_ADDR_LEN_ETHERNET           (6)     /* Ethernet (MAC) address   */
-#define NET_ADDR_LEN_IPV4               (4)     /* IPv4 address             */
+#define NET_ADDR_LEN_ETHERNET           (6)     /* Ethernet (MAC) address       */
+#define NET_ADDR_LEN_IPV4               (6)     /* IPv4 address, including port */
 
 /* Set this to equal the length of the longest supported address type */
-#define NET_MAX_ADDR_LEN                NET_ADDR_LEN_ETHERNET
+#define NET_MAX_ADDR_LEN                (6)
 
 typedef union net_addr
 {
@@ -126,5 +129,6 @@ s32 net_transmit(net_packet_t *packet);
 s16 net_cksum(const void *buf, u32 len);
 s32 net_address_compare(const net_address_t *a1, const net_address_t *a2);
 s32 net_print_addr(const net_address_t *addr, char *buf, s32 len);
+net_iface_t *net_get_iface_by_dev(const char * const name);
 
 #endif

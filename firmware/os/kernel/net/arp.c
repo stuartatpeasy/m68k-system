@@ -77,7 +77,7 @@ s32 arp_rx(net_packet_t *packet)
         net_address_t hw_addr, proto_addr;
 
         eth_make_addr(&payload->src_mac, &hw_addr);
-        ipv4_make_addr(payload->src_ip, &proto_addr);
+        ipv4_make_addr(payload->src_ip, 0, &proto_addr);
 
         arp_cache_add(packet->iface, &hw_addr, &proto_addr);
 
@@ -97,7 +97,7 @@ s32 arp_rx(net_packet_t *packet)
         net_address_t hw_addr, proto_addr;
 
         eth_make_addr(&payload->src_mac, &hw_addr);
-        ipv4_make_addr(payload->src_ip, &proto_addr);
+        ipv4_make_addr(payload->src_ip, 0, &proto_addr);
 
         return arp_cache_add(packet->iface, &hw_addr, &proto_addr);
     }

@@ -26,8 +26,7 @@ typedef struct udp_hdr
 
 
 s32 udp_rx(net_packet_t *packet);
-s32 udp_send(net_iface_t *iface, const net_address_t *src_addr, const ipv4_port_t src_port,
-             const net_address_t *dest_addr, const ipv4_port_t dest_port, buffer_t *payload);
+s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
 s32 udp_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet);
 
 #endif

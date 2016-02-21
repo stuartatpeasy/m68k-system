@@ -15,11 +15,17 @@
 #include <klibc/strings.h>
 
 
-s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
 s32 ipv4_reply(net_packet_t *packet);
+ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto);
 
-s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
-                     const void *packet, u32 len);
+const net_address_t g_ipv4_broadcast =
+{
+    .type = na_ipv4,
+    .addr.addr_bytes[0] = 0xff,
+    .addr.addr_bytes[1] = 0xff,
+    .addr.addr_bytes[2] = 0xff,
+    .addr.addr_bytes[3] = 0xff
+};
 
 
 /*
@@ -125,9 +131,33 @@ s32 ipv4_rx(net_packet_t *packet)
 */
 s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
+    ipv4_hdr_t *hdr;
+    const ipv4_address_t *src_addr, *dest_addr;
+
     UNUSED(src);
     UNUSED(dest);
-    UNUSED(packet);
+
+    packet->start -= sizeof(ipv4_hdr_t);
+    packet->len += sizeof(ipv4_hdr_t);
+
+    hdr = (ipv4_hdr_t *) packet->start;
+    src_addr = (ipv4_address_t *) &src->addr;
+    dest_addr = (ipv4_address_t *) &dest->addr;
+
+    hdr->version_hdr_len    = (4 << 4) | 5;     /* IPv4, header len = 5 32-bit words (=20 bytes) */
+    hdr->diff_svcs          = 0;
+    hdr->total_len          = packet->len;
+    hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
+    hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
+    hdr->ttl                = 64;               /* Sensible default? */
+    hdr->protocol           = ipv4_get_proto(packet->proto);
+    hdr->src                = src_addr->addr;
+    hdr->dest               = dest_addr->addr;
+
+    puts("ipv4_tx(): sending:");
+    dump_hex(packet->start, 1, (u32) packet->start, packet->len);
+
+//    return packet->iface->driver->tx()
 
     return SUCCESS;
 }
@@ -156,67 +186,56 @@ s32 ipv4_reply(net_packet_t *packet)
 
 
 /*
-    ipv4_send_packet() - send an IPv4 packet to a peer
+    ipv4_make_addr() - populate a net_address_t object with an IPv4 address.
 */
-s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
-                     const void *packet, u32 len)
+net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr)
 {
-    ////////////////////// FIXME - reimplement this in terms of net_rx_packet_t //////////////////
-    UNUSED(src);
-    UNUSED(dest);
-    UNUSED(proto);
-    UNUSED(packet);
-    UNUSED(len);
-#if 0
+    ipv4_address_t *ipv4_addr = (ipv4_address_t *) &addr->addr;
 
-    ipv4_hdr_t *hdr;
-    ipv4_addr_t srcaddr;
-    void *buffer;
-    u32 total_len;
+    addr->type = na_ipv4;
+    ipv4_addr->addr = ip;
+    ipv4_addr->port = port;
 
-    net_iface_t *iface = net_route_get(na_ipv4, (net_addr_t *) &dest);
-    if(iface == NULL)
-        return EHOSTUNREACH;
+    return addr;
+}
 
-    total_len = sizeof(ipv4_hdr_t) + len;
-    buffer = kmalloc(total_len);
-    if(buffer == NULL)
-        return ENOMEM;
 
-    hdr = (ipv4_hdr_t *) buffer;
+/*
+    ipv4_alloc_packet() - allocate a packet for transmission, to contain a payload of the
+    specified length.
+*/
+s32 ipv4_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet)
+{
+    ks32 ret = iface->driver->alloc_packet(iface, sizeof(ipv4_hdr_t) + len, packet);
+    if(ret != SUCCESS)
+        return ret;
 
-    srcaddr =
-    (src == IPV4_SRC_ADDR_DEFAULT) ?
-    *((ipv4_addr_t *) &iface->proto_addr) :
-        src;
+    (*packet)->start += sizeof(ipv4_hdr_t);
+    (*packet)->len -= sizeof(ipv4_hdr_t);
+    (*packet)->proto = np_ipv4;
 
-    /* TODO - fragmentation... */
-
-    /* Create an IPv4 header for the packet */
-    hdr->version_hdr_len    = (4 << 4) | 5;     /* IPv4, header len = 5 32-bit words (=20 bytes) */
-    hdr->diff_svcs          = 0;
-    hdr->total_len          = sizeof(ipv4_hdr_t) + len;
-    hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
-    hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
-    hdr->ttl                = 64;               /* Sensible default? */
-    hdr->protocol           = proto;
-    hdr->src                = srcaddr;
-    hdr->dest               = dest;
-
-    memcpy((u8 *) buffer + sizeof(ipv4_hdr_t), packet, len);
-
-    return net_transmit(iface, buffer, total_len);
-#endif
     return SUCCESS;
 }
 
 
 /*
-    ipv4_make_addr() - populate a net_address_t object with an IPv4 address.
+    ipv4_get_proto() - given a net_protocol_t-style protocol, return the corresponding IPv4 protocol
+    number.
 */
-void ipv4_make_addr(ipv4_addr_t ipv4, net_address_t *addr)
+ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto)
 {
-    addr->type = na_ipv4;
-    bzero(&addr->addr, sizeof(net_addr_t));
-    *((u32 *) &addr->addr) = ipv4;
+    switch(proto)
+    {
+        case np_tcp:
+            return ipv4_proto_tcp;
+
+        case np_udp:
+            return ipv4_proto_udp;
+
+        case np_icmp:
+            return ipv4_proto_icmp;
+
+        default:
+            return 0xff;
+    }
 }

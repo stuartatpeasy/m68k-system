@@ -25,11 +25,20 @@
 #define IPV4_DEFAULT_TTL            (64)
 
 
+const net_address_t g_ipv4_broadcast;
+
 /* IPv4 address */
 typedef u32 ipv4_addr_t;
 
 /* IPv4 port number */
 typedef u16 ipv4_port_t;
+
+/* IPv4 address/port combination */
+typedef struct ipv4_address
+{
+    ipv4_addr_t     addr;
+    ipv4_port_t     port;
+} ipv4_address_t;
 
 /* IPv4 protocol IDs */
 typedef enum ipv4_protocol
@@ -68,7 +77,9 @@ typedef struct ipv4_route_ent
 
 
 s32 ipv4_init(net_proto_driver_t *driver);
-void ipv4_make_addr(ipv4_addr_t ipv4, net_address_t *addr);
+s32 ipv4_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet);
+net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr);
 s32 ipv4_rx(net_packet_t *packet);
+s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
 
 #endif

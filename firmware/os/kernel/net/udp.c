@@ -22,19 +22,32 @@ s32 udp_rx(net_packet_t *packet)
 
 
 /*
-    udp_send() - send a UDP packet
+    udp_tx() - transmit a UDP packet.
 */
-s32 udp_send(net_iface_t *iface, const net_address_t *src_addr, const ipv4_port_t src_port,
-             const net_address_t *dest_addr, const ipv4_port_t dest_port, buffer_t *payload)
+s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
-    UNUSED(iface);
-    UNUSED(src_addr);
-    UNUSED(src_port);
-    UNUSED(dest_addr);
-    UNUSED(dest_port);
-    UNUSED(payload);
+    udp_hdr_t *hdr;
+    ipv4_address_t *src_addr, *dest_addr;
 
-    return SUCCESS;
+    puts("udp_tx()");
+
+    if((src->type != na_ipv4) || (dest->type != na_ipv4))
+        return EPROTONOSUPPORT;
+
+    packet->start -= sizeof(udp_hdr_t);
+    packet->len += sizeof(udp_hdr_t);
+
+    hdr = (udp_hdr_t *) packet->start;
+
+    src_addr    = (ipv4_address_t *) &src->addr;
+    dest_addr   = (ipv4_address_t *) &dest->addr;
+
+    hdr->src_port   = N2BE16(src_addr->port);
+    hdr->dest_port  = N2BE16(dest_addr->port);
+    hdr->len        = N2BE16(sizeof(udp_hdr_t) + packet->len);
+    hdr->cksum      = 0;
+
+    return ipv4_tx(src, dest, packet);
 }
 
 
@@ -44,12 +57,13 @@ s32 udp_send(net_iface_t *iface, const net_address_t *src_addr, const ipv4_port_
 */
 s32 udp_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet)
 {
-    ks32 ret = iface->driver->alloc_packet(iface, sizeof(udp_hdr_t) + len, packet);
+    ks32 ret = ipv4_alloc_packet(iface, sizeof(udp_hdr_t) + len, packet);
     if(ret != SUCCESS)
         return ret;
 
     (*packet)->start += sizeof(udp_hdr_t);
-    (*packet)->len += sizeof(udp_hdr_t);
+    (*packet)->len -= sizeof(udp_hdr_t);
+    (*packet)->proto = np_udp;
 
     return SUCCESS;
 }

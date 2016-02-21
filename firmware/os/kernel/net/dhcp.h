@@ -20,6 +20,8 @@
 #define DHCP_MAGIC_COOKIE           (0x63825363)
 #define DHCP_DISCOVER_BUFFER_LEN    (512)
 
+#define DHCP_SERVER_PORT            ((ipv4_port_t) 67)
+#define DHCP_CLIENT_PORT            ((ipv4_port_t) 68)
 
 /* BOOTP packet-operation identifier */
 typedef enum bootp_op
