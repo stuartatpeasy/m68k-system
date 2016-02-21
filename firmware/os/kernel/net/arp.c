@@ -19,8 +19,6 @@ extern time_t g_current_timestamp;
 
 s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
                   const net_address_t *proto_addr);
-arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface,
-                                   const net_address_t *proto_addr);
 arp_cache_item_t *arp_cache_get_entry_for_insert();
 s32 arp_send_request(net_iface_t *iface, const net_address_t *addr);
 
@@ -88,7 +86,7 @@ s32 arp_rx(net_packet_t *packet)
 
         payload->src_ip = *((ipv4_addr_t *) &packet->iface->proto_addr.addr);
         payload->src_mac = *((mac_addr_t *) &packet->iface->hw_addr.addr);
-
+puts("arp_rx");
         return packet->driver->tx(NULL, &hw_addr, packet);
     }
     else if(hdr->opcode == BE2N16(arp_reply))

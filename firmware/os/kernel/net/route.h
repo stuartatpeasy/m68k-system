@@ -11,7 +11,9 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
+#include <kernel/net/net.h>
 
 
+s32 route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr);
 
 #endif

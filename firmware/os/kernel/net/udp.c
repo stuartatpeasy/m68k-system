@@ -29,8 +29,6 @@ s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
     udp_hdr_t *hdr;
     ipv4_address_t *src_addr, *dest_addr;
 
-    puts("udp_tx()");
-
     if((src->type != na_ipv4) || (dest->type != na_ipv4))
         return EPROTONOSUPPORT;
 
@@ -44,7 +42,7 @@ s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 
     hdr->src_port   = N2BE16(src_addr->port);
     hdr->dest_port  = N2BE16(dest_addr->port);
-    hdr->len        = N2BE16(sizeof(udp_hdr_t) + packet->len);
+    hdr->len        = N2BE16(packet->len);
     hdr->cksum      = 0;
 
     return ipv4_tx(src, dest, packet);

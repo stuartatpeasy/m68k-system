@@ -10,6 +10,7 @@
 #include <kernel/net/icmp.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
+#include <kernel/net/route.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
 #include <klibc/strings.h>
@@ -89,9 +90,14 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
 {
     ipv4_hdr_t *hdr;
     const ipv4_address_t *src_addr, *dest_addr;
+    net_address_t dest_hw_addr;
+    s32 ret;
 
-    UNUSED(src);
-    UNUSED(dest);
+    if(src == NULL)
+    {
+        /* FIXME - check that interface is actually configured */
+        src = &packet->iface->proto_addr;
+    }
 
     packet->start -= sizeof(ipv4_hdr_t);
     packet->len += sizeof(ipv4_hdr_t);
@@ -109,13 +115,17 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
     hdr->protocol           = ipv4_get_proto(packet->proto);
     hdr->src                = src_addr->addr;
     hdr->dest               = dest_addr->addr;
+    hdr->cksum              = 0x0000;
 
-    puts("ipv4_tx(): sending:");
-    dump_hex(packet->start, 1, (u32) packet->start, packet->len);
+    hdr->cksum = net_cksum(packet->start, sizeof(ipv4_hdr_t));
 
-//    return packet->iface->driver->tx()
+    ret = route_get_hw_addr(packet->iface, dest, &dest_hw_addr);
+    if(ret != SUCCESS)
+        return ret;
 
-    return SUCCESS;
+    packet->proto = np_ipv4;
+
+    return packet->iface->driver->tx(NULL, &dest_hw_addr, packet);
 }
 
 

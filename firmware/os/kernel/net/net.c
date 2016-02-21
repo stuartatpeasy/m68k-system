@@ -295,7 +295,6 @@ void net_receive(void *arg)
         ret = iface->dev->read(iface->dev, 0, &packet->raw.len, packet->raw.data);
 
         /* TODO - this assumes we're working with an Ethernet interface - genericise */
-        /* TODO - statistics */
         if(ret == SUCCESS)
         {
             packet->len = packet->raw.len;

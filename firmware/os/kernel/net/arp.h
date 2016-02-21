@@ -75,8 +75,11 @@ typedef struct arp_cache_item
     time_t              etime;
 } arp_cache_item_t;
 
+
 s32 arp_init(net_proto_driver_t *driver);
 arp_cache_item_t *arp_cache_get_item(ku32 n);
+arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface,
+                                   const net_address_t *proto_addr);
 s32 arp_handle_packet(net_packet_t *packet);
 s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr);
 s32 arp_rx(net_packet_t *packet);
