@@ -50,7 +50,6 @@ s32 ipv4_init(net_proto_driver_t *driver)
 s32 ipv4_rx(net_packet_t *packet)
 {
     ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->start;
-    s32 ret;
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -69,60 +68,17 @@ s32 ipv4_rx(net_packet_t *packet)
     switch(hdr->protocol)
     {
         case ipv4_proto_icmp:
-            ret = icmp_rx(packet);
-            break;
+            return icmp_rx(packet);
 
         case ipv4_proto_tcp:
-            ret = tcp_rx(packet);
-            break;
+            return tcp_rx(packet);
 
         case ipv4_proto_udp:
-            ret = udp_rx(packet);
-            break;
+            return udp_rx(packet);
 
         default:
             return SUCCESS;     /* Drop packet */
     }
-
-    if(ret != SUCCESS)
-        return ret;
-#if 0
-    if(proto_response != NULL)
-    {
-        /* Encapsulate packet, free original response packet, and respond */
-        net_rx_packet_t *r;
-        ipv4_hdr_t *rhdr;
-
-        ret = net_packet_alloc(sizeof(ipv4_hdr_t) + proto_response->len, &r);
-        if(ret != SUCCESS)
-        {
-            net_packet_free(proto_response);
-            return ret;
-        }
-
-        rhdr = (ipv4_hdr_t *) r->data;
-
-        rhdr->cksum             = 0;
-        rhdr->version_hdr_len   = (4 << 4) | 5;     /* IPv4, hdr len = 5 32-bit words (=20 bytes) */
-        rhdr->diff_svcs         = 0;
-        rhdr->total_len         = sizeof(ipv4_hdr_t) + proto_response->len;
-        rhdr->id                = rand();           /* FIXME - almost certainly wrong for pkt id  */
-        rhdr->flags_frag_offset = IPV4_HDR_FLAG_DF;
-        rhdr->ttl               = IPV4_DEFAULT_TTL;
-        rhdr->protocol          = hdr->protocol;
-        rhdr->src               = hdr->dest;
-        rhdr->dest              = hdr->src;
-        rhdr->cksum             = net_cksum(rhdr, sizeof(ipv4_hdr_t));
-
-
-        memcpy(&rhdr[1], proto_response->data, proto_response->len);
-        net_packet_free(proto_response);
-
-        *response = r;
-    }
-#endif
-
-    return SUCCESS;
 }
 
 
