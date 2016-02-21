@@ -21,8 +21,9 @@
 s32 net_add_interface(dev_t *dev);
 void net_receive(void *arg);
 s32 net_rx_unimplemented(net_packet_t *packet);
-s32 net_tx_unimplemented(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
+s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
 s32 net_reply_unimplemented(net_packet_t *packet);
+s32 net_alloc_packet_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet);
 
 net_iface_t *g_net_ifaces = NULL;
 
@@ -64,9 +65,10 @@ s32 net_register_proto_driver(s32 (*init_fn)(net_proto_driver_t *))
     net_proto_driver_t *driver = (net_proto_driver_t *) CHECKED_KMALLOC(sizeof(net_proto_driver_t)),
                         *p;
 
-    driver->rx = net_rx_unimplemented;
-    driver->tx = net_tx_unimplemented;
-    driver->reply = net_reply_unimplemented;
+    driver->rx              = net_rx_unimplemented;
+    driver->tx              = net_tx_unimplemented;
+    driver->reply           = net_reply_unimplemented;
+    driver->alloc_packet    = net_alloc_packet_unimplemented;
 
     driver->next = NULL;
 
@@ -113,18 +115,26 @@ s32 net_rx_unimplemented(net_packet_t *packet)
 }
 
 
-s32 net_tx_unimplemented(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload)
+s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
-    UNUSED(iface);
+    UNUSED(src);
     UNUSED(dest);
-    UNUSED(type);
-    UNUSED(payload);
+    UNUSED(packet);
     return ENOSYS;
 }
 
 
 s32 net_reply_unimplemented(net_packet_t *packet)
 {
+    UNUSED(packet);
+    return ENOSYS;
+}
+
+
+s32 net_alloc_packet_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet)
+{
+    UNUSED(iface);
+    UNUSED(len);
     UNUSED(packet);
     return ENOSYS;
 }
@@ -192,13 +202,13 @@ s32 net_add_interface(dev_t *dev)
 
 
 /*
-    net_alloc_packet() - create a packet object and allocate a buffer of the specified length for
+    net_alloc_packet() - allocate a packet object and allocate a buffer of the specified length for
     the payload.
 */
 s32 net_alloc_packet(ku32 len, net_packet_t **packet)
 {
-    net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
     s32 ret;
+    net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
 
     ret = buffer_init(len, &p->raw);
     if(ret != SUCCESS)
@@ -207,15 +217,18 @@ s32 net_alloc_packet(ku32 len, net_packet_t **packet)
         return ret;
     }
 
-    p->parent = NULL;
+    p->start = p->raw.data;
+    p->proto = np_unknown;
+    p->len = 0;
 
     *packet = p;
+
     return SUCCESS;
 }
 
 
 /*
-    net_free_packet() - free the memory associated with a packet created by net_alloc_packet().
+    net_free_packet() - destroy an object created by net_alloc_packet().
 */
 void net_free_packet(net_packet_t *packet)
 {
@@ -229,13 +242,13 @@ void net_free_packet(net_packet_t *packet)
 */
 s32 net_transmit(net_packet_t *packet)
 {
-    u32 len = packet->raw.len;
+    u32 len = packet->len;
     dev_t * const dev = packet->iface->dev;
 
     ++packet->iface->stats.tx_packets;
     packet->iface->stats.tx_bytes += len;
 
-    return dev->write(dev, 0, &len, packet->raw.data);
+    return dev->write(dev, 0, &len, packet->start);
 }
 
 
@@ -256,21 +269,22 @@ void net_receive(void *arg)
     }
 
     packet->iface = iface;
-    packet->driver = iface->driver;
-    packet->proto = iface->driver->proto;
 
     while(1)
     {
         /* TODO - ensure that the interface is configured before calling eth_handle_packet() */
-
+        packet->driver  = iface->driver;
+        packet->proto   = iface->driver->proto;
+        packet->start   = packet->raw.data;
         packet->raw.len = 1500;
-        packet->parent = NULL;
         ret = iface->dev->read(iface->dev, 0, &packet->raw.len, packet->raw.data);
 
         /* TODO - this assumes we're working with an Ethernet interface - genericise */
         /* TODO - statistics */
         if(ret == SUCCESS)
         {
+            packet->len = packet->raw.len;
+
             if(eth_rx(packet) == SUCCESS)
             {
                 ++iface->stats.rx_packets;

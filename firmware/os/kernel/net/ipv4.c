@@ -15,8 +15,7 @@
 #include <klibc/strings.h>
 
 
-s32 ipv4_rx(net_packet_t *packet);
-s32 ipv4_tx(net_iface_t *iface, net_addr_t *dest, ku16 type, buffer_t *payload);
+s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
 s32 ipv4_reply(net_packet_t *packet);
 
 s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
@@ -44,8 +43,7 @@ s32 ipv4_init(net_proto_driver_t *driver)
 */
 s32 ipv4_rx(net_packet_t *packet)
 {
-    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->raw.data;
-    net_packet_t ipv4packet;
+    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->start;
     s32 ret;
 
     /*
@@ -57,25 +55,23 @@ s32 ipv4_rx(net_packet_t *packet)
         return SUCCESS;     /* Drop packet */
 #endif
 
-    ipv4packet.iface = packet->iface;
-    ipv4packet.proto = np_ipv4;
-    ipv4packet.raw.len = packet->raw.len - sizeof(ipv4_hdr_t);
-    ipv4packet.raw.data = (void *) &hdr[1];
-    ipv4packet.driver = net_get_proto_driver(np_ipv4);
-    ipv4packet.parent = packet;
+    packet->start += sizeof(ipv4_hdr_t);
+    packet->len -= sizeof(ipv4_hdr_t);
+    packet->proto = np_ipv4;
+    packet->driver = net_get_proto_driver(np_ipv4);
 
     switch(hdr->protocol)
     {
         case ipv4_proto_icmp:
-            ret = icmp_rx(&ipv4packet);
+            ret = icmp_rx(packet);
             break;
 
         case ipv4_proto_tcp:
-            ret = tcp_rx(&ipv4packet);
+            ret = tcp_rx(packet);
             break;
 
         case ipv4_proto_udp:
-            ret = udp_rx(&ipv4packet);
+            ret = udp_rx(packet);
             break;
 
         default:
@@ -88,7 +84,7 @@ s32 ipv4_rx(net_packet_t *packet)
     if(proto_response != NULL)
     {
         /* Encapsulate packet, free original response packet, and respond */
-        net_packet_t *r;
+        net_rx_packet_t *r;
         ipv4_hdr_t *rhdr;
 
         ret = net_packet_alloc(sizeof(ipv4_hdr_t) + proto_response->len, &r);
@@ -127,10 +123,12 @@ s32 ipv4_rx(net_packet_t *packet)
 /*
     ipv4_tx() - transmit an IPv4 packet
 */
-s32 ipv4_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
+s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
-    UNUSED(iface); UNUSED(dest); UNUSED(proto); UNUSED(payload);
-    puts("ipv4_tx");
+    UNUSED(src);
+    UNUSED(dest);
+    UNUSED(packet);
+
     return SUCCESS;
 }
 
@@ -140,14 +138,20 @@ s32 ipv4_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
 */
 s32 ipv4_reply(net_packet_t *packet)
 {
-    ipv4_hdr_t *hdr = packet->raw.data;
+    ipv4_hdr_t *hdr;
     ipv4_addr_t tmp;
+
+    packet->start -= sizeof(ipv4_hdr_t);
+    packet->len += sizeof(ipv4_hdr_t);
+    packet->proto = np_ipv4;
+
+    hdr = (ipv4_hdr_t *) packet->start;
 
     tmp = hdr->src;
     hdr->src = hdr->dest;
     hdr->dest = tmp;
 
-    return packet->parent->driver->reply(packet->parent);
+    return packet->iface->driver->reply(packet);
 }
 
 
@@ -157,7 +161,7 @@ s32 ipv4_reply(net_packet_t *packet)
 s32 ipv4_send_packet(const ipv4_addr_t src, const ipv4_addr_t dest, const ipv4_protocol_t proto,
                      const void *packet, u32 len)
 {
-    ////////////////////// FIXME - reimplement this in terms of net_packet_t //////////////////
+    ////////////////////// FIXME - reimplement this in terms of net_rx_packet_t //////////////////
     UNUSED(src);
     UNUSED(dest);
     UNUSED(proto);

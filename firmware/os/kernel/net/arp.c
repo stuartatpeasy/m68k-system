@@ -17,7 +17,6 @@
 arp_cache_item_t *g_arp_cache = NULL;
 extern time_t g_current_timestamp;
 
-s32 arp_rx(net_packet_t *packet);
 s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
                   const net_address_t *proto_addr);
 arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface,
@@ -56,11 +55,11 @@ s32 arp_init(net_proto_driver_t *driver)
 */
 s32 arp_rx(net_packet_t *packet)
 {
-    arp_hdr_t * const hdr = (arp_hdr_t *) packet->raw.data;
+    arp_hdr_t * const hdr = (arp_hdr_t *) packet->start;
     arp_payload_t * const payload = (arp_payload_t *) &hdr[1];
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
-    if(packet->raw.len < sizeof(arp_hdr_t))
+    if(packet->len < sizeof(arp_hdr_t))
         return EINVAL;      /* Incomplete packet */
 
     /* Only interested in ARP packets containing Ethernet+IPv4 addresses */
@@ -90,8 +89,7 @@ s32 arp_rx(net_packet_t *packet)
         payload->src_ip = *((ipv4_addr_t *) &packet->iface->proto_addr.addr);
         payload->src_mac = *((mac_addr_t *) &packet->iface->hw_addr.addr);
 
-        return packet->parent->driver->reply(packet->parent);
-
+        return packet->driver->tx(NULL, &hw_addr, packet);
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
@@ -114,18 +112,21 @@ s32 arp_rx(net_packet_t *packet)
 */
 s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
 {
-    buffer_t buffer;
     s32 ret;
 
     if((iface->driver->proto == np_ethernet) && (addr->type == na_ipv4))
     {
         arp_eth_ipv4_packet_t *p;
+        net_packet_t *pkt;
 
-        ret = buffer_init(sizeof(arp_eth_ipv4_packet_t), &buffer);
+        ret = iface->driver->alloc_packet(iface, sizeof(arp_eth_ipv4_packet_t), &pkt);
         if(ret != SUCCESS)
             return ret;
 
-        p = (arp_eth_ipv4_packet_t *) buffer.data;
+        pkt->proto = np_arp;
+        pkt->len += sizeof(arp_eth_ipv4_packet_t);
+
+        p = (arp_eth_ipv4_packet_t *) pkt->start;
 
         p->hdr.hw_type          = arp_hw_type_ethernet;
         p->hdr.proto_type       = ethertype_ipv4;
@@ -136,10 +137,11 @@ s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
         p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr);
         p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr);
         p->payload.dst_ip       = *((ipv4_addr_t *) &addr->addr);
-        p->payload.dst_mac      = g_mac_broadcast;
+        p->payload.dst_mac      = *((mac_addr_t *) &g_eth_broadcast.addr);
 
-        ret = iface->driver->tx(iface, (net_addr_t *) &g_mac_broadcast, np_arp, &buffer);
-        buffer_deinit(&buffer);
+        ret = iface->driver->tx(NULL, &g_eth_broadcast, pkt);
+
+        net_free_packet(pkt);
 
         return ret;
     }

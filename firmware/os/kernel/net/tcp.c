@@ -16,7 +16,6 @@
 s32 tcp_rx(net_packet_t *packet)
 {
     UNUSED(packet);
-    puts("tcp_rx");
 
     return SUCCESS;
 }

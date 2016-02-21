@@ -83,9 +83,10 @@ struct net_proto_driver
     net_protocol_t          proto;
     const char *            name;
     s32                     (*rx)(net_packet_t *packet);
-    s32                     (*tx)(net_iface_t *iface, net_addr_t *dest, ku16 proto,
-                                  buffer_t *payload);
+    s32                     (*tx)(const net_address_t *src, const net_address_t *dest,
+                                  net_packet_t *packet);
     s32                     (*reply)(net_packet_t *packet);
+    s32                     (*alloc_packet)(net_iface_t *iface, ku32 len, net_packet_t **packet);
     net_proto_driver_t *    next;
 };
 
@@ -94,22 +95,23 @@ struct net_proto_driver
 struct net_iface
 {
     net_iface_t *       next;
-    dev_t *             dev;                /* The hw device implementing this interface    */
-    net_proto_driver_t *driver;             /* Protocol driver                              */
-    net_iface_type_t    type;               /* Type of interface                            */
-    net_address_t       hw_addr;            /* Hardware address                             */
-    net_address_t       proto_addr;         /* Protocol address                             */
+    dev_t *             dev;            /* The hw device implementing this interface    */
+    net_proto_driver_t *driver;         /* Protocol driver                              */
+    net_iface_type_t    type;           /* Type of interface                            */
+    net_address_t       hw_addr;        /* Hardware address                             */
+    net_address_t       proto_addr;     /* Protocol address                             */
     net_iface_stats_t   stats;
 };
 
 
-/* Network packet object */
+/* Object representing a network packet */
 struct net_packet
 {
     net_iface_t *           iface;
     net_protocol_t          proto;
     net_proto_driver_t *    driver;
-    net_packet_t *          parent;
+    void *                  start;
+    u32                     len;        /* Actual amount of data in the buffer  */
     buffer_t                raw;
 };
 

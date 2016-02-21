@@ -13,14 +13,15 @@
 #include <klibc/strings.h>
 
 
-const mac_addr_t g_mac_broadcast =
+const net_address_t g_eth_broadcast =
 {
-    .b[0] = 0xff,
-    .b[1] = 0xff,
-    .b[2] = 0xff,
-    .b[3] = 0xff,
-    .b[4] = 0xff,
-    .b[5] = 0xff
+    .type = na_ethernet,
+    .addr.addr_bytes[0] = 0xff,
+    .addr.addr_bytes[1] = 0xff,
+    .addr.addr_bytes[2] = 0xff,
+    .addr.addr_bytes[3] = 0xff,
+    .addr.addr_bytes[4] = 0xff,
+    .addr.addr_bytes[5] = 0xff
 };
 
 
@@ -29,11 +30,12 @@ const mac_addr_t g_mac_broadcast =
 */
 s32 eth_init(net_proto_driver_t *driver)
 {
-    driver->name = "Ethernet";
-    driver->proto = np_ethernet;
-    driver->rx = eth_rx;
-    driver->tx = eth_tx;
-    driver->reply = eth_reply;
+    driver->name            = "Ethernet";
+    driver->proto           = np_ethernet;
+    driver->rx              = eth_rx;
+    driver->tx              = eth_tx;
+    driver->reply           = eth_reply;
+    driver->alloc_packet    = eth_alloc_packet;
 
     return SUCCESS;
 }
@@ -45,29 +47,24 @@ s32 eth_init(net_proto_driver_t *driver)
 s32 eth_rx(net_packet_t *packet)
 {
     const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
-    net_packet_t inner;
+
+    packet->start += sizeof(eth_hdr_t);
+    packet->len -= sizeof(eth_hdr_t);
 
     switch(ehdr->type)
     {
         case ethertype_ipv4:
-            inner.proto = np_ipv4;
+            packet->proto = np_ipv4;
+            return ipv4_rx(packet);
             break;
 
         case ethertype_arp:
-            inner.proto = np_arp;
+            packet->proto = np_arp;
+            return arp_rx(packet);
             break;
-
-        default:
-            return EPROTONOSUPPORT;
     }
 
-    inner.iface = packet->iface;
-    inner.raw.len = packet->raw.len - sizeof(eth_hdr_t);
-    inner.raw.data = (void *) &ehdr[1];
-    inner.driver = net_get_proto_driver(inner.proto);////// FIXME - should be eth_get_proto_driver() ??? maybe not
-    inner.parent = packet;
-
-    return inner.driver->rx(&inner);
+    return EPROTONOSUPPORT;
 }
 
 
@@ -75,19 +72,16 @@ s32 eth_rx(net_packet_t *packet)
     eth_tx() - add an Ethernet header to the supplied frame and transmit it on the specified
     interface.
 */
-s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
+s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
-    net_packet_t *p;
     eth_hdr_t *hdr;
-    s32 ret;
+    const mac_addr_t *src_addr, *dest_addr;
 
-    ret = net_alloc_packet(sizeof(eth_hdr_t) + payload->len, &p);
-    if(ret != SUCCESS)
-        return ret;
+    packet->start -= sizeof(eth_hdr_t);
+    packet->len += sizeof(eth_hdr_t);
+    hdr = (eth_hdr_t *) packet->start;
 
-    hdr = p->raw.data;
-
-    switch(proto)
+    switch(packet->proto)
     {
         case np_ipv4:
             hdr->type = ethertype_ipv4;
@@ -98,22 +92,21 @@ s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
             break;
 
         default:
-            net_free_packet(p);
             return EPROTONOSUPPORT;
     }
 
-    hdr->dest = *((mac_addr_t *) dest);
-    hdr->src = *((mac_addr_t *) &iface->hw_addr.addr);
-    p->raw.data = &hdr[1];
-    p->raw.len = payload->len;
+    /*
+        If src is NULL, send from the default address of the interface; otherwise send from the
+        specified address.
+    */
+    src_addr = (src == NULL) ? (mac_addr_t *) &packet->iface->hw_addr.addr
+                                : (mac_addr_t *) &src->addr.addr;
+    dest_addr = (mac_addr_t *) &dest->addr.addr;
 
-    memcpy(p->raw.data, payload->data, payload->len);
+    hdr->dest = *dest_addr;
+    hdr->src = *src_addr;
 
-    ret = net_transmit(p);
-
-    net_free_packet(p);
-
-    return ret;
+    return net_transmit(packet);
 }
 
 
@@ -123,7 +116,12 @@ s32 eth_tx(net_iface_t *iface, net_addr_t *dest, ku16 proto, buffer_t *payload)
 */
 s32 eth_reply(net_packet_t *packet)
 {
-    eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
+    eth_hdr_t *ehdr;
+
+    packet->start -= sizeof(eth_hdr_t);
+    packet->len += sizeof(eth_hdr_t);
+
+    ehdr = (eth_hdr_t *) packet->start;
 
     ehdr->dest = ehdr->src;
     ehdr->src = *((mac_addr_t *) &packet->iface->hw_addr.addr);
@@ -140,4 +138,23 @@ void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
     addr->type = na_ethernet;
     bzero(&addr->addr, sizeof(net_addr_t));
     memcpy(&addr->addr, mac, sizeof(mac_addr_t));
+}
+
+
+/*
+    eth_alloc_packet() - allocate a net_packet_t object large enough to contain an Ethernet header
+    and a payload of the specified length.
+*/
+s32 eth_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet)
+{
+    ks32 ret = net_alloc_packet(sizeof(eth_hdr_t) + len, packet);
+
+    if(ret != SUCCESS)
+        return ret;
+
+    (*packet)->iface = iface;
+    (*packet)->len += sizeof(eth_hdr_t);
+    (*packet)->start += sizeof(eth_hdr_t);
+
+    return SUCCESS;
 }
