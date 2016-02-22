@@ -47,9 +47,8 @@ typedef enum dhcp_option
 } dhcp_option_t;
 
 
-
-/* DHCPDISCOVER message */
-typedef struct dhcpdiscover_msg
+/* DHCP packet format */
+typedef struct dhcp_msg
 {
     u8          op;
     u8          htype;
@@ -65,6 +64,9 @@ typedef struct dhcpdiscover_msg
     u8          chaddr[16];
     u8          zeroes[192];
     u32         magic_cookie;
-} dhcpdiscover_msg_t;
+} dhcp_msg_t;
+
+
+s32 dhcp_rx(net_packet_t *packet);
 
 #endif

@@ -13,12 +13,29 @@
 
 
 /*
+    dhcp_rx() - handle an incoming DHCP packet.
+*/
+s32 dhcp_rx(net_packet_t *packet)
+{
+    dhcp_msg_t *msg = (dhcp_msg_t *) packet->start;
+
+    if(packet->len < sizeof(dhcp_msg_t))
+        return SUCCESS;     /* Drop truncated packet */
+
+    UNUSED(msg);
+    puts("dhcp_rx");
+
+    return SUCCESS;
+}
+
+
+/*
     dhcp_discover() - send a DHCPDISCOVER packet on the specified interface
     Only Ethernet + IPv4 interfaces are supported.
 */
 s32 dhcp_discover(net_iface_t *iface)
 {
-    dhcpdiscover_msg_t *msg;
+    dhcp_msg_t *msg;
     net_packet_t *pkt;
     net_address_t src, dest;
     u8 *opts;
@@ -31,7 +48,7 @@ s32 dhcp_discover(net_iface_t *iface)
     if(ret != SUCCESS)
         return ret;
 
-    msg = (dhcpdiscover_msg_t *) pkt->start;
+    msg = (dhcp_msg_t *) pkt->start;
     opts = (u8 *) &(msg[1]);
 
     bzero(msg, DHCP_DISCOVER_BUFFER_LEN);

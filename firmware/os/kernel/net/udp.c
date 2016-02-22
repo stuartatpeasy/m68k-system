@@ -8,6 +8,7 @@
 */
 
 #include <kernel/net/udp.h>
+#include <kernel/net/dhcp.h>
 
 
 /*
@@ -15,7 +16,13 @@
 */
 s32 udp_rx(net_packet_t *packet)
 {
-    UNUSED(packet);
+    udp_hdr_t *hdr = (udp_hdr_t *) packet->start;
+
+    packet->start += sizeof(udp_hdr_t);
+    packet->len -= sizeof(udp_hdr_t);
+
+    if(hdr->dest_port == DHCP_CLIENT_PORT)
+        return dhcp_rx(packet);
 
     return SUCCESS;
 }
