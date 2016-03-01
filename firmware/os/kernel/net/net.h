@@ -53,7 +53,6 @@ typedef struct net_iface_stats
     u32     rx_dropped;
     u32     tx_packets;
     u32     tx_bytes;
-
 } net_iface_stats_t;
 
 

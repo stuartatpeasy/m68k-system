@@ -18,6 +18,9 @@
 #include <kernel/util/buffer.h>
 
 
+#define MAC_ADDR_EQUAL(x, y)    \
+    (x->w[0] == y->w[0]) && (x->w[1] == y->w[1]) && (x->w[2] == y->w[2])
+
 /* Six-byte MAC address. NOTE: bytes stored in network order. */
 typedef union mac_addr
 {

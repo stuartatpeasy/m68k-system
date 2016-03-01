@@ -871,6 +871,7 @@ MONITOR_CMD_HANDLER(srec)
 */
 #include <kernel/process.h>
 #include <kernel/elf.h>
+#include <kernel/net/dhcp.h>
 MONITOR_CMD_HANDLER(test)
 {
     if(num_args < 1)
