@@ -11,7 +11,7 @@
 #include <klibc/errno.h>
 
 
-static u32 g_rand_next = 1;
+static s32 g_rand_next = 1;
 
 
 /*
@@ -46,8 +46,18 @@ void *malloc(u32 size)
 */
 s32 rand()
 {
-    g_rand_next = g_rand_next * 1103515245 + 12345;
+    g_rand_next = g_rand_next * RAND_LCG_MULTIPLIER + RAND_LCG_INCREMENT;
     return (g_rand_next >> 16) % (RAND_MAX + 1);
+}
+
+
+/*
+    rand32() [non-standard]
+*/
+s32 rand32()
+{
+    g_rand_next = g_rand_next * RAND_LCG_MULTIPLIER + RAND_LCG_INCREMENT;
+    return g_rand_next;
 }
 
 
@@ -63,7 +73,7 @@ void *realloc(void *ptr, u32 size)
 /*
     srand()
 */
-void srand(ku32 seed)
+void srand(ks32 seed)
 {
     g_rand_next = seed;
 }

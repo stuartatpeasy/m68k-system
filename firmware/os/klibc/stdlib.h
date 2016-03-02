@@ -13,14 +13,21 @@
 #include <kernel/include/types.h>
 #include <kernel/memory/kmalloc.h>
 
+
 #define RAND_MAX (32767)
+
+/* Parameters for the linear congruential generator used by rand(), srand(), rand32(), etc. */
+#define RAND_LCG_MULTIPLIER     (1103515245)
+#define RAND_LCG_INCREMENT      (12345)
+
 
 void *calloc(ku32 nmemb, ku32 size);
 void free(void *ptr);
 void *malloc(u32 size);
 s32 rand();
+s32 rand32();
 void *realloc(void *ptr, u32 size);
-void srand(ku32 seed);
+void srand(ks32 seed);
 u32 strtoul(ks8 *nptr, s8 **endptr, s32 base);
 
 #endif
