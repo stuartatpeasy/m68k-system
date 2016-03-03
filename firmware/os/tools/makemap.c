@@ -11,6 +11,10 @@
 	stdin and writes to stdout, but input and output files may optionally be specified, e.g.
 
 		makemap [<input_file> [<output_file>]]
+
+	TODO change record format: don't zero-terminate symbol names; modify "len" field such that it
+	indicates the length of the symbol name.  Length of the whole record can then be deduced from
+	this.
 */
 
 #include <error.h>
