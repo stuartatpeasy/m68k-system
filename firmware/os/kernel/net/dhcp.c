@@ -54,17 +54,23 @@ s32 dhcp_rx(net_packet_t *packet)
                 net_print_addr(&g, gbuf, sizeof(gbuf));
 
                 /* Process DHCP options */
-                for(p = packet->start + sizeof(dhcp_msg_t), end = packet->start + packet->len;
-                    opt = (dhcp_option_t *) p, p < end;
-                    p += sizeof(dhcp_option_hdr_t) + opt->hdr.len)
+                p = packet->start + sizeof(dhcp_msg_t);
+                end = packet->start + packet->len;
+
+                for(; p < end; p += sizeof(dhcp_option_hdr_t) + opt->hdr.len)
                 {
                     char addrbuf[16];
                     net_address_t addr;
 
                     addr.type = na_ipv4;
 
+                    opt = (dhcp_option_t *) p;
                     switch(opt->hdr.id)
                     {
+                        case dopt_padding:
+                            ++p;
+                            break;
+
                         case dopt_msg_type:
                             msg_type = opt->data;
                             break;
@@ -75,14 +81,31 @@ s32 dhcp_rx(net_packet_t *packet)
                             printf("Subnet mask: %s\n", addrbuf);
                             break;
 
-                        case dopt_end:
-                            p = end;
+                        case dopt_router:
+                            memcpy(&addr.addr, &opt->data, sizeof(ipv4_addr_t));
+                            net_print_addr(&addr, addrbuf, sizeof(addrbuf));
+                            printf("Router: %s\n", addrbuf);
+                            break;
+
+                        case dopt_domain_name_server:
+                            memcpy(&addr.addr, &opt->data, sizeof(ipv4_addr_t));
+                            net_print_addr(&addr, addrbuf, sizeof(addrbuf));
+                            printf("DNS resolver: %s\n", addrbuf);
+                            break;
+
+                        case dopt_broadcast_addr:
+                            memcpy(&addr.addr, &opt->data, sizeof(ipv4_addr_t));
+                            net_print_addr(&addr, addrbuf, sizeof(addrbuf));
+                            printf("Broadcast: %s\n", addrbuf);
                             break;
 
                         default:
                             printf("id=%d  len=%d\n", opt->hdr.id, opt->hdr.len);
                             break;
                     }
+
+                    if(opt->hdr.id == dopt_end)
+                        break;
                 }
 
                 printf("BOOTP reply\n"
@@ -124,10 +147,10 @@ s32 dhcp_discover(net_iface_t *iface)
     /* FIXME - only set BOOTP_FLAG_BROADCAST in msg->flags if interface is not configured */
 
     msg->op             = bo_request;
-    msg->htype          = 0x01;                     /* Hardware type = Ethernet */
+    msg->htype          = bh_ethernet;
     msg->hlen           = NET_ADDR_LEN_ETHERNET;
     msg->hops           = 0x00;
-    msg->xid            = rand();
+    msg->xid            = rand32();
     msg->secs           = 0x0000;
     msg->flags          = BOOTP_FLAG_BROADCAST;
     msg->ciaddr         = (ipv4_addr_t) 0;

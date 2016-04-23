@@ -8,8 +8,6 @@
 */
 
 #include <kernel/net/icmp.h>
-#include <kernel/net/ipv4.h>
-#include <klibc/string.h>
 
 
 s32 icmp_handle_echo_request(net_packet_t *packet);

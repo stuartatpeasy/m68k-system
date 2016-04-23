@@ -373,3 +373,42 @@ s8 *strstr(ks8 *haystack, ks8 *needle)
 
 	return NULL;
 }
+
+
+/*
+    strtoipv4() - convert the IPv4 address (in aaa.bbb.ccc.ddd format) in str to a u32.
+    Return 0 on success; non-0 otherwise.
+*/
+s32 strtoipv4(ks8 *str, u32 *ip)
+{
+    u8 i;
+    u32 ip_;
+
+    for(ip_ = 0, i = 0; i < 4; ++i, ++str)
+    {
+        u16 part, j;
+
+        for(ip_ <<= 8, part = 0, j = 0; j < 3; ++j, ++str)
+        {
+            if((*str >= '0') && (*str <= '9'))
+                part = (part * 10) + (*str - '0');
+            else
+                break;
+        }
+        ip_ += part;
+
+        if((part > 255) || !j)
+            return -1;
+
+        if(*str != '.')
+            break;
+    }
+
+    if(i == 3)
+    {
+        *ip = N2BE32(ip_);
+        return 0;
+    }
+
+    return -1;
+}

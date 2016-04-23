@@ -84,6 +84,7 @@ typedef struct dhcp_msg
 /* DHCP option identifiers */
 typedef enum dhcp_option_id
 {
+    dopt_padding                = 0,
     dopt_subnet_mask            = 1,
     dopt_router                 = 3,
     dopt_domain_name_server     = 6,

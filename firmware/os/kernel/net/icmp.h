@@ -9,9 +9,11 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#include <klibc/string.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/net/net.h>
+#include <kernel/net/ipv4.h>
 
 
 s32 icmp_rx(net_packet_t *packet);

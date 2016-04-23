@@ -54,7 +54,7 @@ s32 arp_init(net_proto_driver_t *driver)
 s32 arp_rx(net_packet_t *packet)
 {
     arp_hdr_t * const hdr = (arp_hdr_t *) packet->start;
-    arp_payload_t * const payload = (arp_payload_t *) &hdr[1];
+    arp_payload_t * payload;
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
     if(packet->len < sizeof(arp_hdr_t))
@@ -64,14 +64,19 @@ s32 arp_rx(net_packet_t *packet)
     if(hdr->hw_type != BE2N16(arp_hw_type_ethernet) || hdr->proto_type != BE2N16(ethertype_ipv4))
         return SUCCESS;     /* Discard - not an Ethernet+IPv4 ARP request */
 
+    packet->start += sizeof(arp_hdr_t);
+    packet->len -= sizeof(arp_hdr_t);
+
+    payload = (arp_payload_t *) packet->start;
+
     /* Check that we have a full ARP payload */
-    if(packet->raw.len < (sizeof(arp_hdr_t) + sizeof(arp_payload_t)))
+    if(packet->len < sizeof(arp_payload_t))
         return EINVAL;      /* Incomplete packet */
 
     if(hdr->opcode == BE2N16(arp_request)
        && payload->dst_ip == *((ipv4_addr_t *) &packet->iface->proto_addr.addr))
     {
-        /* This is an Ethernet+IPv4 request addressed to this interface */
+        /* This is an Ethernet+IPv4 request addressed to this interface; send a response */
         net_address_t hw_addr, proto_addr;
 
         eth_make_addr(&payload->src_mac, &hw_addr);
@@ -86,7 +91,7 @@ s32 arp_rx(net_packet_t *packet)
 
         payload->src_ip = *((ipv4_addr_t *) &packet->iface->proto_addr.addr);
         payload->src_mac = *((mac_addr_t *) &packet->iface->hw_addr.addr);
-puts("arp_rx");
+
         return packet->driver->tx(NULL, &hw_addr, packet);
     }
     else if(hdr->opcode == BE2N16(arp_reply))

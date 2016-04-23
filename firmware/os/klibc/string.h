@@ -12,6 +12,7 @@
 
 #include <kernel/include/types.h>
 #include <kernel/include/limits.h>
+#include <kernel/net/ipv4.h>
 #include <stdlib.h>
 #include <errno.h>
 
@@ -30,5 +31,6 @@ s32 strncmp(ks8 *s1, ks8 *s2, u32 n);
 s8 *strncpy(s8 *dest, ks8 *src, u32 n);
 s8 *strrchr(s8 *s, s32 c);
 s8 *strstr(ks8 *haystack, ks8 *needle);
+s32 strtoipv4(ks8 *str, u32 *ip);
 
 #endif
