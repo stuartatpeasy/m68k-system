@@ -460,6 +460,8 @@ MONITOR_CMD_HANDLER(help)
     UNUSED(args);
 
 	puts("Available commands (all can be abbreviated):\n\n"
+		  "arp <list>\n"
+		  "    Display or manipulate the ARP cache.\n\n"
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
           "    in YYYYMMDDHHMMSS format, set the RTC date and time accordingly.\n\n"
