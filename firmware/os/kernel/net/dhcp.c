@@ -170,6 +170,10 @@ s32 dhcp_discover(net_iface_t *iface)
 
     pkt->len = opts - (u8 *) pkt->start;
 
-    return udp_tx(ipv4_make_addr(IPV4_ADDR_NONE, DHCP_CLIENT_PORT, &src),
+    ret = udp_tx(ipv4_make_addr(IPV4_ADDR_NONE, DHCP_CLIENT_PORT, &src),
                     ipv4_make_addr(IPV4_ADDR_BROADCAST, DHCP_SERVER_PORT, &dest), pkt);
+
+    net_free_packet(pkt);
+
+    return ret;
 }

@@ -230,18 +230,26 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/ipv4.h" />
+		<Unit filename="kernel/net/ipv4route.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/ipv4route.h" />
 		<Unit filename="kernel/net/net.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/net.h" />
-		<Unit filename="kernel/net/route.c">
+		<Unit filename="kernel/net/socket.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/route.h" />
+		<Unit filename="kernel/net/socket.h" />
 		<Unit filename="kernel/net/tcp.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/tcp.h" />
+		<Unit filename="kernel/net/tftp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/tftp.h" />
 		<Unit filename="kernel/net/udp.c">
 			<Option compilerVar="CC" />
 		</Unit>

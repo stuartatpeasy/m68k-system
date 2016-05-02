@@ -9,8 +9,8 @@
 
 #include <kernel/net/icmp.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/ipv4route.h>
 #include <kernel/net/net.h>
-#include <kernel/net/route.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
 #include <klibc/strings.h>
@@ -119,7 +119,7 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
 
     hdr->cksum = net_cksum(packet->start, sizeof(ipv4_hdr_t));
 
-    ret = route_get_hw_addr(packet->iface, dest, &dest_hw_addr);
+    ret = ipv4_route_get_hw_addr(packet->iface, dest, &dest_hw_addr);
     if(ret != SUCCESS)
         return ret;
 

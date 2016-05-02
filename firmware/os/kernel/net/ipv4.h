@@ -18,6 +18,7 @@
 #define IPV4_ADDR_NONE              ((ipv4_addr_t) 0)
 #define IPV4_ADDR_BROADCAST         ((ipv4_addr_t) 0xffffffff)
 #define IPV4_SRC_ADDR_DEFAULT       IPV4_ADDR_NONE
+#define IPV4_PORT_NONE              ((ipv4_port_t) 0)
 
 #define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag             */
 #define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag             */

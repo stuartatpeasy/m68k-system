@@ -874,6 +874,7 @@ MONITOR_CMD_HANDLER(srec)
 #include <kernel/process.h>
 #include <kernel/elf.h>
 #include <kernel/net/dhcp.h>
+#include <kernel/net/tftp.h>
 MONITOR_CMD_HANDLER(test)
 {
     if(num_args < 1)
@@ -1018,6 +1019,14 @@ MONITOR_CMD_HANDLER(test)
         }
         else
             puts("Interface eth0 not found");
+    }
+    else if(testnum == 7)
+    {
+        net_address_t server;
+
+        ipv4_make_addr((ipv4_addr_t) 0xac111801, IPV4_PORT_NONE, &server);   /* 172.17.24.1 */
+
+        return tftp_read_request(&server, "test.txt");
     }
 
     return SUCCESS;
