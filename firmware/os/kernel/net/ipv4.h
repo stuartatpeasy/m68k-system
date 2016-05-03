@@ -17,6 +17,7 @@
 
 #define IPV4_ADDR_NONE              ((ipv4_addr_t) 0)
 #define IPV4_ADDR_BROADCAST         ((ipv4_addr_t) 0xffffffff)
+#define IPV4_MASK_HOST_ONLY         ((ipv4_addr_t) 0xffffffff)
 #define IPV4_SRC_ADDR_DEFAULT       IPV4_ADDR_NONE
 #define IPV4_PORT_NONE              ((ipv4_port_t) 0)
 
@@ -82,5 +83,6 @@ s32 ipv4_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet);
 net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr);
 s32 ipv4_rx(net_packet_t *packet);
 s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
+s32 ipv4_print_addr(const ipv4_addr_t addr, char *buf, s32 len);
 
 #endif

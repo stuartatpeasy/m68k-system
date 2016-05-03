@@ -19,6 +19,7 @@
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
 #include <kernel/net/arp.h>
+#include <kernel/net/ipv4route.h>
 #include <kernel/util/kutil.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>
@@ -77,6 +78,7 @@ MONITOR_CMD_HANDLER(map);
 MONITOR_CMD_HANDLER(mount);
 MONITOR_CMD_HANDLER(raw);
 MONITOR_CMD_HANDLER(rootfs);
+MONITOR_CMD_HANDLER(route);
 MONITOR_CMD_HANDLER(schedule);
 MONITOR_CMD_HANDLER(serial);
 MONITOR_CMD_HANDLER(slabs);

@@ -9,6 +9,7 @@
 
 #include <kernel/net/tftp.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/ipv4route.h>
 #include <klibc/string.h>
 
 

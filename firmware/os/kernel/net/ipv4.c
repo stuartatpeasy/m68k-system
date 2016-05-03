@@ -13,6 +13,7 @@
 #include <kernel/net/net.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
+#include <klibc/stdio.h>
 #include <klibc/strings.h>
 
 
@@ -204,4 +205,14 @@ ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto)
         default:
             return 0xff;
     }
+}
+
+
+/*
+    ipv4_print_addr() - write addr to buf in dotted-quad format.
+*/
+s32 ipv4_print_addr(const ipv4_addr_t addr, char *buf, s32 len)
+{
+    return snprintf(buf, len, "%u.%u.%u.%u", addr >> 24, (addr >> 16) & 0xff, (addr >> 8) & 0xff,
+                        addr & 0xff);
 }

@@ -39,14 +39,19 @@ ipv4_rt_item_t *g_ipv4_routes;
 
 
 /* Routing table flags */
-#define IPV4_ROUTE_UP           BIT(0)  /* Route is up (active)             */
-#define IPV4_ROUTE_HOST         BIT(1)  /* Target is a host                 */
-#define IPV4_ROUTE_GATEWAY      BIT(2)  /* Use a gateway                    */
-#define IPV4_ROUTE_REJECT       BIT(3)  /* A "reject" route - drop traffic  */
+#define IPV4_ROUTE_UP           BIT(0)      /* Route is up (active)             */
+#define IPV4_ROUTE_HOST         BIT(1)      /* Target is a host                 */
+#define IPV4_ROUTE_GATEWAY      BIT(2)      /* Use a gateway                    */
+#define IPV4_ROUTE_REJECT       BIT(3)      /* A "reject" route - drop traffic  */
+
+#define IPV4_ROUTE_METRIC_MIN   (0)         /* Minimum allowable route metric   */
+#define IPV4_ROUTE_METRIC_MAX   U16_MAX     /* Maximum allowable route metric   */
 
 
 s32 ipv4_route_add(const ipv4_route_t * const r);
-
+s32 ipv4_route_delete(const ipv4_route_t * const r);
+s32 ipv4_route_get_entry(ipv4_rt_item_t **e);
+s32 ipv4_route_get_iface(const net_address_t *proto_addr, net_iface_t **iface);
 s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr);
 

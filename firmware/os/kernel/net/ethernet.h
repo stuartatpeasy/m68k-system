@@ -56,5 +56,6 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 s32 eth_reply(net_packet_t *packet);
 s32 eth_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet);
 void eth_make_addr(mac_addr_t *mac, net_address_t *addr);
+s32 eth_print_addr(const mac_addr_t *addr, char *buf, s32 len);
 
 #endif

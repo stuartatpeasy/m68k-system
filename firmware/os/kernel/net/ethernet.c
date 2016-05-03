@@ -10,6 +10,7 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/arp.h>
+#include <klibc/stdio.h>
 #include <klibc/strings.h>
 
 
@@ -157,4 +158,14 @@ s32 eth_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet)
     (*packet)->start += sizeof(eth_hdr_t);
 
     return SUCCESS;
+}
+
+
+/*
+    eth_print_addr() - write addr to buf
+*/
+s32 eth_print_addr(const mac_addr_t *addr, char *buf, s32 len)
+{
+    return snprintf(buf, len, "%02x:%02x:%02x:%02x:%02x:%02x",
+                    addr->b[0], addr->b[1], addr->b[2], addr->b[3], addr->b[4], addr->b[5]);
 }

@@ -770,6 +770,85 @@ MONITOR_CMD_HANDLER(rootfs)
 
 
 /*
+    route
+
+    List or manipulate the routing table
+*/
+MONITOR_CMD_HANDLER(route)
+{
+    /*
+        Syntax:
+            route list
+            route add <net> <mask> <gateway> <metric> <interface>
+            route rm <net> <mask> <gateway>
+    */
+    if((num_args == 1) && !strcmp(args[0], "list"))
+    {
+        ipv4_rt_item_t *ent = NULL;
+        u8 header = 0;
+        while(ipv4_route_get_entry(&ent) == SUCCESS)
+        {
+            char buf[3][24], flags[5];
+
+            if(!header)
+            {
+                puts("Destination       Network           Gateway           Metric  Iface  Flags");
+                header = 1;
+            }
+
+            flags[0] = (ent->r.flags & IPV4_ROUTE_UP) ? 'U' : ' ';
+            flags[1] = (ent->r.flags & IPV4_ROUTE_HOST) ? 'H' : ' ';
+            flags[2] = (ent->r.flags & IPV4_ROUTE_GATEWAY) ? 'G' : ' ';
+            flags[3] = (ent->r.flags & IPV4_ROUTE_REJECT) ? '!' : ' ';
+            flags[4] = '\0';
+
+            ipv4_print_addr(ent->r.dest, buf[0], sizeof(buf[0]));
+            ipv4_print_addr(ent->r.mask, buf[1], sizeof(buf[1]));
+            ipv4_print_addr(ent->r.gateway, buf[2], sizeof(buf[2]));
+            printf("%-18s%-18s%-18s%6d  %5s  %s\n",
+                   buf[0], buf[1], buf[2], ent->r.metric, ent->r.iface->dev->name, flags);
+        }
+        return SUCCESS;
+    }
+    else if(num_args >= 4)
+    {
+        ipv4_route_t r;
+        s32 metric_, ret = 0;
+
+        ret |= strtoipv4(args[1], &r.dest);
+        ret |= strtoipv4(args[2], &r.mask);
+        ret |= strtoipv4(args[3], &r.gateway);
+
+        if((num_args == 6) && !strcmp(args[0], "add"))
+        {
+            metric_ = strtoul(args[4], NULL, 0);
+            r.iface = net_get_iface_by_dev(args[5]);
+
+            if(ret || (metric_ < IPV4_ROUTE_METRIC_MIN) || (metric_ > IPV4_ROUTE_METRIC_MAX)
+               || !r.iface)
+                return EINVAL;
+
+            r.metric = metric_;
+
+            r.flags = IPV4_ROUTE_UP;
+            if(r.gateway != IPV4_ADDR_NONE)
+                r.flags |= IPV4_ROUTE_GATEWAY;
+            if(r.mask == IPV4_MASK_HOST_ONLY)
+                r.flags |= IPV4_ROUTE_HOST;
+
+            return ipv4_route_add(&r);
+        }
+        else if((num_args == 4) && !strcmp(args[0], "rm"))
+            return ipv4_route_delete(&r);
+        else
+            return EINVAL;
+    }
+    else
+        return EINVAL;
+}
+
+
+/*
     sched
 
     Start scheduler

@@ -41,6 +41,7 @@ const struct command g_commands[] =
 	{"mount",           cmd_mount},
 	{"raw",				cmd_raw},
 	{"rootfs",          cmd_rootfs},
+	{"route",           cmd_route},
 	{"schedule",        cmd_schedule},
 	{"serial",          cmd_serial},
 	{"slabs",           cmd_slabs},

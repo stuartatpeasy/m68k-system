@@ -26,8 +26,12 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
 
     /* Walk to the end of the routing table; fail if a duplicate entry exists */
     for(p = &g_ipv4_routes; *p != NULL; p = &(*p)->next)
-        if(!memcmp(&(*p)->r, r, sizeof(ipv4_route_t)))
+    {
+        const ipv4_route_t * const rt = &(*p)->r;
+
+        if((rt->dest == r->dest) && (rt->mask == r->mask) && (rt->gateway == r->gateway))
             return EEXIST;
+    }
 
     *p = kmalloc(sizeof(ipv4_rt_item_t));
     if(!*p)
@@ -38,6 +42,44 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
 
     return SUCCESS;
 
+}
+
+
+/*
+    ipv4_route_delete() - delete an item from the IPv4 routing table.  Fail if no matching entry
+    exists.
+*/
+s32 ipv4_route_delete(const ipv4_route_t * const r)
+{
+    ipv4_rt_item_t **p, *prev;
+
+    /* Walk to the end of the routing table; fail if a duplicate entry exists */
+    for(prev = g_ipv4_routes, p = &g_ipv4_routes; *p != NULL; p = &(*p)->next, prev = *p)
+    {
+        const ipv4_route_t * const rt = &(*p)->r;
+
+        if((rt->dest == r->dest) && (rt->mask == r->mask) && (rt->gateway == r->gateway))
+        {
+            if(prev)
+                prev->next = (*p)->next;
+            kfree(*p);
+
+            return SUCCESS;
+        }
+    }
+
+    return ENOENT;
+}
+
+
+/*
+    ipv4_route_get_entry() - can be used to iterate over routing table entries
+*/
+s32 ipv4_route_get_entry(ipv4_rt_item_t **e)
+{
+    *e = (*e == NULL) ? g_ipv4_routes : (*e)->next;
+
+    return *e ? SUCCESS : ENOENT;
 }
 
 
