@@ -21,7 +21,7 @@ s32 memcmp(const void *s1, const void *s2, u32 n)
 	if(!n)
 		return 0;
 
-	for(; n-- && (*s1_ == *s2_); ++s1_, ++s2_)
+	for(; --n && (*s1_ == *s2_); ++s1_, ++s2_)
         ;
 
 	return *s1_ - *s2_;
