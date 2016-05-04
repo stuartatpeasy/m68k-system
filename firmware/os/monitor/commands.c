@@ -17,7 +17,7 @@
 */
 MONITOR_CMD_HANDLER(arp)
 {
-    if(num_args == 1)
+    if(num_args >= 1)
     {
         if(!strcmp(args[0], "list"))
         {
@@ -41,6 +41,34 @@ MONITOR_CMD_HANDLER(arp)
 
             return SUCCESS;
         }
+		else if(!strcmp(args[0], "request"))
+		{
+			/* Syntax: arp request <ip> [<interface>] */
+			net_iface_t *iface;
+			ipv4_addr_t addr;
+			net_address_t proto_addr;
+			s32 ret;
+
+			if((num_args < 2) || (strtoipv4(args[1], &addr) != SUCCESS))
+				return EINVAL;
+
+			ipv4_make_addr(addr, IPV4_PORT_NONE, &proto_addr);
+
+			if(num_args == 3)
+			{
+				iface = net_get_iface_by_dev(args[2]);
+				if(iface == NULL)
+					return ENOENT;
+			}
+			else if(num_args == 2)
+			{
+				ret = ipv4_route_get_iface(&proto_addr, &iface);
+				if(ret != SUCCESS)
+					return ret;
+			}
+
+			return arp_send_request(iface, &proto_addr);
+		}
     }
 
     return EINVAL;
@@ -460,8 +488,9 @@ MONITOR_CMD_HANDLER(help)
     UNUSED(args);
 
 	puts("Available commands (all can be abbreviated):\n\n"
-		  "arp <list>\n"
-		  "    Display or manipulate the ARP cache.\n\n"
+		  "arp list\n"
+		  "arp send <ipv4_addr> [<interface>]\n"
+		  "    Display or manipulate the ARP cache, or send an ARP request.\n\n"
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
           "    in YYYYMMDDHHMMSS format, set the RTC date and time accordingly.\n\n"
@@ -499,6 +528,10 @@ MONITOR_CMD_HANDLER(help)
 		  "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
 		  "rootfs [<partition> <type>]\n"
 		  "    Set/read root partition in BIOS data area.\n\n"
+		  "route list\n"
+		  "route add <dest> <mask> <gateway> <metric> <interface>\n"
+		  "route rm <dest> <mask> <gateway> <metric> <interface>\n"
+		  "    Display or manipulate the kernel IPv4 routing table\n\n"
 		  "schedule\n"
 		  "    Start task scheduler\n\n"
 		  "serial\n"
