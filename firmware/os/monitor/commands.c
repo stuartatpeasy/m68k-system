@@ -25,12 +25,15 @@ MONITOR_CMD_HANDLER(arp)
             extern time_t g_current_timestamp;
             char hw_addrbuf[24], proto_addrbuf[24];
             u32 n;
+            u8 header;
 
-            puts("Iface  Hardware address   Protocol address   Expires in");
-            for(n = 0; (item = arp_cache_get_item(n)) != NULL; ++n)
+            for(header = 0, n = 0; (item = arp_cache_get_item(n)) != NULL; ++n)
             {
                 if(item->iface && (item->etime > g_current_timestamp))
                 {
+                    if(!header++)
+                        puts("Iface  Hardware address   Protocol address   Expires in");
+
                     net_print_addr(&item->hw_addr, hw_addrbuf, sizeof(hw_addrbuf));
                     net_print_addr(&item->proto_addr, proto_addrbuf, sizeof(proto_addrbuf));
 
@@ -489,7 +492,7 @@ MONITOR_CMD_HANDLER(help)
 
 	puts("Available commands (all can be abbreviated):\n\n"
 		  "arp list\n"
-		  "arp send <ipv4_addr> [<interface>]\n"
+		  "arp request <ipv4_addr> [<interface>]\n"
 		  "    Display or manipulate the ARP cache, or send an ARP request.\n\n"
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
@@ -830,14 +833,14 @@ MONITOR_CMD_HANDLER(route)
             }
 
             flags[0] = (ent->r.flags & IPV4_ROUTE_UP) ? 'U' : ' ';
-            flags[1] = (ent->r.flags & IPV4_ROUTE_HOST) ? 'H' : ' ';
-            flags[2] = (ent->r.flags & IPV4_ROUTE_GATEWAY) ? 'G' : ' ';
+            flags[1] = (ent->r.flags & IPV4_ROUTE_GATEWAY) ? 'G' : ' ';
+            flags[2] = (ent->r.flags & IPV4_ROUTE_HOST) ? 'H' : ' ';
             flags[3] = (ent->r.flags & IPV4_ROUTE_REJECT) ? '!' : ' ';
             flags[4] = '\0';
 
-            ipv4_print_addr(ent->r.dest, buf[0], sizeof(buf[0]));
-            ipv4_print_addr(ent->r.mask, buf[1], sizeof(buf[1]));
-            ipv4_print_addr(ent->r.gateway, buf[2], sizeof(buf[2]));
+            ipv4_print_addr(&ent->r.dest, buf[0], sizeof(buf[0]));
+            ipv4_print_addr(&ent->r.mask, buf[1], sizeof(buf[1]));
+            ipv4_print_addr(&ent->r.gateway, buf[2], sizeof(buf[2]));
             printf("%-18s%-18s%-18s%6d  %5s  %s\n",
                    buf[0], buf[1], buf[2], ent->r.metric, ent->r.iface->dev->name, flags);
         }

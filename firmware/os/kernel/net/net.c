@@ -368,7 +368,7 @@ s32 net_print_addr(const net_address_t *addr, char *buf, s32 len)
     if(addr->type == na_ethernet)
         return eth_print_addr((const mac_addr_t *) &addr->addr.addr, buf, len);
     else if(addr->type == na_ipv4)
-        return ipv4_print_addr(addr->addr.addr, buf, len);
+        return ipv4_print_addr((const ipv4_addr_t *) &addr->addr.addr, buf, len);
     else
         return -EINVAL;
 }

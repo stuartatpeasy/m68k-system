@@ -100,7 +100,7 @@ s32 arp_rx(net_packet_t *packet)
         net_address_t hw_addr, proto_addr;
 
         eth_make_addr(&payload->src_mac, &hw_addr);
-        ipv4_make_addr(payload->src_ip, 0, &proto_addr);
+        ipv4_make_addr(payload->src_ip, IPV4_PORT_NONE, &proto_addr);
 
         return arp_cache_add(packet->iface, &hw_addr, &proto_addr);
     }
@@ -137,8 +137,8 @@ s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
         p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
         p->hdr.opcode           = arp_request;
 
-        p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr);
-        p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr);
+        p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr.addr);
+        p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr.addr);
         p->payload.dst_ip       = *((ipv4_addr_t *) &addr->addr);
         p->payload.dst_mac      = *((mac_addr_t *) &g_eth_broadcast.addr);
 

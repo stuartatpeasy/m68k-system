@@ -83,6 +83,6 @@ s32 ipv4_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet);
 net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr);
 s32 ipv4_rx(net_packet_t *packet);
 s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
-s32 ipv4_print_addr(const ipv4_addr_t addr, char *buf, s32 len);
+s32 ipv4_print_addr(const ipv4_addr_t *addr, char *buf, s32 len);
 
 #endif
