@@ -184,21 +184,45 @@ s32 net_add_interface(dev_t *dev)
             ;
 
         *p = iface;
+        iface->proto_addr.type = na_unknown;
 
         ma = (mac_addr_t *) &iface->hw_addr.addr;
         printf("net: added %s: %02x:%02x:%02x:%02x:%02x:%02x\n", dev->name,
                ma->b[0], ma->b[1], ma->b[2], ma->b[3], ma->b[4], ma->b[5]);
-
-        /* FIXME - remove (hardwiring IPv4 addr to 172.16.0.200) */
-        ipv4_addr_t addr = 0xac1000c8;      /* = 172.16.0.200 */
-        iface->proto_addr.type = na_ipv4;
-        memcpy(&iface->proto_addr.addr, &addr, sizeof(addr));
 
         return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL,
                            NULL);
     }
     else
         return EPROTONOSUPPORT;
+}
+
+
+/*
+    net_get_iface_name() - get the device name associated with an interface
+*/
+const char *net_get_iface_name(const net_iface_t * const iface)
+{
+    return iface->dev->name;
+}
+
+
+/*
+    net_get_proto_addr() - get the protocol address for an interface
+*/
+const net_address_t *net_get_proto_addr(const net_iface_t * const iface)
+{
+    return &iface->proto_addr;
+}
+
+
+/*
+    net_set_proto_addr() - set the protocol address for an interface
+*/
+s32 net_set_proto_addr(net_iface_t * const iface, const net_address_t * const addr)
+{
+    iface->proto_addr = *addr;
+    return SUCCESS;
 }
 
 
@@ -276,6 +300,7 @@ void net_receive(void *arg)
 {
     s32 ret;
     net_iface_t * const iface = (net_iface_t *) arg;
+    volatile net_iface_t * const iface_v = (volatile net_iface_t *) arg;
     net_packet_t *packet;
 
     if(net_alloc_packet(1500, &packet) != SUCCESS)
@@ -300,7 +325,7 @@ void net_receive(void *arg)
         {
             packet->len = packet->raw.len;
 
-            if(eth_rx(packet) == SUCCESS)
+            if((eth_rx(packet) == SUCCESS) && (iface_v->proto_addr.type != na_unknown))
             {
                 ++iface->stats.rx_packets;
                 iface->stats.rx_bytes += packet->raw.len;

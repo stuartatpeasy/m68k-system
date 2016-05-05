@@ -32,13 +32,13 @@ MONITOR_CMD_HANDLER(arp)
                 if(item->iface && (item->etime > g_current_timestamp))
                 {
                     if(!header++)
-                        puts("Iface  Hardware address   Protocol address   Expires in");
+                        puts("Iface  Hardware address   Protocol address   TTL");
 
                     net_print_addr(&item->hw_addr, hw_addrbuf, sizeof(hw_addrbuf));
                     net_print_addr(&item->proto_addr, proto_addrbuf, sizeof(proto_addrbuf));
 
-                    printf("%6s %18s %18s %d\n", item->iface->dev->name, hw_addrbuf, proto_addrbuf,
-                           item->etime - g_current_timestamp);
+                    printf("%6s %18s %18s %d\n", net_get_iface_name(item->iface), hw_addrbuf,
+                           proto_addrbuf, item->etime - g_current_timestamp);
                 }
             }
 
@@ -52,23 +52,13 @@ MONITOR_CMD_HANDLER(arp)
 			net_address_t proto_addr;
 			s32 ret;
 
-			if((num_args < 2) || (strtoipv4(args[1], &addr) != SUCCESS))
+			if((num_args != 2) || (strtoipv4(args[1], &addr) != SUCCESS))
 				return EINVAL;
 
-			ipv4_make_addr(addr, IPV4_PORT_NONE, &proto_addr);
-
-			if(num_args == 3)
-			{
-				iface = net_get_iface_by_dev(args[2]);
-				if(iface == NULL)
-					return ENOENT;
-			}
-			else if(num_args == 2)
-			{
-				ret = ipv4_route_get_iface(&proto_addr, &iface);
-				if(ret != SUCCESS)
-					return ret;
-			}
+            ipv4_make_addr(addr, IPV4_PORT_NONE, &proto_addr);
+            ret = ipv4_route_get_iface(&proto_addr, &iface);
+            if(ret != SUCCESS)
+                return ret;
 
 			return arp_send_request(iface, &proto_addr);
 		}
@@ -492,7 +482,7 @@ MONITOR_CMD_HANDLER(help)
 
 	puts("Available commands (all can be abbreviated):\n\n"
 		  "arp list\n"
-		  "arp request <ipv4_addr> [<interface>]\n"
+		  "arp request <ipv4_addr>\n"
 		  "    Display or manipulate the ARP cache, or send an ARP request.\n\n"
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
@@ -527,6 +517,9 @@ MONITOR_CMD_HANDLER(help)
 		  "mount [<dev> <fstype> <mountpoint>]\n"
 		  "    With no arguments, list current mounts.  With arguments, mount block device <dev>\n"
 		  "    containing a file system of type <fstype> at <mountpoint>\n\n"
+		  "netif show <interface>\n"
+		  "netif ipv4 <interface> <address>\n"
+		  "    Display or set the protocol address associated with a network interface\n\n"
 		  "raw\n"
 		  "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
 		  "rootfs [<partition> <type>]\n"
@@ -591,6 +584,51 @@ MONITOR_CMD_HANDLER(id)
 
     puts(OS_NAME " v" OS_VERSION_STR " on " CPU_NAME ", build date " __DATE__ " " __TIME__);
     return SUCCESS;
+}
+
+
+/*
+    netif
+
+    Manipulate network interfaces
+*/
+MONITOR_CMD_HANDLER(netif)
+{
+    net_iface_t *iface;
+
+    /*
+        Syntax:
+            netif show eth0
+            netif ipv4 eth0 172.1.2.3
+    */
+    if(num_args < 2)
+        return EINVAL;
+
+    iface = net_get_iface_by_dev(args[1]);
+    if(!iface)
+        return ENOENT;
+
+    if(!strcmp(args[0], "show"))
+    {
+        char buf[32];
+        net_print_addr(net_get_proto_addr(iface), buf, 32);
+        printf("%s: %s\n", net_get_iface_name(iface), buf);
+
+        return SUCCESS;
+    }
+    else if(!strcmp(args[0], "ipv4"))
+    {
+        ipv4_addr_t ipv4addr;
+        net_address_t addr;
+
+        if(strtoipv4(args[2], &ipv4addr) != SUCCESS)
+            return EINVAL;
+
+        ipv4_make_addr(ipv4addr, IPV4_PORT_NONE, &addr);
+        return net_set_proto_addr(iface, &addr);
+    }
+
+    return EINVAL;
 }
 
 
@@ -842,7 +880,7 @@ MONITOR_CMD_HANDLER(route)
             ipv4_print_addr(&ent->r.mask, buf[1], sizeof(buf[1]));
             ipv4_print_addr(&ent->r.gateway, buf[2], sizeof(buf[2]));
             printf("%-18s%-18s%-18s%6d  %5s  %s\n",
-                   buf[0], buf[1], buf[2], ent->r.metric, ent->r.iface->dev->name, flags);
+                   buf[0], buf[1], buf[2], ent->r.metric, net_get_iface_name(ent->r.iface), flags);
         }
         return SUCCESS;
     }

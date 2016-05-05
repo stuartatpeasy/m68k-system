@@ -102,6 +102,7 @@ s32 ipv4_route_get_iface(const net_address_t *proto_addr, net_iface_t **iface)
     for(p = &g_ipv4_routes; *p != NULL; p = &(*p)->next)
     {
         const ipv4_route_t * const r = &(*p)->r;
+
         if(((r->dest & r->mask) == (ipv4_addr & r->mask)) && ((r->flags) & IPV4_ROUTE_UP))
         {
             *iface = r->iface;

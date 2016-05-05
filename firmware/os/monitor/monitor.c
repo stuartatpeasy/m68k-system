@@ -39,6 +39,7 @@ const struct command g_commands[] =
 	{"ls",              cmd_ls},
 	{"map",             cmd_map},
 	{"mount",           cmd_mount},
+	{"netif",           cmd_netif},
 	{"raw",				cmd_raw},
 	{"rootfs",          cmd_rootfs},
 	{"route",           cmd_route},

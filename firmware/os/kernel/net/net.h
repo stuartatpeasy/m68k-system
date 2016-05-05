@@ -129,5 +129,8 @@ s16 net_cksum(const void *buf, u32 len);
 s32 net_address_compare(const net_address_t *a1, const net_address_t *a2);
 s32 net_print_addr(const net_address_t *addr, char *buf, s32 len);
 net_iface_t *net_get_iface_by_dev(const char * const name);
+const char *net_get_iface_name(const net_iface_t * const iface);
+const net_address_t *net_get_proto_addr(const net_iface_t * const iface);
+s32 net_set_proto_addr(net_iface_t * const iface, const net_address_t * const addr);
 
 #endif
