@@ -122,7 +122,7 @@ s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
         arp_eth_ipv4_packet_t *p;
         net_packet_t *pkt;
 
-        ret = iface->driver->alloc_packet(iface, sizeof(arp_eth_ipv4_packet_t), &pkt);
+        ret = iface->driver->packet_alloc(iface, sizeof(arp_eth_ipv4_packet_t), &pkt);
         if(ret != SUCCESS)
             return ret;
 
@@ -144,7 +144,7 @@ s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
 
         ret = iface->driver->tx(NULL, &g_eth_broadcast, pkt);
 
-        net_free_packet(pkt);
+        net_packet_free(pkt);
 
         return ret;
     }

@@ -168,12 +168,12 @@ net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_
 
 
 /*
-    ipv4_alloc_packet() - allocate a packet for transmission, to contain a payload of the
+    ipv4_packet_alloc() - allocate a packet for transmission, to contain a payload of the
     specified length.
 */
-s32 ipv4_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 ipv4_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
 {
-    ks32 ret = iface->driver->alloc_packet(iface, sizeof(ipv4_hdr_t) + len, packet);
+    ks32 ret = iface->driver->packet_alloc(iface, sizeof(ipv4_hdr_t) + len, packet);
     if(ret != SUCCESS)
         return ret;
 

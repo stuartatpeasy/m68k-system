@@ -135,7 +135,7 @@ s32 dhcp_discover(net_iface_t *iface)
     if((iface->hw_addr.type != na_ethernet) || (iface->proto_addr.type != na_ipv4))
         return EINVAL;
 
-    ret = udp_alloc_packet(iface, DHCP_DISCOVER_BUFFER_LEN, &pkt);
+    ret = udp_packet_alloc(iface, DHCP_DISCOVER_BUFFER_LEN, &pkt);
     if(ret != SUCCESS)
         return ret;
 
@@ -173,7 +173,7 @@ s32 dhcp_discover(net_iface_t *iface)
     ret = udp_tx(ipv4_make_addr(IPV4_ADDR_NONE, DHCP_CLIENT_PORT, &src),
                     ipv4_make_addr(IPV4_ADDR_BROADCAST, DHCP_SERVER_PORT, &dest), pkt);
 
-    net_free_packet(pkt);
+    net_packet_free(pkt);
 
     return ret;
 }

@@ -57,12 +57,12 @@ s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 
 
 /*
-    udp_alloc_packet() - allocate a packet for transmission, to contain a payload of the
+    udp_packet_alloc() - allocate a packet for transmission, to contain a payload of the
     specified length.
 */
-s32 udp_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 udp_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
 {
-    ks32 ret = ipv4_alloc_packet(iface, sizeof(udp_hdr_t) + len, packet);
+    ks32 ret = ipv4_packet_alloc(iface, sizeof(udp_hdr_t) + len, packet);
     if(ret != SUCCESS)
         return ret;
 

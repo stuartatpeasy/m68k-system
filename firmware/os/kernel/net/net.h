@@ -88,7 +88,7 @@ struct net_proto_driver
     s32                     (*tx)(const net_address_t *src, const net_address_t *dest,
                                   net_packet_t *packet);
     s32                     (*reply)(net_packet_t *packet);
-    s32                     (*alloc_packet)(net_iface_t *iface, ku32 len, net_packet_t **packet);
+    s32                     (*packet_alloc)(net_iface_t *iface, ku32 len, net_packet_t **packet);
     net_proto_driver_t *    next;
 };
 
@@ -122,8 +122,8 @@ s32 net_init();
 net_proto_driver_t *net_get_proto_driver(const net_protocol_t proto);
 s32 net_register_proto_driver(s32 (*init_fn)(net_proto_driver_t *));
 net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *addr);
-s32 net_alloc_packet(ku32 len, net_packet_t **packet);
-void net_free_packet(net_packet_t *packet);
+s32 net_packet_alloc(ku32 len, net_packet_t **packet);
+void net_packet_free(net_packet_t *packet);
 s32 net_transmit(net_packet_t *packet);
 s16 net_cksum(const void *buf, u32 len);
 s32 net_address_compare(const net_address_t *a1, const net_address_t *a2);

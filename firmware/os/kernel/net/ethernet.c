@@ -36,7 +36,7 @@ s32 eth_init(net_proto_driver_t *driver)
     driver->rx              = eth_rx;
     driver->tx              = eth_tx;
     driver->reply           = eth_reply;
-    driver->alloc_packet    = eth_alloc_packet;
+    driver->packet_alloc    = eth_packet_alloc;
 
     return SUCCESS;
 }
@@ -143,12 +143,12 @@ void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
 
 
 /*
-    eth_alloc_packet() - allocate a net_packet_t object large enough to contain an Ethernet header
+    eth_packet_alloc() - allocate a net_packet_t object large enough to contain an Ethernet header
     and a payload of the specified length.
 */
-s32 eth_alloc_packet(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 eth_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
 {
-    ks32 ret = net_alloc_packet(sizeof(eth_hdr_t) + len, packet);
+    ks32 ret = net_packet_alloc(sizeof(eth_hdr_t) + len, packet);
 
     if(ret != SUCCESS)
         return ret;

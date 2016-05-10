@@ -24,7 +24,7 @@ void net_receive(void *arg);
 s32 net_rx_unimplemented(net_packet_t *packet);
 s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
 s32 net_reply_unimplemented(net_packet_t *packet);
-s32 net_alloc_packet_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet);
+s32 net_packet_alloc_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet);
 
 net_iface_t *g_net_ifaces = NULL;
 
@@ -69,7 +69,7 @@ s32 net_register_proto_driver(s32 (*init_fn)(net_proto_driver_t *))
     driver->rx              = net_rx_unimplemented;
     driver->tx              = net_tx_unimplemented;
     driver->reply           = net_reply_unimplemented;
-    driver->alloc_packet    = net_alloc_packet_unimplemented;
+    driver->packet_alloc    = net_packet_alloc_unimplemented;
 
     driver->next = NULL;
 
@@ -132,7 +132,7 @@ s32 net_reply_unimplemented(net_packet_t *packet)
 }
 
 
-s32 net_alloc_packet_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 net_packet_alloc_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet)
 {
     UNUSED(iface);
     UNUSED(len);
@@ -242,10 +242,10 @@ net_iface_t *net_get_iface_by_dev(const char * const name)
 
 
 /*
-    net_alloc_packet() - allocate a packet object and allocate a buffer of the specified length for
+    net_packet_alloc() - allocate a packet object and allocate a buffer of the specified length for
     the payload.
 */
-s32 net_alloc_packet(ku32 len, net_packet_t **packet)
+s32 net_packet_alloc(ku32 len, net_packet_t **packet)
 {
     s32 ret;
     net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
@@ -268,9 +268,9 @@ s32 net_alloc_packet(ku32 len, net_packet_t **packet)
 
 
 /*
-    net_free_packet() - destroy an object created by net_alloc_packet().
+    net_packet_free() - destroy an object created by net_packet_alloc().
 */
-void net_free_packet(net_packet_t *packet)
+void net_packet_free(net_packet_t *packet)
 {
     buffer_deinit(&packet->raw);
     kfree(packet);
@@ -303,7 +303,7 @@ void net_receive(void *arg)
     volatile net_iface_t * const iface_v = (volatile net_iface_t *) arg;
     net_packet_t *packet;
 
-    if(net_alloc_packet(1500, &packet) != SUCCESS)
+    if(net_packet_alloc(1500, &packet) != SUCCESS)
     {
         kernel_warning("Failed to allocate packet buffer");
         return;
