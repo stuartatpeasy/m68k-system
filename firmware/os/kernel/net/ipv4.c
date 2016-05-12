@@ -17,7 +17,7 @@
 #include <klibc/strings.h>
 
 
-s32 ipv4_reply(net_packet_t *packet);
+// s32 ipv4_reply(net_packet_t *packet);    // FIXME
 ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto);
 
 const net_address_t g_ipv4_broadcast =
@@ -39,7 +39,6 @@ s32 ipv4_init(net_proto_driver_t *driver)
     driver->proto = np_ipv4;
     driver->rx = ipv4_rx;
     driver->tx = ipv4_tx;
-    driver->reply = ipv4_reply;
 
     return SUCCESS;
 }
@@ -65,7 +64,6 @@ s32 ipv4_rx(net_packet_t *packet)
     packet->start += sizeof(ipv4_hdr_t);
     packet->len -= sizeof(ipv4_hdr_t);
     packet->proto = np_ipv4;
-    packet->driver = net_get_proto_driver(np_ipv4);
 
     switch(hdr->protocol)
     {
@@ -91,8 +89,6 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
 {
     ipv4_hdr_t *hdr;
     const ipv4_address_t *src_addr, *dest_addr;
-    net_address_t dest_hw_addr;
-    s32 ret;
 
     if(src == NULL)
     {
@@ -100,36 +96,30 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
         src = &packet->iface->proto_addr;
     }
 
-    packet->start -= sizeof(ipv4_hdr_t);
-    packet->len += sizeof(ipv4_hdr_t);
+    net_packet_insert(sizeof(ipv4_hdr_t), packet);
 
-    hdr = (ipv4_hdr_t *) packet->start;
+    hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
     src_addr = (ipv4_address_t *) &src->addr;
     dest_addr = (ipv4_address_t *) &dest->addr;
 
     hdr->version_hdr_len    = (4 << 4) | 5;     /* IPv4, header len = 5 32-bit words (=20 bytes) */
     hdr->diff_svcs          = 0;
-    hdr->total_len          = packet->len;
+    hdr->total_len          = net_packet_get_len(packet);
     hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
     hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
     hdr->ttl                = 64;               /* Sensible default? */
-    hdr->protocol           = ipv4_get_proto(packet->proto);
+    hdr->protocol           = ipv4_get_proto(net_packet_get_proto(packet));
     hdr->src                = src_addr->addr;
     hdr->dest               = dest_addr->addr;
     hdr->cksum              = 0x0000;
 
-    hdr->cksum = net_cksum(packet->start, sizeof(ipv4_hdr_t));
+    hdr->cksum = net_cksum(hdr, sizeof(ipv4_hdr_t));
+    net_packet_set_proto(np_ipv4, packet);
 
-    ret = ipv4_route_get_hw_addr(packet->iface, dest, &dest_hw_addr);
-    if(ret != SUCCESS)
-        return ret;
-
-    packet->proto = np_ipv4;
-
-    return packet->iface->driver->tx(NULL, &dest_hw_addr, packet);
+    return net_tx(src, dest, packet);
 }
 
-
+#if 0       // FIXME
 /*
     ipv4_reply() - reply to an IPv4 packet
 */
@@ -138,11 +128,9 @@ s32 ipv4_reply(net_packet_t *packet)
     ipv4_hdr_t *hdr;
     ipv4_addr_t tmp;
 
-    packet->start -= sizeof(ipv4_hdr_t);
-    packet->len += sizeof(ipv4_hdr_t);
-    packet->proto = np_ipv4;
+    net_packet_encapsulate(np_ipv4, sizeof(ipv4_hdr_t), packet);
 
-    hdr = (ipv4_hdr_t *) packet->start;
+    hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
 
     tmp = hdr->src;
     hdr->src = hdr->dest;
@@ -150,6 +138,7 @@ s32 ipv4_reply(net_packet_t *packet)
 
     return packet->iface->driver->reply(packet);
 }
+#endif
 
 
 /*
@@ -171,15 +160,15 @@ net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_
     ipv4_packet_alloc() - allocate a packet for transmission, to contain a payload of the
     specified length.
 */
-s32 ipv4_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 ipv4_packet_alloc(net_address_t * addr, ku32 len, net_iface_t *iface, net_packet_t **packet)
 {
-    ks32 ret = iface->driver->packet_alloc(iface, sizeof(ipv4_hdr_t) + len, packet);
+    ks32 ret = net_packet_alloc(net_address_get_hwproto(addr), addr, sizeof(ipv4_hdr_t) + len,
+                                iface, packet);
     if(ret != SUCCESS)
         return ret;
 
-    (*packet)->start += sizeof(ipv4_hdr_t);
-    (*packet)->len -= sizeof(ipv4_hdr_t);
-    (*packet)->proto = np_ipv4;
+    net_packet_consume(sizeof(ipv4_hdr_t), *packet);
+    net_packet_set_proto(np_ipv4, *packet);
 
     return SUCCESS;
 }

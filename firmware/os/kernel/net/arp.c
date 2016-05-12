@@ -8,6 +8,8 @@
 */
 
 #include <kernel/net/arp.h>
+#include <kernel/net/interface.h>
+#include <kernel/net/route.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/process.h>
 #include <klibc/stdio.h>            // FIXME remove
@@ -20,7 +22,7 @@ extern time_t g_current_timestamp;
 s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
                   const net_address_t *proto_addr);
 arp_cache_item_t *arp_cache_get_entry_for_insert();
-s32 arp_send_request(net_iface_t *iface, const net_address_t *addr);
+s32 arp_send_request(const net_address_t *addr);
 
 
 /*
@@ -92,7 +94,7 @@ s32 arp_rx(net_packet_t *packet)
         payload->src_ip = *((ipv4_addr_t *) &packet->iface->proto_addr.addr);
         payload->src_mac = *((mac_addr_t *) &packet->iface->hw_addr.addr);
 
-        return packet->driver->tx(NULL, &hw_addr, packet);
+        return net_tx(NULL, &hw_addr, packet);
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
@@ -110,46 +112,50 @@ s32 arp_rx(net_packet_t *packet)
 
 
 /*
-    arp_send_request() - send an ARP request, to resolve the specified IPv4 address, over the
-    specified interface.
+    arp_send_request() - send an ARP request to resolve the specified IPv4 address.
 */
-s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
+s32 arp_send_request(const net_address_t *addr)
 {
+    arp_eth_ipv4_packet_t *p;
+    net_packet_t *pkt;
+    net_iface_t *iface;
+    net_address_t bcast;
     s32 ret;
 
-    if((iface->driver->proto == np_ethernet) && (addr->type == na_ipv4))
-    {
-        arp_eth_ipv4_packet_t *p;
-        net_packet_t *pkt;
+    if(addr->type != na_ipv4)
+        return EPROTONOSUPPORT;
 
-        ret = iface->driver->packet_alloc(iface, sizeof(arp_eth_ipv4_packet_t), &pkt);
-        if(ret != SUCCESS)
-            return ret;
+    iface = net_route_get(addr);
+    if(!iface)
+        return ENETUNREACH;
 
-        pkt->proto = np_arp;
-        pkt->len += sizeof(arp_eth_ipv4_packet_t);
-
-        p = (arp_eth_ipv4_packet_t *) pkt->start;
-
-        p->hdr.hw_type          = arp_hw_type_ethernet;
-        p->hdr.proto_type       = ethertype_ipv4;
-        p->hdr.hw_addr_len      = sizeof(mac_addr_t);
-        p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
-        p->hdr.opcode           = arp_request;
-
-        p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr.addr);
-        p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr.addr);
-        p->payload.dst_ip       = *((ipv4_addr_t *) &addr->addr);
-        p->payload.dst_mac      = *((mac_addr_t *) &g_eth_broadcast.addr);
-
-        ret = iface->driver->tx(NULL, &g_eth_broadcast, pkt);
-
-        net_packet_free(pkt);
-
+    ret = net_interface_hw_addr_broadcast(iface, &bcast);
+    if(ret != SUCCESS)
         return ret;
-    }
 
-    return EPROTONOSUPPORT;
+    if(net_address_get_type(&bcast) != na_ethernet)
+        return EPROTONOSUPPORT;
+
+    ret = net_packet_alloc(np_arp, addr, sizeof(arp_eth_ipv4_packet_t), NET_INTERFACE_ANY, &pkt);
+    if(ret != SUCCESS)
+        return ret;
+
+    pkt->len += sizeof(arp_eth_ipv4_packet_t);
+
+    p = (arp_eth_ipv4_packet_t *) pkt->start;
+
+    p->hdr.hw_type          = arp_hw_type_ethernet;
+    p->hdr.proto_type       = ethertype_ipv4;
+    p->hdr.hw_addr_len      = sizeof(mac_addr_t);
+    p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
+    p->hdr.opcode           = arp_request;
+
+    p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr.addr);
+    p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr.addr);
+    p->payload.dst_ip       = *((ipv4_addr_t *) &addr->addr);
+    p->payload.dst_mac      = *((mac_addr_t *) &bcast.addr);
+
+    return net_tx_free(NULL, &bcast, pkt);
 }
 
 
@@ -167,7 +173,7 @@ s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_
         if(p == NULL)
         {
             /* Address not present in cache; try to look it up instead. */
-            ret = arp_send_request(iface, proto_addr);
+            ret = arp_send_request(proto_addr);
             if(ret != SUCCESS)
                 return ret;
 

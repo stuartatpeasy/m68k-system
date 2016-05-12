@@ -35,8 +35,6 @@ s32 eth_init(net_proto_driver_t *driver)
     driver->proto           = np_ethernet;
     driver->rx              = eth_rx;
     driver->tx              = eth_tx;
-    driver->reply           = eth_reply;
-    driver->packet_alloc    = eth_packet_alloc;
 
     return SUCCESS;
 }
@@ -107,10 +105,10 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
     hdr->dest = *dest_addr;
     hdr->src = *src_addr;
 
-    return net_transmit(packet);
+    return net_tx(src, dest, packet);
 }
 
-
+#if 0   // FIXME
 /*
     eth_reply() - assume that *packet contains a received packet which has been modified in some
     way; swap its source and destination addresses and transmit it.
@@ -118,17 +116,22 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 s32 eth_reply(net_packet_t *packet)
 {
     eth_hdr_t *ehdr;
+    net_address_t src, dest;
 
     packet->start -= sizeof(eth_hdr_t);
     packet->len += sizeof(eth_hdr_t);
 
     ehdr = (eth_hdr_t *) packet->start;
 
-    ehdr->dest = ehdr->src;
-    ehdr->src = *((mac_addr_t *) &packet->iface->hw_addr.addr);
+    eth_make_addr(&ehdr->dest, &src);
+    eth_make_addr(NULL, &dest);
 
-    return net_transmit(packet);
+    ehdr->dest = *((mac_addr_t *) &dest.addr);
+    ehdr->src = *((mac_addr_t *) &src.addr);
+
+    return net_tx(&src, &dest, packet);
 }
+#endif
 
 
 /*
@@ -136,9 +139,11 @@ s32 eth_reply(net_packet_t *packet)
 */
 void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
 {
-    addr->type = na_ethernet;
+    net_address_set_type(na_ethernet, addr);
     bzero(&addr->addr, sizeof(net_addr_t));
-    memcpy(&addr->addr, mac, sizeof(mac_addr_t));
+
+    if(mac != NULL)
+        memcpy(&addr->addr, mac, sizeof(mac_addr_t));
 }
 
 
@@ -146,16 +151,14 @@ void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
     eth_packet_alloc() - allocate a net_packet_t object large enough to contain an Ethernet header
     and a payload of the specified length.
 */
-s32 eth_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 eth_packet_alloc(net_address_t * addr, ku32 len, net_iface_t *iface, net_packet_t **packet)
 {
-    ks32 ret = net_packet_alloc(sizeof(eth_hdr_t) + len, packet);
+    ks32 ret = net_packet_alloc(np_ethernet, addr, sizeof(eth_hdr_t) + len, iface, packet);
 
     if(ret != SUCCESS)
         return ret;
 
-    (*packet)->iface = iface;
-    (*packet)->len += sizeof(eth_hdr_t);
-    (*packet)->start += sizeof(eth_hdr_t);
+    net_packet_consume(sizeof(eth_hdr_t), *packet);
 
     return SUCCESS;
 }

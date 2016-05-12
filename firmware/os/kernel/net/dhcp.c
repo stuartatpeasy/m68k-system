@@ -5,10 +5,13 @@
 
 
     (c) Stuart Wallace, February 2016
+
+    FIXME: remove debug printf()s and remove #include stdio.h
 */
 
 #include <kernel/net/dhcp.h>
 #include <kernel/net/udp.h>
+#include <klibc/stdio.h>        // FIXME remove
 #include <klibc/strings.h>
 
 
@@ -17,6 +20,7 @@
 */
 s32 dhcp_rx(net_packet_t *packet)
 {
+    /* FIXME - lots of dereferencing of *packet in this fn - use net_packet_*() fns instead */
     dhcp_msg_t *msg = (dhcp_msg_t *) packet->start;
 
     if(packet->len < sizeof(dhcp_msg_t))
@@ -132,14 +136,14 @@ s32 dhcp_discover(net_iface_t *iface)
     u8 *opts;
     s32 ret;
 
-    if((iface->hw_addr.type != na_ethernet) || (iface->proto_addr.type != na_ipv4))
-        return EINVAL;
+    ipv4_make_addr(IPV4_ADDR_NONE, DHCP_CLIENT_PORT, &src);
+    ipv4_make_addr(IPV4_ADDR_BROADCAST, DHCP_SERVER_PORT, &dest);
 
-    ret = udp_packet_alloc(iface, DHCP_DISCOVER_BUFFER_LEN, &pkt);
+    ret = net_packet_alloc(np_udp, &dest, DHCP_DISCOVER_BUFFER_LEN, iface, &pkt);
     if(ret != SUCCESS)
         return ret;
 
-    msg = (dhcp_msg_t *) pkt->start;
+    msg = (dhcp_msg_t *) net_packet_get_start(pkt);
     opts = (u8 *) &(msg[1]);
 
     bzero(msg, DHCP_DISCOVER_BUFFER_LEN);
@@ -168,12 +172,7 @@ s32 dhcp_discover(net_iface_t *iface)
 
     *opts++ = dopt_end;     /* End of DHCP options */
 
-    pkt->len = opts - (u8 *) pkt->start;
+    pkt->len = opts - (u8 *) msg;
 
-    ret = udp_tx(ipv4_make_addr(IPV4_ADDR_NONE, DHCP_CLIENT_PORT, &src),
-                    ipv4_make_addr(IPV4_ADDR_BROADCAST, DHCP_SERVER_PORT, &dest), pkt);
-
-    net_packet_free(pkt);
-
-    return ret;
+    return net_tx_free(&src, &dest, pkt);
 }

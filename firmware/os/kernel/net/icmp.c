@@ -57,5 +57,6 @@ s32 icmp_handle_echo_request(net_packet_t *packet)
     r->hdr.type     = icmp_echo_reply;
     r->hdr.checksum = net_cksum(r, packet->len);
 
-    return packet->driver->reply(packet);
+//    return packet->driver->reply(packet);
+return SUCCESS;
 }

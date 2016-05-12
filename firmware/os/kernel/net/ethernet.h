@@ -53,8 +53,8 @@ typedef u32 eth_cksum_t;    /* Ethernet checksum (the last four bytes of an Ethe
 s32 eth_init(net_proto_driver_t *driver);
 s32 eth_rx(net_packet_t *packet);
 s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
-s32 eth_reply(net_packet_t *packet);
-s32 eth_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet);
+//s32 eth_reply(net_packet_t *packet);      // FIXME
+s32 eth_packet_alloc(net_address_t * addr, ku32 len, net_iface_t *iface, net_packet_t **packet);
 void eth_make_addr(mac_addr_t *mac, net_address_t *addr);
 s32 eth_print_addr(const mac_addr_t *addr, char *buf, s32 len);
 
