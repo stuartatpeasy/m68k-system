@@ -14,15 +14,11 @@
 #include <kernel/net/interface.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
+#include <kernel/net/route.h>
 #include <kernel/process.h>
 #include <kernel/util/kutil.h>
 #include <klibc/strings.h>
 #include <klibc/stdio.h>
-
-
-s32 net_rx_unimplemented(net_packet_t *packet);
-s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
-s32 net_packet_alloc_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet);
 
 
 /*
@@ -42,32 +38,6 @@ s32 net_init()
 }
 
 
-
-s32 net_rx_unimplemented(net_packet_t *packet)
-{
-    UNUSED(packet);
-    return ENOSYS;
-}
-
-
-s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
-{
-    UNUSED(src);
-    UNUSED(dest);
-    UNUSED(packet);
-    return ENOSYS;
-}
-
-
-s32 net_packet_alloc_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet)
-{
-    UNUSED(iface);
-    UNUSED(len);
-    UNUSED(packet);
-    return ENOSYS;
-}
-
-
 /*
     net_tx() - send a packet over an interface.
 */
@@ -78,7 +48,7 @@ s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
     UNUSED(src);
 
     /* Determine interface over which packet is to be sent */
-    iface = route_get_iface(dest);
+    iface = net_route_get(dest);
     if(iface == NULL)
         return EHOSTUNREACH;
 
@@ -127,7 +97,7 @@ void net_receive(void *arg)
     while(1)
     {
         /* TODO - ensure that the interface is configured before calling eth_handle_packet() */
-        packet->proto   = iface->driver->proto;
+        net_packet_set_proto(net_interface_get_proto(iface), packet);
         net_packet_reset(packet);   /* FIXME - not sure it is right to set len to 1500 here; instead raw.len should be reset? */
         ret = iface->dev->read(iface->dev, 0, &packet->len, packet->raw.data);
 
@@ -207,7 +177,7 @@ s32 net_address_set_type(const net_addr_type_t type, net_address_t * const addr)
     net_address_get_address() - return a pointer to the network address stored in a net_address_t
     object.
 */
-void *net_address_get_address(net_address_t * const addr)
+const void *net_address_get_address(const net_address_t * const addr)
 {
     return &addr->addr;
 }

@@ -16,7 +16,7 @@
 /*
     net_route_get() - look up a route in the kernel routing table.
 */
-net_iface_t *net_route_get(net_address_t *addr)
+net_iface_t *net_route_get(const net_address_t *addr)
 {
     char buf[64];
 

@@ -14,6 +14,7 @@
 #include <kernel/net/packet.h>
 
 
+
 /* Network protocol driver */
 typedef struct net_proto_driver net_proto_driver_t;
 struct net_proto_driver
@@ -25,6 +26,9 @@ struct net_proto_driver
                                   net_packet_t *packet);
     net_proto_driver_t *    next;
 };
+
+/* Network protocol driver init function typedef */
+typedef s32 (*net_protocol_init_fn_t)(net_proto_driver_t *);
 
 
 s32 net_protocol_init();

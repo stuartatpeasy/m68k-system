@@ -65,7 +65,7 @@ s32 net_add_interface(dev_t *dev)
         iface->next         = NULL;
         iface->dev          = dev;
         iface->hw_addr.type = addr_type;
-        iface->type         = ni_ethernet;
+        iface->proto        = np_ethernet;
 
         bzero(&iface->stats, sizeof(net_iface_stats_t));
 
@@ -148,4 +148,13 @@ net_iface_t *net_interface_get_by_dev(const char * const name)
             return *p;
 
     return NULL;
+}
+
+
+/*
+    net_interface_get_proto() - get the network protocol implemented by a network interface
+*/
+net_protocol_t net_interface_get_proto(const net_iface_t * const iface)
+{
+    return iface->proto;
 }

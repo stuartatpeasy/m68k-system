@@ -24,7 +24,7 @@
 #define TARGET_MC68010
 
 #define PLATFORM_LAMBDA
-#define PLATFORM_REV    0
+#define PLATFORM_REV    1
 
 #endif
 

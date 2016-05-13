@@ -48,7 +48,7 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
         plus the length (including terminating '\0) of the requested filename, plus the length
         (including terminating '\0') of the transfer mode.  The transfer mode is always "octet".
     */
-    ret = udp_packet_alloc(TFTP_OPCODE_LEN + fn_len + 7, NET_INTERFACE_ANY, &pkt);
+    ret = udp_packet_alloc(peer_addr, TFTP_OPCODE_LEN + fn_len + 7, NET_INTERFACE_ANY, &pkt);
     if(ret != SUCCESS)
         return ret;
 

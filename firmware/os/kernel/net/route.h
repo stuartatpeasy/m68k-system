@@ -11,6 +11,7 @@
 
 #include <kernel/include/types.h>
 #include <kernel/net/net.h>
+#include <kernel/net/interface.h>
 
 
 net_iface_t *net_route_get(const net_address_t *addr);

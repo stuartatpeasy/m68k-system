@@ -8,6 +8,7 @@
 */
 
 #include <kernel/net/packet.h>
+#include <kernel/memory/kmalloc.h>
 
 
 /*
@@ -48,7 +49,6 @@ s32 net_packet_alloc_raw(ku32 len, net_packet_t **packet)
 
     p->iface = NULL;
     p->proto = np_raw;
-    p->driver = NULL;
     p->start = p->raw.data;
     p->len = 0;
 

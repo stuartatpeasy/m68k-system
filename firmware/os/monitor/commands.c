@@ -46,21 +46,16 @@ MONITOR_CMD_HANDLER(arp)
         }
 		else if(!strcmp(args[0], "request"))
 		{
-			/* Syntax: arp request <ip> [<interface>] */
-			net_iface_t *iface;
+			/* Syntax: arp request <ip> */
 			ipv4_addr_t addr;
 			net_address_t proto_addr;
-			s32 ret;
 
 			if((num_args != 2) || (strtoipv4(args[1], &addr) != SUCCESS))
 				return EINVAL;
 
             ipv4_make_addr(addr, IPV4_PORT_NONE, &proto_addr);
-            ret = ipv4_route_get_iface(&proto_addr, &iface);
-            if(ret != SUCCESS)
-                return ret;
 
-			return arp_send_request(iface, &proto_addr);
+			return arp_send_request(&proto_addr);
 		}
     }
 
