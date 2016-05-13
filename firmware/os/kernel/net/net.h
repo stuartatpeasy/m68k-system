@@ -36,14 +36,15 @@ typedef enum net_addr_type
 typedef enum net_protocol
 {
     np_unknown = 0,
-    np_ethernet,
-    np_arp,
-    np_ipv4,
-    np_ipv6,
-    np_tcp,
-    np_udp,
-    np_icmp,
-    np_invalid
+    np_raw,                 /* Raw packets - no protocol wrapper    */
+    np_ethernet,            /* Ethernet protocol                    */
+    np_arp,                 /* Address Resolution Protocol          */
+    np_ipv4,                /* IP v4                                */
+    np_ipv6,                /* IP v6                                */
+    np_tcp,                 /* TCP                                  */
+    np_udp,                 /* UDP                                  */
+    np_icmp,                /* ICMP (ping, etc.)                    */
+    np_invalid              /* Used as a delimiter for validation   */
 } net_protocol_t;
 
 

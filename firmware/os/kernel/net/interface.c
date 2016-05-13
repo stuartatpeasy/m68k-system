@@ -134,3 +134,18 @@ s32 net_interface_hw_addr_broadcast(net_iface_t * const iface, net_address_t * c
     puts("net_interface_hw_addr_broadcast() - not implemented");
     return EPROTONOSUPPORT;
 }
+
+
+/*
+    net_interface_get_by_dev() - look up a network interface by device name.
+*/
+net_iface_t *net_interface_get_by_dev(const char * const name)
+{
+    net_iface_t **p;
+
+    for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
+        if(!strcmp((*p)->dev->name, name))
+            return *p;
+
+    return NULL;
+}

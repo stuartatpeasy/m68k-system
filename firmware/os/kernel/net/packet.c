@@ -23,26 +23,19 @@ s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const add
         case np_udp:        return udp_packet_alloc(addr, len, iface, packet);
         case np_ipv4:       return ipv4_packet_alloc(addr, len, iface, packet);
         case np_ethernet:   return eth_packet_alloc(addr, len, iface, packet);
+        case np_raw:        return net_packet_alloc_raw(len, packet);
 
         default:        return EPROTONOSUPPORT;
     }
-
-    /*
-        Rules for packet allocation
-        ---------------------------
-
-        e.g. 1. UDP packet, sending to an IPv4 address, proto = UDP, interface not specified
-
-            - calculate overall header length
-            - call udp_get_header_len(
-
-            udp_packet_alloc(addr, len, iface, packet);
-            /* ^^
-
-        e.g. 2. DHCP packet, sending to an IPv4 address, proto = UDP, interface specified (Ethernet)
+}
 
 
-    */
+/*
+    net_packet_alloc_raw() - allocate a "raw" packet, i.e. just a fixed-length buffer without a
+    specific associated protocol.
+*/
+s32 net_packet_alloc_raw(ku32 len, net_packet_t **packet)
+{
     s32 ret;
     net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
 
@@ -54,7 +47,7 @@ s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const add
     }
 
     p->iface = NULL;
-    p->proto = proto;
+    p->proto = np_raw;
     p->driver = NULL;
     p->start = p->raw.data;
     p->len = 0;
@@ -62,6 +55,7 @@ s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const add
     *packet = p;
 
     return SUCCESS;
+
 }
 
 
@@ -72,6 +66,18 @@ void net_packet_free(net_packet_t *packet)
 {
     buffer_deinit(&packet->raw);
     kfree(packet);
+}
+
+
+/*
+    net_packet_reset() - "reset" a packet by setting its "start" pointer to the beginning of its
+    buffer, and setting its "length" member to the size of the buffer.  This enables a packet
+    object to be re-used.
+*/
+void net_packet_reset(net_packet_t *packet)
+{
+    packet->start = packet->raw.data;
+    packet->len = packet->raw.len;
 }
 
 

@@ -604,7 +604,7 @@ MONITOR_CMD_HANDLER(netif)
     if(num_args < 2)
         return EINVAL;
 
-    iface = net_get_iface_by_dev(args[1]);
+    iface = net_interface_get_by_dev(args[1]);
     if(!iface)
         return ENOENT;
 
@@ -896,7 +896,7 @@ MONITOR_CMD_HANDLER(route)
         if((num_args == 6) && !strcmp(args[0], "add"))
         {
             metric_ = strtoul(args[4], NULL, 0);
-            r.iface = net_get_iface_by_dev(args[5]);
+            r.iface = net_interface_get_by_dev(args[5]);
 
             if(ret || (metric_ < IPV4_ROUTE_METRIC_MIN) || (metric_ > IPV4_ROUTE_METRIC_MAX)
                || !r.iface)
@@ -1146,7 +1146,7 @@ MONITOR_CMD_HANDLER(test)
     }
     else if(testnum == 6)
     {
-        net_iface_t *iface = net_get_iface_by_dev("eth0");
+        net_iface_t *iface = net_interface_get_by_dev("eth0");
         if(iface)
         {
             return dhcp_discover(iface);

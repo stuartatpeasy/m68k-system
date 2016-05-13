@@ -69,21 +69,6 @@ s32 net_packet_alloc_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **
 
 
 /*
-    net_get_iface_by_dev() - look up a network interface by device name.
-*/
-net_iface_t *net_get_iface_by_dev(const char * const name)
-{
-    net_iface_t **p;
-
-    for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
-        if(!strcmp((*p)->dev->name, name))
-            return *p;
-
-    return NULL;
-}
-
-
-/*
     net_tx() - send a packet over an interface.
 */
 s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
@@ -130,7 +115,8 @@ void net_receive(void *arg)
     volatile net_iface_t * const iface_v = (volatile net_iface_t *) arg;
     net_packet_t *packet;
 
-    if(net_packet_alloc(1500, &packet) != SUCCESS)
+    /* FIXME - get MTU from interface and use as packet size here */
+    if(net_packet_alloc_raw(1500, &packet) != SUCCESS)
     {
         kernel_warning("Failed to allocate packet buffer");
         return;
@@ -142,19 +128,17 @@ void net_receive(void *arg)
     {
         /* TODO - ensure that the interface is configured before calling eth_handle_packet() */
         packet->proto   = iface->driver->proto;
-        packet->start   = packet->raw.data;
-        packet->raw.len = 1500;
-        ret = iface->dev->read(iface->dev, 0, &packet->raw.len, packet->raw.data);
+        net_packet_reset(packet);   /* FIXME - not sure it is right to set len to 1500 here; instead raw.len should be reset? */
+        ret = iface->dev->read(iface->dev, 0, &packet->len, packet->raw.data);
 
         /* TODO - this assumes we're working with an Ethernet interface - genericise */
         if(ret == SUCCESS)
         {
-            packet->len = packet->raw.len;
-
+            ku32 bytes_received = net_packet_get_len(packet);
             if((eth_rx(packet) == SUCCESS) && (iface_v->proto_addr.type != na_unknown))
             {
                 ++iface->stats.rx_packets;
-                iface->stats.rx_bytes += packet->raw.len;
+                iface->stats.rx_bytes += bytes_received;
             }
             else
                 ++iface->stats.rx_dropped;
