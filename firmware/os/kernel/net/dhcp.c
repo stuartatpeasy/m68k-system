@@ -21,7 +21,7 @@
 s32 dhcp_rx(net_packet_t *packet)
 {
     /* FIXME - lots of dereferencing of *packet in this fn - use net_packet_*() fns instead */
-    dhcp_msg_t *msg = (dhcp_msg_t *) packet->start;
+    dhcp_msg_t *msg = (dhcp_msg_t *) net_packet_get_start(packet);
 
     if(packet->len < sizeof(dhcp_msg_t))
         return SUCCESS;     /* Drop truncated packet */
@@ -41,7 +41,7 @@ s32 dhcp_rx(net_packet_t *packet)
                 /* FIXME - check that the transaction ID matches the one in the iface DHCP status */
                 void *p, *end;
                 const dhcp_option_t *opt;
-                dhcp_msg_type_t msg_type;
+//                dhcp_msg_type_t msg_type;     // FIXME
                 char cbuf[16], ybuf[16], sbuf[16], gbuf[16];
                 net_address_t c, y, s, g;
 
@@ -58,8 +58,8 @@ s32 dhcp_rx(net_packet_t *packet)
                 net_print_addr(&g, gbuf, sizeof(gbuf));
 
                 /* Process DHCP options */
-                p = packet->start + sizeof(dhcp_msg_t);
-                end = packet->start + packet->len;
+                p = net_packet_get_start(packet) + sizeof(dhcp_msg_t);
+                end = net_packet_get_start(packet) + net_packet_get_len(packet);
 
                 for(; p < end; p += sizeof(dhcp_option_hdr_t) + opt->hdr.len)
                 {
@@ -76,7 +76,7 @@ s32 dhcp_rx(net_packet_t *packet)
                             break;
 
                         case dopt_msg_type:
-                            msg_type = opt->data;
+//                            msg_type = opt->data;     // FIXME
                             break;
 
                         case dopt_subnet_mask:

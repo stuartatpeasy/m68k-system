@@ -5,9 +5,14 @@
 
 
     (c) Stuart Wallace, May 2016.
+
+    FIXME - net_packet_alloc() should get proto driver and call packet_alloc() on it, then remove #includes of various protocols
 */
 
 #include <kernel/net/packet.h>
+#include <kernel/net/ethernet.h>
+#include <kernel/net/ipv4.h>
+#include <kernel/net/udp.h>
 #include <kernel/memory/kmalloc.h>
 
 
@@ -16,7 +21,7 @@
     the payload.
 */
 s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const addr, ku32 len,
-                     const net_iface_t * const iface, net_packet_t **packet)
+                     net_iface_t * const iface, net_packet_t **packet)
 {
     /* MASSIVE FIXME - I have no idea how to complete this function at the moment */
     switch(proto)

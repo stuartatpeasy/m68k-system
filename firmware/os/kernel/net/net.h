@@ -84,6 +84,7 @@ net_addr_type_t net_address_get_type(const net_address_t * const addr);
 s32 net_address_set_type(const net_addr_type_t type, net_address_t * const addr);
 const void *net_address_get_address(const net_address_t * const addr);
 net_protocol_t net_address_get_proto(const net_address_t * const addr);
-s32 net_print_addr(const net_address_t *addr, char *buf, s32 len);
+net_protocol_t net_address_get_hwproto(const net_address_t * const addr);
+s32 net_print_addr(const net_address_t * const addr, char * const buf, s32 len);
 
 #endif

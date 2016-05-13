@@ -5,11 +5,14 @@
 
 
     (c) Stuart Wallace, February 2016.
+
+    FIXME remove debug log message and #include of stdio
 */
 
 #include <kernel/net/ipv4route.h>
 #include <kernel/net/arp.h>
 #include <klibc/string.h>
+#include <klibc/stdio.h>
 
 
 /* The IPv4 routing table */

@@ -151,7 +151,8 @@ void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
     eth_packet_alloc() - allocate a net_packet_t object large enough to contain an Ethernet header
     and a payload of the specified length.
 */
-s32 eth_packet_alloc(net_address_t * addr, ku32 len, net_iface_t *iface, net_packet_t **packet)
+s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet)
 {
     ks32 ret = net_packet_alloc(np_ethernet, addr, sizeof(eth_hdr_t) + len, iface, packet);
 

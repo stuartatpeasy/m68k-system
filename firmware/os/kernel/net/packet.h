@@ -28,7 +28,7 @@ struct net_packet
 
 
 s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const addr, ku32 len,
-                     const net_iface_t * const iface, net_packet_t **packet);
+                     net_iface_t * const iface, net_packet_t **packet);
 s32 net_packet_alloc_raw(ku32 len, net_packet_t **packet);
 void net_packet_free(net_packet_t *packet);
 void net_packet_reset(net_packet_t *packet);

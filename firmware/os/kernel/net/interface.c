@@ -45,9 +45,9 @@ s32 net_interface_init()
 
 
 /*
-    net_add_interface() - add a network interface based on the specified hardware device
+    net_interface_add() - add a network interface based on the specified hardware device
 */
-s32 net_add_interface(dev_t *dev)
+s32 net_interface_add(dev_t *dev)
 {
     net_iface_t **p, *iface;
     net_addr_type_t addr_type;

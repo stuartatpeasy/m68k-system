@@ -200,9 +200,20 @@ net_protocol_t net_address_get_proto(const net_address_t * const addr)
 
 
 /*
+    net_address_get_hwproto() - get the hardware protocol associated with a network address.
+    Involves a routing lookup.
+*/
+net_protocol_t net_address_get_hwproto(const net_address_t * const addr)
+{
+    // FIXME
+    return np_unknown;
+}
+
+
+/*
     net_print_addr() - print a human-readable form of addr into buf.
 */
-s32 net_print_addr(const net_address_t *addr, char *buf, s32 len)
+s32 net_print_addr(const net_address_t * const addr, char * const buf, s32 len)
 {
     if(addr->type == na_ethernet)
         return eth_print_addr((const mac_addr_t *) &addr->addr.addr, buf, len);
