@@ -32,7 +32,8 @@ const net_address_t g_eth_broadcast =
 */
 s32 eth_init()
 {
-    return net_protocol_register_driver(np_ethernet, "Ethernet", eth_rx, eth_tx, eth_addr_compare);
+    return net_protocol_register_driver(np_ethernet, "Ethernet", eth_rx, eth_tx, eth_addr_compare,
+                                        NULL);
 }
 
 

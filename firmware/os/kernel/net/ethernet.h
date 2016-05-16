@@ -14,7 +14,6 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/net/interface.h>
-#include <kernel/net/ipv4.h>        // FIXME - why is this here?
 #include <kernel/net/net.h>
 #include <kernel/util/buffer.h>
 

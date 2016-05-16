@@ -42,7 +42,7 @@ s32 arp_init()
     */
     g_arp_cache = kcalloc(ARP_CACHE_SIZE, sizeof(arp_cache_item_t));
 
-    return net_protocol_register_driver(np_arp, "ARP", arp_rx, NULL, NULL);
+    return net_protocol_register_driver(np_arp, "ARP", arp_rx, NULL, NULL, NULL);
 }
 
 

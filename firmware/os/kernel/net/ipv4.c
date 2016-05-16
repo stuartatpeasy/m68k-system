@@ -36,7 +36,8 @@ const net_address_t g_ipv4_broadcast =
 */
 s32 ipv4_init()
 {
-    return net_protocol_register_driver(np_ipv4, "IPv4", ipv4_rx, ipv4_tx, ipv4_addr_compare);
+    return net_protocol_register_driver(np_ipv4, "IPv4", ipv4_rx, ipv4_tx, ipv4_addr_compare,
+                                        ipv4_packet_alloc);
 }
 
 

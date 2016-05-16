@@ -48,6 +48,7 @@ s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const add
 
 
 /*
+    FIXME - move this to a "raw" protocol driver
     net_packet_alloc_raw() - allocate a "raw" packet, i.e. just a fixed-length buffer without a
     specific associated protocol.
 */
@@ -193,7 +194,9 @@ s32 net_packet_encapsulate(const net_protocol_t proto, ku32 len, net_packet_t * 
 */
 s32 net_packet_insert(ku32 len, net_packet_t * const packet)
 {
-    /* FIXME - check that we're not underflowing */
+    if((packet->len) + len > packet->raw.len)
+        return EINVAL;      /* Underflow */
+
     packet->start -= len;
     packet->len += len;
 
@@ -208,7 +211,9 @@ s32 net_packet_insert(ku32 len, net_packet_t * const packet)
 */
 s32 net_packet_consume(ku32 len, net_packet_t * const packet)
 {
-    /* FIXME - check that we're not overflowing */
+    if(packet->len < len)
+        return EINVAL;      /* Overflow */
+
     packet->start += len;
     packet->len -= len;
 
