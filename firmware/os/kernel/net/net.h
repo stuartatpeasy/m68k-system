@@ -13,7 +13,6 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/util/buffer.h>
-#include <kernel/net/address.h>
 
 
 /*
@@ -21,17 +20,7 @@
 */
 typedef struct net_packet net_packet_t;
 typedef enum net_protocol net_protocol_t;
-
-
-typedef struct net_iface_stats
-{
-    u32     rx_packets;
-    u32     rx_bytes;
-    u32     rx_checksum_err;
-    u32     rx_dropped;
-    u32     tx_packets;
-    u32     tx_bytes;
-} net_iface_stats_t;
+typedef struct net_address net_address_t;
 
 /* Network module (i.e. protocol driver) init function typedef */
 typedef s32 (*net_init_fn_t)();

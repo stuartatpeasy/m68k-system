@@ -44,10 +44,9 @@ s32 ipv4_init()
     ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
     returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
 */
-s32 ipv4_rx(net_iface_t *iface, net_packet_t *packet)
+s32 ipv4_rx(net_packet_t *packet)
 {
     ipv4_hdr_t *hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
-    UNUSED(iface);
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -65,7 +64,7 @@ s32 ipv4_rx(net_iface_t *iface, net_packet_t *packet)
     switch(hdr->protocol)
     {
         case ipv4_proto_icmp:
-            return icmp_rx(iface, packet);
+            return icmp_rx(packet);
 
         case ipv4_proto_tcp:
             return tcp_rx(packet);

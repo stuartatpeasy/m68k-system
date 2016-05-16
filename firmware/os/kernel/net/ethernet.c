@@ -39,27 +39,14 @@ s32 eth_init()
 /*
     eth_rx() - handle an incoming Ethernet packet.
 */
-s32 eth_rx(net_iface_t *iface, net_packet_t *packet)
+s32 eth_rx(net_packet_t *packet)
 {
     const eth_hdr_t * const ehdr = (eth_hdr_t *) net_packet_get_start(packet);
 
     net_packet_consume(sizeof(eth_hdr_t), packet);
+    net_packet_set_proto(eth_proto_from_ethertype(ehdr->type), packet);
 
-    // FIXME - do eth_proto_from_ethertype() then a driver lookup here
-    switch(ehdr->type)
-    {
-        case ethertype_ipv4:
-            net_packet_set_proto(np_ipv4, packet);
-            return ipv4_rx(iface, packet);
-            break;
-
-        case ethertype_arp:
-            net_packet_set_proto(np_arp, packet);
-            return arp_rx(iface, packet);
-            break;
-    }
-
-    return EPROTONOSUPPORT;
+    return net_protocol_rx(packet);
 }
 
 
@@ -184,6 +171,25 @@ s32 eth_addr_compare(const net_address_t * const a1, const net_address_t * const
         return -1;      /* Mismatch */
 
     return memcmp(net_address_get_address(a1), net_address_get_address(a2), sizeof(mac_addr_t));
+}
+
+
+/*
+    eth_proto_from_ethertype() - given an ethertype value, return the corresponding np_* protocol
+    constant.
+*/
+net_protocol_t eth_proto_from_ethertype(ku16 ethertype)
+{
+    switch(ethertype)
+    {
+        case ethertype_ipv4:
+            return np_ipv4;
+
+        case ethertype_arp:
+            return np_arp;
+    }
+
+    return np_unknown;
 }
 
 

@@ -12,6 +12,7 @@
 #include <kernel/device/device.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/net/interface.h>
+#include <kernel/net/packet.h>
 #include <kernel/net/net.h>
 #include <kernel/process.h>
 #include <klibc/stdio.h>        // FIXME remove
@@ -22,6 +23,19 @@ s32 net_interface_add(dev_t *dev);
 
 net_iface_t *g_net_ifaces = NULL;
 
+/* Statistics associated with a network interface */
+typedef struct net_iface_stats
+{
+    u32     rx_packets;
+    u32     rx_bytes;
+    u32     rx_checksum_err;
+    u32     rx_dropped;
+    u32     tx_packets;
+    u32     tx_bytes;
+} net_iface_stats_t;
+
+
+/* A network interface object */
 struct net_iface
 {
     net_iface_t *       next;
@@ -100,6 +114,42 @@ s32 net_interface_add(dev_t *dev)
     }
     else
         return EPROTONOSUPPORT;
+}
+
+
+/*
+    net_interface_rx() - receive a packet from an interface.  Will not read more data than the
+    packet can accommodate.  May block in call to dev->read().  Updates interface statistics.
+*/
+s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet)
+{
+    u32 len;
+    net_protocol_t proto;
+    dev_t *dev;
+
+    dev = net_interface_get_device(iface);
+    len = net_packet_get_buffer_len(packet);
+
+    net_packet_reset(packet);
+
+    s32 ret = dev->read(dev, 0, &len, net_packet_get_start(packet));
+    if(ret != SUCCESS)
+        return ret;
+
+    proto = net_interface_get_proto(iface);
+
+    net_packet_set_interface(packet, iface);
+    net_packet_set_proto(proto, packet);
+    net_packet_set_len(packet, len);
+    net_interface_stats_add_rx_bytes(iface, len);
+
+    ret = net_protocol_rx(packet);
+    if(ret == SUCCESS)
+        net_interface_stats_inc_rx_packets(iface);
+    else
+        net_interface_stats_inc_rx_dropped(iface);
+
+    return ret;
 }
 
 
@@ -189,6 +239,42 @@ net_protocol_t net_interface_get_proto(const net_iface_t * const iface)
 
 
 /*
+    net_interface_stats_inc_rx_packets() - increment the "received packets" count on an interface
+*/
+void net_interface_stats_inc_rx_packets(net_iface_t * const iface)
+{
+    ++iface->stats.rx_packets;
+}
+
+
+/*
+    net_interface_stats_add_rx_bytes() - add to the "received bytes" count for an interface
+*/
+void net_interface_stats_add_rx_bytes(net_iface_t * const iface, ku32 bytes)
+{
+    iface->stats.rx_bytes += bytes;
+}
+
+
+/*
+    net_interface_stats_inc_tx_packets() - increment the "transmitted packets" count on an interface
+*/
+void net_interface_stats_inc_tx_packets(net_iface_t * const iface)
+{
+    ++iface->stats.tx_packets;
+}
+
+
+/*
+    net_interface_stats_add_tx_bytes() - add to the "transmitted bytes" count for an interface
+*/
+void net_interface_stats_add_tx_bytes(net_iface_t * const iface, ku32 bytes)
+{
+    iface->stats.tx_bytes += bytes;
+}
+
+
+/*
     net_interface_stats_inc_cksum_err() - increment the "checksum error" count on an interface.
 */
 void net_interface_stats_inc_cksum_err(net_iface_t * const iface)
@@ -198,9 +284,10 @@ void net_interface_stats_inc_cksum_err(net_iface_t * const iface)
 
 
 /*
-    net_interface_stats_inc_dropped() - increment the "packets dropped" count on an interface.
+    net_interface_stats_inc_rx_dropped() - increment the "received packets dropped" count on an
+    interface.
 */
-void net_interface_stats_inc_dropped(net_iface_t * const iface)
+void net_interface_stats_inc_rx_dropped(net_iface_t * const iface)
 {
     ++iface->stats.rx_dropped;
 }

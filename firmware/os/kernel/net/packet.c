@@ -102,6 +102,21 @@ void net_packet_reset(net_packet_t *packet)
 
 
 /*
+    net_packet_get_interface() - return the interface associated with a packet.
+*/
+net_iface_t *net_packet_get_interface(net_packet_t * const packet)
+{
+    return packet->iface;
+}
+
+
+void net_packet_set_interface(net_packet_t * const packet, net_iface_t * const iface)
+{
+    packet->iface = iface;
+}
+
+
+/*
     net_packet_get_start() - get a pointer to the current start of the payload in a packet.
 */
 void *net_packet_get_start(net_packet_t * const packet)
@@ -111,11 +126,20 @@ void *net_packet_get_start(net_packet_t * const packet)
 
 
 /*
-    net_packet_get_len() - get the length of the payload in a packet
+    net_packet_get_len() - get the length of the payload in a packet object.
 */
-u32 net_packet_get_len(net_packet_t * const packet)
+u32 net_packet_get_len(const net_packet_t * const packet)
 {
     return packet->len;
+}
+
+
+/*
+    net_packet_get_buffer_len() - get the length of the storage buffer in a packet object.
+*/
+u32 net_packet_get_buffer_len(const net_packet_t * const packet)
+{
+    return packet->raw.len;
 }
 
 

@@ -64,8 +64,8 @@ s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 
     dev_t * const dev = net_interface_get_device(iface);
 
-    ++iface->stats.tx_packets;
-    iface->stats.tx_bytes += len;
+    net_interface_stats_inc_tx_packets(iface);
+    net_interface_stats_add_tx_bytes(iface, len);
 
     return dev->write(dev, 0, &len, net_packet_get_start(packet));
 }
@@ -90,9 +90,7 @@ s32 net_tx_free(const net_address_t *src, const net_address_t *dest, net_packet_
 */
 void net_receive(void *arg)
 {
-    s32 ret;
     net_iface_t * const iface = (net_iface_t *) arg;
-    volatile net_iface_t * const iface_v = (volatile net_iface_t *) arg;
     net_packet_t *packet;
 
     /* FIXME - get MTU from interface and use as packet size here */
@@ -102,29 +100,8 @@ void net_receive(void *arg)
         return;
     }
 
-    packet->iface = iface;
-
     while(1)
-    {
-        /* TODO - ensure that the interface is configured before calling eth_handle_packet() */
-        net_packet_set_proto(net_interface_get_proto(iface), packet);
-        net_packet_reset(packet);   /* FIXME - not sure it is right to set len to 1500 here; instead raw.len should be reset? */
-        ret = iface->dev->read(iface->dev, 0, &packet->len, packet->raw.data);
-
-        /* TODO - this assumes we're working with an Ethernet interface - genericise */
-        if(ret == SUCCESS)
-        {
-            ku32 bytes_received = net_packet_get_len(packet);
-            if((eth_rx(iface, packet) == SUCCESS) &&
-               (net_address_get_type(net_interface_get_proto_addr(iface_v)) != na_unknown))
-            {
-                ++iface->stats.rx_packets;
-                iface->stats.rx_bytes += bytes_received;
-            }
-            else
-                ++iface->stats.rx_dropped;
-        }
-    }
+        net_interface_rx(iface, packet);
 }
 
 

@@ -19,13 +19,16 @@
 /*
     dhcp_rx() - handle an incoming DHCP packet.
 */
-s32 dhcp_rx(net_iface_t *iface, net_packet_t *packet)
+s32 dhcp_rx(net_packet_t *packet)
 {
     /* FIXME - lots of dereferencing of *packet in this fn - use net_packet_*() fns instead */
+    net_iface_t *iface;
     dhcp_msg_t *msg = (dhcp_msg_t *) net_packet_get_start(packet);
 
     if(net_packet_get_len(packet) < sizeof(dhcp_msg_t))
         return SUCCESS;     /* Drop truncated packet */
+
+    iface = net_packet_get_interface(packet);
 
     if((msg->op == bo_reply) && (msg->magic_cookie == DHCP_MAGIC_COOKIE))
     {

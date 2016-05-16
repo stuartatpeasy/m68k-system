@@ -33,7 +33,7 @@ typedef enum net_protocol
 /* Network protocol driver */
 typedef struct net_proto_driver net_proto_driver_t;
 
-typedef s32 (*net_rx_fn)(net_iface_t *iface, net_packet_t *packet);
+typedef s32 (*net_rx_fn)(net_packet_t *packet);
 typedef s32 (*net_tx_fn)(const net_address_t *src, const net_address_t *dest,
                            net_packet_t *packet);
 typedef s32 (*net_addr_compare_fn)(const net_address_t * const a1, const net_address_t * const a2);
@@ -46,5 +46,6 @@ net_protocol_t net_protocol_from_address(const net_address_t * const addr);
 net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr);
 s32 net_protocol_addr_compare(const net_protocol_t proto, const net_address_t * const a1,
                               const net_address_t * const a2);
+s32 net_protocol_rx(net_packet_t * const packet);
 
 #endif

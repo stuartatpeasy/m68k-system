@@ -9,7 +9,8 @@
 
 #include <kernel/net/tftp.h>
 #include <kernel/net/ipv4.h>
-#include <kernel/net/ipv4route.h>
+#include <kernel/net/ipv4route.h>       // FIXME - remove IPv4-specific #include [?]
+#include <kernel/net/packet.h>
 #include <klibc/string.h>
 
 
@@ -52,13 +53,14 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
     if(ret != SUCCESS)
         return ret;
 
-    *((u16 *) pkt->start) = N2BE16(tftp_rrq);     /* Opcode: read request */
-    p = (char *) pkt->start + TFTP_OPCODE_LEN;
+    *((u16 *) net_packet_get_start(pkt)) = N2BE16(tftp_rrq);    /* Opcode: read request */
+    p = (char *) net_packet_get_start(pkt) + TFTP_OPCODE_LEN;
 
     strcpy(p, fn);
     strcpy(p + fn_len + 1, "octet");
 
-    ret = udp_tx(ipv4_make_addr(IPV4_ADDR_NONE, 12345 /* FIXME */, &src), peer_addr, pkt);
+    /* FIXME - get ephemeral port num, instead of using 12345 */
+    ret = udp_tx(ipv4_make_addr(IPV4_ADDR_NONE, 12345, &src), peer_addr, pkt);
     net_packet_free(pkt);
 
     return ret;

@@ -17,7 +17,7 @@ s32 icmp_handle_echo_request(net_packet_t *packet);
 /*
     icmp_rx() - handle an incoming ICMP packet.
 */
-s32 icmp_rx(net_iface_t *iface, net_packet_t *packet)
+s32 icmp_rx(net_packet_t *packet)
 {
     const icmp_fixed_hdr_t * const icmp_hdr =
         (const icmp_fixed_hdr_t *) net_packet_get_start(packet);
@@ -29,8 +29,10 @@ s32 icmp_rx(net_iface_t *iface, net_packet_t *packet)
 #if(ICMP_VERIFY_CHECKSUM)
     if(net_cksum(net_packet_get_start(packet), net_packet_get_len(packet)) != 0x0000)
     {
+        net_iface_t * const iface = net_packet_get_interface(packet);
+
         net_interface_stats_inc_cksum_err(iface);
-        net_interface_stats_inc_dropped(iface);
+        net_interface_stats_inc_rx_dropped(iface);
         return SUCCESS;     /* Drop packet */
     }
 #endif

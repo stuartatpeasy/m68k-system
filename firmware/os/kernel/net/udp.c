@@ -9,6 +9,7 @@
 
 #include <kernel/net/udp.h>
 #include <kernel/net/dhcp.h>
+#include <kernel/net/packet.h>
 
 
 /*

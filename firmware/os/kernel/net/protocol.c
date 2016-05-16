@@ -33,8 +33,8 @@ struct net_proto_driver
 {
     net_protocol_t          proto;
     const char *            name;
-    net_proto_rx_fn         rx;
-    net_proto_tx_fn         tx;
+    net_rx_fn               rx;
+    net_tx_fn               tx;
     net_addr_compare_fn     addr_compare;
     net_proto_driver_t *    next;
 };
@@ -44,10 +44,8 @@ struct net_proto_driver
     net_protocol_register_driver() - register a driver for a particular network protocol
 */
 s32 net_protocol_register_driver(const net_protocol_t proto, const char * const name,
-                                 net_proto_rx_fn rx, net_proto_tx_fn tx,
-                                 net_addr_compare_fn addr_compare)
+                                 net_rx_fn rx, net_tx_fn tx, net_addr_compare_fn addr_compare)
 {
-    s32 ret;
     net_proto_driver_t *driver = (net_proto_driver_t *) CHECKED_KMALLOC(sizeof(net_proto_driver_t)),
                         *p;
 
@@ -55,6 +53,7 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
     driver->name            = strdup(name);
     driver->rx              = rx ? rx : net_rx_unimplemented;
     driver->tx              = tx ? tx : net_tx_unimplemented;
+    driver->addr_compare    = addr_compare ? addr_compare : net_addr_compare_unimplemented;
 
     driver->next = NULL;
 
@@ -162,6 +161,8 @@ net_protocol_t net_protocol_from_address(const net_address_t * const addr)
 net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr)
 {
     // FIXME
+    UNUSED(addr);
+
     return np_unknown;
 }
 
@@ -173,10 +174,24 @@ net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const add
 s32 net_protocol_addr_compare(const net_protocol_t proto, const net_address_t * const a1,
                               const net_address_t * const a2)
 {
-    net_protocol_driver_t * const drv = net_protocol_get_driver(proto);
+    net_proto_driver_t * const drv = net_protocol_get_driver(proto);
 
     if(!drv || (proto == np_unknown))
         return -1;      /* Mismatch */
 
     return drv->addr_compare(a1, a2);
+}
+
+
+/*
+    net_protocol_rx() - call the appropriate protocol driver to handle a received packet.
+*/
+s32 net_protocol_rx(net_packet_t * const packet)
+{
+    net_proto_driver_t *driver = net_protocol_get_driver(net_packet_get_proto(packet));
+
+    if(driver)
+        return driver->rx(packet);
+
+    return EPROTONOSUPPORT;
 }

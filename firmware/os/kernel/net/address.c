@@ -61,6 +61,28 @@ const void *net_address_get_address(const net_address_t * const addr)
 
 
 /*
+    net_address_get_proto() - get the network protocol associated with an address.
+*/
+net_protocol_t net_address_get_proto(const net_address_t * const addr)
+{
+    switch(addr->type)
+    {
+        case na_ethernet:
+            return np_ethernet;
+
+        case na_ipv4:
+            return np_ipv4;
+
+        case na_ipv6:
+            return np_ipv6;
+
+        default:
+            return np_unknown;
+    }
+}
+
+
+/*
     net_address_print() - print a human-readable form of addr into buf.
 */
 s32 net_address_print(const net_address_t * const addr, char * const buf, s32 len)
