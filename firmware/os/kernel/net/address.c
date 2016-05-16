@@ -13,6 +13,7 @@
 #include <kernel/net/address.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/route.h>
 
 
 /*
@@ -79,6 +80,21 @@ net_protocol_t net_address_get_proto(const net_address_t * const addr)
         default:
             return np_unknown;
     }
+}
+
+
+/*
+    net_address_get_hw_proto() - perform a routing lookup on the given address, and return the
+    hardware protocol associated with the route.
+*/
+net_protocol_t net_address_get_hw_proto(const net_address_t * const addr)
+{
+    net_iface_t * iface = net_route_get(addr);
+
+    if(!iface)
+        return np_unknown;
+
+    return net_interface_get_proto(iface);
 }
 
 

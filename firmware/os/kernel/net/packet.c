@@ -10,6 +10,7 @@
 */
 
 #include <kernel/net/packet.h>
+#include <kernel/net/route.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/udp.h>

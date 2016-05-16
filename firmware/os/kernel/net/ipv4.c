@@ -153,7 +153,7 @@ net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_
 s32 ipv4_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                       net_packet_t **packet)
 {
-    ks32 ret = net_packet_alloc(net_address_get_hwproto(addr), addr, sizeof(ipv4_hdr_t) + len,
+    ks32 ret = net_packet_alloc(net_address_get_hw_proto(addr), addr, sizeof(ipv4_hdr_t) + len,
                                 iface, packet);
     if(ret != SUCCESS)
         return ret;

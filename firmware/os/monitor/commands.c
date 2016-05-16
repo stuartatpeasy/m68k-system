@@ -620,7 +620,7 @@ MONITOR_CMD_HANDLER(netif)
             return EINVAL;
 
         ipv4_make_addr(ipv4addr, IPV4_PORT_NONE, &addr);
-        return net_set_proto_addr(iface, &addr);
+        return net_interface_set_proto_addr(iface, &addr);
     }
 
     return EINVAL;
