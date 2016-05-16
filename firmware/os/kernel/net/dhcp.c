@@ -24,7 +24,7 @@ s32 dhcp_rx(net_iface_t *iface, net_packet_t *packet)
     /* FIXME - lots of dereferencing of *packet in this fn - use net_packet_*() fns instead */
     dhcp_msg_t *msg = (dhcp_msg_t *) net_packet_get_start(packet);
 
-    if(packet->len < sizeof(dhcp_msg_t))
+    if(net_packet_get_len(packet) < sizeof(dhcp_msg_t))
         return SUCCESS;     /* Drop truncated packet */
 
     if((msg->op == bo_reply) && (msg->magic_cookie == DHCP_MAGIC_COOKIE))
@@ -173,7 +173,9 @@ s32 dhcp_discover(net_iface_t *iface)
 
     *opts++ = dopt_end;     /* End of DHCP options */
 
-    pkt->len = opts - (u8 *) msg;
+    ret = net_packet_set_len(pkt, opts - (u8 *) msg);
+    if(ret != SUCCESS)
+        return ret;
 
     return net_tx_free(&src, &dest, pkt);
 }

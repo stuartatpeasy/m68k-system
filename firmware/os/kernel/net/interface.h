@@ -25,6 +25,7 @@ typedef struct net_iface net_iface_t;
 s32 net_interface_init();
 net_iface_t *net_interface_get_by_dev(const char * const name);
 const char *net_get_iface_name(const net_iface_t * const iface);
+dev_t *net_interface_get_device(net_iface_t * const iface);
 const net_address_t *net_interface_get_proto_addr(const net_iface_t * const iface);
 s32 net_set_proto_addr(net_iface_t * const iface, const net_address_t * const addr);
 const net_address_t *net_interface_get_hw_addr(const net_iface_t * const iface);

@@ -113,6 +113,15 @@ const char *net_get_iface_name(const net_iface_t * const iface)
 
 
 /*
+    net_interface_get_device() - return the device object associated with an interface
+*/
+dev_t *net_interface_get_device(net_iface_t * const iface)
+{
+    return iface->dev;
+}
+
+
+/*
     net_interface_get_proto_addr() - get the protocol address for an interface
 */
 const net_address_t *net_interface_get_proto_addr(const net_iface_t * const iface)

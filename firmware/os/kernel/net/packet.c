@@ -16,6 +16,16 @@
 #include <kernel/memory/kmalloc.h>
 
 
+struct net_packet
+{
+    net_iface_t *           iface;
+    net_protocol_t          proto;
+    void *                  start;
+    u32                     len;        /* Actual amount of data in the buffer  */
+    buffer_t                raw;
+};
+
+
 /*
     net_packet_alloc() - allocate a packet object and allocate a buffer of the specified length for
     the payload.
@@ -92,7 +102,7 @@ void net_packet_reset(net_packet_t *packet)
 
 
 /*
-    net_packet_get_start() - get a pointer to the start of the buffer in a packet.
+    net_packet_get_start() - get a pointer to the current start of the payload in a packet.
 */
 void *net_packet_get_start(net_packet_t * const packet)
 {
@@ -101,12 +111,27 @@ void *net_packet_get_start(net_packet_t * const packet)
 
 
 /*
-    net_packet_get_len() - get the length of the data buffer in a packet
+    net_packet_get_len() - get the length of the payload in a packet
 */
 u32 net_packet_get_len(net_packet_t * const packet)
 {
     return packet->len;
 }
+
+
+/*
+    net_packet_set_len() - set the payload length of a packet.  This cannot exceed the size of the
+    buffer associated with the packet.
+*/
+s32 net_packet_set_len(net_packet_t * const packet, ku32 new_len)
+{
+    if(new_len > packet->raw.len)
+        return EINVAL;
+
+    packet->len = new_len;
+    return SUCCESS;
+}
+
 
 /*
     net_packet_get_proto() - get the protocol associated with a packet

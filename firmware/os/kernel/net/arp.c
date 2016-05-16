@@ -140,9 +140,7 @@ s32 arp_send_request(const net_address_t *addr)
     if(ret != SUCCESS)
         return ret;
 
-    pkt->len += sizeof(arp_eth_ipv4_packet_t);
-
-    p = (arp_eth_ipv4_packet_t *) pkt->start;
+    p = (arp_eth_ipv4_packet_t *) net_packet_get_start(pkt);
 
     p->hdr.hw_type          = arp_hw_type_ethernet;
     p->hdr.proto_type       = ethertype_ipv4;

@@ -41,21 +41,20 @@ s32 eth_init()
 */
 s32 eth_rx(net_iface_t *iface, net_packet_t *packet)
 {
-    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
+    const eth_hdr_t * const ehdr = (eth_hdr_t *) net_packet_get_start(packet);
 
-    packet->start += sizeof(eth_hdr_t);
-    packet->len -= sizeof(eth_hdr_t);
+    net_packet_consume(sizeof(eth_hdr_t), packet);
 
     // FIXME - do eth_proto_from_ethertype() then a driver lookup here
     switch(ehdr->type)
     {
         case ethertype_ipv4:
-            packet->proto = np_ipv4;
+            net_packet_set_proto(np_ipv4, packet);
             return ipv4_rx(iface, packet);
             break;
 
         case ethertype_arp:
-            packet->proto = np_arp;
+            net_packet_set_proto(np_arp, packet);
             return arp_rx(iface, packet);
             break;
     }

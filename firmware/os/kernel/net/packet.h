@@ -17,14 +17,6 @@
 
 /* Object representing a network packet */
 typedef struct net_packet net_packet_t;
-struct net_packet
-{
-    net_iface_t *           iface;
-    net_protocol_t          proto;
-    void *                  start;
-    u32                     len;        /* Actual amount of data in the buffer  */
-    buffer_t                raw;
-};
 
 
 s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const addr, ku32 len,
@@ -35,7 +27,7 @@ void net_packet_free(net_packet_t *packet);
 void net_packet_reset(net_packet_t *packet);
 void *net_packet_get_start(net_packet_t * const packet);
 u32 net_packet_get_len(net_packet_t * const packet);
-u32 net_packet_get_len(net_packet_t * const packet);
+s32 net_packet_set_len(net_packet_t * const packet, ku32 new_len);
 net_protocol_t net_packet_get_proto(net_packet_t * const packet);
 void net_packet_set_proto(const net_protocol_t proto, net_packet_t * const packet);
 s32 net_packet_insert(ku32 len, net_packet_t * const packet);

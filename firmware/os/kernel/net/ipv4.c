@@ -87,12 +87,6 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
     ipv4_hdr_t *hdr;
     const ipv4_address_t *src_addr, *dest_addr;
 
-    if(src == NULL)
-    {
-        /* FIXME - check that interface is actually configured */
-        src = &packet->iface->proto_addr;
-    }
-
     net_packet_insert(sizeof(ipv4_hdr_t), packet);
 
     hdr = (ipv4_hdr_t *) net_packet_get_start(packet);

@@ -14,6 +14,7 @@
 #include <kernel/net/interface.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
+#include <kernel/net/packet.h>
 #include <kernel/net/route.h>
 #include <kernel/process.h>
 #include <kernel/util/kutil.h>
@@ -34,7 +35,6 @@ net_init_fn_t g_net_init_fns[] =
 */
 s32 net_init()
 {
-    s32 ret;
     u32 i;
 
     for(i = 0; i < sizeof(g_net_init_fns); ++i)
@@ -62,7 +62,7 @@ s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
     if(iface == NULL)
         return EHOSTUNREACH;
 
-    dev_t * const dev = iface->dev;
+    dev_t * const dev = net_interface_get_device(iface);
 
     ++iface->stats.tx_packets;
     iface->stats.tx_bytes += len;
@@ -115,7 +115,8 @@ void net_receive(void *arg)
         if(ret == SUCCESS)
         {
             ku32 bytes_received = net_packet_get_len(packet);
-            if((eth_rx(iface, packet) == SUCCESS) && (iface_v->proto_addr.type != na_unknown))
+            if((eth_rx(iface, packet) == SUCCESS) &&
+               (net_address_get_type(net_interface_get_proto_addr(iface_v)) != na_unknown))
             {
                 ++iface->stats.rx_packets;
                 iface->stats.rx_bytes += bytes_received;
