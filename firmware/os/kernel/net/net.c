@@ -21,18 +21,28 @@
 #include <klibc/stdio.h>
 
 
+net_init_fn_t g_net_init_fns[] =
+{
+    arp_init,
+    ipv4_init,
+    eth_init
+};
+
+
 /*
     net_init() - initialise networking layer
 */
 s32 net_init()
 {
     s32 ret;
+    u32 i;
 
-
-    /* Register protocols */
-    ret = net_protocol_init();
-    if(ret != SUCCESS)
-        return ret;
+    for(i = 0; i < sizeof(g_net_init_fns); ++i)
+    {
+        ks32 ret = g_net_init_fns[i]();
+        if(ret != SUCCESS)
+            return ret;
+    }
 
     return net_interface_init();
 }
@@ -86,7 +96,7 @@ void net_receive(void *arg)
     net_packet_t *packet;
 
     /* FIXME - get MTU from interface and use as packet size here */
-    if(net_packet_alloc_raw(1500, &packet) != SUCCESS)
+    if(net_packet_alloc(np_raw, NULL, 1500, iface, &packet) != SUCCESS)
     {
         kernel_warning("Failed to allocate packet buffer");
         return;
@@ -105,7 +115,7 @@ void net_receive(void *arg)
         if(ret == SUCCESS)
         {
             ku32 bytes_received = net_packet_get_len(packet);
-            if((eth_rx(packet) == SUCCESS) && (iface_v->proto_addr.type != na_unknown))
+            if((eth_rx(iface, packet) == SUCCESS) && (iface_v->proto_addr.type != na_unknown))
             {
                 ++iface->stats.rx_packets;
                 iface->stats.rx_bytes += bytes_received;
@@ -139,86 +149,4 @@ s16 net_cksum(const void *buf, u32 len)
         sum += *((u8 *) p) << 8;
 
     return ~(sum + (sum >> 16));
-}
-
-
-/*
-    net_address_compare() - compare two net_address_t objects.  Same semantics as memcmp().
-*/
-s32 net_address_compare(const net_address_t *a1, const net_address_t *a2)
-{
-    return memcmp(a1, a2, sizeof(net_address_t));
-}
-
-
-/*
-    net_address_get_type() - return the address type of an address.
-*/
-net_addr_type_t net_address_get_type(const net_address_t * const addr)
-{
-    return addr->type;
-}
-
-
-/*
-    net_address_set_type() - set the type of an address.
-*/
-s32 net_address_set_type(const net_addr_type_t type, net_address_t * const addr)
-{
-    if((type < na_unknown) || (type >= na_invalid))
-        return EINVAL;
-
-    addr->type = type;
-    return SUCCESS;
-}
-
-
-/*
-    net_address_get_address() - return a pointer to the network address stored in a net_address_t
-    object.
-*/
-const void *net_address_get_address(const net_address_t * const addr)
-{
-    return &addr->addr;
-}
-
-
-/*
-    net_address_get_proto() - get the protocol associated with a network address.
-*/
-net_protocol_t net_address_get_proto(const net_address_t * const addr)
-{
-    switch(addr->type)
-    {
-        case na_ethernet:   return np_ethernet;
-        case na_ipv4:       return np_ipv4;
-        case na_ipv6:       return np_ipv6;
-
-        default:            return np_unknown;
-    }
-}
-
-
-/*
-    net_address_get_hwproto() - get the hardware protocol associated with a network address.
-    Involves a routing lookup.
-*/
-net_protocol_t net_address_get_hwproto(const net_address_t * const addr)
-{
-    // FIXME
-    return np_unknown;
-}
-
-
-/*
-    net_print_addr() - print a human-readable form of addr into buf.
-*/
-s32 net_print_addr(const net_address_t * const addr, char * const buf, s32 len)
-{
-    if(addr->type == na_ethernet)
-        return eth_print_addr((const mac_addr_t *) &addr->addr.addr, buf, len);
-    else if(addr->type == na_ipv4)
-        return ipv4_print_addr((const ipv4_addr_t *) &addr->addr.addr, buf, len);
-    else
-        return -EINVAL;
 }

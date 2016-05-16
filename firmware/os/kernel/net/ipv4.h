@@ -13,6 +13,8 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/net/net.h>
+#include <kernel/net/address.h>
+#include <kernel/net/interface.h>
 #include <kernel/net/protocol.h>
 
 
@@ -79,12 +81,14 @@ typedef struct ipv4_route_ent
 } ipv4_route_ent_t;
 
 
-s32 ipv4_init(net_proto_driver_t *driver);
+s32 ipv4_init();
 s32 ipv4_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                       net_packet_t **packet);
 net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr);
-s32 ipv4_rx(net_packet_t *packet);
+s32 ipv4_rx(net_iface_t *iface, net_packet_t *packet);
 s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
-s32 ipv4_print_addr(const ipv4_addr_t *addr, char *buf, s32 len);
+const ipv4_addr_t *ipv4_get_addr(const net_address_t * const addr);
+s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * const a2);
+s32 ipv4_print_addr(const net_address_t *addr, char *buf, s32 len);
 
 #endif

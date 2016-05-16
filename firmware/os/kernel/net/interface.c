@@ -22,6 +22,16 @@ s32 net_interface_add(dev_t *dev);
 
 net_iface_t *g_net_ifaces = NULL;
 
+struct net_iface
+{
+    net_iface_t *       next;
+    dev_t *             dev;            /* The hw device implementing this interface            */
+    net_protocol_t      proto;          /* Interface protocol (e.g. np_ethernet -> Ethernet)    */
+    net_address_t       hw_addr;        /* Hardware address                                     */
+    net_address_t       proto_addr;     /* Protocol address                                     */
+    net_iface_stats_t   stats;
+};
+
 
 /*
     net_interface_init() - detect and initialise network interfaces
@@ -82,7 +92,7 @@ s32 net_interface_add(dev_t *dev)
         *p = iface;
         iface->proto_addr.type = na_unknown;
 
-        net_print_addr(&iface->hw_addr, buf, sizeof(buf));
+        net_address_print(&iface->hw_addr, buf, sizeof(buf));
         printf("net: added %s: %s\n", dev->name, buf);
 
         return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL,
@@ -103,18 +113,27 @@ const char *net_get_iface_name(const net_iface_t * const iface)
 
 
 /*
-    net_get_proto_addr() - get the protocol address for an interface
+    net_interface_get_proto_addr() - get the protocol address for an interface
 */
-const net_address_t *net_get_proto_addr(const net_iface_t * const iface)
+const net_address_t *net_interface_get_proto_addr(const net_iface_t * const iface)
 {
     return &iface->proto_addr;
 }
 
 
 /*
-    net_set_proto_addr() - set the protocol address for an interface
+    net_interface_get_hw_addr() - get the hardware address for an interface
 */
-s32 net_set_proto_addr(net_iface_t * const iface, const net_address_t * const addr)
+const net_address_t *net_interface_get_hw_addr(const net_iface_t * const iface)
+{
+    return &iface->hw_addr;
+}
+
+
+/*
+    net_interface_set_proto_addr() - set the protocol address for an interface
+*/
+s32 net_interface_set_proto_addr(net_iface_t * const iface, const net_address_t * const addr)
 {
     iface->proto_addr = *addr;
     return SUCCESS;
@@ -157,4 +176,22 @@ net_iface_t *net_interface_get_by_dev(const char * const name)
 net_protocol_t net_interface_get_proto(const net_iface_t * const iface)
 {
     return iface->proto;
+}
+
+
+/*
+    net_interface_stats_inc_cksum_err() - increment the "checksum error" count on an interface.
+*/
+void net_interface_stats_inc_cksum_err(net_iface_t * const iface)
+{
+    ++iface->stats.rx_checksum_err;
+}
+
+
+/*
+    net_interface_stats_inc_dropped() - increment the "packets dropped" count on an interface.
+*/
+void net_interface_stats_inc_dropped(net_iface_t * const iface)
+{
+    ++iface->stats.rx_dropped;
 }

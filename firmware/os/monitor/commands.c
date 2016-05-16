@@ -34,8 +34,8 @@ MONITOR_CMD_HANDLER(arp)
                     if(!header++)
                         puts("Iface  Hardware address   Protocol address   TTL");
 
-                    net_print_addr(&item->hw_addr, hw_addrbuf, sizeof(hw_addrbuf));
-                    net_print_addr(&item->proto_addr, proto_addrbuf, sizeof(proto_addrbuf));
+                    net_address_print(&item->hw_addr, hw_addrbuf, sizeof(hw_addrbuf));
+                    net_address_print(&item->proto_addr, proto_addrbuf, sizeof(proto_addrbuf));
 
                     printf("%6s %18s %18s %d\n", net_get_iface_name(item->iface), hw_addrbuf,
                            proto_addrbuf, item->etime - g_current_timestamp);
@@ -606,7 +606,7 @@ MONITOR_CMD_HANDLER(netif)
     if(!strcmp(args[0], "show"))
     {
         char buf[32];
-        net_print_addr(net_get_proto_addr(iface), buf, 32);
+        net_address_print(net_get_proto_addr(iface), buf, 32);
         printf("%s: %s\n", net_get_iface_name(iface), buf);
 
         return SUCCESS;

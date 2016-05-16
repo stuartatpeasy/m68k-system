@@ -29,7 +29,7 @@ s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const add
         case np_udp:        return udp_packet_alloc(addr, len, iface, packet);
         case np_ipv4:       return ipv4_packet_alloc(addr, len, iface, packet);
         case np_ethernet:   return eth_packet_alloc(addr, len, iface, packet);
-        case np_raw:        return net_packet_alloc_raw(len, packet);
+        case np_raw:        return net_packet_alloc_raw(addr, len, iface, packet);
 
         default:        return EPROTONOSUPPORT;
     }
@@ -40,7 +40,8 @@ s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const add
     net_packet_alloc_raw() - allocate a "raw" packet, i.e. just a fixed-length buffer without a
     specific associated protocol.
 */
-s32 net_packet_alloc_raw(ku32 len, net_packet_t **packet)
+s32 net_packet_alloc_raw(const net_address_t * const addr, ku32 len, net_iface_t * const iface,
+                         net_packet_t **packet)
 {
     s32 ret;
     net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
@@ -52,7 +53,11 @@ s32 net_packet_alloc_raw(ku32 len, net_packet_t **packet)
         return ret;
     }
 
-    p->iface = NULL;
+    /* If an interface was supplied, use it; otherwise look up based on address. */
+    p->iface = iface ? iface : net_route_get(addr);
+    if(!p->iface)
+        return EHOSTUNREACH;
+
     p->proto = np_raw;
     p->start = p->raw.data;
     p->len = 0;

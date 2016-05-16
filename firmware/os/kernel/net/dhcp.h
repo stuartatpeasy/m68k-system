@@ -124,6 +124,6 @@ typedef struct dhcp_client_status
 
 
 s32 dhcp_discover(net_iface_t *iface);
-s32 dhcp_rx(net_packet_t *packet);
+s32 dhcp_rx(net_iface_t *iface, net_packet_t *packet);
 
 #endif

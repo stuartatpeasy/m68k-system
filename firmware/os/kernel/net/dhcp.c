@@ -11,6 +11,7 @@
 
 #include <kernel/net/dhcp.h>
 #include <kernel/net/udp.h>
+#include <kernel/net/packet.h>
 #include <klibc/stdio.h>        // FIXME remove
 #include <klibc/strings.h>
 
@@ -18,7 +19,7 @@
 /*
     dhcp_rx() - handle an incoming DHCP packet.
 */
-s32 dhcp_rx(net_packet_t *packet)
+s32 dhcp_rx(net_iface_t *iface, net_packet_t *packet)
 {
     /* FIXME - lots of dereferencing of *packet in this fn - use net_packet_*() fns instead */
     dhcp_msg_t *msg = (dhcp_msg_t *) net_packet_get_start(packet);
@@ -29,11 +30,11 @@ s32 dhcp_rx(net_packet_t *packet)
     if((msg->op == bo_reply) && (msg->magic_cookie == DHCP_MAGIC_COOKIE))
     {
         if((msg->htype == bh_ethernet) && (msg->hlen == NET_ADDR_LEN_ETHERNET)
-           && packet->iface->hw_addr.type == na_ethernet)
+           && net_address_get_type(net_interface_get_hw_addr(iface)) == na_ethernet)
         {
             /* This is an BOOTP+Ethernet response, received on an Ethernet interface */
             const mac_addr_t * const bootp_hwaddr = (mac_addr_t *) msg->chaddr,
-                             * const iface_hwaddr = (mac_addr_t *) &packet->iface->hw_addr.addr;
+                             * const iface_hwaddr = eth_get_addr(net_interface_get_hw_addr(iface));
 
             if(MAC_ADDR_EQUAL(bootp_hwaddr, iface_hwaddr))
             {
@@ -52,10 +53,10 @@ s32 dhcp_rx(net_packet_t *packet)
                 *((ipv4_addr_t *) &s.addr) = msg->siaddr;
                 *((ipv4_addr_t *) &g.addr) = msg->giaddr;
 
-                net_print_addr(&c, cbuf, sizeof(cbuf));
-                net_print_addr(&y, ybuf, sizeof(ybuf));
-                net_print_addr(&s, sbuf, sizeof(sbuf));
-                net_print_addr(&g, gbuf, sizeof(gbuf));
+                net_address_print(&c, cbuf, sizeof(cbuf));
+                net_address_print(&y, ybuf, sizeof(ybuf));
+                net_address_print(&s, sbuf, sizeof(sbuf));
+                net_address_print(&g, gbuf, sizeof(gbuf));
 
                 /* Process DHCP options */
                 p = net_packet_get_start(packet) + sizeof(dhcp_msg_t);
@@ -81,25 +82,25 @@ s32 dhcp_rx(net_packet_t *packet)
 
                         case dopt_subnet_mask:
                             memcpy(&addr.addr, &opt->data, sizeof(ipv4_addr_t));
-                            net_print_addr(&addr, addrbuf, sizeof(addrbuf));
+                            net_address_print(&addr, addrbuf, sizeof(addrbuf));
                             printf("Subnet mask: %s\n", addrbuf);
                             break;
 
                         case dopt_router:
                             memcpy(&addr.addr, &opt->data, sizeof(ipv4_addr_t));
-                            net_print_addr(&addr, addrbuf, sizeof(addrbuf));
+                            net_address_print(&addr, addrbuf, sizeof(addrbuf));
                             printf("Router: %s\n", addrbuf);
                             break;
 
                         case dopt_domain_name_server:
                             memcpy(&addr.addr, &opt->data, sizeof(ipv4_addr_t));
-                            net_print_addr(&addr, addrbuf, sizeof(addrbuf));
+                            net_address_print(&addr, addrbuf, sizeof(addrbuf));
                             printf("DNS resolver: %s\n", addrbuf);
                             break;
 
                         case dopt_broadcast_addr:
                             memcpy(&addr.addr, &opt->data, sizeof(ipv4_addr_t));
-                            net_print_addr(&addr, addrbuf, sizeof(addrbuf));
+                            net_address_print(&addr, addrbuf, sizeof(addrbuf));
                             printf("Broadcast: %s\n", addrbuf);
                             break;
 
@@ -163,7 +164,7 @@ s32 dhcp_discover(net_iface_t *iface)
     msg->giaddr         = (ipv4_addr_t) 0;
     msg->magic_cookie   = DHCP_MAGIC_COOKIE;
 
-    memcpy(msg->chaddr, &iface->hw_addr.addr, NET_ADDR_LEN_ETHERNET);
+    memcpy(msg->chaddr, eth_get_addr(net_interface_get_hw_addr(iface)), NET_ADDR_LEN_ETHERNET);
 
     /* HACK - add options after msg */
     *opts++ = dopt_msg_type;

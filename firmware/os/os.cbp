@@ -210,6 +210,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/memory/slab.h" />
+		<Unit filename="kernel/net/address.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/address.h" />
 		<Unit filename="kernel/net/arp.c">
 			<Option compilerVar="CC" />
 		</Unit>

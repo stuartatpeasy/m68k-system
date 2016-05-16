@@ -10,6 +10,7 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/arp.h>
+#include <kernel/net/packet.h>
 #include <klibc/stdio.h>
 #include <klibc/strings.h>
 
@@ -29,37 +30,33 @@ const net_address_t g_eth_broadcast =
 /*
     eth_init() - initialise Ethernet protocol driver
 */
-s32 eth_init(net_proto_driver_t *driver)
+s32 eth_init()
 {
-    driver->name            = "Ethernet";
-    driver->proto           = np_ethernet;
-    driver->rx              = eth_rx;
-    driver->tx              = eth_tx;
-
-    return SUCCESS;
+    return net_protocol_register_driver(np_ethernet, "Ethernet", eth_rx, eth_tx, eth_addr_compare);
 }
 
 
 /*
     eth_rx() - handle an incoming Ethernet packet.
 */
-s32 eth_rx(net_packet_t *packet)
+s32 eth_rx(net_iface_t *iface, net_packet_t *packet)
 {
     const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
 
     packet->start += sizeof(eth_hdr_t);
     packet->len -= sizeof(eth_hdr_t);
 
+    // FIXME - do eth_proto_from_ethertype() then a driver lookup here
     switch(ehdr->type)
     {
         case ethertype_ipv4:
             packet->proto = np_ipv4;
-            return ipv4_rx(packet);
+            return ipv4_rx(iface, packet);
             break;
 
         case ethertype_arp:
             packet->proto = np_arp;
-            return arp_rx(packet);
+            return arp_rx(iface, packet);
             break;
     }
 
@@ -74,13 +71,18 @@ s32 eth_rx(net_packet_t *packet)
 s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
     eth_hdr_t *hdr;
-    const mac_addr_t *src_addr, *dest_addr;
+    net_protocol_t proto;
 
-    packet->start -= sizeof(eth_hdr_t);
-    packet->len += sizeof(eth_hdr_t);
-    hdr = (eth_hdr_t *) packet->start;
+    /* Source and dest addresses must be na_ethernet */
+    if((net_address_get_type(src) != na_ethernet) || (net_address_get_type(dest) != na_ethernet))
+        return EAFNOSUPPORT;
 
-    switch(packet->proto)
+    proto = net_packet_get_proto(packet);
+
+    net_packet_encapsulate(np_ethernet, sizeof(eth_hdr_t), packet);
+    hdr = (eth_hdr_t *) net_packet_get_start(packet);
+
+    switch(proto)
     {
         case np_ipv4:
             hdr->type = ethertype_ipv4;
@@ -98,12 +100,8 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
         If src is NULL, send from the default address of the interface; otherwise send from the
         specified address.
     */
-    src_addr = (src == NULL) ? (mac_addr_t *) &packet->iface->hw_addr.addr
-                                : (mac_addr_t *) &src->addr.addr;
-    dest_addr = (mac_addr_t *) &dest->addr.addr;
-
-    hdr->dest = *dest_addr;
-    hdr->src = *src_addr;
+    hdr->src = *eth_get_addr(src);
+    hdr->dest = *eth_get_addr(dest);
 
     return net_tx(src, dest, packet);
 }
@@ -148,6 +146,19 @@ void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
 
 
 /*
+    eth_get_addr() - if the supplied net_address_t object represents an Ethernet address, return a
+    ptr to the MAC address part of the object; otherwise, return NULL.
+*/
+const mac_addr_t *eth_get_addr(const net_address_t * const addr)
+{
+    if(net_address_get_type(addr) != na_ethernet)
+        return NULL;
+
+    return (mac_addr_t *) net_address_get_address(addr);
+}
+
+
+/*
     eth_packet_alloc() - allocate a net_packet_t object large enough to contain an Ethernet header
     and a payload of the specified length.
 */
@@ -166,10 +177,24 @@ s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *if
 
 
 /*
+    eth_addr_compare() - compare two Ethernet addresses.
+*/
+s32 eth_addr_compare(const net_address_t * const a1, const net_address_t * const a2)
+{
+    if((net_address_get_type(a1) != na_ethernet) || (net_address_get_type(a2) != na_ethernet))
+        return -1;      /* Mismatch */
+
+    return memcmp(net_address_get_address(a1), net_address_get_address(a2), sizeof(mac_addr_t));
+}
+
+
+/*
     eth_print_addr() - write addr to buf
 */
-s32 eth_print_addr(const mac_addr_t *addr, char *buf, s32 len)
+s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len)
 {
+    const mac_addr_t * const m = (const mac_addr_t *) net_address_get_address(addr);
+
     return snprintf(buf, len, "%02x:%02x:%02x:%02x:%02x:%02x",
-                    addr->b[0], addr->b[1], addr->b[2], addr->b[3], addr->b[4], addr->b[5]);
+                    m->b[0], m->b[1], m->b[2], m->b[3], m->b[4], m->b[5]);
 }

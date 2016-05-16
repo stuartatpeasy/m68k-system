@@ -13,7 +13,8 @@
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/ipv4.h>
+#include <kernel/net/interface.h>
+#include <kernel/net/ipv4.h>        // FIXME - why is this here?
 #include <kernel/net/net.h>
 #include <kernel/util/buffer.h>
 
@@ -50,13 +51,15 @@ typedef struct eth_hdr
 typedef u32 eth_cksum_t;    /* Ethernet checksum (the last four bytes of an Ethernet frame) */
 
 
-s32 eth_init(net_proto_driver_t *driver);
-s32 eth_rx(net_packet_t *packet);
+s32 eth_init();
+s32 eth_rx(net_iface_t *iface, net_packet_t *packet);
 s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
 //s32 eth_reply(net_packet_t *packet);      // FIXME
 s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                      net_packet_t **packet);
 void eth_make_addr(mac_addr_t *mac, net_address_t *addr);
-s32 eth_print_addr(const mac_addr_t *addr, char *buf, s32 len);
+const mac_addr_t *eth_get_addr(const net_address_t * const addr);
+s32 eth_addr_compare(const net_address_t * const a1, const net_address_t * const a2);
+s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len);
 
 #endif

@@ -10,7 +10,7 @@
 */
 
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>
+#include <kernel/net/address.h>
 #include <kernel/net/interface.h>
 #include <kernel/net/protocol.h>
 
@@ -29,7 +29,8 @@ struct net_packet
 
 s32 net_packet_alloc(const net_protocol_t proto, const net_address_t * const addr, ku32 len,
                      net_iface_t * const iface, net_packet_t **packet);
-s32 net_packet_alloc_raw(ku32 len, net_packet_t **packet);
+s32 net_packet_alloc_raw(const net_address_t * const addr, ku32 len, net_iface_t * const iface,
+                         net_packet_t **packet);
 void net_packet_free(net_packet_t *packet);
 void net_packet_reset(net_packet_t *packet);
 void *net_packet_get_start(net_packet_t * const packet);

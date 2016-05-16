@@ -11,6 +11,7 @@
 #include <kernel/net/ipv4.h>
 #include <kernel/net/ipv4route.h>
 #include <kernel/net/net.h>
+#include <kernel/net/packet.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
 #include <klibc/stdio.h>
@@ -33,14 +34,9 @@ const net_address_t g_ipv4_broadcast =
 /*
     ipv4_init() - initialise the IPv4 protocol driver
 */
-s32 ipv4_init(net_proto_driver_t *driver)
+s32 ipv4_init()
 {
-    driver->name = "IPv4";
-    driver->proto = np_ipv4;
-    driver->rx = ipv4_rx;
-    driver->tx = ipv4_tx;
-
-    return SUCCESS;
+    return net_protocol_register_driver(np_ipv4, "IPv4", ipv4_rx, ipv4_tx, ipv4_addr_compare);
 }
 
 
@@ -48,9 +44,10 @@ s32 ipv4_init(net_proto_driver_t *driver)
     ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
     returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
 */
-s32 ipv4_rx(net_packet_t *packet)
+s32 ipv4_rx(net_iface_t *iface, net_packet_t *packet)
 {
-    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->start;
+    ipv4_hdr_t *hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
+    UNUSED(iface);
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -61,14 +58,14 @@ s32 ipv4_rx(net_packet_t *packet)
         return SUCCESS;     /* Drop packet */
 #endif
 
-    packet->start += sizeof(ipv4_hdr_t);
-    packet->len -= sizeof(ipv4_hdr_t);
-    packet->proto = np_ipv4;
+    net_packet_consume(sizeof(ipv4_hdr_t), packet);
+    net_packet_set_proto(np_ipv4, packet);
 
+    // FIXME - do protocol lookup here, instead of a switch
     switch(hdr->protocol)
     {
         case ipv4_proto_icmp:
-            return icmp_rx(packet);
+            return icmp_rx(iface, packet);
 
         case ipv4_proto_tcp:
             return tcp_rx(packet);
@@ -148,7 +145,7 @@ net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_
 {
     ipv4_address_t *ipv4_addr = (ipv4_address_t *) &addr->addr;
 
-    addr->type = na_ipv4;
+    net_address_set_type(na_ipv4, addr);
     ipv4_addr->addr = ip;
     ipv4_addr->port = port;
 
@@ -199,10 +196,37 @@ ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto)
 
 
 /*
+    ipv4_get_addr() - if the supplied net_address_t object represents an IPv4 address, return a ptr
+    to the IP address part of the address/port combination; otherwise, return NULL.
+*/
+const ipv4_addr_t *ipv4_get_addr(const net_address_t * const addr)
+{
+    if(net_address_get_type(addr) != na_ipv4)
+        return NULL;
+
+    return &((ipv4_address_t *) net_address_get_address(addr))->addr;
+}
+
+
+/*
+    ipv4_addr_compare() - compare two IPv4 addresses.
+*/
+s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * const a2)
+{
+    if((net_address_get_type(a1) != na_ipv4) || (net_address_get_type(a2) != na_ipv4))
+        return -1;      /* Mismatch */
+
+    return memcmp(net_address_get_address(a1), net_address_get_address(a2), sizeof(ipv4_address_t));
+}
+
+
+/*
     ipv4_print_addr() - write addr to buf in dotted-quad format.
 */
-s32 ipv4_print_addr(const ipv4_addr_t *addr, char *buf, s32 len)
+s32 ipv4_print_addr(const net_address_t *addr, char *buf, s32 len)
 {
-    return snprintf(buf, len, "%u.%u.%u.%u", *addr >> 24, (*addr >> 16) & 0xff, (*addr >> 8) & 0xff,
-                        *addr & 0xff);
+    const ipv4_addr_t * const a = (const ipv4_addr_t *) net_address_get_address(addr);
+
+    return snprintf(buf, len, "%u.%u.%u.%u", *a >> 24, (*a >> 16) & 0xff, (*a >> 8) & 0xff,
+                        *a & 0xff);
 }
