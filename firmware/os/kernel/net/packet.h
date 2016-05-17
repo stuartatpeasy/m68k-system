@@ -21,6 +21,7 @@ typedef struct net_packet net_packet_t;
 
 s32 net_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * const iface,
                      net_packet_t **packet);
+s32 net_packet_clone(const net_packet_t * const packet, net_packet_t ** new_packet);
 void net_packet_free(net_packet_t *packet);
 void net_packet_reset(net_packet_t *packet);
 void *net_packet_get_start(net_packet_t * const packet);

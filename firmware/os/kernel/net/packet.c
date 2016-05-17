@@ -25,12 +25,14 @@ struct net_packet
 };
 
 
+s32 net_packet_create(ku32 len, net_packet_t **packet);
+
+
 /*
-    net_packet_alloc() - allocate a packet object and allocate a buffer of the specified length for
-    the payload.
+    net_packet_create() - create a packet object and allocate its buffer.  Private to this module;
+    used by net_packet_alloc() and net_packet_clone().
 */
-s32 net_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * const iface,
-                     net_packet_t **packet)
+s32 net_packet_create(ku32 len, net_packet_t **packet)
 {
     s32 ret;
     net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
@@ -42,6 +44,24 @@ s32 net_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * c
         return ret;
     }
 
+    *packet = p;
+    return SUCCESS;
+}
+
+
+/*
+    net_packet_alloc() - allocate a packet object and allocate a buffer of the specified length for
+    the payload.
+*/
+s32 net_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * const iface,
+                     net_packet_t **packet)
+{
+    net_packet_t *p;
+    ks32 ret = net_packet_create(len, &p);
+
+    if(ret != SUCCESS)
+        return ret;
+
     /* If an interface was supplied, use it; otherwise look up based on address. */
     p->iface = iface ? iface : net_route_get(addr);
     if(!p->iface)
@@ -51,6 +71,28 @@ s32 net_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * c
     net_packet_set_proto(p, np_unknown);
 
     *packet = p;
+
+    return SUCCESS;
+}
+
+
+/*
+    net_packet_clone() - clone net_packet_t object "packet" into "new_packet".
+*/
+s32 net_packet_clone(const net_packet_t * const packet, net_packet_t ** new_packet)
+{
+    net_packet_t *newp;
+    ks32 ret = net_packet_create(packet->raw.len, &newp);
+
+    if(ret != SUCCESS)
+        return ret;
+
+    newp->iface = packet->iface;
+    newp->proto = packet->proto;
+    newp->start = packet->start;
+    newp->len = packet->len;
+
+    *new_packet = newp;
 
     return SUCCESS;
 }
