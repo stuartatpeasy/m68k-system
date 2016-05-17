@@ -7,13 +7,10 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <kernel/net/icmp.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/ipv4route.h>
 #include <kernel/net/net.h>
 #include <kernel/net/packet.h>
-#include <kernel/net/tcp.h>
-#include <kernel/net/udp.h>
 #include <klibc/stdio.h>
 #include <klibc/strings.h>
 
