@@ -147,7 +147,12 @@ s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet)
     if(ret == SUCCESS)
         net_interface_stats_inc_rx_packets(iface);
     else
+    {
+        if(ret == ECKSUM)
+            net_interface_stats_inc_cksum_err(iface);
+
         net_interface_stats_inc_rx_dropped(iface);
+    }
 
     return ret;
 }

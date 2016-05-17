@@ -8,7 +8,6 @@
 */
 
 #include <kernel/net/ipv4.h>
-#include <kernel/net/ipv4route.h>
 #include <kernel/net/net.h>
 #include <kernel/net/packet.h>
 #include <klibc/stdio.h>
@@ -30,7 +29,7 @@ const net_address_t g_ipv4_broadcast =
 
 
 /*
-    ipv4_init() - initialise the IPv4 protocol driver
+    ipv4_init() - initialise the IPv4 protocol driver.
 */
 s32 ipv4_init()
 {
@@ -40,8 +39,8 @@ s32 ipv4_init()
 
 
 /*
-    ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
-    returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
+    ipv4_handle_packet() - handle an incoming IPv4 packet by decapsulating it, optionally verifying
+    its header checksum, and passing it up to the next protocol handler.
 */
 s32 ipv4_rx(net_packet_t *packet)
 {
@@ -54,7 +53,7 @@ s32 ipv4_rx(net_packet_t *packet)
     */
 #if(IPV4_VERIFY_CHECKSUM)
     if(net_cksum(hdr, (hdr->version_hdr_len & 0xf) << 2) != 0x0000)
-        return SUCCESS;     /* Drop packet */
+        return ECKSUM;      /* Drop packet */
 #endif
 
     ret = net_packet_consume(packet, sizeof(ipv4_hdr_t));
@@ -68,7 +67,7 @@ s32 ipv4_rx(net_packet_t *packet)
 
 
 /*
-    ipv4_tx() - transmit an IPv4 packet
+    ipv4_tx() - transmit an IPv4 packet.
 */
 s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
@@ -235,7 +234,8 @@ s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * cons
 */
 s32 ipv4_print_addr(const net_address_t *addr, char *buf, s32 len)
 {
-    const ipv4_addr_t * const a = (const ipv4_addr_t *) net_address_get_address(addr);
+    const ipv4_address_t * const ipaddr = (const ipv4_address_t *) net_address_get_address(addr);
+    const ipv4_addr_t * const a = &ipaddr->addr;
 
     return snprintf(buf, len, "%u.%u.%u.%u", *a >> 24, (*a >> 16) & 0xff, (*a >> 8) & 0xff,
                         *a & 0xff);
