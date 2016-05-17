@@ -18,15 +18,6 @@
 ipv4_protocol_t ipv4_get_ipproto(const net_protocol_t proto);
 net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto);
 
-const net_address_t g_ipv4_broadcast =
-{
-    .type = na_ipv4,
-    .addr.addr_bytes[0] = 0xff,
-    .addr.addr_bytes[1] = 0xff,
-    .addr.addr_bytes[2] = 0xff,
-    .addr.addr_bytes[3] = 0xff
-};
-
 
 /*
     ipv4_init() - initialise the IPv4 protocol driver.
@@ -72,7 +63,6 @@ s32 ipv4_rx(net_packet_t *packet)
 s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
     ipv4_hdr_t *hdr;
-    const ipv4_address_t *src_addr, *dest_addr;
     s32 ret;
 
     ret = net_packet_insert(packet, sizeof(ipv4_hdr_t));
@@ -80,8 +70,6 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
         return ret;
 
     hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
-    src_addr = (ipv4_address_t *) &src->addr;
-    dest_addr = (ipv4_address_t *) &dest->addr;
 
     hdr->version_hdr_len    = (4 << 4) | 5;     /* IPv4, header len = 5 32-bit words (=20 bytes) */
     hdr->diff_svcs          = 0;
@@ -90,8 +78,8 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
     hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
     hdr->ttl                = 64;               /* Sensible default? */
     hdr->protocol           = ipv4_get_ipproto(net_packet_get_proto(packet));
-    hdr->src                = src_addr->addr;
-    hdr->dest               = dest_addr->addr;
+    hdr->src                = ipv4_get_addr(src);
+    hdr->dest               = ipv4_get_addr(dest);
     hdr->cksum              = 0x0000;
 
     hdr->cksum = net_cksum(hdr, sizeof(ipv4_hdr_t));
@@ -126,17 +114,27 @@ s32 ipv4_reply(net_packet_t *packet)
 
 
 /*
-    ipv4_make_addr() - populate a net_address_t object with an IPv4 address.
+    ipv4_make_addr() - populate a net_address_t object with an IPv4 address and return it.
 */
 net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr)
 {
-    ipv4_address_t *ipv4_addr = (ipv4_address_t *) &addr->addr;
+    ipv4_address_t *ipv4_addr = (ipv4_address_t *) net_address_get_address(addr);
 
     net_address_set_type(na_ipv4, addr);
     ipv4_addr->addr = ip;
     ipv4_addr->port = port;
 
     return addr;
+}
+
+
+/*
+    ipv4_make_broadcast_addr() - populate a net_address_t object with the IPv4 broadcast address
+    (255.255.255.255) and return it.
+*/
+net_address_t *ipv4_make_broadcast_addr(net_address_t * const addr)
+{
+    return ipv4_make_addr(IPV4_ADDR_BROADCAST, IPV4_PORT_NONE, addr);
 }
 
 
@@ -206,14 +204,28 @@ net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto)
 
 /*
     ipv4_get_addr() - if the supplied net_address_t object represents an IPv4 address, return a ptr
-    to the IP address part of the address/port combination; otherwise, return NULL.
+    to the IP address part of the address/port combination; otherwise, return IPV4_ADDR_NONE
+    (=0.0.0.0).
 */
-const ipv4_addr_t *ipv4_get_addr(const net_address_t * const addr)
+ipv4_addr_t ipv4_get_addr(const net_address_t * const addr)
 {
     if(net_address_get_type(addr) != na_ipv4)
-        return NULL;
+        return IPV4_ADDR_NONE;
 
-    return &((ipv4_address_t *) net_address_get_address(addr))->addr;
+    return ((ipv4_address_t *) net_address_get_address(addr))->addr;
+}
+
+
+/*
+    ipv4_get_port() - if the supplied net_address_t object represents an IPv4 address/port object,
+    return the port number associated with the object; otherwise, return IPV4_PORT_NONE (0).
+*/
+ipv4_port_t ipv4_get_port(const net_address_t * const addr)
+{
+    if(net_address_get_type(addr) != na_ipv4)
+        return IPV4_PORT_NONE;
+
+    return ((ipv4_address_t *) net_address_get_address(addr))->port;
 }
 
 
@@ -234,9 +246,8 @@ s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * cons
 */
 s32 ipv4_print_addr(const net_address_t *addr, char *buf, s32 len)
 {
-    const ipv4_address_t * const ipaddr = (const ipv4_address_t *) net_address_get_address(addr);
-    const ipv4_addr_t * const a = &ipaddr->addr;
+    const ipv4_addr_t a = ipv4_get_addr(addr);
 
-    return snprintf(buf, len, "%u.%u.%u.%u", *a >> 24, (*a >> 16) & 0xff, (*a >> 8) & 0xff,
-                        *a & 0xff);
+    return snprintf(buf, len, "%u.%u.%u.%u", a >> 24, (a >> 16) & 0xff, (a >> 8) & 0xff,
+                        a & 0xff);
 }

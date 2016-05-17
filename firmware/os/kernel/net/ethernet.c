@@ -15,15 +15,10 @@
 #include <klibc/strings.h>
 
 
-const net_address_t g_eth_broadcast =
+/* MAC address representing the broadcast address */
+const mac_addr_t eth_mac_broadcast =
 {
-    .type = na_ethernet,
-    .addr.addr_bytes[0] = 0xff,
-    .addr.addr_bytes[1] = 0xff,
-    .addr.addr_bytes[2] = 0xff,
-    .addr.addr_bytes[3] = 0xff,
-    .addr.addr_bytes[4] = 0xff,
-    .addr.addr_bytes[5] = 0xff
+    .b = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 };
 
 
@@ -125,15 +120,31 @@ s32 eth_reply(net_packet_t *packet)
 
 
 /*
-    eth_make_addr() - populate a net_address_t object with a MAC address.
+    eth_make_addr() - populate a net_address_t object with a MAC address and return it.
 */
-void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
+net_address_t *eth_make_addr(const mac_addr_t * const mac, net_address_t *addr)
 {
+    void * const addr_buf = (void *) net_address_get_address(addr);
+
     net_address_set_type(na_ethernet, addr);
-    bzero(&addr->addr, sizeof(net_addr_t));
+    bzero(addr_buf, sizeof(net_addr_t));
 
     if(mac != NULL)
-        memcpy(&addr->addr, mac, sizeof(mac_addr_t));
+        memcpy(addr_buf, mac, sizeof(mac_addr_t));
+
+    return addr;
+}
+
+
+/*
+    eth_make_broadcast_address(): populate a net_address_t object with the Ethernet broadcast
+    address (ff:ff:ff:ff:ff:ff) and return it.
+*/
+net_address_t *eth_make_broadcast_addr(net_address_t *addr)
+{
+    eth_make_addr(&eth_mac_broadcast, addr);
+
+    return addr;
 }
 
 

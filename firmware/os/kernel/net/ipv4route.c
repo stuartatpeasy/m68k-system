@@ -97,10 +97,10 @@ s32 ipv4_route_get_iface(const net_address_t *proto_addr, net_iface_t **iface)
     ipv4_addr_t ipv4_addr;
     ipv4_rt_item_t **p;
 
-    if(proto_addr->type != na_ipv4)
+    if(net_address_get_type(proto_addr) != na_ipv4)
         return EHOSTUNREACH;        /* Should this be EPROTONOSUPPORT? */
 
-    ipv4_addr = ((ipv4_address_t *) &proto_addr->addr)->addr;
+    ipv4_addr = ipv4_get_addr(proto_addr);
 
     for(p = &g_ipv4_routes; *p != NULL; p = &(*p)->next)
     {
@@ -125,8 +125,9 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr)
 {
     arp_cache_item_t *item;
+    net_address_t ipv4_addr_broadcast;
 
-    if(proto_addr->type != na_ipv4)
+    if(net_address_get_type(proto_addr) != na_ipv4)
         return EHOSTUNREACH;        /* Should this be EPROTONOSUPPORT? */
 
     /* Check ARP cache */
@@ -138,9 +139,9 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
     }
 
     /* Is this a broadcast address? */
-    if(*((ipv4_addr_t *) &proto_addr->addr) == IPV4_ADDR_BROADCAST)
+    if(!ipv4_addr_compare(proto_addr, ipv4_make_broadcast_addr(&ipv4_addr_broadcast)))
     {
-        *hw_addr = g_eth_broadcast;
+        eth_make_broadcast_addr(hw_addr);
         return SUCCESS;
     }
 

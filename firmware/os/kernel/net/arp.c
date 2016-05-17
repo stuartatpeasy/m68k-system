@@ -96,7 +96,7 @@ s32 arp_rx(net_packet_t *packet)
         payload->dst_ip = payload->src_ip;
         payload->dst_mac = payload->src_mac;
 
-        payload->src_ip = *ipv4_get_addr(net_interface_get_proto_addr(iface));
+        payload->src_ip = ipv4_get_addr(net_interface_get_proto_addr(iface));
         payload->src_mac = *eth_get_addr(net_interface_get_hw_addr(iface));
 
         return net_tx(NULL, &hw_addr, packet);
@@ -127,7 +127,7 @@ s32 arp_send_request(const net_address_t *addr)
     net_address_t bcast;
     s32 ret;
 
-    if(addr->type != na_ipv4)
+    if(net_address_get_type(addr) != na_ipv4)
         return EPROTONOSUPPORT;
 
     iface = net_route_get(addr);
@@ -154,9 +154,9 @@ s32 arp_send_request(const net_address_t *addr)
     p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
     p->hdr.opcode           = arp_request;
 
-    p->payload.src_ip       = *ipv4_get_addr(net_interface_get_proto_addr(iface));
+    p->payload.src_ip       = ipv4_get_addr(net_interface_get_proto_addr(iface));
     p->payload.src_mac      = *eth_get_addr(net_interface_get_hw_addr(iface));
-    p->payload.dst_ip       = *ipv4_get_addr(addr);
+    p->payload.dst_ip       = ipv4_get_addr(addr);
     p->payload.dst_mac      = *eth_get_addr(&bcast);
 
     return net_tx_free(NULL, &bcast, pkt);

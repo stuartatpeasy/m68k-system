@@ -7,6 +7,7 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#include <kernel/net/address.h>
 #include <kernel/net/tftp.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/packet.h>
@@ -20,7 +21,6 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
 {
     net_address_t src;
     net_packet_t *pkt;
-    ipv4_address_t *ipv4_addr;
     s32 ret;
     u32 fn_len;
     char *p;
@@ -30,12 +30,11 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
     if(!fn_len || (fn_len > TFTP_MAX_FN_LEN))
         return EINVAL;
 
-    if(peer_addr->type != na_ipv4)
+    if(net_address_get_type(peer_addr) != na_ipv4)
         return EPROTONOSUPPORT;     /* Only IPv4 addresses are supported at the moment */
 
     /* Force the server port to the TFTP well-known port number */
-    ipv4_addr = (ipv4_address_t *) &peer_addr->addr;
-    ipv4_addr->port = TFTP_SERVER_PORT;
+    ipv4_make_addr(ipv4_get_addr(peer_addr), TFTP_SERVER_PORT, peer_addr);
 
     /*
         The read request packet length is equal to the size of the read request opcode (2 bytes)
