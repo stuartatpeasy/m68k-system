@@ -254,6 +254,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/protocol.h" />
+		<Unit filename="kernel/net/raw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/raw.h" />
 		<Unit filename="kernel/net/route.c">
 			<Option compilerVar="CC" />
 		</Unit>

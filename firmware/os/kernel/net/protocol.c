@@ -12,6 +12,7 @@
 #include <kernel/net/protocol.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/net/packet.h>
+#include <kernel/net/route.h>
 #include <klibc/stdio.h>
 #include <klibc/string.h>
 
@@ -163,10 +164,9 @@ net_protocol_t net_protocol_from_address(const net_address_t * const addr)
 */
 net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr)
 {
-    // FIXME
-    UNUSED(addr);
+    net_iface_t * const iface = net_route_get(addr);
 
-    return np_unknown;
+    return iface ? net_interface_get_proto(iface) : np_unknown;
 }
 
 
@@ -183,6 +183,22 @@ s32 net_protocol_addr_compare(const net_protocol_t proto, const net_address_t * 
         return -1;      /* Mismatch */
 
     return drv->addr_compare(a1, a2);
+}
+
+
+/*
+    net_protocol_packet_alloc() - allocate a packet object and allocate a buffer of the specified
+    length for the payload.
+*/
+s32 net_protocol_packet_alloc(const net_protocol_t proto, const net_address_t * const addr,
+                              ku32 len, net_iface_t * const iface, net_packet_t **packet)
+{
+    net_proto_driver_t * const drv = net_protocol_get_driver(proto);
+
+    if(!drv || (proto == np_unknown))
+        return EPROTONOSUPPORT;
+
+    return drv->packet_alloc(addr, len, iface, packet);
 }
 
 

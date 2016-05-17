@@ -17,9 +17,12 @@
 */
 s32 udp_rx(net_packet_t *packet)
 {
+    s32 ret;
     udp_hdr_t *hdr = (udp_hdr_t *) net_packet_get_start(packet);
 
-    net_packet_consume(sizeof(udp_hdr_t), packet);
+    ret = net_packet_consume(packet, sizeof(udp_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
     if(hdr->dest_port == DHCP_CLIENT_PORT)
         return dhcp_rx(packet);
@@ -37,11 +40,14 @@ s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 {
     udp_hdr_t *hdr;
     ipv4_address_t *src_addr, *dest_addr;
+    s32 ret;
 
     if((src->type != na_ipv4) || (dest->type != na_ipv4))
         return EPROTONOSUPPORT;
 
-    net_packet_insert(sizeof(udp_hdr_t), packet);
+    ret = net_packet_insert(packet, sizeof(udp_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
     hdr = (udp_hdr_t *) net_packet_get_start(packet);
 
@@ -64,13 +70,12 @@ s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 s32 udp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                      net_packet_t **packet)
 {
-    ks32 ret = net_packet_alloc(net_address_get_proto(addr), addr, sizeof(udp_hdr_t) + len, iface,
-                                packet);
+    ks32 ret = net_protocol_packet_alloc(net_address_get_proto(addr), addr, sizeof(udp_hdr_t) + len,
+                                         iface, packet);
     if(ret != SUCCESS)
         return ret;
 
-    net_packet_consume(sizeof(udp_hdr_t), *packet);
-    net_packet_set_proto(np_udp, *packet);
+    net_packet_set_proto(*packet, np_udp);
 
-    return SUCCESS;
+    return net_packet_consume(*packet, sizeof(udp_hdr_t));
 }

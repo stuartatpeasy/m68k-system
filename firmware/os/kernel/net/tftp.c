@@ -9,7 +9,6 @@
 
 #include <kernel/net/tftp.h>
 #include <kernel/net/ipv4.h>
-#include <kernel/net/ipv4route.h>       // FIXME - remove IPv4-specific #include [?]
 #include <kernel/net/packet.h>
 #include <klibc/string.h>
 
@@ -21,7 +20,6 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
 {
     net_address_t src;
     net_packet_t *pkt;
-    net_iface_t *iface;
     ipv4_address_t *ipv4_addr;
     s32 ret;
     u32 fn_len;
@@ -35,14 +33,9 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
     if(peer_addr->type != na_ipv4)
         return EPROTONOSUPPORT;     /* Only IPv4 addresses are supported at the moment */
 
-    ret = ipv4_route_get_iface(peer_addr, &iface);
-    if(ret != SUCCESS)
-        return ret;
-
     /* Force the server port to the TFTP well-known port number */
     ipv4_addr = (ipv4_address_t *) &peer_addr->addr;
     ipv4_addr->port = TFTP_SERVER_PORT;
-
 
     /*
         The read request packet length is equal to the size of the read request opcode (2 bytes)

@@ -50,7 +50,8 @@ typedef enum ipv4_protocol
 {
     ipv4_proto_icmp     = 1,
     ipv4_proto_tcp      = 6,
-    ipv4_proto_udp      = 17
+    ipv4_proto_udp      = 17,
+    ipv4_proto_invalid  = 255
 } ipv4_protocol_t;
 
 

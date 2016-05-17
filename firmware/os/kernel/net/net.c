@@ -15,6 +15,7 @@
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
 #include <kernel/net/packet.h>
+#include <kernel/net/raw.h>
 #include <kernel/net/route.h>
 #include <kernel/process.h>
 #include <kernel/util/kutil.h>
@@ -26,7 +27,8 @@ net_init_fn_t g_net_init_fns[] =
 {
     arp_init,
     ipv4_init,
-    eth_init
+    eth_init,
+    raw_init
 };
 
 
@@ -94,7 +96,7 @@ void net_receive(void *arg)
     net_packet_t *packet;
 
     /* FIXME - get MTU from interface and use as packet size here */
-    if(net_packet_alloc(np_raw, NULL, 1500, iface, &packet) != SUCCESS)
+    if(net_protocol_packet_alloc(np_raw, NULL, 1500, iface, &packet) != SUCCESS)
     {
         kernel_warning("Failed to allocate packet buffer");
         return;

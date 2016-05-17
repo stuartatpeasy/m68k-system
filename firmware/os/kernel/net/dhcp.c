@@ -21,7 +21,6 @@
 */
 s32 dhcp_rx(net_packet_t *packet)
 {
-    /* FIXME - lots of dereferencing of *packet in this fn - use net_packet_*() fns instead */
     net_iface_t *iface;
     dhcp_msg_t *msg = (dhcp_msg_t *) net_packet_get_start(packet);
 
@@ -143,7 +142,7 @@ s32 dhcp_discover(net_iface_t *iface)
     ipv4_make_addr(IPV4_ADDR_NONE, DHCP_CLIENT_PORT, &src);
     ipv4_make_addr(IPV4_ADDR_BROADCAST, DHCP_SERVER_PORT, &dest);
 
-    ret = net_packet_alloc(np_udp, &dest, DHCP_DISCOVER_BUFFER_LEN, iface, &pkt);
+    ret = net_protocol_packet_alloc(np_udp, &dest, DHCP_DISCOVER_BUFFER_LEN, iface, &pkt);
     if(ret != SUCCESS)
         return ret;
 

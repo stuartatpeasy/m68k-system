@@ -21,6 +21,7 @@
 typedef struct net_packet net_packet_t;
 typedef enum net_protocol net_protocol_t;
 typedef struct net_address net_address_t;
+typedef struct net_iface net_iface_t;
 
 /* Network module (i.e. protocol driver) init function typedef */
 typedef s32 (*net_init_fn_t)();

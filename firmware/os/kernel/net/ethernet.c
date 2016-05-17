@@ -42,10 +42,14 @@ s32 eth_init()
 */
 s32 eth_rx(net_packet_t *packet)
 {
+    s32 ret;
     const eth_hdr_t * const ehdr = (eth_hdr_t *) net_packet_get_start(packet);
 
-    net_packet_consume(sizeof(eth_hdr_t), packet);
-    net_packet_set_proto(eth_proto_from_ethertype(ehdr->type), packet);
+    ret = net_packet_consume(packet, sizeof(eth_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
+
+    net_packet_set_proto(packet, eth_proto_from_ethertype(ehdr->type));
 
     return net_protocol_rx(packet);
 }
@@ -59,6 +63,7 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 {
     eth_hdr_t *hdr;
     net_protocol_t proto;
+    s32 ret;
 
     /* Source and dest addresses must be na_ethernet */
     if((net_address_get_type(src) != na_ethernet) || (net_address_get_type(dest) != na_ethernet))
@@ -66,7 +71,10 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 
     proto = net_packet_get_proto(packet);
 
-    net_packet_encapsulate(np_ethernet, sizeof(eth_hdr_t), packet);
+    ret = net_packet_encapsulate(packet, np_ethernet, sizeof(eth_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
+
     hdr = (eth_hdr_t *) net_packet_get_start(packet);
 
     switch(proto)
@@ -83,40 +91,37 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
             return EPROTONOSUPPORT;
     }
 
-    /*
-        If src is NULL, send from the default address of the interface; otherwise send from the
-        specified address.
-    */
     hdr->src = *eth_get_addr(src);
     hdr->dest = *eth_get_addr(dest);
 
     return net_tx(src, dest, packet);
 }
 
-#if 0   // FIXME
+
 /*
     eth_reply() - assume that *packet contains a received packet which has been modified in some
     way; swap its source and destination addresses and transmit it.
 */
 s32 eth_reply(net_packet_t *packet)
 {
-    eth_hdr_t *ehdr;
+    eth_hdr_t *hdr;
     net_address_t src, dest;
+    s32 ret;
 
-    packet->start -= sizeof(eth_hdr_t);
-    packet->len += sizeof(eth_hdr_t);
+    ret = net_packet_insert(packet, sizeof(eth_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
-    ehdr = (eth_hdr_t *) packet->start;
+    hdr = (eth_hdr_t *) net_packet_get_start(packet);
 
-    eth_make_addr(&ehdr->dest, &src);
-    eth_make_addr(NULL, &dest);
+    eth_make_addr(&hdr->dest, &src);
+    eth_make_addr(&hdr->src, &dest);
 
-    ehdr->dest = *((mac_addr_t *) &dest.addr);
-    ehdr->src = *((mac_addr_t *) &src.addr);
+    hdr->src = *eth_get_addr(&src);
+    hdr->dest = *eth_get_addr(&dest);
 
     return net_tx(&src, &dest, packet);
 }
-#endif
 
 
 /*
@@ -152,14 +157,14 @@ const mac_addr_t *eth_get_addr(const net_address_t * const addr)
 s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                      net_packet_t **packet)
 {
-    ks32 ret = net_packet_alloc(np_ethernet, addr, sizeof(eth_hdr_t) + len, iface, packet);
+    ks32 ret = net_protocol_packet_alloc(np_raw, addr, sizeof(eth_hdr_t) + len, iface, packet);
 
     if(ret != SUCCESS)
         return ret;
 
-    net_packet_consume(sizeof(eth_hdr_t), *packet);
+    net_packet_set_proto(*packet, np_ethernet);
 
-    return SUCCESS;
+    return net_packet_consume(*packet, sizeof(eth_hdr_t));
 }
 
 

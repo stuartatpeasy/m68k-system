@@ -19,7 +19,8 @@
 
 
 // s32 ipv4_reply(net_packet_t *packet);    // FIXME
-ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto);
+ipv4_protocol_t ipv4_get_ipproto(const net_protocol_t proto);
+net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto);
 
 const net_address_t g_ipv4_broadcast =
 {
@@ -48,6 +49,7 @@ s32 ipv4_init()
 s32 ipv4_rx(net_packet_t *packet)
 {
     ipv4_hdr_t *hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
+    s32 ret;
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -58,24 +60,13 @@ s32 ipv4_rx(net_packet_t *packet)
         return SUCCESS;     /* Drop packet */
 #endif
 
-    net_packet_consume(sizeof(ipv4_hdr_t), packet);
-    net_packet_set_proto(np_ipv4, packet);
+    ret = net_packet_consume(packet, sizeof(ipv4_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
-    // FIXME - do protocol lookup here, instead of a switch
-    switch(hdr->protocol)
-    {
-        case ipv4_proto_icmp:
-            return icmp_rx(packet);
+    net_packet_set_proto(packet, ipv4_get_proto(hdr->protocol));
 
-        case ipv4_proto_tcp:
-            return tcp_rx(packet);
-
-        case ipv4_proto_udp:
-            return udp_rx(packet);
-
-        default:
-            return SUCCESS;     /* Drop packet */
-    }
+    return net_protocol_rx(packet);
 }
 
 
@@ -86,8 +77,11 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
 {
     ipv4_hdr_t *hdr;
     const ipv4_address_t *src_addr, *dest_addr;
+    s32 ret;
 
-    net_packet_insert(sizeof(ipv4_hdr_t), packet);
+    ret = net_packet_insert(packet, sizeof(ipv4_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
     hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
     src_addr = (ipv4_address_t *) &src->addr;
@@ -99,13 +93,13 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
     hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
     hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
     hdr->ttl                = 64;               /* Sensible default? */
-    hdr->protocol           = ipv4_get_proto(net_packet_get_proto(packet));
+    hdr->protocol           = ipv4_get_ipproto(net_packet_get_proto(packet));
     hdr->src                = src_addr->addr;
     hdr->dest               = dest_addr->addr;
     hdr->cksum              = 0x0000;
 
     hdr->cksum = net_cksum(hdr, sizeof(ipv4_hdr_t));
-    net_packet_set_proto(np_ipv4, packet);
+    net_packet_set_proto(packet, np_ipv4);
 
     return net_tx(src, dest, packet);
 }
@@ -118,8 +112,11 @@ s32 ipv4_reply(net_packet_t *packet)
 {
     ipv4_hdr_t *hdr;
     ipv4_addr_t tmp;
+    s32 ret;
 
-    net_packet_encapsulate(np_ipv4, sizeof(ipv4_hdr_t), packet);
+    ret = net_packet_encapsulate(np_ipv4, sizeof(ipv4_hdr_t), packet);
+    if(ret != SUCCESS)
+        return ret;
 
     hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
 
@@ -154,15 +151,14 @@ net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_
 s32 ipv4_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                       net_packet_t **packet)
 {
-    ks32 ret = net_packet_alloc(net_address_get_hw_proto(addr), addr, sizeof(ipv4_hdr_t) + len,
-                                iface, packet);
+    ks32 ret = net_protocol_packet_alloc(net_address_get_hw_proto(addr), addr,
+                                         sizeof(ipv4_hdr_t) + len, iface, packet);
     if(ret != SUCCESS)
         return ret;
 
-    net_packet_consume(sizeof(ipv4_hdr_t), *packet);
-    net_packet_set_proto(np_ipv4, *packet);
+    net_packet_set_proto(*packet, np_ipv4);
 
-    return SUCCESS;
+    return net_packet_consume(*packet, sizeof(ipv4_hdr_t));
 }
 
 
@@ -170,7 +166,7 @@ s32 ipv4_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *i
     ipv4_get_proto() - given a net_protocol_t-style protocol, return the corresponding IPv4 protocol
     number.
 */
-ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto)
+ipv4_protocol_t ipv4_get_ipproto(const net_protocol_t proto)
 {
     switch(proto)
     {
@@ -184,7 +180,30 @@ ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto)
             return ipv4_proto_icmp;
 
         default:
-            return 0xff;
+            return ipv4_proto_invalid;
+    }
+}
+
+
+/*
+    ipv4_get_proto() - given an IPv4 protocol value, return the corresponding np_* protocol
+    constant.
+*/
+net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto)
+{
+    switch(proto)
+    {
+        case ipv4_proto_tcp:
+            return np_tcp;
+
+        case ipv4_proto_udp:
+            return np_udp;
+
+        case ipv4_proto_icmp:
+            return np_icmp;
+
+        default:
+            return np_unknown;
     }
 }
 

@@ -14,7 +14,6 @@
 #include <kernel/net/route.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/process.h>
-#include <klibc/stdio.h>            // FIXME remove
 #include <klibc/stdlib.h>
 
 
@@ -57,6 +56,7 @@ s32 arp_rx(net_packet_t *packet)
     arp_payload_t * payload;
     net_address_t dst;
     net_iface_t *iface;
+    s32 ret;
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
     if(net_packet_get_len(packet) < sizeof(arp_hdr_t))
@@ -66,7 +66,9 @@ s32 arp_rx(net_packet_t *packet)
     if(hdr->hw_type != BE2N16(arp_hw_type_ethernet) || hdr->proto_type != BE2N16(ethertype_ipv4))
         return SUCCESS;     /* Discard - not an Ethernet+IPv4 ARP request */
 
-    net_packet_consume(sizeof(arp_hdr_t), packet);
+    ret = net_packet_consume(packet, sizeof(arp_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
     payload = (arp_payload_t *) net_packet_get_start(packet);
 
@@ -139,7 +141,8 @@ s32 arp_send_request(const net_address_t *addr)
     if(net_address_get_type(&bcast) != na_ethernet)
         return EPROTONOSUPPORT;
 
-    ret = net_packet_alloc(np_arp, addr, sizeof(arp_eth_ipv4_packet_t), NET_INTERFACE_ANY, &pkt);
+    ret = net_protocol_packet_alloc(np_arp, addr, sizeof(arp_eth_ipv4_packet_t), NET_INTERFACE_ANY,
+                                    &pkt);
     if(ret != SUCCESS)
         return ret;
 

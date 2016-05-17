@@ -139,7 +139,7 @@ s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet)
     proto = net_interface_get_proto(iface);
 
     net_packet_set_interface(packet, iface);
-    net_packet_set_proto(proto, packet);
+    net_packet_set_proto(packet, proto);
     net_packet_set_len(packet, len);
     net_interface_stats_add_rx_bytes(iface, len);
 

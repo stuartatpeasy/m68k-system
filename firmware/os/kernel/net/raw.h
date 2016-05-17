@@ -1,5 +1,5 @@
-#ifndef KERNEL_NET_UDP_H_INC
-#define KERNEL_NET_UDP_H_INC
+#ifndef KERNEL_NET_RAW_H_INC
+#define KERNEL_NET_RAW_H_INC
 /*
     "Raw" protocol implementation
 
@@ -9,5 +9,12 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#include <kernel/include/types.h>
+#include <kernel/net/net.h>
+
+
+s32 raw_init();
+s32 raw_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * const iface,
+                     net_packet_t **packet);
 
 #endif
