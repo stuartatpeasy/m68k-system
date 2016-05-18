@@ -25,8 +25,9 @@ struct ipv4_route
     ipv4_addr_t     dest;
     ipv4_addr_t     mask;
     ipv4_addr_t     gateway;
-    u16             metric;
+    s16             metric;
     u16             flags;
+    s16             prefix_len;
 };
 
 
@@ -39,7 +40,6 @@ struct ipv4_rt_item
     ipv4_route_t    r;
     ipv4_rt_item_t  *next;
 };
-
 
 
 /* Routing table flags */
@@ -55,7 +55,8 @@ struct ipv4_rt_item
 s32 ipv4_route_add(const ipv4_route_t * const r);
 s32 ipv4_route_delete(const ipv4_route_t * const r);
 s32 ipv4_route_get_entry(ipv4_rt_item_t **e);
-s32 ipv4_route_get_iface(const net_address_t *proto_addr, net_iface_t **iface);
+const ipv4_route_t *ipv4_route_get(const net_address_t * const proto_addr);
+net_iface_t *ipv4_route_get_iface(const net_address_t * const proto_addr);
 s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr);
 

@@ -20,9 +20,11 @@
 
 #define IPV4_ADDR_NONE              ((ipv4_addr_t) 0)
 #define IPV4_ADDR_BROADCAST         ((ipv4_addr_t) 0xffffffff)
+#define IPV4_MASK_NONE              ((ipv4_addr_t) 0)
 #define IPV4_MASK_HOST_ONLY         ((ipv4_addr_t) 0xffffffff)
 #define IPV4_SRC_ADDR_DEFAULT       IPV4_ADDR_NONE
 #define IPV4_PORT_NONE              ((ipv4_port_t) 0)
+#define IPV4_PREFIX_LEN_MAX         (32)
 
 #define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag             */
 #define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag             */
@@ -69,17 +71,6 @@ typedef struct ipv4_hdr
 } ipv4_hdr_t;
 
 
-typedef struct ipv4_route_ent
-{
-    ipv4_addr_t     dest;
-    ipv4_addr_t     gateway;
-    net_iface_t *   iface;
-    u8              mask;
-    u8              flags;
-    u8              metric;
-} ipv4_route_ent_t;
-
-
 s32 ipv4_init();
 s32 ipv4_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                       net_packet_t **packet);
@@ -91,5 +82,7 @@ ipv4_addr_t ipv4_get_addr(const net_address_t * const addr);
 ipv4_port_t ipv4_get_port(const net_address_t * const addr);
 s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * const a2);
 s32 ipv4_print_addr(const net_address_t *addr, char *buf, s32 len);
+u32 ipv4_mask_valid(const ipv4_addr_t mask);
+u8 ipv4_mask_to_prefix_len(const ipv4_addr_t mask);
 
 #endif

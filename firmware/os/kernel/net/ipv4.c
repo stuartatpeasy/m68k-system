@@ -253,3 +253,29 @@ s32 ipv4_print_addr(const net_address_t *addr, char *buf, s32 len)
     return snprintf(buf, len, "%u.%u.%u.%u", a >> 24, (a >> 16) & 0xff, (a >> 8) & 0xff,
                         a & 0xff);
 }
+
+
+/*
+    ipv4_mask_valid() - return non-zero if the specified ipv4_addr_t object represents a valid
+    netmask (e.g. 0.0.0.0, 255.255.252.0, etc.)
+*/
+u32 ipv4_mask_valid(const ipv4_addr_t mask)
+{
+    return !mask || !(~mask & (~mask + 1));
+}
+
+
+/*
+    ipv4_mask_to_prefix_len() - convert a netmask, contained in an ipv4_addr_t object, to a CIDR-
+    style prefix length value.  E.g. "255.255.252.0" -> 22.
+*/
+u8 ipv4_mask_to_prefix_len(const ipv4_addr_t mask)
+{
+    u32 m;
+    u8 cidr;
+
+    for(m = ~mask, cidr = 32; m; m >>= 1, --cidr)
+        ;
+
+    return cidr;
+}
