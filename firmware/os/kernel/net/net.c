@@ -52,12 +52,14 @@ s32 net_init()
 
 /*
     net_tx() - send a packet over an interface.
+    FIXME - net_tx() may no longer be needed
 */
 s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {
     net_iface_t *iface;
     u32 len = net_packet_get_len(packet);
     UNUSED(src);
+
 
     /* Determine interface over which packet is to be sent */
     iface = net_route_get(dest);
@@ -75,6 +77,7 @@ s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 
 /*
     net_tx_free() - send a packet, then free the packet.
+    FIXME - net_tx_free() may no longer be needed
 */
 s32 net_tx_free(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
 {

@@ -50,7 +50,7 @@ typedef u32 eth_cksum_t;    /* Ethernet checksum (the last four bytes of an Ethe
 
 s32 eth_init();
 s32 eth_rx(net_packet_t *packet);
-s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
+s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 eth_reply(net_packet_t *packet);
 s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                      net_packet_t **packet);

@@ -12,6 +12,7 @@
 #include <kernel/net/dhcp.h>
 #include <kernel/net/udp.h>
 #include <kernel/net/packet.h>
+#include <kernel/net/protocol.h>
 #include <klibc/stdio.h>        // FIXME remove
 #include <klibc/strings.h>
 
@@ -152,7 +153,6 @@ s32 dhcp_discover(net_iface_t *iface)
     bzero(msg, DHCP_DISCOVER_BUFFER_LEN);
 
     /* FIXME - only set BOOTP_FLAG_BROADCAST in msg->flags if interface is not configured */
-
     msg->op             = bo_request;
     msg->htype          = bh_ethernet;
     msg->hlen           = NET_ADDR_LEN_ETHERNET;
@@ -179,5 +179,9 @@ s32 dhcp_discover(net_iface_t *iface)
     if(ret != SUCCESS)
         return ret;
 
-    return net_tx_free(&src, &dest, pkt);
+    ret = net_protocol_tx(&src, &dest, pkt);
+
+    net_packet_free(pkt);
+
+    return ret;
 }

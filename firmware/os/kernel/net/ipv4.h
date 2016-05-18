@@ -86,7 +86,7 @@ s32 ipv4_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *i
 net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr);
 net_address_t *ipv4_make_broadcast_addr(net_address_t * const addr);
 s32 ipv4_rx(net_packet_t *packet);
-s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
+s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 ipv4_addr_t ipv4_get_addr(const net_address_t * const addr);
 ipv4_port_t ipv4_get_port(const net_address_t * const addr);
 s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * const a2);

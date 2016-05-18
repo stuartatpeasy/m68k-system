@@ -18,7 +18,7 @@
 
 
 s32 net_rx_unimplemented(net_packet_t *packet);
-s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
+s32 net_tx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 net_packet_alloc_unimplemented(const net_address_t * const addr, ku32 len,
                                    net_iface_t * const iface, net_packet_t **packet);
 s32 net_addr_compare_unimplemented(const net_address_t * const a1, const net_address_t * const a2);
@@ -81,6 +81,21 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
 
 
 /*
+    net_protocol_tx() - obtain an appropriate protocol driver for a packet, and pass the packet to
+    the driver's tx() function.
+*/
+s32 net_protocol_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
+{
+    const net_proto_driver_t *driver = net_protocol_get_driver(net_packet_get_proto(packet));
+
+    if(!driver)
+        return EPROTONOSUPPORT;
+
+    return driver->tx(src, dest, packet);
+}
+
+
+/*
     net_rx_unimplemented() - default handler for <proto>_rx()
 */
 s32 net_rx_unimplemented(net_packet_t *packet)
@@ -93,7 +108,7 @@ s32 net_rx_unimplemented(net_packet_t *packet)
 /*
     net_tx_unimplemented() - default handler for <proto>_tx()
 */
-s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 net_tx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     UNUSED(src);
     UNUSED(dest);

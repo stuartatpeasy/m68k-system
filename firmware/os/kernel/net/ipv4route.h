@@ -16,7 +16,10 @@
 
 
 /* An IPv4 route */
-typedef struct ipv4_route
+typedef struct ipv4_route ipv4_route_t;
+
+/* FIXME: move this struct into ipv4route.c (i.e. make it private) */
+struct ipv4_route
 {
     net_iface_t     *iface;
     ipv4_addr_t     dest;
@@ -24,18 +27,19 @@ typedef struct ipv4_route
     ipv4_addr_t     gateway;
     u16             metric;
     u16             flags;
-} ipv4_route_t;
+};
+
 
 /* IPv4 routing table entry */
 typedef struct ipv4_rt_item ipv4_rt_item_t;
+
+/* FIXME: move this struct into ipv4route.c (i.e. make it private) */
 struct ipv4_rt_item
 {
     ipv4_route_t    r;
     ipv4_rt_item_t  *next;
 };
 
-/* The IPv4 routing table */
-ipv4_rt_item_t *g_ipv4_routes;
 
 
 /* Routing table flags */

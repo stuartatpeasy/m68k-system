@@ -60,7 +60,7 @@ s32 ipv4_rx(net_packet_t *packet)
 /*
     ipv4_tx() - transmit an IPv4 packet.
 */
-s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     ipv4_hdr_t *hdr;
     s32 ret;
@@ -85,10 +85,12 @@ s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *p
     hdr->cksum = net_cksum(hdr, sizeof(ipv4_hdr_t));
     net_packet_set_proto(packet, np_ipv4);
 
-    return net_tx(src, dest, packet);
+    // FIXME - look up route in ipv4 routing table, set packet->interface & hardware address
+
+    return net_protocol_tx(src, dest, packet);
 }
 
-#if 0       // FIXME
+#if 0       // FIXME - remove ipv4_reply()?
 /*
     ipv4_reply() - reply to an IPv4 packet
 */

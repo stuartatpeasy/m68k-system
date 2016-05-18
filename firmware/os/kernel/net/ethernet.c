@@ -54,7 +54,7 @@ s32 eth_rx(net_packet_t *packet)
     eth_tx() - add an Ethernet header to the supplied frame and transmit it on the specified
     interface.
 */
-s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     eth_hdr_t *hdr;
     net_protocol_t proto;
@@ -96,6 +96,7 @@ s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
 /*
     eth_reply() - assume that *packet contains a received packet which has been modified in some
     way; swap its source and destination addresses and transmit it.
+    FIXME - remove eth_reply()
 */
 s32 eth_reply(net_packet_t *packet)
 {

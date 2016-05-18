@@ -36,13 +36,14 @@ s32 udp_rx(net_packet_t *packet)
 /*
     udp_tx() - transmit a UDP packet.
 */
-s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 udp_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     udp_hdr_t *hdr;
     s32 ret;
 
+    /* FIXME - make this work with "IP-family" addresses, not just IPv4 addresses specifically */
     if((net_address_get_type(src) != na_ipv4) || (net_address_get_type(dest) != na_ipv4))
-        return EPROTONOSUPPORT;
+        return EAFNOSUPPORT;
 
     ret = net_packet_insert(packet, sizeof(udp_hdr_t));
     if(ret != SUCCESS)
@@ -55,7 +56,7 @@ s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
     hdr->len        = N2BE16(net_packet_get_len(packet));
     hdr->cksum      = 0;
 
-    return net_tx(src, dest, packet);
+    return net_protocol_tx(src, dest, packet);
 }
 
 
