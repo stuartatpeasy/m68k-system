@@ -28,8 +28,8 @@ typedef s32 (*net_init_fn_t)();
 
 
 s32 net_init();
-s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
-s32 net_tx_free(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
+s32 net_tx(net_packet_t *packet);
+s32 net_tx_free(net_packet_t *packet);
 s16 net_cksum(const void *buf, u32 len);
 void net_receive(void *arg);
 

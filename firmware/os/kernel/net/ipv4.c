@@ -104,30 +104,6 @@ s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     return net_protocol_tx(&routed_src, &routed_dest, packet);
 }
 
-#if 0       // FIXME - remove ipv4_reply()?
-/*
-    ipv4_reply() - reply to an IPv4 packet
-*/
-s32 ipv4_reply(net_packet_t *packet)
-{
-    ipv4_hdr_t *hdr;
-    ipv4_addr_t tmp;
-    s32 ret;
-
-    ret = net_packet_encapsulate(np_ipv4, sizeof(ipv4_hdr_t), packet);
-    if(ret != SUCCESS)
-        return ret;
-
-    hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
-
-    tmp = hdr->src;
-    hdr->src = hdr->dest;
-    hdr->dest = tmp;
-
-    return packet->iface->driver->reply(packet);
-}
-#endif
-
 
 /*
     ipv4_make_addr() - populate a net_address_t object with an IPv4 address and return it.

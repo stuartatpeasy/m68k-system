@@ -67,7 +67,6 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
         ipv4_default_route = newent;
 
     return SUCCESS;
-
 }
 
 

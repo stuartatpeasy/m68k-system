@@ -54,19 +54,24 @@ s32 net_init()
     net_tx() - send a packet over an interface.
     FIXME - net_tx() may no longer be needed
 */
-s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 net_tx(net_packet_t *packet)
 {
     net_iface_t *iface;
-    u32 len = net_packet_get_len(packet);
-    UNUSED(src);
+	dev_t *dev;
+    u32 len;
 
+	len = net_packet_get_len(packet);
 
-    /* Determine interface over which packet is to be sent */
-    iface = net_route_get(dest);
+	/* Routing must be complete by the time this function is called */
+	iface = net_packet_get_interface(packet);
     if(iface == NULL)
         return EHOSTUNREACH;
 
-    dev_t * const dev = net_interface_get_device(iface);
+	/* The packet protocol must match the interface protocol */
+	if(net_packet_get_proto(packet) != net_interface_get_proto(iface))
+		return EPROTONOSUPPORT;
+
+    dev = net_interface_get_device(iface);
 
     net_interface_stats_inc_tx_packets(iface);
     net_interface_stats_add_tx_bytes(iface, len);
@@ -79,9 +84,9 @@ s32 net_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
     net_tx_free() - send a packet, then free the packet.
     FIXME - net_tx_free() may no longer be needed
 */
-s32 net_tx_free(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 net_tx_free(net_packet_t *packet)
 {
-    ks32 ret = net_tx(src, dest, packet);
+    ks32 ret = net_tx(packet);
 
     net_packet_free(packet);
 
