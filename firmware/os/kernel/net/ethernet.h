@@ -32,8 +32,9 @@ typedef union mac_addr
 /* Enumeration of Ethertype values */
 typedef enum ethertype
 {
-    ethertype_ipv4  = 0x0800,
-    ethertype_arp   = 0x0806
+    ethertype_unknown   = 0x0000,
+    ethertype_ipv4      = 0x0800,
+    ethertype_arp       = 0x0806
 } ethertype_t;
 
 
@@ -59,6 +60,7 @@ net_address_t *eth_make_broadcast_addr(net_address_t *addr);
 const mac_addr_t *eth_get_addr(const net_address_t * const addr);
 s32 eth_addr_compare(const net_address_t * const a1, const net_address_t * const a2);
 net_protocol_t eth_proto_from_ethertype(ku16 ethertype);
+ethertype_t eth_ethertype_from_proto(const net_protocol_t proto);
 s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len);
 
 #endif

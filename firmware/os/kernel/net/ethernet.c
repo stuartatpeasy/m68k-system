@@ -10,6 +10,7 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/arp.h>
+#include <kernel/net/interface.h>
 #include <kernel/net/packet.h>
 #include <klibc/stdio.h>
 #include <klibc/strings.h>
@@ -60,7 +61,19 @@ s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     net_protocol_t proto;
     s32 ret;
 
-    /* Source and dest addresses must be na_ethernet */
+    /* Handle NULL source addresses: use the default address for the specified interface */
+    if(!src)
+    {
+        /* No source address specified.  Use the default hardware address for the interface */
+        const net_iface_t * const iface = net_packet_get_interface(packet);
+
+        if(!iface)
+            return EHOSTUNREACH;    /* No source address and no interface - packet unrouteable. */
+
+        src = (net_address_t *) net_interface_get_hw_addr(iface);
+    }
+
+    /* Source and destination addresses must be an Ethernet address */
     if((net_address_get_type(src) != na_ethernet) || (net_address_get_type(dest) != na_ethernet))
         return EAFNOSUPPORT;
 
@@ -71,24 +84,15 @@ s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
         return ret;
 
     hdr = (eth_hdr_t *) net_packet_get_start(packet);
+    hdr->type = eth_ethertype_from_proto(proto);
 
-    switch(proto)
-    {
-        case np_ipv4:
-            hdr->type = ethertype_ipv4;
-            break;
-
-        case np_arp:
-            hdr->type = ethertype_arp;
-            break;
-
-        default:
-            return EPROTONOSUPPORT;
-    }
+    if(hdr->type == ethertype_unknown)
+        return EPROTONOSUPPORT;
 
     hdr->src = *eth_get_addr(src);
     hdr->dest = *eth_get_addr(dest);
 
+    /* FIXME - actually transmit the packet here */
     return net_tx(src, dest, packet);
 }
 
@@ -205,9 +209,30 @@ net_protocol_t eth_proto_from_ethertype(ku16 ethertype)
 
         case ethertype_arp:
             return np_arp;
-    }
 
-    return np_unknown;
+        default:
+            return np_unknown;
+    }
+}
+
+
+/*
+    eth_ethertype_from_proto() - given a net_protocol_t value, return the corresponding ethertype
+    value.
+*/
+ethertype_t eth_ethertype_from_proto(const net_protocol_t proto)
+{
+    switch(proto)
+    {
+        case np_ipv4:
+            return ethertype_ipv4;
+
+        case np_arp:
+            return ethertype_arp;
+
+        default:
+            return ethertype_unknown;
+    }
 }
 
 

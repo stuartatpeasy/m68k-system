@@ -8,6 +8,7 @@
 */
 
 #include <kernel/net/ipv4.h>
+#include <kernel/net/ipv4route.h>
 #include <kernel/net/net.h>
 #include <kernel/net/packet.h>
 #include <klibc/stdio.h>
@@ -62,8 +63,15 @@ s32 ipv4_rx(net_packet_t *packet)
 */
 s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
+    net_address_t routed_src, routed_dest;
+    net_iface_t *iface;
     ipv4_hdr_t *hdr;
     s32 ret;
+
+    iface = ipv4_route_get_iface(dest);
+
+    if(!iface)
+        return EHOSTUNREACH;
 
     ret = net_packet_insert(packet, sizeof(ipv4_hdr_t));
     if(ret != SUCCESS)
@@ -76,18 +84,24 @@ s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     hdr->total_len          = net_packet_get_len(packet);
     hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
     hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
-    hdr->ttl                = 64;               /* Sensible default? */
+    hdr->ttl                = IPV4_DEFAULT_TTL;
     hdr->protocol           = ipv4_get_ipproto(net_packet_get_proto(packet));
     hdr->src                = ipv4_get_addr(src);
     hdr->dest               = ipv4_get_addr(dest);
     hdr->cksum              = 0x0000;
 
     hdr->cksum = net_cksum(hdr, sizeof(ipv4_hdr_t));
+
     net_packet_set_proto(packet, np_ipv4);
+    net_packet_set_interface(packet, iface);
 
-    // FIXME - look up route in ipv4 routing table, set packet->interface & hardware address
+    routed_src = *net_interface_get_hw_addr(iface);
 
-    return net_protocol_tx(src, dest, packet);
+    ret = ipv4_route_get_hw_addr(iface, dest, &routed_dest);
+    if(ret != SUCCESS)
+        return ret;
+
+    return net_protocol_tx(&routed_src, &routed_dest, packet);
 }
 
 #if 0       // FIXME - remove ipv4_reply()?

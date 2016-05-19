@@ -99,7 +99,7 @@ s32 arp_rx(net_packet_t *packet)
         payload->src_ip = ipv4_get_addr(net_interface_get_proto_addr(iface));
         payload->src_mac = *eth_get_addr(net_interface_get_hw_addr(iface));
 
-        return net_tx(NULL, &hw_addr, packet);
+        return net_protocol_tx(NULL, &hw_addr, packet);
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
@@ -118,6 +118,7 @@ s32 arp_rx(net_packet_t *packet)
 
 /*
     arp_send_request() - send an ARP request to resolve the specified IPv4 address.
+    FIXME - rework the Ethernet-specific parts of arp_send_request()
 */
 s32 arp_send_request(const net_address_t *addr)
 {
@@ -159,7 +160,12 @@ s32 arp_send_request(const net_address_t *addr)
     p->payload.dst_ip       = ipv4_get_addr(addr);
     p->payload.dst_mac      = *eth_get_addr(&bcast);
 
-    return net_tx_free(NULL, &bcast, pkt);
+    net_packet_set_proto(pkt, np_ethernet);
+
+    ret = net_protocol_tx(NULL, &bcast, pkt);
+    net_packet_free(pkt);
+
+    return ret;
 }
 
 

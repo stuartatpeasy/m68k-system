@@ -29,7 +29,7 @@
 #define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag             */
 #define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag             */
 
-#define IPV4_DEFAULT_TTL            (64)
+#define IPV4_DEFAULT_TTL            (64)        /* Is this a sensible default?          */
 
 
 /* IPv4 address */
