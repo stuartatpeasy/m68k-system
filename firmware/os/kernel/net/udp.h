@@ -25,6 +25,7 @@ typedef struct udp_hdr
 } udp_hdr_t;
 
 
+s32 udp_init();
 s32 udp_rx(net_packet_t *packet);
 s32 udp_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 udp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,

@@ -14,6 +14,7 @@
 #include <kernel/net/net.h>
 
 
+s32 tcp_init();
 s32 tcp_rx(net_packet_t *packet);
 
 #endif

@@ -8,6 +8,16 @@
 */
 
 #include <kernel/net/tcp.h>
+#include <kernel/net/protocol.h>
+
+
+/*
+    tcp_init() - initialise the TCP protocol driver.
+*/
+s32 tcp_init()
+{
+    return net_protocol_register_driver(np_tcp, "TCP", tcp_rx, NULL, NULL, NULL);
+}
 
 
 /*

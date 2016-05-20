@@ -15,6 +15,15 @@ s32 icmp_handle_echo_request(net_packet_t *packet);
 
 
 /*
+    icmp_init() - initialise the ICMP protocol driver.
+*/
+s32 icmp_init()
+{
+    return net_protocol_register_driver(np_icmp, "ICMP", icmp_rx, NULL, NULL, NULL);
+}
+
+
+/*
     icmp_rx() - handle an incoming ICMP packet.
 */
 s32 icmp_rx(net_packet_t *packet)

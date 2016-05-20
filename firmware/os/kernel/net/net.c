@@ -11,12 +11,15 @@
 #include <kernel/error.h>
 #include <kernel/net/arp.h>
 #include <kernel/net/ethernet.h>
+#include <kernel/net/icmp.h>
 #include <kernel/net/interface.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
 #include <kernel/net/packet.h>
 #include <kernel/net/raw.h>
 #include <kernel/net/route.h>
+#include <kernel/net/tcp.h>
+#include <kernel/net/udp.h>
 #include <kernel/process.h>
 #include <kernel/util/kutil.h>
 #include <klibc/strings.h>
@@ -26,9 +29,12 @@
 net_init_fn_t g_net_init_fns[] =
 {
     arp_init,
+    icmp_init,
     ipv4_init,
     eth_init,
-    raw_init
+    raw_init,
+    tcp_init,
+    udp_init
 };
 
 
@@ -52,7 +58,6 @@ s32 net_init()
 
 /*
     net_tx() - send a packet over an interface.
-    FIXME - net_tx() may no longer be needed
 */
 s32 net_tx(net_packet_t *packet)
 {

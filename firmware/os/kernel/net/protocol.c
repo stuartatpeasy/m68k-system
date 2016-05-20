@@ -81,6 +81,20 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
 
 
 /*
+    net_protocol_rx() - call the appropriate protocol driver to handle a received packet.
+*/
+s32 net_protocol_rx(net_packet_t * const packet)
+{
+    net_proto_driver_t *driver = net_protocol_get_driver(net_packet_get_proto(packet));
+
+    if(driver)
+        return driver->rx(packet);
+
+    return EPROTONOSUPPORT;
+}
+
+
+/*
     net_protocol_tx() - obtain an appropriate protocol driver for a packet, and pass the packet to
     the driver's tx() function.
 */
@@ -214,18 +228,4 @@ s32 net_protocol_packet_alloc(const net_protocol_t proto, const net_address_t * 
         return EPROTONOSUPPORT;
 
     return drv->packet_alloc(addr, len, iface, packet);
-}
-
-
-/*
-    net_protocol_rx() - call the appropriate protocol driver to handle a received packet.
-*/
-s32 net_protocol_rx(net_packet_t * const packet)
-{
-    net_proto_driver_t *driver = net_protocol_get_driver(net_packet_get_proto(packet));
-
-    if(driver)
-        return driver->rx(packet);
-
-    return EPROTONOSUPPORT;
 }

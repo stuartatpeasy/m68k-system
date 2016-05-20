@@ -13,6 +13,15 @@
 
 
 /*
+    udp_init() - initialise the UDP protocol driver.
+*/
+s32 udp_init()
+{
+    return net_protocol_register_driver(np_udp, "UDP", udp_rx, udp_tx, NULL, udp_packet_alloc);
+}
+
+
+/*
     udp_rx() - handle an incoming UDP packet.
 */
 s32 udp_rx(net_packet_t *packet)
