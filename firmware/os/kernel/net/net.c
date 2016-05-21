@@ -9,6 +9,7 @@
 
 #include <kernel/device/device.h>
 #include <kernel/error.h>
+#include <kernel/include/defs.h>
 #include <kernel/net/arp.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/icmp.h>
@@ -45,7 +46,7 @@ s32 net_init()
 {
     u32 i;
 
-    for(i = 0; i < sizeof(g_net_init_fns); ++i)
+    for(i = 0; i < ARRAY_COUNT(g_net_init_fns); ++i)
     {
         ks32 ret = g_net_init_fns[i]();
         if(ret != SUCCESS)

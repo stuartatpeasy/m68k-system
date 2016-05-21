@@ -102,7 +102,6 @@ s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     hdr->src = *eth_get_addr(src);
     hdr->dest = *eth_get_addr(dest);
 
-    /* FIXME - actually transmit the packet here */
     return net_tx(packet);
 }
 

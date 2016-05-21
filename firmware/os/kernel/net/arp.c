@@ -120,14 +120,13 @@ s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 
 /*
     arp_send_request() - send an ARP request to resolve the specified IPv4 address.
-    FIXME - rework the Ethernet-specific parts of arp_send_request()
 */
 s32 arp_send_request(const net_address_t *addr)
 {
     arp_eth_ipv4_packet_t *p;
     net_packet_t *pkt;
     net_iface_t *iface;
-    net_address_t bcast;
+    net_address_t src, bcast;
     s32 ret;
 
     if(net_address_get_type(addr) != na_ipv4)
@@ -141,7 +140,7 @@ s32 arp_send_request(const net_address_t *addr)
     if(ret != SUCCESS)
         return ret;
 
-    if(net_address_get_type(&bcast) != na_ethernet)
+    if(net_interface_get_proto(iface) != np_ethernet)
         return EPROTONOSUPPORT;
 
     ret = net_protocol_packet_alloc(np_arp, addr, sizeof(arp_eth_ipv4_packet_t), NET_INTERFACE_ANY,
@@ -164,7 +163,9 @@ s32 arp_send_request(const net_address_t *addr)
 
     net_packet_set_proto(pkt, np_ethernet);
 
-    ret = net_protocol_tx(NULL, &bcast, pkt);
+    src = *net_interface_get_hw_addr(iface);
+
+    ret = net_protocol_tx(&src, &bcast, pkt);
     net_packet_free(pkt);
 
     return ret;
