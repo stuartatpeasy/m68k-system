@@ -65,7 +65,7 @@ s32 net_tx(net_packet_t *packet)
     net_iface_t *iface;
 	dev_t *dev;
     u32 len;
-puts("net_tx()");
+
 	len = net_packet_get_len(packet);
 
 	/* Routing must be complete by the time this function is called */
@@ -81,8 +81,6 @@ puts("net_tx()");
 
     net_interface_stats_inc_tx_packets(iface);
     net_interface_stats_add_tx_bytes(iface, len);
-
-dump_hex(net_packet_get_start(packet), 1, 0, len);
 
     return dev->write(dev, 0, &len, net_packet_get_start(packet));
 }

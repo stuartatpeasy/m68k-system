@@ -70,7 +70,5 @@ s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet
     r->hdr.type     = icmp_echo_reply;
     r->hdr.checksum = net_cksum(r, net_packet_get_len(packet));
 
-    net_packet_set_proto(packet, net_protocol_from_address(dest));
-
     return net_protocol_tx(dest, src, packet);
 }
