@@ -16,6 +16,12 @@
 #include <klibc/strings.h>
 
 
+s32 eth_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet);
+
+
 /* MAC address representing the broadcast address */
 const mac_addr_t eth_mac_broadcast =
 {
@@ -29,7 +35,7 @@ const mac_addr_t eth_mac_broadcast =
 s32 eth_init()
 {
     return net_protocol_register_driver(np_ethernet, "Ethernet", eth_rx, eth_tx, eth_addr_compare,
-                                        NULL);
+                                        eth_packet_alloc);
 }
 
 

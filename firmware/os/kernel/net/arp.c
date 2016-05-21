@@ -11,7 +11,7 @@
 #include <kernel/net/interface.h>
 #include <kernel/net/packet.h>
 #include <kernel/net/protocol.h>
-#include <kernel/net/route.h>
+#include <kernel/net/ipv4route.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/process.h>
 #include <klibc/stdlib.h>
@@ -23,7 +23,10 @@ extern time_t g_current_timestamp;
 s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
                   const net_address_t *proto_addr);
 arp_cache_item_t *arp_cache_get_entry_for_insert();
+s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 arp_send_request(const net_address_t *addr);
+s32 arp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet);
 
 
 /*
@@ -41,7 +44,7 @@ s32 arp_init()
     */
     g_arp_cache = kcalloc(ARP_CACHE_SIZE, sizeof(arp_cache_item_t));
 
-    return net_protocol_register_driver(np_arp, "ARP", arp_rx, NULL, NULL, NULL);
+    return net_protocol_register_driver(np_arp, "ARP", arp_rx, NULL, NULL, arp_packet_alloc);
 }
 
 
@@ -119,6 +122,23 @@ s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 
 
 /*
+    arp_packet_alloc() - allocate an packet to hold an ARP request.
+*/
+s32 arp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet)
+{
+    ks32 ret = net_protocol_packet_alloc(net_address_get_proto(addr), addr, len, iface, packet);
+
+    if(ret != SUCCESS)
+        return ret;
+
+    net_packet_set_proto(*packet, np_arp);
+
+    return SUCCESS;
+}
+
+
+/*
     arp_send_request() - send an ARP request to resolve the specified IPv4 address.
 */
 s32 arp_send_request(const net_address_t *addr)
@@ -132,19 +152,16 @@ s32 arp_send_request(const net_address_t *addr)
     if(net_address_get_type(addr) != na_ipv4)
         return EPROTONOSUPPORT;
 
-    iface = net_route_get(addr);
+    iface = ipv4_route_get_iface(addr);
     if(!iface)
         return ENETUNREACH;
-
-    ret = net_interface_hw_addr_broadcast(iface, &bcast);
-    if(ret != SUCCESS)
-        return ret;
 
     if(net_interface_get_proto(iface) != np_ethernet)
         return EPROTONOSUPPORT;
 
-    ret = net_protocol_packet_alloc(np_arp, addr, sizeof(arp_eth_ipv4_packet_t), NET_INTERFACE_ANY,
-                                    &pkt);
+    eth_make_broadcast_addr(&bcast);
+
+    ret = net_protocol_packet_alloc(np_arp, &bcast, sizeof(arp_eth_ipv4_packet_t), iface, &pkt);
     if(ret != SUCCESS)
         return ret;
 
@@ -160,8 +177,6 @@ s32 arp_send_request(const net_address_t *addr)
     p->payload.src_mac      = *eth_get_addr(net_interface_get_hw_addr(iface));
     p->payload.dst_ip       = ipv4_get_addr(addr);
     p->payload.dst_mac      = *eth_get_addr(&bcast);
-
-    net_packet_set_proto(pkt, np_ethernet);
 
     src = *net_interface_get_hw_addr(iface);
 

@@ -82,7 +82,6 @@ arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface,
                                    const net_address_t *proto_addr);
 s32 arp_handle_packet(net_packet_t *packet);
 s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr);
-s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 arp_send_request(const net_address_t *addr);
 
 #endif

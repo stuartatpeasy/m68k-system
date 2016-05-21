@@ -31,7 +31,6 @@ const net_address_t *net_interface_get_proto_addr(const net_iface_t * const ifac
 s32 net_interface_set_proto_addr(net_iface_t * const iface, const net_address_t * const addr);
 const net_address_t *net_interface_get_hw_addr(const net_iface_t * const iface);
 net_protocol_t net_interface_get_proto(const net_iface_t * const iface);
-s32 net_interface_hw_addr_broadcast(net_iface_t * const iface, net_address_t * const addr);
 void net_interface_stats_inc_rx_packets(net_iface_t * const iface);
 void net_interface_stats_add_rx_bytes(net_iface_t * const iface, ku32 bytes);
 void net_interface_stats_inc_tx_packets(net_iface_t * const iface);

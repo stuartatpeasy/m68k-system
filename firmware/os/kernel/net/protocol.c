@@ -85,7 +85,7 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
 */
 s32 net_protocol_rx(net_address_t *src, net_address_t *dest, net_packet_t * const packet)
 {
-    net_proto_driver_t *driver = net_protocol_get_driver(net_packet_get_proto(packet));
+    net_proto_driver_t *driver = net_protocol_get_driver(net_address_get_proto(dest));
 
     if(driver)
         return driver->rx(src, dest, packet);
@@ -100,7 +100,7 @@ s32 net_protocol_rx(net_address_t *src, net_address_t *dest, net_packet_t * cons
 */
 s32 net_protocol_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
-    const net_proto_driver_t *driver = net_protocol_get_driver(net_packet_get_proto(packet));
+    const net_proto_driver_t *driver = net_protocol_get_driver(net_address_get_proto(dest));
 
     if(!driver)
         return EPROTONOSUPPORT;

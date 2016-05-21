@@ -209,21 +209,6 @@ s32 net_interface_set_proto_addr(net_iface_t * const iface, const net_address_t 
 
 
 /*
-    net_interface_hw_addr_broadcast() - obtain the broadcast hardware address associated with the
-    specified interface.
-*/
-s32 net_interface_hw_addr_broadcast(net_iface_t * const iface, net_address_t * const addr)
-{
-    UNUSED(iface);
-    UNUSED(addr);
-
-    /* FIXME - implement this */
-    puts("net_interface_hw_addr_broadcast() - not implemented");
-    return EPROTONOSUPPORT;
-}
-
-
-/*
     net_interface_get_by_dev() - look up a network interface by device name.
 */
 net_iface_t *net_interface_get_by_dev(const char * const name)

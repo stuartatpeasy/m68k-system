@@ -35,6 +35,7 @@ s32 raw_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * c
                      net_packet_t **packet)
 {
     ks32 ret = net_packet_alloc(addr, len, iface, packet);
+
     if(ret != SUCCESS)
         return ret;
 

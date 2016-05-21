@@ -116,7 +116,7 @@ void net_packet_free(net_packet_t *packet)
 void net_packet_reset(net_packet_t *packet)
 {
     packet->start = packet->raw.data;
-    packet->len = 0;
+    packet->len = packet->raw.len;
 }
 
 
