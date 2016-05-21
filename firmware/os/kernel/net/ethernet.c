@@ -108,33 +108,6 @@ s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 
 
 /*
-    eth_reply() - assume that *packet contains a received packet which has been modified in some
-    way; swap its source and destination addresses and transmit it.
-    FIXME - remove eth_reply()
-*/
-s32 eth_reply(net_packet_t *packet)
-{
-    eth_hdr_t *hdr;
-    net_address_t src, dest;
-    s32 ret;
-
-    ret = net_packet_insert(packet, sizeof(eth_hdr_t));
-    if(ret != SUCCESS)
-        return ret;
-
-    hdr = (eth_hdr_t *) net_packet_get_start(packet);
-
-    eth_make_addr(&hdr->dest, &src);
-    eth_make_addr(&hdr->src, &dest);
-
-    hdr->src = *eth_get_addr(&src);
-    hdr->dest = *eth_get_addr(&dest);
-
-    return net_tx(packet);
-}
-
-
-/*
     eth_make_addr() - populate a net_address_t object with a MAC address and return it.
 */
 net_address_t *eth_make_addr(const mac_addr_t * const mac, net_address_t *addr)

@@ -15,7 +15,6 @@
 #include <klibc/strings.h>
 
 
-// s32 ipv4_reply(net_packet_t *packet);    // FIXME
 ipv4_protocol_t ipv4_get_ipproto(const net_protocol_t proto);
 net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto);
 
