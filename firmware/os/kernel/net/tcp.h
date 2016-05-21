@@ -15,6 +15,6 @@
 
 
 s32 tcp_init();
-s32 tcp_rx(net_packet_t *packet);
+s32 tcp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 
 #endif

@@ -24,7 +24,7 @@ s32 udp_init()
 /*
     udp_rx() - handle an incoming UDP packet.
 */
-s32 udp_rx(net_packet_t *packet)
+s32 udp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     s32 ret;
     udp_hdr_t *hdr = (udp_hdr_t *) net_packet_get_start(packet);
@@ -32,6 +32,10 @@ s32 udp_rx(net_packet_t *packet)
     ret = net_packet_consume(packet, sizeof(udp_hdr_t));
     if(ret != SUCCESS)
         return ret;
+
+    /* FIXME - this handling of port numbers is ugly and broken; should incorporate portnum in net_address_t? */
+    ipv4_addr_set_port((ipv4_address_t *) net_address_get_address(src), hdr->src_port);
+    ipv4_addr_set_port((ipv4_address_t *) net_address_get_address(dest), hdr->dest_port);
 
     if(hdr->dest_port == DHCP_CLIENT_PORT)
         return dhcp_rx(packet);

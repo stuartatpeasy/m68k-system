@@ -50,13 +50,15 @@ s32 arp_init()
     ESUCCESS if the packet was successfully processed, or if the packet was ignored.  Currently
     only supports Ethernet+IP responses.
 */
-s32 arp_rx(net_packet_t *packet)
+s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     arp_hdr_t * const hdr = (arp_hdr_t *) net_packet_get_start(packet);
     arp_payload_t * payload;
     net_address_t dst;
     net_iface_t *iface;
     s32 ret;
+    UNUSED(src);
+    UNUSED(dest);
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
     if(net_packet_get_len(packet) < sizeof(arp_hdr_t))

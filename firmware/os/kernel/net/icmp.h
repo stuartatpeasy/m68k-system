@@ -54,6 +54,6 @@ typedef struct icmp_echo_request
 typedef icmp_echo_request_t icmp_echo_reply_t;
 
 s32 icmp_init();
-s32 icmp_rx(net_packet_t *packet);
+s32 icmp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 
 #endif

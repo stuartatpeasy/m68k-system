@@ -11,7 +11,7 @@
 #include <kernel/net/packet.h>
 
 
-s32 icmp_handle_echo_request(net_packet_t *packet);
+s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 
 
 /*
@@ -26,7 +26,7 @@ s32 icmp_init()
 /*
     icmp_rx() - handle an incoming ICMP packet.
 */
-s32 icmp_rx(net_packet_t *packet)
+s32 icmp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     const icmp_fixed_hdr_t * const icmp_hdr =
         (const icmp_fixed_hdr_t *) net_packet_get_start(packet);
@@ -49,7 +49,7 @@ s32 icmp_rx(net_packet_t *packet)
     switch(icmp_hdr->type)
     {
         case icmp_echo_request:
-            return icmp_handle_echo_request(packet);
+            return icmp_handle_echo_request(src, dest, packet);
     }
 
     return SUCCESS;
@@ -59,7 +59,7 @@ s32 icmp_rx(net_packet_t *packet)
 /*
     icmp_handle_echo_request() - handle an incoming ICMP echo request packet.
 */
-s32 icmp_handle_echo_request(net_packet_t *packet)
+s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     icmp_echo_reply_t *r = net_packet_get_start(packet);
 
@@ -70,7 +70,7 @@ s32 icmp_handle_echo_request(net_packet_t *packet)
     r->hdr.type     = icmp_echo_reply;
     r->hdr.checksum = net_cksum(r, net_packet_get_len(packet));
 
-// FIXME
-//    return packet->driver->reply(packet);
-return SUCCESS;
+    net_packet_set_proto(packet, net_protocol_from_address(dest));
+
+    return net_protocol_tx(dest, src, packet);
 }

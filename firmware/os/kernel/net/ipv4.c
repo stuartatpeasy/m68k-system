@@ -34,7 +34,7 @@ s32 ipv4_init()
     ipv4_handle_packet() - handle an incoming IPv4 packet by decapsulating it, optionally verifying
     its header checksum, and passing it up to the next protocol handler.
 */
-s32 ipv4_rx(net_packet_t *packet)
+s32 ipv4_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     ipv4_hdr_t *hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
     s32 ret;
@@ -52,9 +52,12 @@ s32 ipv4_rx(net_packet_t *packet)
     if(ret != SUCCESS)
         return ret;
 
+    ipv4_make_addr(hdr->src, IPV4_PORT_NONE, src);
+    ipv4_make_addr(hdr->dest, IPV4_PORT_NONE, dest);
+
     net_packet_set_proto(packet, ipv4_get_proto(hdr->protocol));
 
-    return net_protocol_rx(packet);
+    return net_protocol_rx(src, dest, packet);
 }
 
 
@@ -116,6 +119,16 @@ net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_
     ipv4_addr->addr = ip;
     ipv4_addr->port = port;
 
+    return addr;
+}
+
+
+/*
+    ipv4_addr_set_port() - set the port associated with an IPv4 address object.
+*/
+ipv4_address_t *ipv4_addr_set_port(ipv4_address_t * const addr, const ipv4_port_t port)
+{
+    addr->port = port;
     return addr;
 }
 

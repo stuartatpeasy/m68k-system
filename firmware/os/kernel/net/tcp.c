@@ -23,8 +23,10 @@ s32 tcp_init()
 /*
     tcp_handle_packet() - handle an incoming TCP packet.
 */
-s32 tcp_rx(net_packet_t *packet)
+s32 tcp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
+    UNUSED(src);
+    UNUSED(dest);
     UNUSED(packet);
 
     return SUCCESS;

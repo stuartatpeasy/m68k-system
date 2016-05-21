@@ -17,7 +17,7 @@
 #include <klibc/string.h>
 
 
-s32 net_rx_unimplemented(net_packet_t *packet);
+s32 net_rx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 net_tx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 net_packet_alloc_unimplemented(const net_address_t * const addr, ku32 len,
                                    net_iface_t * const iface, net_packet_t **packet);
@@ -83,12 +83,12 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
 /*
     net_protocol_rx() - call the appropriate protocol driver to handle a received packet.
 */
-s32 net_protocol_rx(net_packet_t * const packet)
+s32 net_protocol_rx(net_address_t *src, net_address_t *dest, net_packet_t * const packet)
 {
     net_proto_driver_t *driver = net_protocol_get_driver(net_packet_get_proto(packet));
 
     if(driver)
-        return driver->rx(packet);
+        return driver->rx(src, dest, packet);
 
     return EPROTONOSUPPORT;
 }
@@ -112,8 +112,10 @@ s32 net_protocol_tx(net_address_t *src, net_address_t *dest, net_packet_t *packe
 /*
     net_rx_unimplemented() - default handler for <proto>_rx()
 */
-s32 net_rx_unimplemented(net_packet_t *packet)
+s32 net_rx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
+    UNUSED(src);
+    UNUSED(dest);
     UNUSED(packet);
     return ENOSYS;
 }

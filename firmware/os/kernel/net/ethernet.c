@@ -34,9 +34,13 @@ s32 eth_init()
 
 
 /*
-    eth_rx() - handle an incoming Ethernet packet.
+    eth_rx() - handle an incoming Ethernet packet.  Ethernet is a layer 2 protocol, meaning that
+    this driver may be the first one called after a packet is received by a hardware driver.
+    In that case, packet->proto will be np_raw, and the src and dest addresses will be na_unknown;
+    we will therefore set src and dest to the source and destination Ethernet addresses contained in
+    the packet.
 */
-s32 eth_rx(net_packet_t *packet)
+s32 eth_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     s32 ret;
     const eth_hdr_t * const ehdr = (eth_hdr_t *) net_packet_get_start(packet);
@@ -45,9 +49,15 @@ s32 eth_rx(net_packet_t *packet)
     if(ret != SUCCESS)
         return ret;
 
+    if(net_address_get_proto(src) == np_unknown)
+        eth_make_addr(&ehdr->src, src);
+
+    if(net_address_get_proto(dest) == np_unknown)
+        eth_make_addr(&ehdr->dest, dest);
+
     net_packet_set_proto(packet, eth_proto_from_ethertype(ehdr->type));
 
-    return net_protocol_rx(packet);
+    return net_protocol_rx(src, dest, packet);
 }
 
 

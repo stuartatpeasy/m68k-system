@@ -125,6 +125,7 @@ s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet)
 {
     u32 len;
     net_protocol_t proto;
+    net_address_t src, dest;
     dev_t *dev;
 
     dev = net_interface_get_device(iface);
@@ -143,7 +144,10 @@ s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet)
     net_packet_set_len(packet, len);
     net_interface_stats_add_rx_bytes(iface, len);
 
-    ret = net_protocol_rx(packet);
+    net_address_set_type(np_unknown, &src);
+    net_address_set_type(np_unknown, &dest);
+
+    ret = net_protocol_rx(&src, &dest, packet);
     if(ret == SUCCESS)
         net_interface_stats_inc_rx_packets(iface);
     else
