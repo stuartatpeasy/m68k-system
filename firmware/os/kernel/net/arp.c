@@ -104,6 +104,8 @@ s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
         payload->src_ip = ipv4_get_addr(net_interface_get_proto_addr(iface));
         payload->src_mac = *eth_get_addr(net_interface_get_hw_addr(iface));
 
+        net_packet_insert(packet, sizeof(arp_hdr_t));
+
         return net_protocol_tx(NULL, &hw_addr, packet);
     }
     else if(hdr->opcode == BE2N16(arp_reply))
