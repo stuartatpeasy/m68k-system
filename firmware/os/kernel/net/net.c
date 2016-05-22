@@ -87,20 +87,6 @@ s32 net_tx(net_packet_t *packet)
 
 
 /*
-    net_tx_free() - send a packet, then free the packet.
-    FIXME - net_tx_free() may no longer be needed
-*/
-s32 net_tx_free(net_packet_t *packet)
-{
-    ks32 ret = net_tx(packet);
-
-    net_packet_free(packet);
-
-    return ret;
-}
-
-
-/*
     net_receive() - handle incoming packets on an interface.
     NOTE: this function runs as a kernel process, one per interface.
 */

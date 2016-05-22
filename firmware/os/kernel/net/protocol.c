@@ -135,7 +135,6 @@ s32 net_tx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *
 
 /*
     net_packet_alloc_unimplemented() - default handler for <proto>_packet_alloc()
-    FIXME - maybe remove this?  I don't think it's used any longer
 */
 s32 net_packet_alloc_unimplemented(const net_address_t * const addr, ku32 len,
                                    net_iface_t * const iface, net_packet_t **packet)

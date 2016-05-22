@@ -11,7 +11,8 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>			// FIXME needed?
+#include <kernel/net/net.h>
+
 
 s32 socket_init();
 s32 socket_create(s32 domain, s32 type, s32 protocol);
