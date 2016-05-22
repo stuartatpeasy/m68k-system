@@ -17,10 +17,13 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/fs/fat/fat.c kernel/fs/romfs.c \
 			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/error.c \
 			kernel/housekeeper.c kernel/ksym.c kernel/process.c kernel/sched.c kernel/semaphore.c \
-			kernel/syscall.c kernel/user.c kernel/net/arp.c kernel/net/dhcp.c \
-			kernel/net/ethernet.c kernel/net/icmp.c kernel/net/ipv4.c kernel/net/ipv4route.c \
-			kernel/net/net.c kernel/net/socket.c kernel/net/tcp.c kernel/net/tftp.c \
-			kernel/net/udp.c kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c \
+			kernel/syscall.c kernel/user.c \
+			kernel/net/address.c kernel/net/arp.c kernel/net/dhcp.c \
+			kernel/net/ethernet.c kernel/net/icmp.c kernel/net/interface.c kernel/net/ipv4.c \
+			kernel/net/ipv4route.c kernel/net/net.c kernel/net/packet.c kernel/net/protocol.c \
+			kernel/net/raw.c kernel/net/route.c kernel/net/socket.c kernel/net/tcp.c \
+			kernel/net/tftp.c kernel/net/udp.c \
+			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c \
 			kernel/memory/kmalloc.c kernel/memory/slab.c
 
 ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S
@@ -219,6 +222,10 @@ kernel/memory/slab.o: \
 	kernel/memory/slab.c kernel/memory/slab.h kernel/include/defs.h kernel/include/types.h \
 	klibc/stdio.h
 
+kernel/net/address.o: \
+	kernel/net/address.c kernel/net/address.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/net.h
+
 kernel/net/arp.o: \
 	kernel/net/arp.c kernel/net/arp.h kernel/include/byteorder.h kernel/include/defs.h \
 	kernel/include/error.h kernel/include/types.h kernel/net/net.h kernel/net/ethernet.h
@@ -236,17 +243,36 @@ kernel/net/icmp.o: \
 	kernel/net/icmp.c kernel/net/icmp.h kernel/include/defs.h kernel/include/types.h \
 	kernel/net/net.h
 
+kernel/net/interface.o: \
+	kernel/net/interface.c kernel/net/interface.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/net.h
+
 kernel/net/ipv4.o: \
 	kernel/net/ipv4.c kernel/net/ipv4.h kernel/include/byteorder.h kernel/include/defs.h \
 	kernel/include/types.h kernel/net/net.h kernel/net/ethernet.h
+
+kernel/net/ipv4route.o: \
+	kernel/net/ipv4route.c kernel/net/ipv4route.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/ethernet.h kernel/net/ipv4.h kernel/net/net.h
 
 kernel/net/net.o: \
 	kernel/net/net.c kernel/net/net.h kernel/include/defs.h kernel/include/types.h \
 	kernel/memory/kmalloc.h kernel/net/arp.h
 
-kernel/net/ipv4route.o: \
-	kernel/net/ipv4route.c kernel/net/ipv4route.h kernel/include/defs.h kernel/include/types.h \
-	kernel/net/ethernet.h kernel/net/ipv4.h kernel/net/net.h
+kernel/net/packet.o: \
+	kernel/net/packet.c kernel/net/packet.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/net.h
+
+kernel/net/protocol.o: \
+	kernel/net/protocol.c kernel/net/protocol.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/net.h
+
+kernel/net/raw.o: \
+	kernel/net/raw.c kernel/net/raw.h kernel/include/defs.h kernel/include/types.h
+
+kernel/net/route.o: \
+	kernel/net/route.c kernel/net/route.h kernel/include/defs.h kernel/include/types.h \
+	kernel/net/net.h
 
 kernel/net/socket.o: \
 	kernel/net/socket.c kernel/net/socket.h kernel/include/defs.h kernel/include/types.h \

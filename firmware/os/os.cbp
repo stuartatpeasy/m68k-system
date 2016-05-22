@@ -210,6 +210,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/memory/slab.h" />
+		<Unit filename="kernel/net/address.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/address.h" />
 		<Unit filename="kernel/net/arp.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -226,6 +230,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/icmp.h" />
+		<Unit filename="kernel/net/interface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/interface.h" />
 		<Unit filename="kernel/net/ipv4.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -238,6 +246,22 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/net.h" />
+		<Unit filename="kernel/net/packet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/packet.h" />
+		<Unit filename="kernel/net/protocol.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/protocol.h" />
+		<Unit filename="kernel/net/raw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/raw.h" />
+		<Unit filename="kernel/net/route.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/net/route.h" />
 		<Unit filename="kernel/net/socket.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -8,27 +8,40 @@
 */
 
 #include <kernel/net/icmp.h>
+#include <kernel/net/packet.h>
 
 
-s32 icmp_handle_echo_request(net_packet_t *packet);
+s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+
+
+/*
+    icmp_init() - initialise the ICMP protocol driver.
+*/
+s32 icmp_init()
+{
+    return net_protocol_register_driver(np_icmp, "ICMP", icmp_rx, NULL, NULL, NULL);
+}
 
 
 /*
     icmp_rx() - handle an incoming ICMP packet.
 */
-s32 icmp_rx(net_packet_t *packet)
+s32 icmp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
-    const icmp_fixed_hdr_t * const icmp_hdr = (const icmp_fixed_hdr_t *) packet->start;
+    const icmp_fixed_hdr_t * const icmp_hdr =
+        (const icmp_fixed_hdr_t *) net_packet_get_start(packet);
 
     /*
         It's usually not necessary to verify the ICMP checksum on received packets, as the hardware
         will already have verified the checksum of the whole (e.g. Ethernet) frame.
     */
 #if(ICMP_VERIFY_CHECKSUM)
-    if(net_cksum(packet->start, packet->len) != 0x0000)
+    if(net_cksum(net_packet_get_start(packet), net_packet_get_len(packet)) != 0x0000)
     {
-        ++packet->iface->stats.rx_checksum_err;
-        ++packet->iface->stats.rx_dropped;
+        net_iface_t * const iface = net_packet_get_interface(packet);
+
+        net_interface_stats_inc_cksum_err(iface);
+        net_interface_stats_inc_rx_dropped(iface);
         return SUCCESS;     /* Drop packet */
     }
 #endif
@@ -36,7 +49,7 @@ s32 icmp_rx(net_packet_t *packet)
     switch(icmp_hdr->type)
     {
         case icmp_echo_request:
-            return icmp_handle_echo_request(packet);
+            return icmp_handle_echo_request(src, dest, packet);
     }
 
     return SUCCESS;
@@ -46,16 +59,16 @@ s32 icmp_rx(net_packet_t *packet)
 /*
     icmp_handle_echo_request() - handle an incoming ICMP echo request packet.
 */
-s32 icmp_handle_echo_request(net_packet_t *packet)
+s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
-    icmp_echo_reply_t *r = packet->start;
+    icmp_echo_reply_t *r = net_packet_get_start(packet);
 
-    if(((icmp_echo_request_t *) packet->start)->hdr.code != 0)    /* "code" field must be 0 */
+    if(((icmp_echo_request_t *) r)->hdr.code != 0)    /* "code" field must be 0 */
         return SUCCESS;     /* drop packet */
 
     r->hdr.checksum = 0;
     r->hdr.type     = icmp_echo_reply;
-    r->hdr.checksum = net_cksum(r, packet->len);
+    r->hdr.checksum = net_cksum(r, net_packet_get_len(packet));
 
-    return packet->driver->reply(packet);
+    return net_protocol_tx(dest, src, packet);
 }

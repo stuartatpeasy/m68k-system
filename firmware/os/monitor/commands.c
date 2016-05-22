@@ -34,8 +34,8 @@ MONITOR_CMD_HANDLER(arp)
                     if(!header++)
                         puts("Iface  Hardware address   Protocol address   TTL");
 
-                    net_print_addr(&item->hw_addr, hw_addrbuf, sizeof(hw_addrbuf));
-                    net_print_addr(&item->proto_addr, proto_addrbuf, sizeof(proto_addrbuf));
+                    net_address_print(&item->hw_addr, hw_addrbuf, sizeof(hw_addrbuf));
+                    net_address_print(&item->proto_addr, proto_addrbuf, sizeof(proto_addrbuf));
 
                     printf("%6s %18s %18s %d\n", net_get_iface_name(item->iface), hw_addrbuf,
                            proto_addrbuf, item->etime - g_current_timestamp);
@@ -46,21 +46,16 @@ MONITOR_CMD_HANDLER(arp)
         }
 		else if(!strcmp(args[0], "request"))
 		{
-			/* Syntax: arp request <ip> [<interface>] */
-			net_iface_t *iface;
+			/* Syntax: arp request <ip> */
 			ipv4_addr_t addr;
 			net_address_t proto_addr;
-			s32 ret;
 
 			if((num_args != 2) || (strtoipv4(args[1], &addr) != SUCCESS))
 				return EINVAL;
 
             ipv4_make_addr(addr, IPV4_PORT_NONE, &proto_addr);
-            ret = ipv4_route_get_iface(&proto_addr, &iface);
-            if(ret != SUCCESS)
-                return ret;
 
-			return arp_send_request(iface, &proto_addr);
+			return arp_send_request(&proto_addr);
 		}
     }
 
@@ -604,14 +599,14 @@ MONITOR_CMD_HANDLER(netif)
     if(num_args < 2)
         return EINVAL;
 
-    iface = net_get_iface_by_dev(args[1]);
+    iface = net_interface_get_by_dev(args[1]);
     if(!iface)
         return ENOENT;
 
     if(!strcmp(args[0], "show"))
     {
         char buf[32];
-        net_print_addr(net_get_proto_addr(iface), buf, 32);
+        net_address_print(net_interface_get_proto_addr(iface), buf, 32);
         printf("%s: %s\n", net_get_iface_name(iface), buf);
 
         return SUCCESS;
@@ -625,7 +620,7 @@ MONITOR_CMD_HANDLER(netif)
             return EINVAL;
 
         ipv4_make_addr(ipv4addr, IPV4_PORT_NONE, &addr);
-        return net_set_proto_addr(iface, &addr);
+        return net_interface_set_proto_addr(iface, &addr);
     }
 
     return EINVAL;
@@ -863,6 +858,7 @@ MONITOR_CMD_HANDLER(route)
         while(ipv4_route_get_entry(&ent) == SUCCESS)
         {
             char buf[3][24], flags[5];
+            net_address_t dest, mask, gateway;
 
             if(!header)
             {
@@ -876,9 +872,13 @@ MONITOR_CMD_HANDLER(route)
             flags[3] = (ent->r.flags & IPV4_ROUTE_REJECT) ? '!' : ' ';
             flags[4] = '\0';
 
-            ipv4_print_addr(&ent->r.dest, buf[0], sizeof(buf[0]));
-            ipv4_print_addr(&ent->r.mask, buf[1], sizeof(buf[1]));
-            ipv4_print_addr(&ent->r.gateway, buf[2], sizeof(buf[2]));
+            ipv4_make_addr(ent->r.dest, IPV4_PORT_NONE, &dest);
+            ipv4_make_addr(ent->r.mask, IPV4_PORT_NONE, &mask);
+            ipv4_make_addr(ent->r.gateway, IPV4_PORT_NONE, &gateway);
+
+            ipv4_print_addr(&dest, buf[0], sizeof(buf[0]));
+            ipv4_print_addr(&mask, buf[1], sizeof(buf[1]));
+            ipv4_print_addr(&gateway, buf[2], sizeof(buf[2]));
             printf("%-18s%-18s%-18s%6d  %5s  %s\n",
                    buf[0], buf[1], buf[2], ent->r.metric, net_get_iface_name(ent->r.iface), flags);
         }
@@ -896,7 +896,7 @@ MONITOR_CMD_HANDLER(route)
         if((num_args == 6) && !strcmp(args[0], "add"))
         {
             metric_ = strtoul(args[4], NULL, 0);
-            r.iface = net_get_iface_by_dev(args[5]);
+            r.iface = net_interface_get_by_dev(args[5]);
 
             if(ret || (metric_ < IPV4_ROUTE_METRIC_MIN) || (metric_ > IPV4_ROUTE_METRIC_MAX)
                || !r.iface)
@@ -1146,7 +1146,7 @@ MONITOR_CMD_HANDLER(test)
     }
     else if(testnum == 6)
     {
-        net_iface_t *iface = net_get_iface_by_dev("eth0");
+        net_iface_t *iface = net_interface_get_by_dev("eth0");
         if(iface)
         {
             return dhcp_discover(iface);

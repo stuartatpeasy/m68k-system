@@ -5,31 +5,48 @@
 
 
     (c) Stuart Wallace, February 2016.
+
+    FIXME remove debug log message and #include of stdio
 */
 
 #include <kernel/net/ipv4route.h>
 #include <kernel/net/arp.h>
 #include <klibc/string.h>
+#include <klibc/stdio.h>
 
 
 /* The IPv4 routing table */
 ipv4_rt_item_t *g_ipv4_routes = NULL;
 
+/* A pointer to the default route entry */
+ipv4_route_t *ipv4_default_route = NULL;
+
 
 /*
     ipv4_route_add() - add an item to the IPv4 routing table.  Fail if the new item is a duplicate
     of an existing item.
+
+    FIXME - ipv4_route_add should take route args individually, probably
 */
 s32 ipv4_route_add(const ipv4_route_t * const r)
 {
     ipv4_rt_item_t **p;
+    ipv4_route_t *newent;
 
-    /* Walk to the end of the routing table; fail if a duplicate entry exists */
+    if(!ipv4_mask_valid(r->mask) || (r->metric < 0))
+        return EINVAL;
+
     for(p = &g_ipv4_routes; *p != NULL; p = &(*p)->next)
     {
-        const ipv4_route_t * const rt = &(*p)->r;
+        const ipv4_route_t * const rt = &((*p)->r);
 
-        if((rt->dest == r->dest) && (rt->mask == r->mask) && (rt->gateway == r->gateway))
+        /*
+            A duplicate is either: a route with a matching destination, gateway and mask, or a route
+            with destination and mask equal to 0.0.0.0 where another such route (regardless of
+            gateway) already exists.
+        */
+        if((rt->mask == r->mask) && (rt->dest == r->dest) &&
+           ((rt->gateway == r->gateway) || (rt->dest == IPV4_ADDR_NONE)))
             return EEXIST;
     }
 
@@ -37,11 +54,19 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
     if(!*p)
         return ENOMEM;
 
-    memcpy(&(*p)->r, r, sizeof(ipv4_route_t));
+    newent = &((*p)->r);
+
+    memcpy(newent, r, sizeof(ipv4_route_t));
+
+    newent->prefix_len = ipv4_mask_to_prefix_len(r->mask);
+
     (*p)->next = NULL;
 
-    return SUCCESS;
+    /* If the new entry is the default route, point ipv4_default_route at it */
+    if((r->gateway == IPV4_ADDR_NONE) && (r->mask == IPV4_MASK_NONE))
+        ipv4_default_route = newent;
 
+    return SUCCESS;
 }
 
 
@@ -51,21 +76,25 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
 */
 s32 ipv4_route_delete(const ipv4_route_t * const r)
 {
-    ipv4_rt_item_t **p, *prev;
+    ipv4_rt_item_t *p, **prev;
 
     /* Walk to the end of the routing table; fail if a duplicate entry exists */
-    for(prev = g_ipv4_routes, p = &g_ipv4_routes; *p != NULL; p = &(*p)->next, prev = *p)
+    for(prev = NULL, p = g_ipv4_routes; p; prev = &p, p = p->next)
     {
-        const ipv4_route_t * const rt = &(*p)->r;
+        const ipv4_route_t * const rt = &(p->r);
 
         if((rt->dest == r->dest) && (rt->mask == r->mask) && (rt->gateway == r->gateway))
         {
-            if(prev)
-                prev->next = (*p)->next;
-			else
-				prev = *p;
+            /* If the default route is being deleted, unset ipv4_default_route */
+            if((r->gateway == IPV4_ADDR_NONE) && (r->mask == IPV4_ADDR_NONE))
+                ipv4_default_route = NULL;
 
-            kfree(*p);
+            if(*prev)
+                (*prev)->next = p->next;
+			else
+				*prev = p->next;
+
+            kfree(p);
 
             return SUCCESS;
         }
@@ -87,30 +116,52 @@ s32 ipv4_route_get_entry(ipv4_rt_item_t **e)
 
 
 /*
-    ipv4_route_get_iface() - get the interface associated with a particular address
+    ipv4_route_get() - get a routing table entry corresponding to an address.
 */
-s32 ipv4_route_get_iface(const net_address_t *proto_addr, net_iface_t **iface)
+const ipv4_route_t *ipv4_route_get(const net_address_t * const proto_addr)
 {
     ipv4_addr_t ipv4_addr;
-    ipv4_rt_item_t **p;
+    ipv4_rt_item_t *p;
+    s16 best_prefix_len, best_metric;
+    const ipv4_route_t *best_route;
 
-    if(proto_addr->type != na_ipv4)
-        return EHOSTUNREACH;        /* Should this be EPROTONOSUPPORT? */
+    if(net_address_get_type(proto_addr) != na_ipv4)
+        return NULL;
 
-    ipv4_addr = ((ipv4_address_t *) &proto_addr->addr)->addr;
+    ipv4_addr = ipv4_get_addr(proto_addr);
 
-    for(p = &g_ipv4_routes; *p != NULL; p = &(*p)->next)
+    best_prefix_len = -1;
+    best_metric = -1;
+    best_route = ipv4_default_route;
+
+    for(p = g_ipv4_routes; p; p = p->next)
     {
-        const ipv4_route_t * const r = &(*p)->r;
+        const ipv4_route_t * const r = &p->r;
 
-        if(((r->dest & r->mask) == (ipv4_addr & r->mask)) && ((r->flags) & IPV4_ROUTE_UP))
-        {
-            *iface = r->iface;
-            return SUCCESS;
-        }
+        if((r->dest & r->mask) == (ipv4_addr & r->mask) &&
+           (r->flags & IPV4_ROUTE_UP) &&
+           (r->prefix_len > best_prefix_len) &&
+           (r->metric > best_metric))
+            {
+                best_prefix_len = r->prefix_len;
+                best_metric = r->metric;
+                best_route = r;
+            }
     }
 
-    return EHOSTUNREACH;
+    return best_route;
+}
+
+
+/*
+    ipv4_route_get_iface() - get the interface associated with a particular address.  Return NULL
+    if no suitable route was found and no default route exists.
+*/
+net_iface_t *ipv4_route_get_iface(const net_address_t * const proto_addr)
+{
+    const ipv4_route_t * const route = ipv4_route_get(proto_addr);
+
+    return route ? route->iface : NULL;
 }
 
 
@@ -122,8 +173,9 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr)
 {
     arp_cache_item_t *item;
+    net_address_t ipv4_addr_broadcast;
 
-    if(proto_addr->type != na_ipv4)
+    if(net_address_get_type(proto_addr) != na_ipv4)
         return EHOSTUNREACH;        /* Should this be EPROTONOSUPPORT? */
 
     /* Check ARP cache */
@@ -135,9 +187,9 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
     }
 
     /* Is this a broadcast address? */
-    if(*((ipv4_addr_t *) &proto_addr->addr) == IPV4_ADDR_BROADCAST)
+    if(!ipv4_addr_compare(proto_addr, ipv4_make_broadcast_addr(&ipv4_addr_broadcast)))
     {
-        *hw_addr = g_eth_broadcast;
+        eth_make_broadcast_addr(hw_addr);
         return SUCCESS;
     }
 

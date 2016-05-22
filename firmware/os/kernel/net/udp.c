@@ -9,20 +9,38 @@
 
 #include <kernel/net/udp.h>
 #include <kernel/net/dhcp.h>
+#include <kernel/net/packet.h>
+
+
+/*
+    udp_init() - initialise the UDP protocol driver.
+*/
+s32 udp_init()
+{
+    return net_protocol_register_driver(np_udp, "UDP", udp_rx, udp_tx, NULL, udp_packet_alloc);
+}
 
 
 /*
     udp_rx() - handle an incoming UDP packet.
 */
-s32 udp_rx(net_packet_t *packet)
+s32 udp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
-    udp_hdr_t *hdr = (udp_hdr_t *) packet->start;
+    s32 ret;
+    udp_hdr_t *hdr = (udp_hdr_t *) net_packet_get_start(packet);
 
-    packet->start += sizeof(udp_hdr_t);
-    packet->len -= sizeof(udp_hdr_t);
+    ret = net_packet_consume(packet, sizeof(udp_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
+
+    /* FIXME - this handling of port numbers is ugly and broken; should incorporate portnum in net_address_t? */
+    ipv4_addr_set_port((ipv4_address_t *) net_address_get_address(src), hdr->src_port);
+    ipv4_addr_set_port((ipv4_address_t *) net_address_get_address(dest), hdr->dest_port);
 
     if(hdr->dest_port == DHCP_CLIENT_PORT)
         return dhcp_rx(packet);
+
+    /* FIXME - do something else with the packet maybe? */
 
     return SUCCESS;
 }
@@ -31,28 +49,27 @@ s32 udp_rx(net_packet_t *packet)
 /*
     udp_tx() - transmit a UDP packet.
 */
-s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 udp_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     udp_hdr_t *hdr;
-    ipv4_address_t *src_addr, *dest_addr;
+    s32 ret;
 
-    if((src->type != na_ipv4) || (dest->type != na_ipv4))
-        return EPROTONOSUPPORT;
+    /* FIXME - make this work with "IP-family" addresses, not just IPv4 addresses specifically */
+    if((net_address_get_type(src) != na_ipv4) || (net_address_get_type(dest) != na_ipv4))
+        return EAFNOSUPPORT;
 
-    packet->start -= sizeof(udp_hdr_t);
-    packet->len += sizeof(udp_hdr_t);
+    ret = net_packet_insert(packet, sizeof(udp_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
-    hdr = (udp_hdr_t *) packet->start;
+    hdr = (udp_hdr_t *) net_packet_get_start(packet);
 
-    src_addr    = (ipv4_address_t *) &src->addr;
-    dest_addr   = (ipv4_address_t *) &dest->addr;
-
-    hdr->src_port   = N2BE16(src_addr->port);
-    hdr->dest_port  = N2BE16(dest_addr->port);
-    hdr->len        = N2BE16(packet->len);
+    hdr->src_port   = N2BE16(ipv4_get_port(src));
+    hdr->dest_port  = N2BE16(ipv4_get_port(dest));
+    hdr->len        = N2BE16(net_packet_get_len(packet));
     hdr->cksum      = 0;
 
-    return ipv4_tx(src, dest, packet);
+    return net_protocol_tx(src, dest, packet);
 }
 
 
@@ -60,15 +77,15 @@ s32 udp_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *pa
     udp_packet_alloc() - allocate a packet for transmission, to contain a payload of the
     specified length.
 */
-s32 udp_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 udp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet)
 {
-    ks32 ret = ipv4_packet_alloc(iface, sizeof(udp_hdr_t) + len, packet);
+    ks32 ret = net_protocol_packet_alloc(net_address_get_proto(addr), addr, sizeof(udp_hdr_t) + len,
+                                         iface, packet);
     if(ret != SUCCESS)
         return ret;
 
-    (*packet)->start += sizeof(udp_hdr_t);
-    (*packet)->len -= sizeof(udp_hdr_t);
-    (*packet)->proto = np_udp;
+    net_packet_set_proto(*packet, np_udp);
 
-    return SUCCESS;
+    return net_packet_consume(*packet, sizeof(udp_hdr_t));
 }

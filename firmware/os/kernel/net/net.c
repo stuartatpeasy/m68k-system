@@ -9,26 +9,34 @@
 
 #include <kernel/device/device.h>
 #include <kernel/error.h>
+#include <kernel/include/defs.h>
 #include <kernel/net/arp.h>
 #include <kernel/net/ethernet.h>
+#include <kernel/net/icmp.h>
+#include <kernel/net/interface.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/net.h>
+#include <kernel/net/packet.h>
+#include <kernel/net/raw.h>
+#include <kernel/net/route.h>
+#include <kernel/net/tcp.h>
+#include <kernel/net/udp.h>
 #include <kernel/process.h>
 #include <kernel/util/kutil.h>
 #include <klibc/strings.h>
 #include <klibc/stdio.h>
 
 
-s32 net_add_interface(dev_t *dev);
-void net_receive(void *arg);
-s32 net_rx_unimplemented(net_packet_t *packet);
-s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
-s32 net_reply_unimplemented(net_packet_t *packet);
-s32 net_packet_alloc_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet);
-
-net_iface_t *g_net_ifaces = NULL;
-
-net_proto_driver_t *g_net_proto_drivers;
+net_init_fn_t g_net_init_fns[] =
+{
+    arp_init,
+    icmp_init,
+    ipv4_init,
+    eth_init,
+    raw_init,
+    tcp_init,
+    udp_init
+};
 
 
 /*
@@ -36,259 +44,45 @@ net_proto_driver_t *g_net_proto_drivers;
 */
 s32 net_init()
 {
-    dev_t *dev = NULL;
+    u32 i;
 
-    /* Register protocols */
-    net_register_proto_driver(arp_init);
-    net_register_proto_driver(ipv4_init);
-    net_register_proto_driver(eth_init);
-
-    /* Iterate over hardware devices; look for any which identify as network interfaces. */
-    while((dev = dev_get_next(dev)) != NULL)
-        if(dev->type == DEV_TYPE_NET)
-        {
-            ks32 ret = net_add_interface(dev);
-
-            if(ret != SUCCESS)
-                printf("net: failed to add %s: %s\n", dev->name, kstrerror(ret));
-        }
-
-    return SUCCESS;
-}
-
-
-/*
-    net_register_proto_driver() - register a driver for a particular network protocol
-*/
-s32 net_register_proto_driver(s32 (*init_fn)(net_proto_driver_t *))
-{
-    s32 ret;
-    net_proto_driver_t *driver = (net_proto_driver_t *) CHECKED_KMALLOC(sizeof(net_proto_driver_t)),
-                        *p;
-
-    driver->rx              = net_rx_unimplemented;
-    driver->tx              = net_tx_unimplemented;
-    driver->reply           = net_reply_unimplemented;
-    driver->packet_alloc    = net_packet_alloc_unimplemented;
-
-    driver->next = NULL;
-
-    ret = init_fn(driver);
-    if(ret != SUCCESS)
+    for(i = 0; i < ARRAY_COUNT(g_net_init_fns); ++i)
     {
-        kfree(driver);
-        return ret;
-    }
-
-    if(g_net_proto_drivers)
-    {
-        for(p = g_net_proto_drivers; p->next; p = p->next)
-            ;
-
-        p->next = driver;
-    }
-    else
-        g_net_proto_drivers = driver;
-
-    printf("net: registered protocol %s\n", driver->name);
-    return SUCCESS;
-}
-
-
-/*
-    net_get_proto_driver() - look up a protocol driver by protocol
-*/
-net_proto_driver_t *net_get_proto_driver(const net_protocol_t proto)
-{
-    net_proto_driver_t *d;
-
-    for(d = g_net_proto_drivers; d && (d->proto != proto); d = d->next)
-        ;
-
-    return d;
-}
-
-
-s32 net_rx_unimplemented(net_packet_t *packet)
-{
-    UNUSED(packet);
-    return ENOSYS;
-}
-
-
-s32 net_tx_unimplemented(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
-{
-    UNUSED(src);
-    UNUSED(dest);
-    UNUSED(packet);
-    return ENOSYS;
-}
-
-
-s32 net_reply_unimplemented(net_packet_t *packet)
-{
-    UNUSED(packet);
-    return ENOSYS;
-}
-
-
-s32 net_packet_alloc_unimplemented(net_iface_t *iface, ku32 len, net_packet_t **packet)
-{
-    UNUSED(iface);
-    UNUSED(len);
-    UNUSED(packet);
-    return ENOSYS;
-}
-
-
-/*
-    net_add_interface() - add a network interface based on the specified hardware device
-*/
-s32 net_add_interface(dev_t *dev)
-{
-    net_iface_t **p, *iface;
-    net_addr_type_t addr_type;
-
-    mac_addr_t *ma;
-    s32 ret;
-
-    ret = dev->control(dev, dc_get_hw_addr_type, NULL, &addr_type);
-    if(ret != SUCCESS)
-        return ret;
-
-    if(addr_type == na_ethernet)    /* Ethernet interface */
-    {
-        iface = (net_iface_t *) CHECKED_KMALLOC(sizeof(net_iface_t));
-        iface->next = NULL;
-        iface->dev = dev;
-        iface->hw_addr.type = addr_type;
-        iface->type = ni_ethernet;
-        iface->driver = net_get_proto_driver(np_ethernet);
-
-        if(!iface->driver)
-        {
-            kfree(iface);
-            return EPROTONOSUPPORT;
-        }
-
-        bzero(&iface->stats, sizeof(net_iface_stats_t));
-
-        ret = dev->control(dev, dc_get_hw_addr, NULL, &iface->hw_addr.addr);
+        ks32 ret = g_net_init_fns[i]();
         if(ret != SUCCESS)
-        {
-            kfree(iface);
             return ret;
-        }
-
-        for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
-            ;
-
-        *p = iface;
-        iface->proto_addr.type = na_unknown;
-
-        ma = (mac_addr_t *) &iface->hw_addr.addr;
-        printf("net: added %s: %02x:%02x:%02x:%02x:%02x:%02x\n", dev->name,
-               ma->b[0], ma->b[1], ma->b[2], ma->b[3], ma->b[4], ma->b[5]);
-
-        return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL,
-                           NULL);
-    }
-    else
-        return EPROTONOSUPPORT;
-}
-
-
-/*
-    net_get_iface_name() - get the device name associated with an interface
-*/
-const char *net_get_iface_name(const net_iface_t * const iface)
-{
-    return iface->dev->name;
-}
-
-
-/*
-    net_get_proto_addr() - get the protocol address for an interface
-*/
-const net_address_t *net_get_proto_addr(const net_iface_t * const iface)
-{
-    return &iface->proto_addr;
-}
-
-
-/*
-    net_set_proto_addr() - set the protocol address for an interface
-*/
-s32 net_set_proto_addr(net_iface_t * const iface, const net_address_t * const addr)
-{
-    iface->proto_addr = *addr;
-    return SUCCESS;
-}
-
-
-/*
-    net_get_iface_by_dev() - look up a network interface by device name.
-*/
-net_iface_t *net_get_iface_by_dev(const char * const name)
-{
-    net_iface_t **p;
-
-    for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
-        if(!strcmp((*p)->dev->name, name))
-            return *p;
-
-    return NULL;
-}
-
-
-/*
-    net_packet_alloc() - allocate a packet object and allocate a buffer of the specified length for
-    the payload.
-*/
-s32 net_packet_alloc(ku32 len, net_packet_t **packet)
-{
-    s32 ret;
-    net_packet_t *p = CHECKED_KMALLOC(sizeof(net_packet_t));
-
-    ret = buffer_init(len, &p->raw);
-    if(ret != SUCCESS)
-    {
-        kfree(p);
-        return ret;
     }
 
-    p->start = p->raw.data;
-    p->proto = np_unknown;
-    p->len = 0;
-
-    *packet = p;
-
-    return SUCCESS;
+    return net_interface_init();
 }
 
 
 /*
-    net_packet_free() - destroy an object created by net_packet_alloc().
+    net_tx() - send a packet over an interface.
 */
-void net_packet_free(net_packet_t *packet)
+s32 net_tx(net_packet_t *packet)
 {
-    buffer_deinit(&packet->raw);
-    kfree(packet);
-}
+    net_iface_t *iface;
+	dev_t *dev;
+    u32 len;
 
+	len = net_packet_get_len(packet);
 
-/*
-    net_transmit() - send a packet over an interface.
-*/
-s32 net_transmit(net_packet_t *packet)
-{
-    u32 len = packet->len;
-    dev_t * const dev = packet->iface->dev;
+	/* Routing must be complete by the time this function is called */
+	iface = net_packet_get_interface(packet);
+    if(iface == NULL)
+        return EHOSTUNREACH;
 
-    ++packet->iface->stats.tx_packets;
-    packet->iface->stats.tx_bytes += len;
+	/* The packet protocol must match the interface protocol */
+	if(net_packet_get_proto(packet) != net_interface_get_proto(iface))
+		return EPROTONOSUPPORT;
 
-    return dev->write(dev, 0, &len, packet->start);
+    dev = net_interface_get_device(iface);
+
+    net_interface_stats_inc_tx_packets(iface);
+    net_interface_stats_add_tx_bytes(iface, len);
+
+    return dev->write(dev, 0, &len, net_packet_get_start(packet));
 }
 
 
@@ -298,56 +92,18 @@ s32 net_transmit(net_packet_t *packet)
 */
 void net_receive(void *arg)
 {
-    s32 ret;
     net_iface_t * const iface = (net_iface_t *) arg;
-    volatile net_iface_t * const iface_v = (volatile net_iface_t *) arg;
     net_packet_t *packet;
 
-    if(net_packet_alloc(1500, &packet) != SUCCESS)
+    /* FIXME - get MTU from interface and use as packet size here */
+    if(net_protocol_packet_alloc(np_raw, NULL, 1500, iface, &packet) != SUCCESS)
     {
         kernel_warning("Failed to allocate packet buffer");
         return;
     }
 
-    packet->iface = iface;
-
     while(1)
-    {
-        /* TODO - ensure that the interface is configured before calling eth_handle_packet() */
-        packet->driver  = iface->driver;
-        packet->proto   = iface->driver->proto;
-        packet->start   = packet->raw.data;
-        packet->raw.len = 1500;
-        ret = iface->dev->read(iface->dev, 0, &packet->raw.len, packet->raw.data);
-
-        /* TODO - this assumes we're working with an Ethernet interface - genericise */
-        if(ret == SUCCESS)
-        {
-            packet->len = packet->raw.len;
-
-            if((eth_rx(packet) == SUCCESS) && (iface_v->proto_addr.type != na_unknown))
-            {
-                ++iface->stats.rx_packets;
-                iface->stats.rx_bytes += packet->raw.len;
-            }
-            else
-                ++iface->stats.rx_dropped;
-        }
-    }
-}
-
-
-/*
-    net_route_get() - look up a route in the kernel routing table.
-*/
-net_iface_t *net_route_get(const net_addr_type_t addr_type, const net_addr_t *addr)
-{
-    UNUSED(addr_type);
-    UNUSED(addr);
-
-    /* TODO */
-
-    return NULL;
+        net_interface_rx(iface, packet);
 }
 
 
@@ -373,27 +129,4 @@ s16 net_cksum(const void *buf, u32 len)
         sum += *((u8 *) p) << 8;
 
     return ~(sum + (sum >> 16));
-}
-
-
-/*
-    net_address_compare() - compare two net_address_t objects.  Same semantics as memcmp().
-*/
-s32 net_address_compare(const net_address_t *a1, const net_address_t *a2)
-{
-    return memcmp(a1, a2, sizeof(net_address_t));
-}
-
-
-/*
-    net_print_addr() - print a human-readable form of addr into buf.
-*/
-s32 net_print_addr(const net_address_t *addr, char *buf, s32 len)
-{
-    if(addr->type == na_ethernet)
-        return eth_print_addr((const mac_addr_t *) &addr->addr.addr, buf, len);
-    else if(addr->type == na_ipv4)
-        return ipv4_print_addr((const ipv4_addr_t *) &addr->addr.addr, buf, len);
-    else
-        return -EINVAL;
 }

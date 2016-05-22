@@ -8,25 +8,30 @@
 */
 
 #include <kernel/net/arp.h>
+#include <kernel/net/interface.h>
+#include <kernel/net/packet.h>
+#include <kernel/net/protocol.h>
+#include <kernel/net/ipv4route.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/process.h>
-#include <klibc/stdio.h>            // FIXME remove
 #include <klibc/stdlib.h>
 
 
 arp_cache_item_t *g_arp_cache = NULL;
 extern time_t g_current_timestamp;
 
-s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
-                  const net_address_t *proto_addr);
+
 arp_cache_item_t *arp_cache_get_entry_for_insert();
-s32 arp_send_request(net_iface_t *iface, const net_address_t *addr);
+s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+s32 arp_send_request(const net_address_t *addr);
+s32 arp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet);
 
 
 /*
     arp_init() - initialise ARP cache
 */
-s32 arp_init(net_proto_driver_t *driver)
+s32 arp_init()
 {
     if(g_arp_cache != NULL)
         kfree(g_arp_cache);
@@ -38,11 +43,7 @@ s32 arp_init(net_proto_driver_t *driver)
     */
     g_arp_cache = kcalloc(ARP_CACHE_SIZE, sizeof(arp_cache_item_t));
 
-    driver->name = "ARP";
-    driver->proto = np_arp;
-    driver->rx = arp_rx;
-
-    return SUCCESS;
+    return net_protocol_register_driver(np_arp, "ARP", arp_rx, NULL, NULL, arp_packet_alloc);
 }
 
 
@@ -51,48 +52,49 @@ s32 arp_init(net_proto_driver_t *driver)
     ESUCCESS if the packet was successfully processed, or if the packet was ignored.  Currently
     only supports Ethernet+IP responses.
 */
-s32 arp_rx(net_packet_t *packet)
+s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
-    arp_hdr_t * const hdr = (arp_hdr_t *) packet->start;
+    arp_hdr_t * const hdr = (arp_hdr_t *) net_packet_get_start(packet);
     arp_payload_t * payload;
+    net_address_t dst;
+    net_iface_t *iface;
+    UNUSED(src);
+    UNUSED(dest);
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
-    if(packet->len < sizeof(arp_hdr_t))
+    if(net_packet_get_len(packet) < sizeof(arp_eth_ipv4_packet_t))
         return EINVAL;      /* Incomplete packet */
 
     /* Only interested in ARP packets containing Ethernet+IPv4 addresses */
     if(hdr->hw_type != BE2N16(arp_hw_type_ethernet) || hdr->proto_type != BE2N16(ethertype_ipv4))
         return SUCCESS;     /* Discard - not an Ethernet+IPv4 ARP request */
 
-    packet->start += sizeof(arp_hdr_t);
-    packet->len -= sizeof(arp_hdr_t);
+    payload = (arp_payload_t *) &hdr[1];
 
-    payload = (arp_payload_t *) packet->start;
+    ipv4_make_addr(payload->dst_ip, IPV4_PORT_NONE, &dst);
 
-    /* Check that we have a full ARP payload */
-    if(packet->len < sizeof(arp_payload_t))
-        return EINVAL;      /* Incomplete packet */
+    iface = net_packet_get_interface(packet);
 
-    if(hdr->opcode == BE2N16(arp_request)
-       && payload->dst_ip == *((ipv4_addr_t *) &packet->iface->proto_addr.addr))
+    if((hdr->opcode == BE2N16(arp_request))
+       && !net_address_compare(&dst, net_interface_get_proto_addr(iface)))
     {
         /* This is an Ethernet+IPv4 request addressed to this interface; send a response */
         net_address_t hw_addr, proto_addr;
 
         eth_make_addr(&payload->src_mac, &hw_addr);
-        ipv4_make_addr(payload->src_ip, 0, &proto_addr);
+        ipv4_make_addr(payload->src_ip, IPV4_PORT_NONE, &proto_addr);
 
-        arp_cache_add(packet->iface, &hw_addr, &proto_addr);
+        arp_cache_add(iface, &hw_addr, &proto_addr);
 
         hdr->opcode = arp_reply;
 
         payload->dst_ip = payload->src_ip;
         payload->dst_mac = payload->src_mac;
 
-        payload->src_ip = *((ipv4_addr_t *) &packet->iface->proto_addr.addr);
-        payload->src_mac = *((mac_addr_t *) &packet->iface->hw_addr.addr);
+        payload->src_ip = ipv4_get_addr(net_interface_get_proto_addr(iface));
+        payload->src_mac = *eth_get_addr(net_interface_get_hw_addr(iface));
 
-        return packet->driver->tx(NULL, &hw_addr, packet);
+        return net_protocol_tx(NULL, &hw_addr, packet);
     }
     else if(hdr->opcode == BE2N16(arp_reply))
     {
@@ -102,7 +104,7 @@ s32 arp_rx(net_packet_t *packet)
         eth_make_addr(&payload->src_mac, &hw_addr);
         ipv4_make_addr(payload->src_ip, IPV4_PORT_NONE, &proto_addr);
 
-        return arp_cache_add(packet->iface, &hw_addr, &proto_addr);
+        return arp_cache_add(iface, &hw_addr, &proto_addr);
     }
 
     return SUCCESS;     /* Discard - not an ARP request/response opcode */
@@ -110,46 +112,68 @@ s32 arp_rx(net_packet_t *packet)
 
 
 /*
-    arp_send_request() - send an ARP request, to resolve the specified IPv4 address, over the
-    specified interface.
+    arp_packet_alloc() - allocate an packet to hold an ARP request.
 */
-s32 arp_send_request(net_iface_t *iface, const net_address_t *addr)
+s32 arp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet)
 {
+    ks32 ret = net_protocol_packet_alloc(net_address_get_proto(addr), addr, len, iface, packet);
+
+    if(ret != SUCCESS)
+        return ret;
+
+    net_packet_set_proto(*packet, np_arp);
+
+    return SUCCESS;
+}
+
+
+/*
+    arp_send_request() - send an ARP request to resolve the specified IPv4 address.
+*/
+s32 arp_send_request(const net_address_t *addr)
+{
+    arp_eth_ipv4_packet_t *p;
+    net_packet_t *pkt;
+    net_iface_t *iface;
+    net_address_t src, bcast;
     s32 ret;
 
-    if((iface->driver->proto == np_ethernet) && (addr->type == na_ipv4))
-    {
-        arp_eth_ipv4_packet_t *p;
-        net_packet_t *pkt;
+    if(net_address_get_type(addr) != na_ipv4)
+        return EPROTONOSUPPORT;
 
-        ret = iface->driver->packet_alloc(iface, sizeof(arp_eth_ipv4_packet_t), &pkt);
-        if(ret != SUCCESS)
-            return ret;
+    iface = ipv4_route_get_iface(addr);
+    if(!iface)
+        return ENETUNREACH;
 
-        pkt->proto = np_arp;
-        pkt->len += sizeof(arp_eth_ipv4_packet_t);
+    if(net_interface_get_proto(iface) != np_ethernet)
+        return EPROTONOSUPPORT;
 
-        p = (arp_eth_ipv4_packet_t *) pkt->start;
+    eth_make_broadcast_addr(&bcast);
 
-        p->hdr.hw_type          = arp_hw_type_ethernet;
-        p->hdr.proto_type       = ethertype_ipv4;
-        p->hdr.hw_addr_len      = sizeof(mac_addr_t);
-        p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
-        p->hdr.opcode           = arp_request;
-
-        p->payload.src_ip       = *((ipv4_addr_t *) &iface->proto_addr.addr);
-        p->payload.src_mac      = *((mac_addr_t *) &iface->hw_addr.addr);
-        p->payload.dst_ip       = *((ipv4_addr_t *) &addr->addr);
-        p->payload.dst_mac      = *((mac_addr_t *) &g_eth_broadcast.addr);
-
-        ret = iface->driver->tx(NULL, &g_eth_broadcast, pkt);
-
-        net_packet_free(pkt);
-
+    ret = net_protocol_packet_alloc(np_arp, &bcast, sizeof(arp_eth_ipv4_packet_t), iface, &pkt);
+    if(ret != SUCCESS)
         return ret;
-    }
 
-    return EPROTONOSUPPORT;
+    p = (arp_eth_ipv4_packet_t *) net_packet_get_start(pkt);
+
+    p->hdr.hw_type          = arp_hw_type_ethernet;
+    p->hdr.proto_type       = ethertype_ipv4;
+    p->hdr.hw_addr_len      = sizeof(mac_addr_t);
+    p->hdr.proto_addr_len   = sizeof(ipv4_addr_t);
+    p->hdr.opcode           = arp_request;
+
+    p->payload.src_ip       = ipv4_get_addr(net_interface_get_proto_addr(iface));
+    p->payload.src_mac      = *eth_get_addr(net_interface_get_hw_addr(iface));
+    p->payload.dst_ip       = ipv4_get_addr(addr);
+    p->payload.dst_mac      = *eth_get_addr(&bcast);
+
+    src = *net_interface_get_hw_addr(iface);
+
+    ret = net_protocol_tx(&src, &bcast, pkt);
+    net_packet_free(pkt);
+
+    return ret;
 }
 
 
@@ -167,7 +191,7 @@ s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_
         if(p == NULL)
         {
             /* Address not present in cache; try to look it up instead. */
-            ret = arp_send_request(iface, proto_addr);
+            ret = arp_send_request(proto_addr);
             if(ret != SUCCESS)
                 return ret;
 

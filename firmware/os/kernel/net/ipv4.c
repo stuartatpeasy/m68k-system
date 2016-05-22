@@ -7,51 +7,39 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <kernel/net/icmp.h>
 #include <kernel/net/ipv4.h>
+#include <kernel/net/arp.h>
 #include <kernel/net/ipv4route.h>
 #include <kernel/net/net.h>
-#include <kernel/net/tcp.h>
-#include <kernel/net/udp.h>
+#include <kernel/net/packet.h>
 #include <klibc/stdio.h>
 #include <klibc/strings.h>
 
 
-s32 ipv4_reply(net_packet_t *packet);
-ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto);
-
-const net_address_t g_ipv4_broadcast =
-{
-    .type = na_ipv4,
-    .addr.addr_bytes[0] = 0xff,
-    .addr.addr_bytes[1] = 0xff,
-    .addr.addr_bytes[2] = 0xff,
-    .addr.addr_bytes[3] = 0xff
-};
+ipv4_protocol_t ipv4_get_ipproto(const net_protocol_t proto);
+net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto);
 
 
 /*
-    ipv4_init() - initialise the IPv4 protocol driver
+    ipv4_init() - initialise the IPv4 protocol driver.
 */
-s32 ipv4_init(net_proto_driver_t *driver)
+s32 ipv4_init()
 {
-    driver->name = "IPv4";
-    driver->proto = np_ipv4;
-    driver->rx = ipv4_rx;
-    driver->tx = ipv4_tx;
-    driver->reply = ipv4_reply;
-
-    return SUCCESS;
+    return net_protocol_register_driver(np_ipv4, "IPv4", ipv4_rx, ipv4_tx, ipv4_addr_compare,
+                                        ipv4_packet_alloc);
 }
 
 
 /*
-    ipv4_handle_packet() - handle an incoming IPv4 packet.  Return EINVAL if the packet is invalid;
-    returns ESUCCESS if the packet was successfully processed, or if the packet was ignored.
+    ipv4_handle_packet() - handle an incoming IPv4 packet by decapsulating it, optionally verifying
+    its header checksum, and passing it up to the next protocol handler.
 */
-s32 ipv4_rx(net_packet_t *packet)
+s32 ipv4_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
-    ipv4_hdr_t *hdr = (ipv4_hdr_t *) packet->start;
+    ipv4_hdr_t *hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
+    net_address_t ipv4_src, ipv4_dest;
+    s32 ret;
+    UNUSED(dest);
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -59,107 +47,82 @@ s32 ipv4_rx(net_packet_t *packet)
     */
 #if(IPV4_VERIFY_CHECKSUM)
     if(net_cksum(hdr, (hdr->version_hdr_len & 0xf) << 2) != 0x0000)
-        return SUCCESS;     /* Drop packet */
+        return ECKSUM;      /* Drop packet */
 #endif
 
-    packet->start += sizeof(ipv4_hdr_t);
-    packet->len -= sizeof(ipv4_hdr_t);
-    packet->proto = np_ipv4;
-    packet->driver = net_get_proto_driver(np_ipv4);
-
-    switch(hdr->protocol)
-    {
-        case ipv4_proto_icmp:
-            return icmp_rx(packet);
-
-        case ipv4_proto_tcp:
-            return tcp_rx(packet);
-
-        case ipv4_proto_udp:
-            return udp_rx(packet);
-
-        default:
-            return SUCCESS;     /* Drop packet */
-    }
-}
-
-
-/*
-    ipv4_tx() - transmit an IPv4 packet
-*/
-s32 ipv4_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
-{
-    ipv4_hdr_t *hdr;
-    const ipv4_address_t *src_addr, *dest_addr;
-    net_address_t dest_hw_addr;
-    s32 ret;
-
-    if(src == NULL)
-    {
-        /* FIXME - check that interface is actually configured */
-        src = &packet->iface->proto_addr;
-    }
-
-    packet->start -= sizeof(ipv4_hdr_t);
-    packet->len += sizeof(ipv4_hdr_t);
-
-    hdr = (ipv4_hdr_t *) packet->start;
-    src_addr = (ipv4_address_t *) &src->addr;
-    dest_addr = (ipv4_address_t *) &dest->addr;
-
-    hdr->version_hdr_len    = (4 << 4) | 5;     /* IPv4, header len = 5 32-bit words (=20 bytes) */
-    hdr->diff_svcs          = 0;
-    hdr->total_len          = packet->len;
-    hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
-    hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
-    hdr->ttl                = 64;               /* Sensible default? */
-    hdr->protocol           = ipv4_get_proto(packet->proto);
-    hdr->src                = src_addr->addr;
-    hdr->dest               = dest_addr->addr;
-    hdr->cksum              = 0x0000;
-
-    hdr->cksum = net_cksum(packet->start, sizeof(ipv4_hdr_t));
-
-    ret = ipv4_route_get_hw_addr(packet->iface, dest, &dest_hw_addr);
+    ret = net_packet_consume(packet, sizeof(ipv4_hdr_t));
     if(ret != SUCCESS)
         return ret;
 
-    packet->proto = np_ipv4;
+    ipv4_make_addr(hdr->src, IPV4_PORT_NONE, &ipv4_src);
+    ipv4_make_addr(hdr->dest, IPV4_PORT_NONE, &ipv4_dest);
 
-    return packet->iface->driver->tx(NULL, &dest_hw_addr, packet);
+    net_packet_set_proto(packet, ipv4_get_proto(hdr->protocol));
+
+    /* Add the packet's source hardware address and source protocol address to the ARP cache */
+    if(hdr->src != IPV4_ADDR_NONE)
+        arp_cache_add(net_packet_get_interface(packet), src, &ipv4_src);
+
+    return net_protocol_rx(&ipv4_src, &ipv4_dest, packet);
 }
 
 
 /*
-    ipv4_reply() - reply to an IPv4 packet
+    ipv4_tx() - transmit an IPv4 packet.
 */
-s32 ipv4_reply(net_packet_t *packet)
+s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
+    net_address_t routed_src, routed_dest;
+    net_iface_t *iface;
     ipv4_hdr_t *hdr;
-    ipv4_addr_t tmp;
+    s32 ret;
 
-    packet->start -= sizeof(ipv4_hdr_t);
-    packet->len += sizeof(ipv4_hdr_t);
-    packet->proto = np_ipv4;
+    iface = net_packet_get_interface(packet) ?
+        net_packet_get_interface(packet) : ipv4_route_get_iface(dest);
 
-    hdr = (ipv4_hdr_t *) packet->start;
+    if(!iface)
+        return EHOSTUNREACH;
 
-    tmp = hdr->src;
-    hdr->src = hdr->dest;
-    hdr->dest = tmp;
+    ret = net_packet_insert(packet, sizeof(ipv4_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
-    return packet->iface->driver->reply(packet);
+    hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
+
+    hdr->version_hdr_len    = (4 << 4) | 5;     /* IPv4, header len = 5 32-bit words (=20 bytes) */
+    hdr->diff_svcs          = 0;
+    hdr->total_len          = net_packet_get_len(packet);
+    hdr->id                 = rand();           /* FIXME - rand() almost certainly wrong for pkt id */
+    hdr->flags_frag_offset  = IPV4_HDR_FLAG_DF;
+    hdr->ttl                = IPV4_DEFAULT_TTL;
+    hdr->protocol           = ipv4_get_ipproto(net_packet_get_proto(packet));
+    hdr->src                = ipv4_get_addr(src);
+    hdr->dest               = ipv4_get_addr(dest);
+    hdr->cksum              = 0x0000;
+
+    hdr->cksum = net_cksum(hdr, sizeof(ipv4_hdr_t));
+
+    net_packet_set_proto(packet, np_ipv4);
+    net_packet_set_interface(packet, iface);
+
+    routed_src = *net_interface_get_hw_addr(iface);
+
+    ret = ipv4_route_get_hw_addr(iface, dest, &routed_dest);
+    if(ret != SUCCESS)
+        return ret;
+
+    return net_protocol_tx(&routed_src, &routed_dest, packet);
 }
 
 
 /*
-    ipv4_make_addr() - populate a net_address_t object with an IPv4 address.
+    ipv4_make_addr() - populate a net_address_t object with an IPv4 address and return it.
 */
 net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_address_t *addr)
 {
-    ipv4_address_t *ipv4_addr = (ipv4_address_t *) &addr->addr;
+    ipv4_address_t *ipv4_addr = (ipv4_address_t *) net_address_get_address(addr);
 
-    addr->type = na_ipv4;
+    net_address_set_type(na_ipv4, addr);
     ipv4_addr->addr = ip;
     ipv4_addr->port = port;
 
@@ -168,20 +131,40 @@ net_address_t *ipv4_make_addr(const ipv4_addr_t ip, const ipv4_port_t port, net_
 
 
 /*
+    ipv4_addr_set_port() - set the port associated with an IPv4 address object.
+*/
+ipv4_address_t *ipv4_addr_set_port(ipv4_address_t * const addr, const ipv4_port_t port)
+{
+    addr->port = port;
+    return addr;
+}
+
+
+/*
+    ipv4_make_broadcast_addr() - populate a net_address_t object with the IPv4 broadcast address
+    (255.255.255.255) and return it.
+*/
+net_address_t *ipv4_make_broadcast_addr(net_address_t * const addr)
+{
+    return ipv4_make_addr(IPV4_ADDR_BROADCAST, IPV4_PORT_NONE, addr);
+}
+
+
+/*
     ipv4_packet_alloc() - allocate a packet for transmission, to contain a payload of the
     specified length.
 */
-s32 ipv4_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 ipv4_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                      net_packet_t **packet)
 {
-    ks32 ret = iface->driver->packet_alloc(iface, sizeof(ipv4_hdr_t) + len, packet);
+    ks32 ret = net_protocol_packet_alloc(net_address_get_hw_proto(addr), addr,
+                                         sizeof(ipv4_hdr_t) + len, iface, packet);
     if(ret != SUCCESS)
         return ret;
 
-    (*packet)->start += sizeof(ipv4_hdr_t);
-    (*packet)->len -= sizeof(ipv4_hdr_t);
-    (*packet)->proto = np_ipv4;
+    net_packet_set_proto(*packet, np_ipv4);
 
-    return SUCCESS;
+    return net_packet_consume(*packet, sizeof(ipv4_hdr_t));
 }
 
 
@@ -189,7 +172,7 @@ s32 ipv4_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
     ipv4_get_proto() - given a net_protocol_t-style protocol, return the corresponding IPv4 protocol
     number.
 */
-ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto)
+ipv4_protocol_t ipv4_get_ipproto(const net_protocol_t proto)
 {
     switch(proto)
     {
@@ -203,16 +186,106 @@ ipv4_protocol_t ipv4_get_proto(const net_protocol_t proto)
             return ipv4_proto_icmp;
 
         default:
-            return 0xff;
+            return ipv4_proto_invalid;
     }
+}
+
+
+/*
+    ipv4_get_proto() - given an IPv4 protocol value, return the corresponding np_* protocol
+    constant.
+*/
+net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto)
+{
+    switch(proto)
+    {
+        case ipv4_proto_tcp:
+            return np_tcp;
+
+        case ipv4_proto_udp:
+            return np_udp;
+
+        case ipv4_proto_icmp:
+            return np_icmp;
+
+        default:
+            return np_unknown;
+    }
+}
+
+
+/*
+    ipv4_get_addr() - if the supplied net_address_t object represents an IPv4 address, return a ptr
+    to the IP address part of the address/port combination; otherwise, return IPV4_ADDR_NONE
+    (=0.0.0.0).
+*/
+ipv4_addr_t ipv4_get_addr(const net_address_t * const addr)
+{
+    if(net_address_get_type(addr) != na_ipv4)
+        return IPV4_ADDR_NONE;
+
+    return ((ipv4_address_t *) net_address_get_address(addr))->addr;
+}
+
+
+/*
+    ipv4_get_port() - if the supplied net_address_t object represents an IPv4 address/port object,
+    return the port number associated with the object; otherwise, return IPV4_PORT_NONE (0).
+*/
+ipv4_port_t ipv4_get_port(const net_address_t * const addr)
+{
+    if(net_address_get_type(addr) != na_ipv4)
+        return IPV4_PORT_NONE;
+
+    return ((ipv4_address_t *) net_address_get_address(addr))->port;
+}
+
+
+/*
+    ipv4_addr_compare() - compare two IPv4 addresses.
+*/
+s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * const a2)
+{
+    if((net_address_get_type(a1) != na_ipv4) || (net_address_get_type(a2) != na_ipv4))
+        return -1;      /* Mismatch */
+
+    return memcmp(net_address_get_address(a1), net_address_get_address(a2), sizeof(ipv4_address_t));
 }
 
 
 /*
     ipv4_print_addr() - write addr to buf in dotted-quad format.
 */
-s32 ipv4_print_addr(const ipv4_addr_t *addr, char *buf, s32 len)
+s32 ipv4_print_addr(const net_address_t *addr, char *buf, s32 len)
 {
-    return snprintf(buf, len, "%u.%u.%u.%u", *addr >> 24, (*addr >> 16) & 0xff, (*addr >> 8) & 0xff,
-                        *addr & 0xff);
+    const ipv4_addr_t a = ipv4_get_addr(addr);
+
+    return snprintf(buf, len, "%u.%u.%u.%u", a >> 24, (a >> 16) & 0xff, (a >> 8) & 0xff,
+                        a & 0xff);
+}
+
+
+/*
+    ipv4_mask_valid() - return non-zero if the specified ipv4_addr_t object represents a valid
+    netmask (e.g. 0.0.0.0, 255.255.252.0, etc.)
+*/
+u32 ipv4_mask_valid(const ipv4_addr_t mask)
+{
+    return !mask || !(~mask & (~mask + 1));
+}
+
+
+/*
+    ipv4_mask_to_prefix_len() - convert a netmask, contained in an ipv4_addr_t object, to a CIDR-
+    style prefix length value.  E.g. "255.255.252.0" -> 22.
+*/
+u8 ipv4_mask_to_prefix_len(const ipv4_addr_t mask)
+{
+    u32 m;
+    u8 cidr;
+
+    for(m = ~mask, cidr = 32; m; m >>= 1, --cidr)
+        ;
+
+    return cidr;
 }

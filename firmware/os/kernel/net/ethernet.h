@@ -13,7 +13,7 @@
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/ipv4.h>
+#include <kernel/net/interface.h>
 #include <kernel/net/net.h>
 #include <kernel/util/buffer.h>
 
@@ -28,14 +28,13 @@ typedef union mac_addr
     u16 w[3];
 } mac_addr_t;
 
-const net_address_t g_eth_broadcast;
-
 
 /* Enumeration of Ethertype values */
 typedef enum ethertype
 {
-    ethertype_ipv4  = 0x0800,
-    ethertype_arp   = 0x0806
+    ethertype_unknown   = 0x0000,
+    ethertype_ipv4      = 0x0800,
+    ethertype_arp       = 0x0806
 } ethertype_t;
 
 
@@ -50,12 +49,13 @@ typedef struct eth_hdr
 typedef u32 eth_cksum_t;    /* Ethernet checksum (the last four bytes of an Ethernet frame) */
 
 
-s32 eth_init(net_proto_driver_t *driver);
-s32 eth_rx(net_packet_t *packet);
-s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet);
-s32 eth_reply(net_packet_t *packet);
-s32 eth_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet);
-void eth_make_addr(mac_addr_t *mac, net_address_t *addr);
-s32 eth_print_addr(const mac_addr_t *addr, char *buf, s32 len);
+s32 eth_init();
+net_address_t *eth_make_addr(const mac_addr_t * const mac, net_address_t *addr);
+net_address_t *eth_make_broadcast_addr(net_address_t *addr);
+const mac_addr_t *eth_get_addr(const net_address_t * const addr);
+s32 eth_addr_compare(const net_address_t * const a1, const net_address_t * const a2);
+net_protocol_t eth_proto_from_ethertype(ku16 ethertype);
+ethertype_t eth_ethertype_from_proto(const net_protocol_t proto);
+s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len);
 
 #endif

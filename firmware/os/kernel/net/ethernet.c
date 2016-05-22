@@ -10,62 +10,60 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/ipv4.h>
 #include <kernel/net/arp.h>
+#include <kernel/net/interface.h>
+#include <kernel/net/packet.h>
 #include <klibc/stdio.h>
 #include <klibc/strings.h>
 
 
-const net_address_t g_eth_broadcast =
+s32 eth_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet);
+
+
+/* MAC address representing the broadcast address */
+const mac_addr_t eth_mac_broadcast =
 {
-    .type = na_ethernet,
-    .addr.addr_bytes[0] = 0xff,
-    .addr.addr_bytes[1] = 0xff,
-    .addr.addr_bytes[2] = 0xff,
-    .addr.addr_bytes[3] = 0xff,
-    .addr.addr_bytes[4] = 0xff,
-    .addr.addr_bytes[5] = 0xff
+    .b = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 };
 
 
 /*
     eth_init() - initialise Ethernet protocol driver
 */
-s32 eth_init(net_proto_driver_t *driver)
+s32 eth_init()
 {
-    driver->name            = "Ethernet";
-    driver->proto           = np_ethernet;
-    driver->rx              = eth_rx;
-    driver->tx              = eth_tx;
-    driver->reply           = eth_reply;
-    driver->packet_alloc    = eth_packet_alloc;
-
-    return SUCCESS;
+    return net_protocol_register_driver(np_ethernet, "Ethernet", eth_rx, eth_tx, eth_addr_compare,
+                                        eth_packet_alloc);
 }
 
 
 /*
-    eth_rx() - handle an incoming Ethernet packet.
+    eth_rx() - handle an incoming Ethernet packet.  Ethernet is a layer 2 protocol, meaning that
+    this driver may be the first one called after a packet is received by a hardware driver.
+    In that case, packet->proto will be np_raw, and the src and dest addresses will be na_unknown;
+    we will therefore set src and dest to the source and destination Ethernet addresses contained in
+    the packet.
 */
-s32 eth_rx(net_packet_t *packet)
+s32 eth_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
-    const eth_hdr_t * const ehdr = (eth_hdr_t *) packet->raw.data;
+    s32 ret;
+    const eth_hdr_t * const ehdr = (eth_hdr_t *) net_packet_get_start(packet);
 
-    packet->start += sizeof(eth_hdr_t);
-    packet->len -= sizeof(eth_hdr_t);
+    ret = net_packet_consume(packet, sizeof(eth_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
 
-    switch(ehdr->type)
-    {
-        case ethertype_ipv4:
-            packet->proto = np_ipv4;
-            return ipv4_rx(packet);
-            break;
+    if(net_address_get_proto(src) == np_unknown)
+        eth_make_addr(&ehdr->src, src);
 
-        case ethertype_arp:
-            packet->proto = np_arp;
-            return arp_rx(packet);
-            break;
-    }
+    if(net_address_get_proto(dest) == np_unknown)
+        eth_make_addr(&ehdr->dest, dest);
 
-    return EPROTONOSUPPORT;
+    net_packet_set_proto(packet, eth_proto_from_ethertype(ehdr->type));
+
+    return net_protocol_rx(src, dest, packet);
 }
 
 
@@ -73,72 +71,86 @@ s32 eth_rx(net_packet_t *packet)
     eth_tx() - add an Ethernet header to the supplied frame and transmit it on the specified
     interface.
 */
-s32 eth_tx(const net_address_t *src, const net_address_t *dest, net_packet_t *packet)
+s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     eth_hdr_t *hdr;
-    const mac_addr_t *src_addr, *dest_addr;
+    net_protocol_t proto;
+    s32 ret;
 
-    packet->start -= sizeof(eth_hdr_t);
-    packet->len += sizeof(eth_hdr_t);
-    hdr = (eth_hdr_t *) packet->start;
-
-    switch(packet->proto)
+    /* Handle NULL source addresses: use the default address for the specified interface */
+    if(!src)
     {
-        case np_ipv4:
-            hdr->type = ethertype_ipv4;
-            break;
+        /* No source address specified.  Use the default hardware address for the interface */
+        const net_iface_t * const iface = net_packet_get_interface(packet);
 
-        case np_arp:
-            hdr->type = ethertype_arp;
-            break;
+        if(!iface)
+            return EHOSTUNREACH;    /* No source address and no interface - packet unrouteable. */
 
-        default:
-            return EPROTONOSUPPORT;
+        src = (net_address_t *) net_interface_get_hw_addr(iface);
     }
 
-    /*
-        If src is NULL, send from the default address of the interface; otherwise send from the
-        specified address.
-    */
-    src_addr = (src == NULL) ? (mac_addr_t *) &packet->iface->hw_addr.addr
-                                : (mac_addr_t *) &src->addr.addr;
-    dest_addr = (mac_addr_t *) &dest->addr.addr;
+    /* Source and destination addresses must be an Ethernet address */
+    if((net_address_get_type(src) != na_ethernet) || (net_address_get_type(dest) != na_ethernet))
+        return EAFNOSUPPORT;
 
-    hdr->dest = *dest_addr;
-    hdr->src = *src_addr;
+    proto = net_packet_get_proto(packet);
 
-    return net_transmit(packet);
+    ret = net_packet_encapsulate(packet, np_ethernet, sizeof(eth_hdr_t));
+    if(ret != SUCCESS)
+        return ret;
+
+    hdr = (eth_hdr_t *) net_packet_get_start(packet);
+    hdr->type = eth_ethertype_from_proto(proto);
+
+    if(hdr->type == ethertype_unknown)
+        return EPROTONOSUPPORT;
+
+    hdr->src = *eth_get_addr(src);
+    hdr->dest = *eth_get_addr(dest);
+
+    return net_tx(packet);
 }
 
 
 /*
-    eth_reply() - assume that *packet contains a received packet which has been modified in some
-    way; swap its source and destination addresses and transmit it.
+    eth_make_addr() - populate a net_address_t object with a MAC address and return it.
 */
-s32 eth_reply(net_packet_t *packet)
+net_address_t *eth_make_addr(const mac_addr_t * const mac, net_address_t *addr)
 {
-    eth_hdr_t *ehdr;
+    void * const addr_buf = (void *) net_address_get_address(addr);
 
-    packet->start -= sizeof(eth_hdr_t);
-    packet->len += sizeof(eth_hdr_t);
+    net_address_set_type(na_ethernet, addr);
+    bzero(addr_buf, sizeof(net_addr_t));
 
-    ehdr = (eth_hdr_t *) packet->start;
+    if(mac != NULL)
+        memcpy(addr_buf, mac, sizeof(mac_addr_t));
 
-    ehdr->dest = ehdr->src;
-    ehdr->src = *((mac_addr_t *) &packet->iface->hw_addr.addr);
-
-    return net_transmit(packet);
+    return addr;
 }
 
 
 /*
-    eth_make_addr() - populate a net_address_t object with a MAC address.
+    eth_make_broadcast_address(): populate a net_address_t object with the Ethernet broadcast
+    address (ff:ff:ff:ff:ff:ff) and return it.
 */
-void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
+net_address_t *eth_make_broadcast_addr(net_address_t *addr)
 {
-    addr->type = na_ethernet;
-    bzero(&addr->addr, sizeof(net_addr_t));
-    memcpy(&addr->addr, mac, sizeof(mac_addr_t));
+    eth_make_addr(&eth_mac_broadcast, addr);
+
+    return addr;
+}
+
+
+/*
+    eth_get_addr() - if the supplied net_address_t object represents an Ethernet address, return a
+    ptr to the MAC address part of the object; otherwise, return NULL.
+*/
+const mac_addr_t *eth_get_addr(const net_address_t * const addr)
+{
+    if(net_address_get_type(addr) != na_ethernet)
+        return NULL;
+
+    return (mac_addr_t *) net_address_get_address(addr);
 }
 
 
@@ -146,26 +158,79 @@ void eth_make_addr(mac_addr_t *mac, net_address_t *addr)
     eth_packet_alloc() - allocate a net_packet_t object large enough to contain an Ethernet header
     and a payload of the specified length.
 */
-s32 eth_packet_alloc(net_iface_t *iface, ku32 len, net_packet_t **packet)
+s32 eth_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
+                     net_packet_t **packet)
 {
-    ks32 ret = net_packet_alloc(sizeof(eth_hdr_t) + len, packet);
+    ks32 ret = net_protocol_packet_alloc(np_raw, addr, sizeof(eth_hdr_t) + len, iface, packet);
 
     if(ret != SUCCESS)
         return ret;
 
-    (*packet)->iface = iface;
-    (*packet)->len += sizeof(eth_hdr_t);
-    (*packet)->start += sizeof(eth_hdr_t);
+    net_packet_set_proto(*packet, np_ethernet);
 
-    return SUCCESS;
+    return net_packet_consume(*packet, sizeof(eth_hdr_t));
+}
+
+
+/*
+    eth_addr_compare() - compare two Ethernet addresses.
+*/
+s32 eth_addr_compare(const net_address_t * const a1, const net_address_t * const a2)
+{
+    if((net_address_get_type(a1) != na_ethernet) || (net_address_get_type(a2) != na_ethernet))
+        return -1;      /* Mismatch */
+
+    return memcmp(net_address_get_address(a1), net_address_get_address(a2), sizeof(mac_addr_t));
+}
+
+
+/*
+    eth_proto_from_ethertype() - given an ethertype value, return the corresponding np_* protocol
+    constant.
+*/
+net_protocol_t eth_proto_from_ethertype(ku16 ethertype)
+{
+    switch(ethertype)
+    {
+        case ethertype_ipv4:
+            return np_ipv4;
+
+        case ethertype_arp:
+            return np_arp;
+
+        default:
+            return np_unknown;
+    }
+}
+
+
+/*
+    eth_ethertype_from_proto() - given a net_protocol_t value, return the corresponding ethertype
+    value.
+*/
+ethertype_t eth_ethertype_from_proto(const net_protocol_t proto)
+{
+    switch(proto)
+    {
+        case np_ipv4:
+            return ethertype_ipv4;
+
+        case np_arp:
+            return ethertype_arp;
+
+        default:
+            return ethertype_unknown;
+    }
 }
 
 
 /*
     eth_print_addr() - write addr to buf
 */
-s32 eth_print_addr(const mac_addr_t *addr, char *buf, s32 len)
+s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len)
 {
+    const mac_addr_t * const m = (const mac_addr_t *) net_address_get_address(addr);
+
     return snprintf(buf, len, "%02x:%02x:%02x:%02x:%02x:%02x",
-                    addr->b[0], addr->b[1], addr->b[2], addr->b[3], addr->b[4], addr->b[5]);
+                    m->b[0], m->b[1], m->b[2], m->b[3], m->b[4], m->b[5]);
 }
