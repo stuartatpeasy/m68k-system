@@ -8,6 +8,7 @@
 */
 
 #include <kernel/net/ipv4.h>
+#include <kernel/net/arp.h>
 #include <kernel/net/ipv4route.h>
 #include <kernel/net/net.h>
 #include <kernel/net/packet.h>
@@ -36,7 +37,9 @@ s32 ipv4_init()
 s32 ipv4_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 {
     ipv4_hdr_t *hdr = (ipv4_hdr_t *) net_packet_get_start(packet);
+    net_address_t ipv4_src, ipv4_dest;
     s32 ret;
+    UNUSED(dest);
 
     /*
         It's usually not necessary to verify the IPv4 header checksum on received packets, as the
@@ -51,12 +54,16 @@ s32 ipv4_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     if(ret != SUCCESS)
         return ret;
 
-    ipv4_make_addr(hdr->src, IPV4_PORT_NONE, src);
-    ipv4_make_addr(hdr->dest, IPV4_PORT_NONE, dest);
+    ipv4_make_addr(hdr->src, IPV4_PORT_NONE, &ipv4_src);
+    ipv4_make_addr(hdr->dest, IPV4_PORT_NONE, &ipv4_dest);
 
     net_packet_set_proto(packet, ipv4_get_proto(hdr->protocol));
 
-    return net_protocol_rx(src, dest, packet);
+    /* Add the packet's source hardware address and source protocol address to the ARP cache */
+    if(hdr->src != IPV4_ADDR_NONE)
+        arp_cache_add(net_packet_get_interface(packet), src, &ipv4_src);
+
+    return net_protocol_rx(&ipv4_src, &ipv4_dest, packet);
 }
 
 
@@ -70,7 +77,8 @@ s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     ipv4_hdr_t *hdr;
     s32 ret;
 
-    iface = ipv4_route_get_iface(dest);
+    iface = net_packet_get_interface(packet) ?
+        net_packet_get_interface(packet) : ipv4_route_get_iface(dest);
 
     if(!iface)
         return EHOSTUNREACH;

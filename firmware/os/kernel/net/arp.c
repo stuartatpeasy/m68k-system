@@ -20,8 +20,7 @@
 arp_cache_item_t *g_arp_cache = NULL;
 extern time_t g_current_timestamp;
 
-s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
-                  const net_address_t *proto_addr);
+
 arp_cache_item_t *arp_cache_get_entry_for_insert();
 s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 arp_send_request(const net_address_t *addr);
@@ -59,27 +58,18 @@ s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     arp_payload_t * payload;
     net_address_t dst;
     net_iface_t *iface;
-    s32 ret;
     UNUSED(src);
     UNUSED(dest);
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
-    if(net_packet_get_len(packet) < sizeof(arp_hdr_t))
+    if(net_packet_get_len(packet) < sizeof(arp_eth_ipv4_packet_t))
         return EINVAL;      /* Incomplete packet */
 
     /* Only interested in ARP packets containing Ethernet+IPv4 addresses */
     if(hdr->hw_type != BE2N16(arp_hw_type_ethernet) || hdr->proto_type != BE2N16(ethertype_ipv4))
         return SUCCESS;     /* Discard - not an Ethernet+IPv4 ARP request */
 
-    ret = net_packet_consume(packet, sizeof(arp_hdr_t));
-    if(ret != SUCCESS)
-        return ret;
-
-    payload = (arp_payload_t *) net_packet_get_start(packet);
-
-    /* Check that we have a full ARP payload */
-    if(net_packet_get_len(packet) < sizeof(arp_payload_t))
-        return EINVAL;      /* Incomplete packet */
+    payload = (arp_payload_t *) &hdr[1];
 
     ipv4_make_addr(payload->dst_ip, IPV4_PORT_NONE, &dst);
 
@@ -103,8 +93,6 @@ s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 
         payload->src_ip = ipv4_get_addr(net_interface_get_proto_addr(iface));
         payload->src_mac = *eth_get_addr(net_interface_get_hw_addr(iface));
-
-        net_packet_insert(packet, sizeof(arp_hdr_t));
 
         return net_protocol_tx(NULL, &hw_addr, packet);
     }
