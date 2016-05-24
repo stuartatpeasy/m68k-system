@@ -7,6 +7,9 @@
     (c) Stuart Wallace, May 2016.
 
     FIXME: remove debug printf() and #include of stdio
+    TODO: use a flat array, of size (np_invalid - np_unknown + 1) of protocol drivers.  Pre-init
+          all array members to point to a "null" driver.  This will make get_protocol_get_driver
+          much faster.
 */
 
 #include <kernel/net/protocol.h>
@@ -143,6 +146,22 @@ s32 net_protocol_packet_alloc(const net_protocol_t proto, const net_address_t * 
         return EPROTONOSUPPORT;
 
     return drv->fn.packet_alloc(addr, len, iface, packet);
+}
+
+
+/*
+    net_protocol_route_get_iface() - get the interface associated with a particular (protocol)
+    address.
+*/
+s32 net_protocol_route_get_iface(const net_protocol_t proto, const net_address_t * const addr,
+                                 net_iface_t **iface)
+{
+    net_proto_driver_t * const drv = net_protocol_get_driver(proto);
+
+    if(!drv)
+        return EPROTONOSUPPORT;
+
+    return drv->fn.route_get_iface(addr, iface);
 }
 
 

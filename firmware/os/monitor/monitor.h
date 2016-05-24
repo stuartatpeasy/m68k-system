@@ -19,7 +19,7 @@
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
 #include <kernel/net/arp.h>
-#include <kernel/net/ipv4route.h>
+#include <kernel/net/ipv4.h>
 #include <kernel/util/kutil.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>

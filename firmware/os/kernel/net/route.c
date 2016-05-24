@@ -13,6 +13,14 @@
 #include <kernel/net/route.h>
 
 
+/* A network route */
+struct net_route
+{
+    net_iface_t     *iface;
+    net_address_t   *addr;
+};
+
+
 /*
     net_route_get() - look up a route in the kernel routing table.
 */

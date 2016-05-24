@@ -9,9 +9,9 @@
 
 #include <kernel/net/arp.h>
 #include <kernel/net/interface.h>
+#include <kernel/net/ipv4.h>
 #include <kernel/net/packet.h>
 #include <kernel/net/protocol.h>
-#include <kernel/net/ipv4route.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/process.h>
 #include <klibc/stdlib.h>
@@ -149,7 +149,7 @@ s32 arp_send_request(const net_address_t *addr)
     if(net_address_get_type(addr) != na_ipv4)
         return EPROTONOSUPPORT;
 
-    iface = ipv4_route_get_iface(addr);
+    iface = ipv4_route_iface(addr);
     if(!iface)
         return ENETUNREACH;
 

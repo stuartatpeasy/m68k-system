@@ -20,8 +20,8 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/syscall.c kernel/user.c \
 			kernel/net/address.c kernel/net/arp.c kernel/net/dhcp.c \
 			kernel/net/ethernet.c kernel/net/icmp.c kernel/net/interface.c kernel/net/ipv4.c \
-			kernel/net/ipv4route.c kernel/net/net.c kernel/net/packet.c kernel/net/protocol.c \
-			kernel/net/raw.c kernel/net/route.c kernel/net/socket.c kernel/net/tcp.c \
+			kernel/net/net.c kernel/net/packet.c kernel/net/protocol.c kernel/net/raw.c \
+			kernel/net/route.c kernel/net/socket.c kernel/net/tcp.c \
 			kernel/net/tftp.c kernel/net/udp.c \
 			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c \
 			kernel/memory/kmalloc.c kernel/memory/slab.c

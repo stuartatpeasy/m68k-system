@@ -30,33 +30,30 @@ typedef enum net_protocol
 } net_protocol_t;
 
 
-typedef s32 (*net_rx_fn)(net_address_t *src, net_address_t *dest, net_packet_t *packet);
-typedef s32 (*net_tx_fn)(net_address_t *src, net_address_t *dest, net_packet_t *packet);
-typedef s32 (*net_addr_compare_fn)(const net_address_t * const a1, const net_address_t * const a2);
-typedef s32 (*net_packet_alloc_fn)(const net_address_t * const addr, ku32 len,
-                                   net_iface_t * const iface, net_packet_t **packet);
-
-
 /* Functions implemented by a network protocol driver */
 typedef struct net_proto_fns
 {
-    net_rx_fn               rx;
-    net_tx_fn               tx;
-    net_addr_compare_fn     addr_compare;
-    net_packet_alloc_fn     packet_alloc;
+    s32     (*rx)(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+    s32     (*tx)(net_address_t *src, net_address_t *dest, net_packet_t *packet);
+    s32     (*addr_compare)(const net_address_t * const a1, const net_address_t * const a2);
+    s32     (*packet_alloc)(const net_address_t * const addr, ku32 len,
+                            net_iface_t * const iface, net_packet_t **packet);
+    s32     (*route_get_iface)(const net_address_t * const addr, net_iface_t **iface);
 } net_proto_fns_t;
 
 
 s32 net_protocol_register_driver(const net_protocol_t proto, const char * const name,
                                  net_proto_fns_t * const f);
 void net_proto_fns_struct_init(net_proto_fns_t * const f);
+s32 net_protocol_rx(net_address_t *src, net_address_t *dest, net_packet_t * const packet);
 s32 net_protocol_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
-net_protocol_t net_protocol_from_address(const net_address_t * const addr);
-net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr);
 s32 net_protocol_addr_compare(const net_protocol_t proto, const net_address_t * const a1,
                               const net_address_t * const a2);
 s32 net_protocol_packet_alloc(const net_protocol_t proto, const net_address_t * const addr,
                               ku32 len, net_iface_t * const iface, net_packet_t **packet);
-s32 net_protocol_rx(net_address_t *src, net_address_t *dest, net_packet_t * const packet);
+s32 net_protocol_route_get_iface(const net_protocol_t proto, const net_address_t * const addr,
+                                 net_iface_t **iface);
+net_protocol_t net_protocol_from_address(const net_address_t * const addr);
+net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr);
 
 #endif
