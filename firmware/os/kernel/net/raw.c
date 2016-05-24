@@ -19,7 +19,13 @@
 */
 s32 raw_init()
 {
-    return net_protocol_register_driver(np_raw, "raw", NULL, NULL, NULL, raw_packet_alloc);
+    net_proto_fns_t fns;
+
+    net_proto_fns_struct_init(&fns);
+
+    fns.packet_alloc = raw_packet_alloc;
+
+    return net_protocol_register_driver(np_raw, "raw", &fns);
 }
 
 

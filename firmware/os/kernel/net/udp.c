@@ -17,7 +17,15 @@
 */
 s32 udp_init()
 {
-    return net_protocol_register_driver(np_udp, "UDP", udp_rx, udp_tx, NULL, udp_packet_alloc);
+    net_proto_fns_t fns;
+
+    net_proto_fns_struct_init(&fns);
+
+    fns.rx              = udp_rx;
+    fns.tx              = udp_tx;
+    fns.packet_alloc    = udp_packet_alloc;
+
+    return net_protocol_register_driver(np_udp, "UDP", &fns);
 }
 
 

@@ -16,7 +16,13 @@
 */
 s32 tcp_init()
 {
-    return net_protocol_register_driver(np_tcp, "TCP", tcp_rx, NULL, NULL, NULL);
+    net_proto_fns_t fns;
+
+    net_proto_fns_struct_init(&fns);
+
+    fns.rx = tcp_rx;
+
+    return net_protocol_register_driver(np_tcp, "TCP", &fns);
 }
 
 

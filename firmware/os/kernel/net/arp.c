@@ -33,6 +33,8 @@ s32 arp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *if
 */
 s32 arp_init()
 {
+    net_proto_fns_t fns;
+
     if(g_arp_cache != NULL)
         kfree(g_arp_cache);
 
@@ -43,7 +45,12 @@ s32 arp_init()
     */
     g_arp_cache = kcalloc(ARP_CACHE_SIZE, sizeof(arp_cache_item_t));
 
-    return net_protocol_register_driver(np_arp, "ARP", arp_rx, NULL, NULL, arp_packet_alloc);
+    net_proto_fns_struct_init(&fns);
+
+    fns.rx = arp_rx;
+    fns.packet_alloc = arp_packet_alloc;
+
+    return net_protocol_register_driver(np_arp, "ARP", &fns);
 }
 
 

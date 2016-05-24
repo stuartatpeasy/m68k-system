@@ -34,8 +34,16 @@ const mac_addr_t eth_mac_broadcast =
 */
 s32 eth_init()
 {
-    return net_protocol_register_driver(np_ethernet, "Ethernet", eth_rx, eth_tx, eth_addr_compare,
-                                        eth_packet_alloc);
+    net_proto_fns_t fns;
+
+    net_proto_fns_struct_init(&fns);
+
+    fns.rx              = eth_rx;
+    fns.tx              = eth_tx;
+    fns.addr_compare    = eth_addr_compare;
+    fns.packet_alloc    = eth_packet_alloc;
+
+    return net_protocol_register_driver(np_ethernet, "Ethernet", &fns);
 }
 
 

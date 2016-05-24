@@ -25,8 +25,16 @@ net_protocol_t ipv4_get_proto(const ipv4_protocol_t proto);
 */
 s32 ipv4_init()
 {
-    return net_protocol_register_driver(np_ipv4, "IPv4", ipv4_rx, ipv4_tx, ipv4_addr_compare,
-                                        ipv4_packet_alloc);
+    net_proto_fns_t fns;
+
+    net_proto_fns_struct_init(&fns);
+
+    fns.rx              = ipv4_rx;
+    fns.tx              = ipv4_tx;
+    fns.addr_compare    = ipv4_addr_compare;
+    fns.packet_alloc    = ipv4_packet_alloc;
+
+    return net_protocol_register_driver(np_ipv4, "IPv4", &fns);
 }
 
 

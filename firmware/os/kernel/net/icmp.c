@@ -19,7 +19,13 @@ s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet
 */
 s32 icmp_init()
 {
-    return net_protocol_register_driver(np_icmp, "ICMP", icmp_rx, NULL, NULL, NULL);
+    net_proto_fns_t fns;
+
+    net_proto_fns_struct_init(&fns);
+
+    fns.rx = icmp_rx;
+
+    return net_protocol_register_driver(np_icmp, "ICMP", &fns);
 }
 
 
