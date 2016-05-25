@@ -125,7 +125,7 @@ s32 ipv4_route_add(const ipv4_route_t * const r);
 s32 ipv4_route_delete(const ipv4_route_t * const r);
 s32 ipv4_route_get_entry(ipv4_rt_item_t **e);
 const ipv4_route_t *ipv4_route_get(const net_address_t * const proto_addr);
-net_iface_t *ipv4_route_iface(const net_address_t * const proto_addr);
+s32 ipv4_route_get_iface(const net_address_t * const proto_addr, net_iface_t **iface);
 s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr);
 

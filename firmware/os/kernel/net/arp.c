@@ -149,9 +149,9 @@ s32 arp_send_request(const net_address_t *addr)
     if(net_address_get_type(addr) != na_ipv4)
         return EPROTONOSUPPORT;
 
-    iface = ipv4_route_iface(addr);
-    if(!iface)
-        return ENETUNREACH;
+    ret = net_route_get_iface(addr, &iface);
+    if(ret != SUCCESS)
+        return ret;
 
     if(net_interface_get_proto(iface) != np_ethernet)
         return EPROTONOSUPPORT;
@@ -186,6 +186,7 @@ s32 arp_send_request(const net_address_t *addr)
 
 /*
     arp_lookup() - look up the supplied hardware address on the specified network interface.
+    FIXME: arp_lookup() isn't used; maybe remove
 */
 s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr)
 {

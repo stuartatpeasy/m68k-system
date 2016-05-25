@@ -89,12 +89,10 @@ net_protocol_t net_address_get_proto(const net_address_t * const addr)
 */
 net_protocol_t net_address_get_hw_proto(const net_address_t * const addr)
 {
-    net_iface_t * iface = net_route_get(addr);
+    net_iface_t *iface;
 
-    if(!iface)
-        return np_unknown;
-
-    return net_interface_get_proto(iface);
+    return (net_route_get_iface(addr, &iface) == SUCCESS) ?
+                net_interface_get_proto(iface) : np_unknown;
 }
 
 

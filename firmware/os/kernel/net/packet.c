@@ -57,15 +57,24 @@ s32 net_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * c
                      net_packet_t **packet)
 {
     net_packet_t *p;
-    ks32 ret = net_packet_create(len, &p);
+    s32 ret;
 
+    ret = net_packet_create(len, &p);
     if(ret != SUCCESS)
         return ret;
 
     /* If an interface was supplied, use it; otherwise look up based on address. */
-    p->iface = iface ? iface : net_route_get(addr);
-    if(!p->iface)
-        return EHOSTUNREACH;
+    if(iface)
+        p->iface = iface;
+    else
+    {
+        ret = net_route_get_iface(addr, &p->iface);
+        if(ret != SUCCESS)
+        {
+            net_packet_free(p);
+            return ret;
+        }
+    }
 
     net_packet_reset(p);
     net_packet_set_proto(p, np_unknown);

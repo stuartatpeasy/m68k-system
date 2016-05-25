@@ -39,6 +39,7 @@ s32 ipv4_init()
     fns.tx              = ipv4_tx;
     fns.addr_compare    = ipv4_addr_compare;
     fns.packet_alloc    = ipv4_packet_alloc;
+    fns.route_get_iface = ipv4_route_get_iface;
 
     return net_protocol_register_driver(np_ipv4, "IPv4", &fns);
 }
@@ -91,11 +92,13 @@ s32 ipv4_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     ipv4_hdr_t *hdr;
     s32 ret;
 
-    iface = net_packet_get_interface(packet) ?
-        net_packet_get_interface(packet) : ipv4_route_iface(dest);
-
+    iface = net_packet_get_interface(packet);
     if(!iface)
-        return EHOSTUNREACH;
+    {
+        ret = ipv4_route_get_iface(dest, &iface);
+        if(ret != SUCCESS)
+            return ret;
+    }
 
     ret = net_packet_insert(packet, sizeof(ipv4_hdr_t));
     if(ret != SUCCESS)
@@ -256,14 +259,19 @@ ipv4_port_t ipv4_get_port(const net_address_t * const addr)
 
 
 /*
-    ipv4_addr_compare() - compare two IPv4 addresses.
+    ipv4_addr_compare() - compare two IPv4 addresses.  Return 0 for a match, nonzero otherwise.
 */
 s32 ipv4_addr_compare(const net_address_t * const a1, const net_address_t * const a2)
 {
+    const ipv4_address_t *ip1, *ip2;
+
     if((net_address_get_type(a1) != na_ipv4) || (net_address_get_type(a2) != na_ipv4))
         return -1;      /* Mismatch */
 
-    return memcmp(net_address_get_address(a1), net_address_get_address(a2), sizeof(ipv4_address_t));
+    ip1 = (ipv4_address_t *) net_address_get_address(a1);
+    ip2 = (ipv4_address_t *) net_address_get_address(a2);
+
+    return !(ip1->addr == ip2->addr);
 }
 
 
@@ -437,14 +445,20 @@ const ipv4_route_t *ipv4_route_get(const net_address_t * const proto_addr)
 
 
 /*
-    ipv4_route_iface() - get the interface associated with a particular address.  Return NULL if no
-    suitable route was found and no default route exists.
+    ipv4_route_get_iface() - get the interface associated with a particular address.  Return NULL if
+    no suitable route was found and no default route exists.
 */
-net_iface_t *ipv4_route_iface(const net_address_t * const proto_addr)
+s32 ipv4_route_get_iface(const net_address_t * const proto_addr, net_iface_t **iface)
 {
     const ipv4_route_t * const route = ipv4_route_get(proto_addr);
 
-    return route ? route->iface : NULL;
+    if(route)
+    {
+        *iface = route->iface;
+        return SUCCESS;
+    }
+
+    return EHOSTUNREACH;
 }
 
 
@@ -472,6 +486,7 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
     /* Is this a broadcast address? */
     if(!ipv4_addr_compare(proto_addr, ipv4_make_broadcast_addr(&ipv4_addr_broadcast)))
     {
+        /* FIXME - this is Ethernet-specific! */
         eth_make_broadcast_addr(hw_addr);
         return SUCCESS;
     }

@@ -51,8 +51,7 @@ s32 net_protocol_addr_compare(const net_protocol_t proto, const net_address_t * 
                               const net_address_t * const a2);
 s32 net_protocol_packet_alloc(const net_protocol_t proto, const net_address_t * const addr,
                               ku32 len, net_iface_t * const iface, net_packet_t **packet);
-s32 net_protocol_route_get_iface(const net_protocol_t proto, const net_address_t * const addr,
-                                 net_iface_t **iface);
+s32 net_route_get_iface(const net_address_t * const addr, net_iface_t **iface);
 net_protocol_t net_protocol_from_address(const net_address_t * const addr);
 net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr);
 

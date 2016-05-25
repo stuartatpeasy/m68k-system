@@ -37,6 +37,7 @@ s32 net_tx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *
 s32 net_packet_alloc_unimplemented(const net_address_t * const addr, ku32 len,
                                    net_iface_t * const iface, net_packet_t **packet);
 s32 net_addr_compare_unimplemented(const net_address_t * const a1, const net_address_t * const a2);
+s32 net_route_get_iface_unimplemented(const net_address_t * const addr, net_iface_t **iface);
 net_proto_driver_t *net_protocol_get_driver(const net_protocol_t proto);
 
 
@@ -80,11 +81,16 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
 
 
 /*
-    net_proto_fns_struct_init() - initialise a net_proto_fns_t struct by setting all members to 0.
+    net_proto_fns_struct_init() - initialise a net_proto_fns_t struct by setting all members to
+    point to the _unimplemented() versions of the respective functions.
 */
 void net_proto_fns_struct_init(net_proto_fns_t * const f)
 {
-    bzero(f, sizeof(net_proto_fns_t));
+    f->rx               = net_rx_unimplemented;
+    f->tx               = net_tx_unimplemented;
+    f->addr_compare     = net_addr_compare_unimplemented;
+    f->packet_alloc     = net_packet_alloc_unimplemented;
+    f->route_get_iface  = net_route_get_iface_unimplemented;
 }
 
 
@@ -150,13 +156,11 @@ s32 net_protocol_packet_alloc(const net_protocol_t proto, const net_address_t * 
 
 
 /*
-    net_protocol_route_get_iface() - get the interface associated with a particular (protocol)
-    address.
+    net_route_get_iface() - get the interface associated with a particular (protocol) address.
 */
-s32 net_protocol_route_get_iface(const net_protocol_t proto, const net_address_t * const addr,
-                                 net_iface_t **iface)
+s32 net_route_get_iface(const net_address_t * const addr, net_iface_t **iface)
 {
-    net_proto_driver_t * const drv = net_protocol_get_driver(proto);
+    net_proto_driver_t * const drv = net_protocol_get_driver(net_address_get_proto(addr));
 
     if(!drv)
         return EPROTONOSUPPORT;
@@ -215,6 +219,17 @@ s32 net_addr_compare_unimplemented(const net_address_t * const a1, const net_add
 
 
 /*
+    net_protocol_route_get_iface_unimplemented() - default handler for <proto>_route_get_iface()
+*/
+s32 net_route_get_iface_unimplemented(const net_address_t * const addr, net_iface_t **iface)
+{
+    UNUSED(addr);
+    UNUSED(iface);
+    return ENOSYS;
+}
+
+
+/*
     net_protocol_get_driver() - look up a protocol driver by protocol
 */
 net_proto_driver_t *net_protocol_get_driver(const net_protocol_t proto)
@@ -250,7 +265,8 @@ net_protocol_t net_protocol_from_address(const net_address_t * const addr)
 */
 net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr)
 {
-    net_iface_t * const iface = net_route_get(addr);
+    net_iface_t *iface;
 
-    return iface ? net_interface_get_proto(iface) : np_unknown;
+    return (net_route_get_iface(addr, &iface) == SUCCESS) ?
+                net_interface_get_proto(iface) : np_unknown;
 }
