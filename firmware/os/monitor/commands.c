@@ -583,51 +583,6 @@ MONITOR_CMD_HANDLER(id)
 
 
 /*
-    netif
-
-    Manipulate network interfaces
-*/
-MONITOR_CMD_HANDLER(netif)
-{
-    net_iface_t *iface;
-
-    /*
-        Syntax:
-            netif show eth0
-            netif ipv4 eth0 172.1.2.3
-    */
-    if(num_args < 2)
-        return EINVAL;
-
-    iface = net_interface_get_by_dev(args[1]);
-    if(!iface)
-        return ENOENT;
-
-    if(!strcmp(args[0], "show"))
-    {
-        char buf[32];
-        net_address_print(net_interface_get_proto_addr(iface), buf, 32);
-        printf("%s: %s\n", net_get_iface_name(iface), buf);
-
-        return SUCCESS;
-    }
-    else if(!strcmp(args[0], "ipv4"))
-    {
-        ipv4_addr_t ipv4addr;
-        net_address_t addr;
-
-        if(strtoipv4(args[2], &ipv4addr) != SUCCESS)
-            return EINVAL;
-
-        ipv4_make_addr(ipv4addr, IPV4_PORT_NONE, &addr);
-        return net_interface_set_proto_addr(iface, &addr);
-    }
-
-    return EINVAL;
-}
-
-
-/*
     ls
 
     List directory contents
@@ -755,6 +710,60 @@ MONITOR_CMD_HANDLER(mount)
         return EINVAL;
 
     return SUCCESS;
+}
+
+
+/*
+    netif
+
+    Manipulate network interfaces
+*/
+MONITOR_CMD_HANDLER(netif)
+{
+    net_iface_t *iface;
+
+    /*
+        Syntax:
+            netif show eth0
+            netif ipv4 eth0 172.1.2.3
+    */
+    if(num_args < 2)
+        return EINVAL;
+
+    iface = net_interface_get_by_dev(args[1]);
+    if(!iface)
+        return ENOENT;
+
+    if(!strcmp(args[0], "show"))
+    {
+        char buf[32];
+        const net_iface_stats_t *stats;
+
+        net_address_print(net_interface_get_proto_addr(iface), buf, 32);
+        stats = net_interface_get_stats(iface);
+
+        printf("%s: %s\n"
+               "RX packets: %u    bytes: %u    checksum err: %u    dropped: %u\n"
+               "TX packets: %u    bytes: %u\n"
+               , net_get_iface_name(iface), buf,
+               stats->rx_packets, stats->rx_bytes, stats->rx_checksum_err, stats->rx_dropped,
+               stats->tx_packets, stats->tx_bytes);
+
+        return SUCCESS;
+    }
+    else if(!strcmp(args[0], "ipv4"))
+    {
+        ipv4_addr_t ipv4addr;
+        net_address_t addr;
+
+        if(strtoipv4(args[2], &ipv4addr) != SUCCESS)
+            return EINVAL;
+
+        ipv4_make_addr(ipv4addr, IPV4_PORT_NONE, &addr);
+        return net_interface_set_proto_addr(iface, &addr);
+    }
+
+    return EINVAL;
 }
 
 

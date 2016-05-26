@@ -22,6 +22,18 @@
 typedef struct net_iface net_iface_t;
 
 
+/* Statistics associated with a network interface */
+typedef struct net_iface_stats
+{
+    u32     rx_packets;
+    u32     rx_bytes;
+    u32     rx_checksum_err;
+    u32     rx_dropped;
+    u32     tx_packets;
+    u32     tx_bytes;
+} net_iface_stats_t;
+
+
 s32 net_interface_init();
 s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet);
 net_iface_t *net_interface_get_by_dev(const char * const name);
@@ -37,5 +49,6 @@ void net_interface_stats_inc_tx_packets(net_iface_t * const iface);
 void net_interface_stats_add_tx_bytes(net_iface_t * const iface, ku32 bytes);
 void net_interface_stats_inc_cksum_err(net_iface_t * const iface);
 void net_interface_stats_inc_rx_dropped(net_iface_t * const iface);
+const net_iface_stats_t * net_interface_get_stats(net_iface_t * const iface);
 
 #endif

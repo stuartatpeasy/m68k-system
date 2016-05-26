@@ -23,18 +23,6 @@ s32 net_interface_add(dev_t *dev);
 
 net_iface_t *g_net_ifaces = NULL;
 
-/* Statistics associated with a network interface */
-typedef struct net_iface_stats
-{
-    u32     rx_packets;
-    u32     rx_bytes;
-    u32     rx_checksum_err;
-    u32     rx_dropped;
-    u32     tx_packets;
-    u32     tx_bytes;
-} net_iface_stats_t;
-
-
 /* A network interface object */
 struct net_iface
 {
@@ -284,4 +272,14 @@ void net_interface_stats_inc_cksum_err(net_iface_t * const iface)
 void net_interface_stats_inc_rx_dropped(net_iface_t * const iface)
 {
     ++iface->stats.rx_dropped;
+}
+
+
+/*
+    net_interface_get_stats() - get a ptr to the net_iface_stats_t object containing the statistics
+    associated with an interface.
+*/
+const net_iface_stats_t * net_interface_get_stats(net_iface_t * const iface)
+{
+    return &iface->stats;
 }
