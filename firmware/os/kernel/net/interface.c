@@ -62,46 +62,40 @@ s32 net_interface_init()
 s32 net_interface_add(dev_t *dev)
 {
     net_iface_t **p, *iface;
-    net_addr_type_t addr_type;
+    net_protocol_t proto;
+    char buf[64];
     s32 ret;
 
-    ret = dev->control(dev, dc_get_hw_addr_type, NULL, &addr_type);
+    ret = dev->control(dev, dc_get_hw_protocol, NULL, &proto);
     if(ret != SUCCESS)
         return ret;
 
-    if(addr_type == na_ethernet)    /* Ethernet interface */
+    iface = (net_iface_t *) CHECKED_KMALLOC(sizeof(net_iface_t));
+    iface->next         = NULL;
+    iface->dev          = dev;
+    iface->hw_addr.type = net_address_type_from_proto(proto);
+    iface->proto        = proto;
+
+    bzero(&iface->stats, sizeof(net_iface_stats_t));
+
+    ret = dev->control(dev, dc_get_hw_addr, NULL, &iface->hw_addr.addr);
+    if(ret != SUCCESS)
     {
-        char buf[64];
-
-        iface = (net_iface_t *) CHECKED_KMALLOC(sizeof(net_iface_t));
-        iface->next         = NULL;
-        iface->dev          = dev;
-        iface->hw_addr.type = addr_type;
-        iface->proto        = np_ethernet;
-
-        bzero(&iface->stats, sizeof(net_iface_stats_t));
-
-        ret = dev->control(dev, dc_get_hw_addr, NULL, &iface->hw_addr.addr);
-        if(ret != SUCCESS)
-        {
-            kfree(iface);
-            return ret;
-        }
-
-        for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
-            ;
-
-        *p = iface;
-        iface->proto_addr.type = na_unknown;
-
-        net_address_print(&iface->hw_addr, buf, sizeof(buf));
-        printf("net: added %s: %s\n", dev->name, buf);
-
-        return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL,
-                           NULL);
+        kfree(iface);
+        return ret;
     }
-    else
-        return EPROTONOSUPPORT;
+
+    for(p = &g_net_ifaces; *p != NULL; p = &(*p)->next)
+        ;
+
+    *p = iface;
+    iface->proto_addr.type = na_unknown;
+
+    net_address_print(&iface->hw_addr, buf, sizeof(buf));
+    printf("net: added %s: %s\n", dev->name, buf);
+
+    return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL,
+                       NULL);
 }
 
 
@@ -115,13 +109,14 @@ s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet)
     net_protocol_t proto;
     net_address_t src, dest;
     dev_t *dev;
+    s32 ret;
 
     dev = net_interface_get_device(iface);
     len = net_packet_get_buffer_len(packet);
 
     net_packet_reset(packet);
 
-    s32 ret = dev->read(dev, 0, &len, net_packet_get_start(packet));
+    ret = dev->read(dev, 0, &len, net_packet_get_start(packet));
     if(ret != SUCCESS)
         return ret;
 

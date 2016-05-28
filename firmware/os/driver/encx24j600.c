@@ -10,6 +10,7 @@
 */
 
 #include <driver/encx24j600.h>
+#include <kernel/memory/kmalloc.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/net.h>
 #include <kernel/process.h>
@@ -261,12 +262,7 @@ s32 encx24j600_init(dev_t *dev)
     encx24j600_state_t *state;
     s32 ret;
 
-    state = kmalloc(sizeof(encx24j600_state_t));
-    if(state == NULL)
-        return ENOMEM;
-
-    state->rx_wait_pid = 0;
-    state->rx_packets_pending = 0;
+    state = CHECKED_KCALLOC(1, sizeof(encx24j600_state_t));
 
     /* Reset the controller */
     ret = encx24j600_reset(dev);
@@ -387,7 +383,7 @@ s32 encx24j600_write(dev_t *dev, ku32 offset, u32 *len, const void *buf)
         return EINVAL;
 
     /* Is a transmission in progress? */
-    /* TODO - put process to sleep, instead of busy-waiting */
+    /* FIXME - put process to sleep, instead of busy-waiting */
     while(ENCX24_REG(base_addr, ECON1) & BIT(ECON1_TXRTS))
         ;
 
@@ -412,6 +408,10 @@ s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *o
 
     switch(fn)
     {
+        case dc_get_hw_protocol:
+            *((net_protocol_t *) out) = np_ethernet;
+            return SUCCESS;
+
         case dc_get_hw_addr_type:
             *((net_addr_type_t *) out) = na_ethernet;
             return SUCCESS;
@@ -420,6 +420,10 @@ s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *o
             ((mac_addr_t *) out)->w[0] = ENCX24_REG(base_addr, MAADR1);
             ((mac_addr_t *) out)->w[1] = ENCX24_REG(base_addr, MAADR2);
             ((mac_addr_t *) out)->w[2] = ENCX24_REG(base_addr, MAADR3);
+            return SUCCESS;
+
+        case dc_get_link_flags:
+            *((u32 *) out) = ((encx24j600_state_t *) dev->data)->flags;
             return SUCCESS;
 
         default:

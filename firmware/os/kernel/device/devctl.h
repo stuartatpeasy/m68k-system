@@ -31,10 +31,12 @@ typedef enum devctl_fn
     dc_set_baud_rate            = 0x0101,   /* Set device baud rate                             */
 
     /* Network devices */
-    dc_get_hw_addr_type         = 0x0200,   /* Get hardware address type                        */
-    dc_get_hw_addr              = 0x0201,   /* Get hardware address                             */
-    dc_get_proto_addr_type      = 0x0202,   /* Get protocol address type                        */
-    dc_get_proto_addr           = 0x0203    /* Get protocol address                             */
+    dc_get_hw_protocol          = 0x0200,   /* Get hardware protocol                            */
+    dc_get_hw_addr_type         = 0x0201,   /* Get hardware address type                        */
+    dc_get_hw_addr              = 0x0202,   /* Get hardware address                             */
+    dc_get_proto_addr_type      = 0x0203,   /* Get protocol address type                        */
+    dc_get_proto_addr           = 0x0204,   /* Get protocol address                             */
+    dc_get_link_flags           = 0x0205    /* Get link status flags                            */
 } devctl_fn_t;
 
 #endif

@@ -84,6 +84,29 @@ net_protocol_t net_address_get_proto(const net_address_t * const addr)
 
 
 /*
+    net_address_type_from_proto() - given a net_protocol_t, return the corresponding
+    net_addr_type_t.
+*/
+net_addr_type_t net_address_type_from_proto(const net_protocol_t proto)
+{
+    switch(proto)
+    {
+        case np_ethernet:
+            return na_ethernet;
+
+        case np_ipv4:
+            return na_ipv4;
+
+        case np_ipv6:
+            return na_ipv6;
+
+        default:
+            return na_unknown;
+    }
+}
+
+
+/*
     net_address_get_hw_proto() - perform a routing lookup on the given address, and return the
     hardware protocol associated with the route.
 */

@@ -9,6 +9,7 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/device/device.h>
 #include <kernel/net/net.h>
@@ -16,6 +17,9 @@
 
 
 #define NET_INTERFACE_ANY           ((net_iface_t *) NULL)
+
+/* Interface state flags */
+#define NETIF_LINKED                BIT(0)
 
 
 /* Network interface. */
