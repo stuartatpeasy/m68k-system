@@ -77,7 +77,7 @@ s32 ext2_mount(vfs_t *vfs)
     if(!vfs->data)
         return ENOMEM;
 
-	fs = (ext2_filesystem_t *) vfs->data;
+    fs = (ext2_filesystem_t *) vfs->data;
 
 	/*
 		Read the superblock

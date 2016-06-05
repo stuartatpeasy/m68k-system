@@ -62,7 +62,7 @@ s32 vfs_init()
         return ret;
 
 	/* Find rootfs device */
-	ret = nvram_bpb_read(&bpb);
+    ret = nvram_bpb_read(&bpb);
 	if(ret != SUCCESS)
     {
         printf("vfs: failed to read rootfs from BPB: %s\n", kstrerror(ret));

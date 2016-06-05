@@ -74,8 +74,8 @@ s32 net_tx(net_packet_t *packet)
         return EHOSTUNREACH;
 
 	/* The packet protocol must match the interface protocol */
-	if(net_packet_get_proto(packet) != net_interface_get_proto(iface))
-		return EPROTONOSUPPORT;
+    if(net_packet_get_proto(packet) != net_interface_get_proto(iface))
+        return EPROTONOSUPPORT;
 
     dev = net_interface_get_device(iface);
 

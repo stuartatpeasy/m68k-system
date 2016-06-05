@@ -154,12 +154,12 @@ MONITOR_CMD_HANDLER(dfu)
     if(cksum_calculated != cksum_sent)
         return ECKSUM;
 
-	if((ret = dfu((ku16 *) data, buffer_len)))
-		printf("Firmware update failed: %s\n", kstrerror(ret));
+    if((ret = dfu((ku16 *) data, buffer_len)))
+        printf("Firmware update failed: %s\n", kstrerror(ret));
 
     ufree(data);
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 

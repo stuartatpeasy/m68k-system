@@ -181,7 +181,7 @@ void dispatch_command(char *cmdline)
     if(ret != SUCCESS)
         puts(kstrerror(ret));
 
-	for(c = 0; c < num_args; ++c)
-		kfree(args[c]);
+    for(c = 0; c < num_args; ++c)
+        kfree(args[c]);
 }
 

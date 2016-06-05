@@ -74,7 +74,7 @@ s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev)
     else
         g_mount_table = new_ent;    /* This is the first entry in the mount table */
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -125,6 +125,6 @@ vfs_t *mount_find(const char * const path, const char **rel)
     if(rel)
         *rel = path + best_match_len;
 
-	return fs;  /* returns NULL if no root fs is mounted */
+    return fs;  /* returns NULL if no root fs is mounted */
 }
 

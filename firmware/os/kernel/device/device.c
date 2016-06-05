@@ -77,7 +77,7 @@ s32 dev_add_child(dev_t *parent, dev_t *child)
     if(parent == NULL)
         parent = root_dev;
 
-	child->parent = parent;
+    child->parent = parent;
 
 	if(parent->first_child == NULL)
 		parent->first_child = child;
