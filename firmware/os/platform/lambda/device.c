@@ -60,13 +60,27 @@ s32 plat_dev_enumerate()
                    NULL, "MC68681 serial port B", dev, mc68681_serial_b_init);
 
         /*
+            Set the MC68681 general-purpose outputs to safe initial values:
+                OP7     nLEDRED     0
+                OP6     nLEDGREEN   0
+                OP5     BUZZER      1       doesn't matter; will be changed in the next stmt
+                OP4     n/c         1
+                OP3     nTIMERIRQ   1       negate timer IRQ
+                OP2     nEID        1       negate nEID
+                OP1     RTS_B       0       negate RTS_B
+                OP0     RTS_A       0       negate RTS_A
+        */
+        mc68681_reset_op_bits(g_lambda_duart, 0xc3);
+        mc68681_set_op_bits(g_lambda_duart, 0x3c);
+
+        /*
             Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
             subsequent revisions it's active-low.
         */
 #if (PLATFORM_REV == 0)
-		mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+		mc68681_reset_op_bits(g_lambda_duart, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
 #else
-		mc68681_set_op_bits(g_lambda_console, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+		mc68681_set_op_bits(g_lambda_duart, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
 #endif
     }
 
