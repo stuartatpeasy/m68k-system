@@ -37,6 +37,7 @@ const struct command g_commands[] =
 	{"history",         cmd_history},
 	{"id",              cmd_id},
 	{"ls",              cmd_ls},
+	{"lsdev",           cmd_lsdev},
 	{"map",             cmd_map},
 	{"mount",           cmd_mount},
 	{"netif",           cmd_netif},

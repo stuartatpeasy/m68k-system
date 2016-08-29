@@ -507,6 +507,8 @@ MONITOR_CMD_HANDLER(help)
 		  "    Display device identity\n\n"
 		  "ls [<path>]\n"
 		  "    List directory contents\n\n"
+		  "lsdev\n"
+		  "    List devices\n\n"
 		  "map\n"
 		  "    Display memory map\n\n"
 		  "mount [<dev> <fstype> <mountpoint>]\n"
@@ -638,6 +640,24 @@ MONITOR_CMD_HANDLER(ls)
     }
     else
         return EINVAL;
+
+    return SUCCESS;
+}
+
+
+/*
+    lsdev
+
+    List devices
+*/
+MONITOR_CMD_HANDLER(lsdev)
+{
+    dev_t *dev;
+    UNUSED(num_args);
+    UNUSED(args);
+
+    for(dev = dev_get_root(); (dev = dev_get_next(dev)) != NULL;)
+        puts(dev->name);
 
     return SUCCESS;
 }
