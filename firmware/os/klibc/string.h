@@ -25,6 +25,7 @@ s8 *strchr(s8 *s, s32 c);
 s32 strcmp(ks8 *s1, ks8 *s2);
 s8 *strcpy(s8 *dest, ks8 *src);
 s8 *strdup(ks8 *s);
+s8 *strdupext(ks8 *s, ku32 ext);
 ks8 *strerror(ks32 errnum);
 u32 strlen(const s8 *s);
 s32 strncmp(ks8 *s1, ks8 *s2, u32 n);

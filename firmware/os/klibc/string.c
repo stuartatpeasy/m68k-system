@@ -118,9 +118,10 @@ s32 strcmp(ks8 *s1, ks8 *s2)
 */
 s8 *strcpy(s8 *dest, ks8 *src)
 {
+    s8 *dest_ = dest;
 	do
 	{
-		*dest++ = *src;
+		*dest_++ = *src;
 	} while(*src++);
 
 	return dest;
@@ -132,18 +133,26 @@ s8 *strcpy(s8 *dest, ks8 *src)
 */
 s8 *strdup(ks8 *s)
 {
-	ku32 len = strlen(s);
-	s8 *buf = malloc(len + 1);
+    return strdupext(s, 0);
+}
 
-	if(buf == NULL)
-	{
-		/* TODO: set error code */
-		return 0;
-	}
 
-	strcpy(buf, s);
+/*
+    strdupext() - same as strdup, but make the buffer length equal to strlen(s) + 1 + ext bytes.
+    The extra bytes, after the terminating zero, will not be initialised.
+*/
+s8 *strdupext(ks8 *s, ku32 ext)
+{
+    ku32 len = strlen(s);
+    s8 *buf = malloc(len + 1 + ext);
 
-	return buf;
+    if(buf == NULL)
+    {
+        /* TODO: set errno */
+        return 0;
+    }
+
+    return strcpy(buf, s);
 }
 
 
