@@ -54,7 +54,8 @@ typedef enum
     DEV_SUBTYPE_NONE            = 0x00,
     DEV_SUBTYPE_MASS_STORAGE    = 0x01,
     DEV_SUBTYPE_PARTITION       = 0x02,
-    DEV_SUBTYPE_ETHERNET        = 0x03
+    DEV_SUBTYPE_ETHERNET        = 0x03,
+    DEV_SUBTYPE_PS2PORT         = 0x04
 } dev_subtype_t;
 
 
