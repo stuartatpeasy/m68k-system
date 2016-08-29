@@ -57,22 +57,21 @@ enum PS2Controller_Reg
 */
 
 /* Flags - used in PS2_STATUS and PS2_INT_CFG */
-#define PS2_FLAG_RX             (7)     /* Byte received                                        */
-#define PS2_FLAG_TX             (6)     /* Transmit finished                                    */
-#define PS2_FLAG_PAR_ERR        (5)     /* Receiver parity error                                */
-#define PS2_FLAG_OVF            (4)     /* Keyboard FIFO overflow                               */
-#define PS2_FLAG_RX_TIMEOUT     (3)     /* Timeout during receive                               */
-#define PS2_FLAG_TX_TIMEOUT     (2)     /* Timeout during transmit                              */
-#define PS2_FLAG_START_TIMEOUT  (1)     /* Timeout while waiting for TX clock                   */
-#define PS2_FLAG_CMD_TIMEOUT    (0)     /* Timeout waiting for command response                 */
+#define PS2_FLAG_RX             BIT(7)     /* Byte received                                     */
+#define PS2_FLAG_TX             BIT(6)     /* Transmit finished                                 */
+#define PS2_FLAG_PAR_ERR        BIT(5)     /* Receiver parity error                             */
+#define PS2_FLAG_OVF            BIT(4)     /* Keyboard FIFO overflow                            */
+#define PS2_FLAG_RX_TIMEOUT     BIT(3)     /* Timeout during receive                            */
+#define PS2_FLAG_TX_TIMEOUT     BIT(2)     /* Timeout during transmit                           */
+#define PS2_FLAG_START_TIMEOUT  BIT(1)     /* Timeout while waiting for TX clock                */
+#define PS2_FLAG_CMD_TIMEOUT    BIT(0)     /* Timeout waiting for command response              */
 
 /* Bits in PS2_CFG */
-#define PS2_CFG_IE              (7)     /* Global interrupt enable                              */
-#define PS2_CFG_PWR_A           (4)     /* Enable/disable power to channel A                    */
-#define PS2_CFG_PWR_B           (3)     /* Enable/disable power to channel B                    */
+#define PS2_CFG_IE              BIT(7)     /* Global interrupt enable                           */
+#define PS2_CFG_PWR_A           BIT(4)     /* Enable/disable power to channel A                 */
+#define PS2_CFG_PWR_B           BIT(3)     /* Enable/disable power to channel B                  */
 
 
 s32 ps2controller_init(dev_t *dev);
-void ps2controller_irq(ku32 irql, void *data);
 
 #endif
