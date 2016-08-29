@@ -276,6 +276,28 @@ s32 dev_destroy(dev_t *dev)
 
 
 /*
+    dev_get_type_char() - get the character code representing a high-level device type.
+*/
+char dev_get_type_char(const dev_t * const dev)
+{
+    switch(dev->type)
+    {
+        case DEV_TYPE_NONE:         return '-';
+        case DEV_TYPE_BLOCK:        return 'b';
+        case DEV_TYPE_CHARACTER:    return 'c';
+        case DEV_TYPE_NET:          return 'n';
+        case DEV_TYPE_SERIAL:       return 's';
+        case DEV_TYPE_RTC:          return 'r';
+        case DEV_TYPE_MEM:          return 'm';
+        case DEV_TYPE_NVRAM:        return 'M';
+        case DEV_TYPE_MULTI:        return 'x';
+    }
+
+    return '?';
+}
+
+
+/*
     dev_read_unimplemented() - default handler for dev->read() calls
 */
 s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, u32 *len, void *buf)

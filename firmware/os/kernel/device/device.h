@@ -40,8 +40,9 @@ typedef enum
 	DEV_TYPE_NET                = 0x03,
 	DEV_TYPE_SERIAL			    = 0x04,
 	DEV_TYPE_RTC                = 0x05,
-	DEV_TYPE_NVRAM              = 0x06,
-	DEV_TYPE_MULTI              = 0x07
+	DEV_TYPE_MEM                = 0x06,
+	DEV_TYPE_NVRAM              = 0x07,
+	DEV_TYPE_MULTI              = 0x08
 } dev_type_t;
 
 
@@ -107,6 +108,7 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
                  dev_t *parent_dev, s32 (*init_fn)(dev_t *));
 
 s32 dev_destroy(dev_t *dev);
+char dev_get_type_char(const dev_t * const dev);
 
 dev_t *dev_find(const char * const name);
 dev_t *dev_find_subtree(const char * const name, dev_t *node);

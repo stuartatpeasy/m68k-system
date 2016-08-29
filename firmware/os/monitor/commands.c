@@ -9,6 +9,9 @@
 
 #include <monitor/monitor.h>
 
+/* lsdev command output-formatting flags */
+#define LSDEV_LONG_FORMAT       BIT(0)
+
 
 /*
     arp
@@ -653,11 +656,30 @@ MONITOR_CMD_HANDLER(ls)
 MONITOR_CMD_HANDLER(lsdev)
 {
     dev_t *dev;
+    u32 flags = 0;
     UNUSED(num_args);
     UNUSED(args);
 
+    if(args)
+    {
+        int i;
+        for(i = 0; i < num_args; ++i)
+        {
+            if(!strcmp(args[i], "-l"))
+                flags |= LSDEV_LONG_FORMAT;
+        }
+    }
+
     for(dev = dev_get_root(); (dev = dev_get_next(dev)) != NULL;)
-        puts(dev->name);
+    {
+        if(flags & LSDEV_LONG_FORMAT)
+        {
+            printf("%08x %c %12s %s\n", (u32) dev->base_addr, dev_get_type_char(dev), dev->name,
+                    dev->human_name);
+        }
+        else
+            puts(dev->name);
+    }
 
     return SUCCESS;
 }
