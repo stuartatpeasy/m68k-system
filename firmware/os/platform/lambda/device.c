@@ -63,15 +63,15 @@ s32 plat_dev_enumerate()
             Set the MC68681 general-purpose outputs to safe initial values:
                 OP7     nLEDRED     0
                 OP6     nLEDGREEN   0
-                OP5     BUZZER      1       doesn't matter; will be changed in the next stmt
-                OP4     n/c         1
+                OP5     BUZZER      0       doesn't matter; will be changed in the next stmt
+                OP4     n/c         0
                 OP3     nTIMERIRQ   1       negate timer IRQ
                 OP2     nEID        1       negate nEID
                 OP1     RTS_B       0       negate RTS_B
                 OP0     RTS_A       0       negate RTS_A
         */
-        mc68681_reset_op_bits(g_lambda_duart, 0xc3);
-        mc68681_set_op_bits(g_lambda_duart, 0x3c);
+        mc68681_reset_op_bits(g_lambda_duart, 0xf3);
+        mc68681_set_op_bits(g_lambda_duart, 0x0c);
 
         /*
             Switch off the beeper.  In hardware rev0, the beeper is an active-high output; in
@@ -90,7 +90,7 @@ s32 plat_dev_enumerate()
     */
     /* DEV_TYPE_MULTI device representing the whole chip */
     if(dev_create(DEV_TYPE_MULTI, DEV_SUBTYPE_NONE, "nvrtc", IRQL_NONE,
-                  LAMBDA_DS17485_BASE, &dev, "DS17485", NULL, ds17485_init) == SUCCESS)
+                  LAMBDA_DS17485_BASE, &dev, "DS17485 RTC/NVRAM IC", NULL, ds17485_init) == SUCCESS)
     {
         /* Child device: RTC */
         dev_create(DEV_TYPE_RTC, DEV_SUBTYPE_NONE, "rtc", LAMBDA_DS17485_IRQL, LAMBDA_DS17485_BASE,
@@ -155,6 +155,7 @@ void expansion_init()
             /* Assert nEID to ask peripherals to identify themselves */
             mc68681_reset_op_bits(g_lambda_console, BIT(LAMBDA_EXP_ID));
 
+            /* Read device ID byte */
             id = *((u8 *) LAMBDA_EXP_BASE(i));
 
             /* Negate nEID */
