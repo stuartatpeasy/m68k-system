@@ -3,11 +3,12 @@ Setting up a toolchain to build ayumos for the m68k architecture
 
 Stuart Wallace, 2011-2016.
 
-Last updated 2016-01-29: updated to binutils v2.26.
+Last updated 2016-08-30: updated to binutils v2.28 and gcc v6.2.
+Updated 2016-01-29: updated to binutils v2.27.
 Updated 2016-01-24: updated to gcc v6.1.
 
 
-These instructions have been tested on Debian jessie/sid, specifically Ubuntu 14.04.3 LTS (trusty).
+These instructions have been tested on Debian jessie/sid, specifically Ubuntu 16.04 LTS (xenial).
 
 
 Notes on the "old" toolchain
@@ -57,24 +58,24 @@ Building the toolchain
 	$ cd tools
 
 
-1. Build and install binutils-2.26
+1. Build and install binutils-2.27
 
-	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.26.tar.bz2
-	$ tar xf binutils-2.26.tar.bz2
-	$ cd binutils-2.26
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/binutils/binutils-2.27.tar.bz2
+	$ tar xf binutils-2.27.tar.bz2
+	$ cd binutils-2.27
 	$ ./configure --prefix=/opt/m68k --target=m68k-elf
 	$ make -j$(nproc)
 	$ make install
 	$ cd ..
 
 
-2. build and install gcc-6.1.0
+2. build and install gcc-6.2.0
 
-	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-6.1.0/gcc-6.1.0.tar.bz2
-	$ tar xf gcc-6.1.0.tar.bz2
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-6.2.0/gcc-6.2.0.tar.bz2
+	$ tar xf gcc-6.2.0.tar.bz2
 	$ mkdir gcc-build
 	$ cd gcc-build
-	$ ../gcc-6.1.0/configure --prefix=/opt/m68k --target=m68k-elf --enable-languages=c,c++
+	$ ../gcc-6.2.0/configure --prefix=/opt/m68k --target=m68k-elf --enable-languages=c,c++
 	$ make -j$(nproc) all-gcc all-target-libgcc
 	$ make install-gcc install-target-libgcc
 	$ cd ..
