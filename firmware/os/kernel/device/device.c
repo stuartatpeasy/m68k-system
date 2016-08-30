@@ -200,9 +200,11 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
 
 	d->type		    = type;
 	d->subtype		= subtype;
+	d->state        = DEV_STATE_UNKNOWN;
 	d->irql		    = irql;
 	d->base_addr    = base_addr;
 	d->human_name   = human_name;
+	d->data         = NULL;
 
 	d->control      = dev_control_unimplemented;
 	d->read         = dev_read_unimplemented;
@@ -220,25 +222,27 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
         return ret;
     }
 
+    ret = dev_add_child(parent_dev, d);
+    if(ret != SUCCESS)
+    {
+        printf("%s: failed to add %s to device tree: %s\n", d->name, human_name,
+                kstrerror(ret));
+        kfree(d);
+        return ret;
+    }
+
     if(init_fn != NULL)
     {
         ret = init_fn(d);
         if(ret != SUCCESS)
         {
-            kfree(d);
             printf("%s: %s device init failed: %s\n", d->name, human_name, kstrerror(ret));
+            dev_destroy(d);
             return ret;
         }
     }
 
-    ret = dev_add_child(parent_dev, d);
-    if(ret != SUCCESS)
-    {
-        dev_destroy(d);
-        printf("%s: failed to add %s to device tree: %s\n", d->name, human_name,
-                kstrerror(ret));
-        return ret;
-    }
+    d->state = DEV_STATE_READY;
 
     if(dev != NULL)
         *dev = d;
@@ -271,6 +275,7 @@ s32 dev_destroy(dev_t *dev)
         dev->next_sibling->prev_sibling = dev->prev_sibling;
 
     kfree(dev);
+
     return SUCCESS;
 }
 

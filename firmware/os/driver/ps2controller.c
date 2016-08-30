@@ -66,9 +66,7 @@ s32 ps2controller_init(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
     dev_t *port_a, *port_b;
-    char *name;
     s32 ret;
-    u32 namelen;
 
     dev->shut_down  = ps2controller_shut_down;
     dev->read       = ps2controller_read;
@@ -78,29 +76,16 @@ s32 ps2controller_init(dev_t *dev)
     dev->data = NULL;
 
     /* Set up child devices */
-    namelen = strlen(dev->name);
-    name = strdupext(dev->name, 1);
-    if(!name)
-        return ENOMEM;
-
-    name[namelen + 1] = '\0';
-
-    name[namelen] = 'a';
-    ret = dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_PS2PORT, name, IRQL_NONE, dev->base_addr,
+    ret = dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_PS2PORT, dev->name, IRQL_NONE, dev->base_addr,
                         &port_a, "PS/2 port A", dev, ps2controller_port_a_init);
     if(ret != SUCCESS)
-    {
-        free(name);
         return ret;
-    }
 
-    name[namelen] = 'b';
-    ret = dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_PS2PORT, name, IRQL_NONE, dev->base_addr,
+    ret = dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_PS2PORT, dev->name, IRQL_NONE, dev->base_addr,
                         &port_b, "PS/2 port B", dev, ps2controller_port_b_init);
     if(ret != SUCCESS)
     {
         dev_destroy(port_a);
-        free(name);
         return ret;
     }
 

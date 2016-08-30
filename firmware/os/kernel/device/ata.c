@@ -1,10 +1,10 @@
 /*
-	AT Attachment (ATA) interface driver function definitions
+    AT Attachment (ATA) interface driver function definitions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, December 2011.
+    (c) Stuart Wallace, December 2011.
 */
 
 #include <kernel/device/ata.h>
@@ -17,7 +17,7 @@
 
 
 /*
-	Internal functions (called by "driver" functions)
+    Internal functions (called by "driver" functions)
 */
 s32 ata_send_command(void * const base_addr, const ata_drive_t drive, const ata_command_t cmd);
 
@@ -94,7 +94,10 @@ s32 ata_drive_init(dev_t *dev, const ata_drive_t drive)
     ret = ata_drive_do_init(dev);
 
     if(ret != SUCCESS)
-        kfree(dev_data);
+    {
+        kfree(dev->data);
+        dev->data = NULL;
+    }
 
     return ret;
 }
@@ -137,7 +140,7 @@ s32 ata_drive_do_init(dev_t *dev)
 
     /* A device is present. Wait for BSY to go low */
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;	/* Device did not negate BSY in a timely fashion */
+        return ETIME;   /* Device did not negate BSY in a timely fashion */
 
     /* Wait for DRDY to go high */
     if(!ATA_WAIT_DRDY(base_addr))
@@ -150,11 +153,11 @@ s32 ata_drive_do_init(dev_t *dev)
         if(ATA_REG(base_addr, ATA_R_ERROR) & ATA_ERROR_ABRT)
         {
             /* This might be a packet device. */
-            if((ATA_REG(base_addr, ATA_R_SECTOR_COUNT) == 0x01) &&		    /* \ this is the 	*/
-               (ATA_REG(base_addr, ATA_R_SECTOR_NUMBER) == 0x01) &&			/* | PACKET command	*/
-               (ATA_REG(base_addr, ATA_R_CYLINDER_LOW) == 0x14) &&		    /* | feature set 	*/
-               (ATA_REG(base_addr, ATA_R_CYLINDER_HIGH) == 0xeb) &&			/* | signature	 	*/
-               ((ATA_REG(base_addr, ATA_R_DEVICE_HEAD) & 0xef) == 0x00))	/* /			 	*/
+            if((ATA_REG(base_addr, ATA_R_SECTOR_COUNT) == 0x01) &&          /* \ this is the    */
+               (ATA_REG(base_addr, ATA_R_SECTOR_NUMBER) == 0x01) &&         /* | PACKET command */
+               (ATA_REG(base_addr, ATA_R_CYLINDER_LOW) == 0x14) &&          /* | feature set    */
+               (ATA_REG(base_addr, ATA_R_CYLINDER_HIGH) == 0xeb) &&         /* | signature      */
+               ((ATA_REG(base_addr, ATA_R_DEVICE_HEAD) & 0xef) == 0x00))    /* /                */
             {
                 /* This is a packet device; these are not supported. */
                 return EMEDIUMTYPE;
@@ -203,8 +206,10 @@ s32 ata_drive_do_init(dev_t *dev)
 */
 s32 ata_shut_down(dev_t *dev)
 {
-    kfree(dev->data);
-	return SUCCESS;
+    if(dev->data != NULL)
+        kfree(dev->data);
+
+    return SUCCESS;
 }
 
 
@@ -233,36 +238,36 @@ return;
 
 
 /*
-	ata_send_command() - Send ATA command
+    ata_send_command() - Send ATA command
 */
 s32 ata_send_command(void * const base_addr, const ata_drive_t drive, const ata_command_t cmd)
 {
-	/* Select master / slave device */
-	if(drive == ata_drive_master)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
-	else if(drive == ata_drive_slave)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
-	else
-		return ENODEV;
+    /* Select master / slave device */
+    if(drive == ata_drive_master)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
+    else if(drive == ata_drive_slave)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
+    else
+        return ENODEV;
 
-	/* Wait for the device to become ready */
-	if(!ATA_WAIT_NBSY(base_addr))
-		return ETIME;
+    /* Wait for the device to become ready */
+    if(!ATA_WAIT_NBSY(base_addr))
+        return ETIME;
 
-	ATA_REG(base_addr, ATA_R_COMMAND) = cmd;
+    ATA_REG(base_addr, ATA_R_COMMAND) = cmd;
 
-	/* Wait for the command to complete */
-	if(!ATA_WAIT_NBSY(base_addr))
-		return ETIME;
+    /* Wait for the command to complete */
+    if(!ATA_WAIT_NBSY(base_addr))
+        return ETIME;
 
-	/* Did an error occur? */
-	if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
-	{
-		/* Note: it is up to the caller to determine which error occurred */
-		return EDEVOPFAILED;
-	}
+    /* Did an error occur? */
+    if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
+    {
+        /* Note: it is up to the caller to determine which error occurred */
+        return EDEVOPFAILED;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -275,57 +280,57 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf)
     const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
     u32 len_ = *len;
 
-	/* Select master / slave device */
-	if(drive == ata_drive_master)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = 0;
-	else if(drive == ata_drive_slave)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = ATA_DH_DEV;
-	else
-		return ENODEV;
+    /* Select master / slave device */
+    if(drive == ata_drive_master)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = 0;
+    else if(drive == ata_drive_slave)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = ATA_DH_DEV;
+    else
+        return ENODEV;
 
-	if(!ATA_WAIT_NBSY(base_addr))
-		return ETIME;
+    if(!ATA_WAIT_NBSY(base_addr))
+        return ETIME;
 
-	if((offset + len_ < offset) || (offset + len_ > dev->len))
-	   return EINVAL;
+    if((offset + len_ < offset) || (offset + len_ > dev->len))
+       return EINVAL;
 
-	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
+    /* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
-	ATA_REG(base_addr, ATA_R_SECTOR_COUNT)		= len_;
+    ATA_REG(base_addr, ATA_R_SECTOR_COUNT)      = len_;
 
-	ATA_REG(base_addr, ATA_R_SECTOR_NUMBER)		= offset & 0xff;
-	ATA_REG(base_addr, ATA_R_CYLINDER_LOW)		= (offset >> 8) & 0xff;
-	ATA_REG(base_addr, ATA_R_CYLINDER_HIGH)		= (offset >> 16) & 0xff;
-	ATA_REG(base_addr, ATA_R_DEVICE_HEAD)	   |= ATA_DH_LBA | ((offset >> 24) & 0xf);
+    ATA_REG(base_addr, ATA_R_SECTOR_NUMBER)     = offset & 0xff;
+    ATA_REG(base_addr, ATA_R_CYLINDER_LOW)      = (offset >> 8) & 0xff;
+    ATA_REG(base_addr, ATA_R_CYLINDER_HIGH)     = (offset >> 16) & 0xff;
+    ATA_REG(base_addr, ATA_R_DEVICE_HEAD)      |= ATA_DH_LBA | ((offset >> 24) & 0xf);
 
-	/* Issue the command */
-	ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_READ_SECTORS;
+    /* Issue the command */
+    ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_READ_SECTORS;
 
-	if(!ATA_WAIT_NBSY(base_addr))
-		return ETIME;
+    if(!ATA_WAIT_NBSY(base_addr))
+        return ETIME;
 
-	if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
-	{
-		ku8 err = ATA_REG(base_addr, ATA_R_ERROR);
-		if((err & ATA_ERROR_ABRT) || (err & ATA_ERROR_IDNF))
-			return EINVAL;
-		else if(err & ATA_ERROR_UNC)
-			return EDATA;
-		else if((err & ATA_ERROR_MC) || (err & ATA_ERROR_MCR))
-			return EMEDIACHANGED;
-		else if(err & ATA_ERROR_NM)
-			return ENOMEDIUM;
-		else
-			return EUNKNOWN;
-	}
+    if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
+    {
+        ku8 err = ATA_REG(base_addr, ATA_R_ERROR);
+        if((err & ATA_ERROR_ABRT) || (err & ATA_ERROR_IDNF))
+            return EINVAL;
+        else if(err & ATA_ERROR_UNC)
+            return EDATA;
+        else if((err & ATA_ERROR_MC) || (err & ATA_ERROR_MCR))
+            return EMEDIACHANGED;
+        else if(err & ATA_ERROR_NM)
+            return ENOMEDIUM;
+        else
+            return EUNKNOWN;
+    }
 
-	for(; len_--; buf += ATA_SECTOR_SIZE)
-		ata_read_data(ATA_REG_DATA_ADDR(base_addr), buf);
+    for(; len_--; buf += ATA_SECTOR_SIZE)
+        ata_read_data(ATA_REG_DATA_ADDR(base_addr), buf);
 
-	g_ata_stats.blocks_read += *len;
-	*len -= len_;
+    g_ata_stats.blocks_read += *len;
+    *len -= len_;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -338,72 +343,72 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
     const ata_drive_t drive = ((ata_dev_data_t *) dev->data)->drive;
     u32 len_ = *len;
 
-	/* Select master / slave device */
-	if(drive == ata_drive_master)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
-	else if(drive == ata_drive_slave)
-		ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
-	else
-		return ENODEV;
+    /* Select master / slave device */
+    if(drive == ata_drive_master)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) &= ~ATA_DH_DEV;
+    else if(drive == ata_drive_slave)
+        ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
+    else
+        return ENODEV;
 
-	if(!ATA_WAIT_NBSY(base_addr))
-		return ETIME;
+    if(!ATA_WAIT_NBSY(base_addr))
+        return ETIME;
 
-	if((offset + len_ < offset) || (offset + len_ > dev->len))
-	   return EINVAL;
+    if((offset + len_ < offset) || (offset + len_ > dev->len))
+       return EINVAL;
 
-	/* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
+    /* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
-	ATA_REG(base_addr, ATA_R_SECTOR_COUNT)	 	= len_;
+    ATA_REG(base_addr, ATA_R_SECTOR_COUNT)      = len_;
 
-	ATA_REG(base_addr, ATA_R_SECTOR_NUMBER)	 	= offset & 0xff;
-	ATA_REG(base_addr, ATA_R_CYLINDER_LOW)	 	= (offset >> 8) & 0xff;
-	ATA_REG(base_addr, ATA_R_CYLINDER_HIGH)		= (offset >> 16) & 0xff;
-	ATA_REG(base_addr, ATA_R_DEVICE_HEAD)      |= ATA_DH_LBA | ((offset >> 24) & 0xf);
+    ATA_REG(base_addr, ATA_R_SECTOR_NUMBER)     = offset & 0xff;
+    ATA_REG(base_addr, ATA_R_CYLINDER_LOW)      = (offset >> 8) & 0xff;
+    ATA_REG(base_addr, ATA_R_CYLINDER_HIGH)     = (offset >> 16) & 0xff;
+    ATA_REG(base_addr, ATA_R_DEVICE_HEAD)      |= ATA_DH_LBA | ((offset >> 24) & 0xf);
 
-	/* Issue the command */
-	ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
+    /* Issue the command */
+    ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
 
-	for(; len_--; buf += ATA_SECTOR_SIZE)
-		ata_write_data(ATA_REG_DATA_ADDR(base_addr), buf);
+    for(; len_--; buf += ATA_SECTOR_SIZE)
+        ata_write_data(ATA_REG_DATA_ADDR(base_addr), buf);
 
-	if(!ATA_WAIT_NBSY(base_addr))
-		return ETIME;
+    if(!ATA_WAIT_NBSY(base_addr))
+        return ETIME;
 
-	/* Did an error occur? */
-	if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
-	{
-		ku8 err = ATA_REG(base_addr, ATA_R_ERROR);
-		if((err & ATA_ERROR_ABRT) || (err & ATA_ERROR_IDNF))
-			return EINVAL;
-		else if(err & ATA_ERROR_WP)
-			return EROFS;
-		else if(err & ATA_ERROR_UNC)
-			return EDATA;
-		else if((err & ATA_ERROR_MC) || (err & ATA_ERROR_MCR))
-			return EMEDIACHANGED;
-		else if(err & ATA_ERROR_NM)
-			return ENOMEDIUM;
-		else
-			return EUNKNOWN;
-	}
+    /* Did an error occur? */
+    if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
+    {
+        ku8 err = ATA_REG(base_addr, ATA_R_ERROR);
+        if((err & ATA_ERROR_ABRT) || (err & ATA_ERROR_IDNF))
+            return EINVAL;
+        else if(err & ATA_ERROR_WP)
+            return EROFS;
+        else if(err & ATA_ERROR_UNC)
+            return EDATA;
+        else if((err & ATA_ERROR_MC) || (err & ATA_ERROR_MCR))
+            return EMEDIACHANGED;
+        else if(err & ATA_ERROR_NM)
+            return ENOMEDIUM;
+        else
+            return EUNKNOWN;
+    }
 
-	g_ata_stats.blocks_written += *len;
-	*len -= len_;
+    g_ata_stats.blocks_written += *len;
+    *len -= len_;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
 /*
-	ata_read_data() - read from the ATA data buffer
+    ata_read_data() - read from the ATA data buffer
 */
 void ata_read_data(vu16 * const ata_data_port, void *buf)
 {
-	u16 *buf_;
-	u32 count;
+    u16 *buf_;
+    u32 count;
 
-	for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
+    for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
     {
 #ifdef BUG_ATA_BYTE_SWAP
         /*
@@ -430,21 +435,21 @@ void ata_read_data(vu16 * const ata_data_port, void *buf)
         bswap_16(data);
         *buf_++ = data;
 #else
-		*buf_++ = *ata_data_port;
+        *buf_++ = *ata_data_port;
 #endif
     }
 }
 
 
 /*
-	ata_write_data() - write to the ATA data buffer
+    ata_write_data() - write to the ATA data buffer
 */
 void ata_write_data(vu16 * const ata_data_port, const void *buf)
 {
-	ku16 *buf_;
-	u32 count;
+    ku16 *buf_;
+    u32 count;
 
-	for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
+    for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
     {
 #ifdef BUG_ATA_BYTE_SWAP
         /*
@@ -469,9 +474,9 @@ void ata_write_data(vu16 * const ata_data_port, const void *buf)
         */
         u16 data = *buf_++;
         bswap_16(data);
-		*ata_data_port = data;
+        *ata_data_port = data;
 #else
-		*ata_data_port = *buf_++;
+        *ata_data_port = *buf_++;
 #endif
     }
 }
@@ -493,25 +498,25 @@ s32 ata_control(dev_t *dev, ku32 function, const void *in, void *out)
 
 
 /*
-	ata_drive_control() - ATA devctl implementation for attached drives
+    ata_drive_control() - ATA devctl implementation for attached drives
 */
 s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
     UNUSED(in);
 
-	switch(fn)
-	{
-		case dc_get_extent:
-			*((u32 *) out) = dev->len;
-			break;
+    switch(fn)
+    {
+        case dc_get_extent:
+            *((u32 *) out) = dev->len;
+            break;
 
-		case dc_get_block_size:
-			*((u32 *) out) = dev->block_size;
-			break;
+        case dc_get_block_size:
+            *((u32 *) out) = dev->block_size;
+            break;
 
-		case dc_get_bootable:
-			*((u32 *) out) = 0;		/* partitions might be bootable; the device isn't */
-			break;
+        case dc_get_bootable:
+            *((u32 *) out) = 0;     /* partitions might be bootable; the device isn't */
+            break;
 
         case dc_get_model:
             *((s8 **) out) = ((ata_dev_data_t *) dev->data)->model;
@@ -525,9 +530,9 @@ s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *ou
             *((s8 **) out) = ((ata_dev_data_t *) dev->data)->firmware;
             break;
 
-		default:
-			return ENOSYS;
-	}
+        default:
+            return ENOSYS;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
