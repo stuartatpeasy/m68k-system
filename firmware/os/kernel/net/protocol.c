@@ -22,7 +22,6 @@
 
 
 /* Network protocol driver */
-typedef struct net_proto_driver net_proto_driver_t;
 struct net_proto_driver
 {
     net_protocol_t          proto;
@@ -75,7 +74,6 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
     else
         g_net_proto_drivers = driver;
 
-    printf("net: registered protocol %s\n", driver->name);
     return SUCCESS;
 }
 
@@ -91,6 +89,34 @@ void net_proto_fns_struct_init(net_proto_fns_t * const f)
     f->addr_compare     = net_addr_compare_unimplemented;
     f->packet_alloc     = net_packet_alloc_unimplemented;
     f->route_get_iface  = net_route_get_iface_unimplemented;
+}
+
+
+/*
+    net_protocol_get_first() - when iterating over the registered network protocol handlers: get the
+    first protocol in the list.
+*/
+net_proto_driver_t *net_protocol_get_first()
+{
+    return g_net_proto_drivers;
+}
+
+/*
+    net_protocol_get_next() - when iterating over the registered network protocol handlers: get the
+    next protocol in the list.
+*/
+net_proto_driver_t *net_protocol_get_next(const net_proto_driver_t * const proto)
+{
+    return proto->next;
+}
+
+
+/*
+    net_proto_get_name() - get the name associated with a protocol.
+*/
+const char *net_protocol_get_name(const net_proto_driver_t * const proto)
+{
+    return proto->name;
 }
 
 

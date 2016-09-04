@@ -45,6 +45,7 @@ net_init_fn_t g_net_init_fns[] =
 s32 net_init()
 {
     u32 i;
+    net_proto_driver_t *drv;
 
     for(i = 0; i < ARRAY_COUNT(g_net_init_fns); ++i)
     {
@@ -52,6 +53,11 @@ s32 net_init()
         if(ret != SUCCESS)
             return ret;
     }
+
+    put("net: registered protocols: ");
+    for(drv = net_protocol_get_first(); drv; drv = net_protocol_get_next(drv))
+        printf("%s ", net_protocol_get_name(drv));
+    putchar('\n');
 
     return net_interface_init();
 }

@@ -41,10 +41,16 @@ typedef struct net_proto_fns
     s32     (*route_get_iface)(const net_address_t * const addr, net_iface_t **iface);
 } net_proto_fns_t;
 
+/* Network protocol driver object */
+typedef struct net_proto_driver net_proto_driver_t;
+
 
 s32 net_protocol_register_driver(const net_protocol_t proto, const char * const name,
                                  net_proto_fns_t * const f);
 void net_proto_fns_struct_init(net_proto_fns_t * const f);
+net_proto_driver_t *net_protocol_get_first();
+net_proto_driver_t *net_protocol_get_next(const net_proto_driver_t * const proto);
+const char *net_protocol_get_name(const net_proto_driver_t * const proto);
 s32 net_protocol_rx(net_address_t *src, net_address_t *dest, net_packet_t * const packet);
 s32 net_protocol_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 net_protocol_addr_compare(const net_protocol_t proto, const net_address_t * const a1,
