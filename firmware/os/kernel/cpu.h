@@ -27,7 +27,7 @@ typedef struct regs regs_t;     /* struct regs must hold a complete CPU context 
     ---------------------
 */
 void cpu_halt(void) __attribute__((noreturn));  /* Halt processing, pending an interrupt        */
-void cpu_swi();                                 /* Raise a software IRQ (=TRAP #x on the 680x0) */
+u32 cpu_swi();                                  /* Raise a software IRQ (=TRAP #x on the 680x0) */
 
 /*
     Atomically test and set the value at addr.  This is useful when implementing semaphores.  A
@@ -94,7 +94,7 @@ void cpu_irq_handler(ku32 irql);
 s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler);
 
 /* De-register/remove a handler for the specified IRQ */
-s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler);
+s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data);
 
 /*
     An entry in the IRQ indirection table.  Consists of a ptr to a handler fn, and an arbitrary

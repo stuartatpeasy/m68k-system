@@ -90,9 +90,11 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
 
 
 /*
-    cpu_irq_remove_handler() - de-register (remove) an interrupt handler function
+    cpu_irq_remove_handler() - de-register (remove) an interrupt handler function.  Locate the
+    handler function by looking for a matching irq_handler; if the data arg is not NULL, also match
+    on the value of the data argument associated with the handler.
 */
-s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler)
+s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
 {
     irq_handler_table_entry_t *ent, *ent_prev;
 
@@ -101,7 +103,8 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler)
 
     for(ent_prev = NULL, ent = &g_irq_handlers[irql]; ent; ent_prev = ent, ent = ent->next)
     {
-        if(ent->handler == handler)
+        /* Look for matching handler function and (optionally) a match on the data arg */
+        if((ent->handler == handler) && ((data == NULL) || (data == ent->data)))
         {
             if(ent_prev)
             {
@@ -121,10 +124,7 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler)
                     */
                     irq_handler_table_entry_t *next = ent->next;
 
-                    ent->handler = next->handler;
-                    ent->data = next->data;
-                    ent->flags = next->flags;
-                    ent->next = next->next;
+                    *ent = *next;
 
                     kfree(next);
                     return SUCCESS;
