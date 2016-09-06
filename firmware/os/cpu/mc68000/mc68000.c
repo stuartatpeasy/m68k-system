@@ -183,14 +183,22 @@ void cpu_halt(void)
 /*
     cpu_swi() - raise a software interrupt.
 */
-void cpu_swi()
+u32 cpu_swi(ku32 num)
 {
+    register u32 ret asm("d0");
+
     asm volatile
     (
-        "trap #15                       \n"
+        "moveml     %%d1/%%a0-%%a2, %%sp@-  \n"
+        "movel      %0, %%a0                \n" /* FIXME - calculated stack offset is wrong */
+        "trap       #15                     \n"
+        "moveml     %%sp@+, %%d1/%%a0-%%a2  \n"
         :
-        :
+        : "m" (num) /* FIXME - the calculated address of this var is wrong following the movem */
+        : "cc"
     );
+
+    return ret;
 }
 
 
