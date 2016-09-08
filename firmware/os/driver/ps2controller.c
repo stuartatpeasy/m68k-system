@@ -24,6 +24,72 @@ s32 ps2controller_read(dev_t *dev, ku32 offset, u32 *len, void *buf);
 s32 ps2controller_write(dev_t *dev, ku32 offset, u32 *len, const void *buf);
 s32 ps2controller_shut_down(dev_t *dev);
 
+void ps2controller_process_key(ps2controller_port_state_t *state);      // FIXME
+
+
+/*
+    PS/2 scan code set 2 single-byte scan code bitmap.  In this bitmap, a bit is set when the
+    corresponding single-byte scan-code from PS/2 scan code set 2 is valid.  The test is carried out
+    like this:
+
+        if(ps2_sc2_single_byte_code_map[scan_code >> 3] & (1 << (scan_code & 0x7)))
+            valid = 1;
+*/
+const u8 ps2_sc2_single_byte_code_map[32] =
+{
+    /* bit       0   1   2   3   4   5   6   7  */
+    0xfa,   /*      01      03  04  05  06  07  */
+    0x7e,   /*      09  0a  0b  0c  0d  0e      */
+    0x76,   /*      11  12      14  15  16      */
+    0x7c,   /*          1a  1b  1c  1d  1e      */
+    0x7e,   /*      21  22  23  24  25  26      */
+    0x7e,   /*      29  2a  2b  2c  2d  2e      */
+    0x7e,   /*      31  32  33  34  35  36      */
+    0x7c,   /*          3a  3b  3c  3d  3e      */
+    0x7e,   /*      41  42  43  44  45  46      */
+    0x7e,   /*      49  4a  4b  4c  4d  4e      */
+    0x34,   /*          52      54  55          */
+    0x2f,   /*  58  59  5a  5b      5d          */
+    0x40,   /*                          66      */
+    0x1a,   /*      69      6b  6c              */
+    0xff,   /*  70  71  72  73  74  75  76  77  */
+    0x7f,   /*  78  79  7a  7b  7c  7d  7e      */
+    0x08,   /*              83                  */
+    0x00,   /*                                  */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+
+/*
+    PS/2 scan code set 2 two-byte scan code bitmap.  In this bitmap, a bit is set when the second
+    byte in the scan code sequence 0xe0, 0xXX is valid.  Note that this bitmap only covers codes
+    below 0x80, as all higher code points are vacant.  The test is carried out like this:
+
+        if((second_byte < 0x80) &&
+           (ps2_sc2_ext1_code_map[second_byte >> 3] & (1 << (second_byte & 0x7)))
+            valid = 1;
+*/
+const u8 ps2_sc2_ext1_code_map[16] =
+{
+    /* bit       0   1   2   3   4   5   6   7  */
+    0x00,   /*                                  */
+    0x00,   /*                                  */
+    0x12,   /*      11          14              */
+    0x80,   /*                              1f  */
+    0x80,   /*                              27  */
+    0x80,   /*                              2f  */
+    0x80,   /*                              37  */
+    0x80,   /*                              3f  */
+    0x00,   /*                                  */
+    0x04,   /*          4a                      */
+    0x00,   /*                                  */
+    0x44,   /*          5a              5e      */
+    0x00,   /*                                  */
+    0x1a,   /*      69      6b  6c              */
+    0x37,   /*  70  71  72      74  75          */
+    0x24,   /*          7a          7d          */
+};
+
 
 /*
     ps2controller_init() - initialise the PS/2 ports.
@@ -144,49 +210,10 @@ void ps2controller_port_irq_handler(ku32 irql, void *data)
                 state->packet.kb.flags |= PS2_PKT_KB_RELEASE;
             else
             {
-                ku8 flags = state->packet.kb.flags & (PS2_PKT_KB_EXT1 | PS2_PKT_KB_EXT2);
-
+                /* Accumulate the received scan code into the keyboard data buffer */
                 state->packet.kb.data = (state->packet.kb.data << 8) | key;
 
-                switch(flags)
-                {
-                    case 0:
-                        /* If neither of the EXTx flags is true, this must be a single-byte code */
-                        ps2controller_process_key(state);
-                        break;
-
-                    case PS2_PKT_KB_EXT1:
-                        /*
-                            Most EXT1-prefixed keys are single-byte codes; two aren't.  We see
-                            "PrtSc pressed" as 0x127c, and "PrtSc released" as 0x7c12", with the
-                            appropriate flags set.  We defer processing the key if we have received
-                            only the first byte of either of these two (0x127c / 0x7c12) scan codes.
-                            Otherwise, the scan code is processed now.
-                        */
-                        if(((flags & PS2_SC_KB_RELEASE) && (state->packet.kb.data != 0x7c)) ||
-                           (!(flags & PS2_SC_KB_RELEASE) && (state->packet.kb.data != 0x12)))
-                            ps2controller_process_key(state);
-                        break;
-
-                    case PS2_PKT_KB_EXT2:
-                        /*
-                            The only EXT2-prefixed code we recognise is "Pause pressed", which we
-                            receive as 0x14771477.  The scan code is actually 0xe1, 0x14, 0x77,
-                            0xe1, 0xf0, 0x14, 0xf0, 0x77.  Note that misplaced prefixes will not be
-                            detected.  If we have received any four bytes (not including the prefix
-                            characters 0xe1 and 0xf0), we process the key.
-                        */
-                        if((flags & PS2_SC_KB_RELEASE) && (state->packet.kb.data & 0xff00000))
-                            ps2controller_process_key(state);
-                        break;
-
-                    case PS2_PKT_KB_EXT1 | PS2_PKT_KB_EXT2:
-                        /* Invalid state - discard packet */
-                        break;
-                }
-
-                state->packet.kb.data = 0;
-                state->packet.kb.flags = 0;
+                ps2controller_process_key(state);
             }
         }
         else if(status & PS2_FLAG_TX)
@@ -207,16 +234,77 @@ void ps2controller_port_irq_handler(ku32 irql, void *data)
 
 void ps2controller_process_key(ps2controller_port_state_t *state)
 {
-    if(state->packet.kb.flags & PS2_PKT_KB_RELEASE)
-        putchar('!');
+    ku32 data = state->packet.kb.data;
+    ku8 flags = state->packet.kb.flags & (PS2_PKT_KB_EXT1 | PS2_PKT_KB_EXT2),
+        release = state->packet.kb.flags & PS2_PKT_KB_RELEASE,
+        scan_code = data & 0xff;
 
-    if(state->packet.kb.flags & PS2_PKT_KB_EXT1)
-        putchar('1');
+    if(flags == 0)
+    {
+        /* If neither of the EXTx flags is true, this must be a single-byte code */
+        if(ps2_sc2_single_byte_code_map[scan_code >> 3] & (1 << (scan_code & 0x7)))
+        {
+            if(!release)
+                printf("[%02x]", scan_code);
+            else
+                printf("[!%02x]", scan_code);
+        }
+    }
+    else if(flags == PS2_PKT_KB_EXT1)
+    {
+        /*
+            Most EXT1-prefixed keys are single-byte codes; two aren't.  We see
+            "PrtSc pressed" as 0x127c, and "PrtSc released" as 0x7c12", with the
+            appropriate flags set.  We defer processing the key if we have received
+            only the first byte of either of these two (0x127c / 0x7c12) scan codes.
+            Otherwise, the scan code is processed now.
+        */
+        if(scan_code < 0x80)
+        {
+            if(ps2_sc2_ext1_code_map[scan_code >> 3] & (1 << (scan_code & 0x7)))
+            {
+                /* Boom. */
+                if(!release)
+                    printf("[1:%02x]", scan_code);
+                else
+                    printf("[!1:%02x]", scan_code);
+            }
+            else if(!release)
+            {
+                if(scan_code == 0x12)
+                    return;     /* First byte of a PrtSc press - wait for next byte */
+                else if(data == 0x127c)
+                    put("[prtsc]");
+            }
+            else if(release)
+            {
+                if(scan_code == 0x7c)
+                    return;     /* First byte of a PrtSc release - wait for next byte */
+                else if(data == 0x7c12)
+                    put("[!prtsc]");
+            }
+        }
+    }
+    else if(flags == PS2_PKT_KB_EXT2)
+    {
+        /*
+            The only EXT2-prefixed code we recognise is "Pause pressed", which we
+            receive as 0x14771477.  The scan code is actually 0xe1, 0x14, 0x77,
+            0xe1, 0xf0, 0x14, 0xf0, 0x77.  Note that misplaced prefixes will not be
+            detected.  If we have received any four bytes (not including the prefix
+            characters 0xe1 and 0xf0), we process the key.
+        */
+        if(!(data & 0xff000000))
+            return;     /* Wait for another code to arrive */
 
-    if(state->packet.kb.flags & PS2_PKT_KB_EXT2)
-        putchar('2');
+        if(release && (data == 0x14771477))
+            put("[pause]");
+    }
+    /* Note: we ignore sequences where both PS2_PKT_KB_EXT1 and PS2_PKT_KB_EXT2 are set */
 
-    printf(":%08x ", state->packet.kb.data);
+    /* Either the scan code was handled, or it was invalid.  Reset state here. */
+    state->packet.kb.data = 0;
+    state->packet.kb.flags = 0;
 }
 
 
