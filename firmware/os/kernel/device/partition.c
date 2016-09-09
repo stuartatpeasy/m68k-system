@@ -16,7 +16,7 @@
 
 
 /* Module-private function declarations */
-s32 partition_control(dev_t *dev, ku32 function, const void *in, void *out);
+s32 partition_control(dev_t *dev, const devctl_fn_t function, const void *in, void *out);
 s32 partition_read(dev_t *dev, ku32 offset, u32 *len, void* buf);
 s32 partition_write(dev_t *dev, ku32 offset, u32 *len, const void* buf);
 

@@ -333,7 +333,7 @@ s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, u32 *len, const void
 /*
     dev_control_unimplemented() - default handler for dev->control() calls
 */
-s32 dev_control_unimplemented(dev_t * const dev, ku32 function, const void *in, void *out)
+s32 dev_control_unimplemented(dev_t * const dev, devctl_fn_t function, const void *in, void *out)
 {
     UNUSED(dev);
     UNUSED(function);

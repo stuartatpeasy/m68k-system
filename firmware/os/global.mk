@@ -25,7 +25,7 @@ SRCDIR=$(PROJECTDIR)/os
 APPNAME=ayumos
 
 CFLAGS=-I$(SRCDIR) -I$(SRCDIR)/klibc -c -Wall -Wextra -O2 -m68000 -g -include buildcfg.h \
-	-ffreestanding -fomit-frame-pointer -fno-delete-null-pointer-checks
+	-ffreestanding -fomit-frame-pointer -fno-delete-null-pointer-checks -fshort-enums
 
 AFLAGS=-m68000
 
