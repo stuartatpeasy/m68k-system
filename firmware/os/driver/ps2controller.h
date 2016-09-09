@@ -57,22 +57,30 @@ typedef struct
 {
     struct
     {
-        vu8 *   data;
-        vu8 *   status;
-        vu8 *   int_cfg;
+        vu8 *       data;
+        vu8 *       status;
+        vu8 *       int_cfg;
     } regs;
 
-    struct
+    union
     {
         struct
         {
             u32     data;
             u8      flags;
         } kb;
+
+        struct
+        {
+            s16     dx;
+            s16     dy;
+            s16     dz;
+            u8      buttons;
+        } mouse;
     } packet;
 
-    u8                      err;
-    CIRCBUF(u8)             tx_buf;
+    u8              err;
+    CIRCBUF(u8)     tx_buf;
 } ps2controller_port_state_t;
 
 
@@ -182,6 +190,139 @@ enum PS2Controller_PortRegOffset
 #define PS2_CFG_IE              BIT(7)     /* Global interrupt enable                           */
 #define PS2_CFG_PWR_A           BIT(4)     /* Enable/disable power to port A                    */
 #define PS2_CFG_PWR_B           BIT(3)     /* Enable/disable power to port B                    */
+
+
+/*
+    Constants representing PS/2 set 2 single-byte keyboard scan codes.
+*/
+enum PS2ScanCodes_Set2
+{
+    PS2_SC2_KEY_A           = 0x1c,
+    PS2_SC2_KEY_B           = 0x32,
+    PS2_SC2_KEY_C           = 0x21,
+    PS2_SC2_KEY_D           = 0x23,
+    PS2_SC2_KEY_E           = 0x24,
+    PS2_SC2_KEY_F           = 0x2b,
+    PS2_SC2_KEY_G           = 0x34,
+    PS2_SC2_KEY_H           = 0x33,
+    PS2_SC2_KEY_I           = 0x43,
+    PS2_SC2_KEY_J           = 0x3b,
+    PS2_SC2_KEY_K           = 0x42,
+    PS2_SC2_KEY_L           = 0x4b,
+    PS2_SC2_KEY_M           = 0x3a,
+    PS2_SC2_KEY_N           = 0x31,
+    PS2_SC2_KEY_O           = 0x44,
+    PS2_SC2_KEY_P           = 0x4d,
+    PS2_SC2_KEY_Q           = 0x15,
+    PS2_SC2_KEY_R           = 0x2d,
+    PS2_SC2_KEY_S           = 0x1b,
+    PS2_SC2_KEY_T           = 0x2c,
+    PS2_SC2_KEY_U           = 0x3c,
+    PS2_SC2_KEY_V           = 0x2a,
+    PS2_SC2_KEY_W           = 0x1d,
+    PS2_SC2_KEY_X           = 0x22,
+    PS2_SC2_KEY_Y           = 0x35,
+    PS2_SC2_KEY_Z           = 0x1a,
+
+    PS2_SC2_KEY_0           = 0x45,
+    PS2_SC2_KEY_1           = 0x16,
+    PS2_SC2_KEY_2           = 0x1e,
+    PS2_SC2_KEY_3           = 0x26,
+    PS2_SC2_KEY_4           = 0x25,
+    PS2_SC2_KEY_5           = 0x2e,
+    PS2_SC2_KEY_6           = 0x36,
+    PS2_SC2_KEY_7           = 0x3d,
+    PS2_SC2_KEY_8           = 0x3e,
+    PS2_SC2_KEY_9           = 0x46,
+
+    PS2_SC2_KEY_F1          = 0x05,
+    PS2_SC2_KEY_F2          = 0x06,
+    PS2_SC2_KEY_F3          = 0x04,
+    PS2_SC2_KEY_F4          = 0x0c,
+    PS2_SC2_KEY_F5          = 0x03,
+    PS2_SC2_KEY_F6          = 0x0b,
+    PS2_SC2_KEY_F7          = 0x83,
+    PS2_SC2_KEY_F8          = 0x0a,
+    PS2_SC2_KEY_F9          = 0x01,
+    PS2_SC2_KEY_F10         = 0x09,
+    PS2_SC2_KEY_F11         = 0x78,
+    PS2_SC2_KEY_F12         = 0x07,
+
+    PS2_SC2_KEY_KP_AST      = 0x7c,
+    PS2_SC2_KEY_KP_MINUS    = 0x7b,
+    PS2_SC2_KEY_KP_PLUS     = 0x79,
+    PS2_SC2_KEY_KP_DOT      = 0x71,
+    PS2_SC2_KEY_KP_0        = 0x70,
+    PS2_SC2_KEY_KP_1        = 0x69,
+    PS2_SC2_KEY_KP_2        = 0x72,
+    PS2_SC2_KEY_KP_3        = 0x7a,
+    PS2_SC2_KEY_KP_4        = 0x6b,
+    PS2_SC2_KEY_KP_5        = 0x73,
+    PS2_SC2_KEY_KP_6        = 0x74,
+    PS2_SC2_KEY_KP_7        = 0x6c,
+    PS2_SC2_KEY_KP_8        = 0x75,
+    PS2_SC2_KEY_KP_9        = 0x7d,
+
+    PS2_SC2_KEY_CAPS        = 0x58,
+    PS2_SC2_KEY_NUM         = 0x77,
+    PS2_SC2_KEY_SCROLL      = 0x7e,
+
+    PS2_SC2_KEY_APOST       = 0x52,
+    PS2_SC2_KEY_BKTICK      = 0x0e,
+    PS2_SC2_KEY_BKSLASH     = 0x5d,
+    PS2_SC2_KEY_BKSP        = 0x66,
+    PS2_SC2_KEY_COMMA       = 0x41,
+    PS2_SC2_KEY_DOT         = 0x49,
+    PS2_SC2_KEY_ENTER       = 0x5a,
+    PS2_SC2_KEY_EQUALS      = 0x55,
+    PS2_SC2_KEY_ESC         = 0x76,
+    PS2_SC2_KEY_FWDSLASH    = 0x4a,
+    PS2_SC2_KEY_HYPHEN      = 0x4e,
+    PS2_SC2_KEY_SCOLON      = 0x4c,
+    PS2_SC2_KEY_SPACE       = 0x29,
+    PS2_SC2_KEY_TAB         = 0x0d,
+    PS2_SC2_KEY_L_BKT       = 0x54,
+    PS2_SC2_KEY_R_BKT       = 0x5b,
+
+    PS2_SC2_KEY_L_SHIFT     = 0x12,
+    PS2_SC2_KEY_L_CTRL      = 0x14,
+    PS2_SC2_KEY_L_ALT       = 0x11,
+    PS2_SC2_KEY_R_SHFT      = 0x59
+};
+
+
+/*
+    Constants representing PS/2 set 2 scan codes prefixed by a 0xe0 byte (we call this the "first
+    extended" set)
+*/
+enum PS2ScanCodes_Set2_Ext1
+{
+    PS2_SC2_KEY_L_GUI       = 0x1f,
+    PS2_SC2_KEY_R_CTRL      = 0x14,
+    PS2_SC2_KEY_R_GUI       = 0x27,
+    PS2_SC2_KEY_R_ALT       = 0x11,
+    PS2_SC2_KEY_APPS        = 0x2f,
+    PS2_SC2_KEY_INSERT      = 0x70,
+    PS2_SC2_KEY_HOME        = 0x6c,
+    PS2_SC2_KEY_PG_UP       = 0x7d,
+    PS2_SC2_KEY_DELETE      = 0x71,
+    PS2_SC2_KEY_END         = 0x69,
+    PS2_SC2_KEY_PG_DN       = 0x7a,
+    PS2_SC2_KEY_U_ARROW     = 0x75,
+    PS2_SC2_KEY_L_ARROW     = 0x6b,
+    PS2_SC2_KEY_D_ARROW     = 0x72,
+    PS2_SC2_KEY_R_ARROW     = 0x74,
+    PS2_SC2_KEY_KP_FWDSLASH = 0x4a,
+    PS2_SC2_KEY_KP_ENTER    = 0x5a,
+    PS2_SC2_KEY_POWER       = 0x37,
+    PS2_SC2_KEY_SLEEP       = 0x3f,
+    PS2_SC2_KEY_WAKE        = 0x5e,
+};
+
+/* Other PS/2 set 2 scan codes */
+#define PS2_SC2_PRTSC_PRESS     (0x127c)        /* PrtSc pressed: actual code e0 12 e0 7c */
+#define PS2_SC2_PRTSC_RELEASE   (0x7c12)        /* PrtSc released: actual code e0 f0 7c e0 f0 12 */
+#define PS2_SC2_PAUSE           (0x14771477)    /* Pause: actual code e1 14 77 e1 f0 14 f0 77 */
 
 
 s32 ps2controller_init(dev_t *dev);

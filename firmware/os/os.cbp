@@ -179,6 +179,7 @@
 		<Unit filename="kernel/include/byteorder.h" />
 		<Unit filename="kernel/include/defs.h" />
 		<Unit filename="kernel/include/error.h" />
+		<Unit filename="kernel/include/keyboard.h" />
 		<Unit filename="kernel/include/limits.h" />
 		<Unit filename="kernel/include/list.h" />
 		<Unit filename="kernel/include/types.h" />

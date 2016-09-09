@@ -1,7 +1,7 @@
 /*
     ATmega8-driven dual PS/2 port controller driver
 
-    Part of the as-yet-unnamed MC68010 operating system
+    Part of ayumos
 
 
     (c) Stuart Wallace <stuartw@atom.net>, December 2015.
@@ -11,6 +11,7 @@
 
 #include <driver/ps2controller.h>
 #include <kernel/cpu.h>
+#include <kernel/include/keyboard.h>
 #include <klibc/stdio.h>			/* TODO remove */
 
 
@@ -25,6 +26,142 @@ s32 ps2controller_write(dev_t *dev, ku32 offset, u32 *len, const void *buf);
 s32 ps2controller_shut_down(dev_t *dev);
 
 void ps2controller_process_key(ps2controller_port_state_t *state);      // FIXME
+
+
+/*
+    PS/2 scan code set 2 single-byte scan code to internal key code map.  This table maps single-
+    byte scan codes (i.e. those without a prefix byte like 0xe0 or 0xe1) to internal key codes.
+*/
+const KeyCode ps2_sc2_to_internal[] =
+{
+    KEY_NONE,       KEY_F9,         KEY_NONE,       KEY_F5,
+    KEY_F3,         KEY_F1,         KEY_F2,         KEY_F12,
+    KEY_NONE,       KEY_F10,        KEY_F8,         KEY_F6,
+    KEY_F4,         KEY_TAB,        KEY_BKTICK,     KEY_NONE,
+
+    KEY_NONE,       KEY_ALT_L,      KEY_SHIFT_L,    KEY_NONE,
+    KEY_CTRL_L,     KEY_Q,          KEY_1,          KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_Z,          KEY_S,
+    KEY_A,          KEY_W,          KEY_2,          KEY_NONE,
+
+    KEY_NONE,       KEY_C,          KEY_X,          KEY_D,
+    KEY_E,          KEY_4,          KEY_3,          KEY_NONE,
+    KEY_NONE,       KEY_SPACE,      KEY_V,          KEY_F,
+    KEY_T,          KEY_R,          KEY_S,          KEY_NONE,
+
+    KEY_NONE,       KEY_N,          KEY_B,          KEY_H,
+    KEY_G,          KEY_Y,          KEY_6,          KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_M,          KEY_J,
+    KEY_U,          KEY_7,          KEY_8,          KEY_NONE,
+
+    KEY_NONE,       KEY_COMMA,      KEY_K,          KEY_I,
+    KEY_O,          KEY_0,          KEY_9,          KEY_NONE,
+    KEY_NONE,       KEY_DOT,        KEY_FWDSL,      KEY_L,
+    KEY_SCOLON,     KEY_P,          KEY_MINUS,      KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_APOS,       KEY_NONE,
+    KEY_BKT_L,      KEY_EQUALS,     KEY_NONE,       KEY_NONE,
+    KEY_CAPS,       KEY_SHIFT_R,    KEY_ENTER,      KEY_BKT_R,
+    KEY_NONE,       KEY_BKSLASH,    KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_BKSPACE,    KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NP_4,
+    KEY_NP_7,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NP_0,       KEY_NP_DOT,     KEY_NP_2,       KEY_NP_5,
+    KEY_NP_6,       KEY_NP_8,       KEY_ESC,        KEY_NUM,
+    KEY_F11,        KEY_NP_PLUS,    KEY_NP_3,       KEY_NP_MINUS,
+    KEY_NP_STAR,    KEY_NP_9,       KEY_SCROLL,     KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_F7,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+};
+
+
+/*
+    PS/2 scan code set 2 "0xe0-prefixed two-byte scan code" to internal key code map.  This table
+    maps two-byte scan codes, starting with an implicit 0xe0 byte, to internal key codes.
+*/
+const KeyCode ps2_sc2_ext1_to_internal[] =
+{
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_ALT_R,      KEY_NONE,       KEY_NONE,
+    KEY_CTRL_R,     KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_GUI_L,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_GUI_R,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_APPS,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_POWER,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_SLEEP,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NP_FWDSL,   KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NP_ENTER,   KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_WAKE,       KEY_NONE,
+
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_END,        KEY_NONE,       KEY_ARROW_L,
+    KEY_HOME,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+
+    KEY_INSERT,     KEY_DELETE,     KEY_ARROW_D,    KEY_NONE,
+    KEY_ARROW_R,    KEY_ARROW_U,    KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_PG_DOWN,    KEY_NONE,
+    KEY_NONE,       KEY_PG_UP,      KEY_NONE,       KEY_NONE,
+};
 
 
 /*
@@ -238,16 +375,17 @@ void ps2controller_process_key(ps2controller_port_state_t *state)
     ku8 flags = state->packet.kb.flags & (PS2_PKT_KB_EXT1 | PS2_PKT_KB_EXT2),
         release = state->packet.kb.flags & PS2_PKT_KB_RELEASE,
         scan_code = data & 0xff;
+    u8 c;
 
     if(flags == 0)
     {
         /* If neither of the EXTx flags is true, this must be a single-byte code */
-        if(ps2_sc2_single_byte_code_map[scan_code >> 3] & (1 << (scan_code & 0x7)))
+        if(!release)
         {
-            if(!release)
-                printf("[%02x]", scan_code);
-            else
-                printf("[!%02x]", scan_code);
+            c = keymap_get(ps2_sc2_to_internal[scan_code], KMF_NORMAL);
+
+            if(c)
+                putchar(c);
         }
     }
     else if(flags == PS2_PKT_KB_EXT1)
@@ -261,26 +399,26 @@ void ps2controller_process_key(ps2controller_port_state_t *state)
         */
         if(scan_code < 0x80)
         {
-            if(ps2_sc2_ext1_code_map[scan_code >> 3] & (1 << (scan_code & 0x7)))
+            if(!release)
             {
-                /* Boom. */
-                if(!release)
-                    printf("[1:%02x]", scan_code);
-                else
-                    printf("[!1:%02x]", scan_code);
+                c = keymap_get(ps2_sc2_ext1_to_internal[scan_code], KMF_NORMAL);
+
+                if(c)
+                    putchar(c);
             }
-            else if(!release)
+
+            if(!release)
             {
-                if(scan_code == 0x12)
+                if(scan_code == (PS2_SC2_PRTSC_PRESS >> 8))
                     return;     /* First byte of a PrtSc press - wait for next byte */
-                else if(data == 0x127c)
+                else if(data == PS2_SC2_PRTSC_PRESS)
                     put("[prtsc]");
             }
-            else if(release)
+            else
             {
-                if(scan_code == 0x7c)
+                if(scan_code == (PS2_SC2_PRTSC_RELEASE >> 8))
                     return;     /* First byte of a PrtSc release - wait for next byte */
-                else if(data == 0x7c12)
+                else if(data == PS2_SC2_PRTSC_RELEASE)
                     put("[!prtsc]");
             }
         }
@@ -297,7 +435,7 @@ void ps2controller_process_key(ps2controller_port_state_t *state)
         if(!(data & 0xff000000))
             return;     /* Wait for another code to arrive */
 
-        if(release && (data == 0x14771477))
+        if(release && (data == PS2_SC2_PAUSE))
             put("[pause]");
     }
     /* Note: we ignore sequences where both PS2_PKT_KB_EXT1 and PS2_PKT_KB_EXT2 are set */
