@@ -40,7 +40,11 @@ typedef enum devctl_fn
 
     /* Keyboards */
     dc_get_leds                 = 0x0300,   /* Get keyboard LED status                          */
-    dc_set_leds                 = 0x0301    /* Set keyboard LED status                          */
+    dc_set_leds                 = 0x0301,   /* Set keyboard LED status                          */
+
+    /* Generic devctls */
+    dc_get_power_state          = 0x8000,   /* Get power state for a device                     */
+    dc_set_power_state          = 0x8001    /* Set power state for a device                     */
 } devctl_fn_t;
 
 #endif

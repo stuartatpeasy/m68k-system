@@ -52,6 +52,16 @@
 #define PS2_SC_KB_EXT2          (0xe1)  /* Second extended key set                              */
 
 
+/* Types of device which may be attached to a PS/2 port */
+typedef enum
+{
+    PS2_DEV_NONE        = 0,        /* No device attached                   */
+    PS2_DEV_UNKNOWN     = 1,        /* Device detection not yet complete    */
+    PS2_DEV_KEYBOARD    = 2,        /* Keyboard attached to port            */
+    PS2_DEV_MOUSE       = 3         /* Mouse attached to port               */
+} PS2_DevType;
+
+
 /* State of a single PS/2 port */
 typedef struct
 {
@@ -60,6 +70,7 @@ typedef struct
         vu8 *       data;
         vu8 *       status;
         vu8 *       int_cfg;
+        u8          pwr_flag;
     } regs;
 
     union
@@ -88,6 +99,7 @@ typedef struct
     CIRCBUF(u8)     tx_buf;
     vu8             tx_in_progress;
     u8              err;
+    PS2_DevType     dev_type;
 } ps2controller_port_state_t;
 
 
@@ -105,7 +117,11 @@ enum PS2Port_State
     PS2_STATE_INIT,
     PS2_STATE_RESET_SENT,
     PS2_STATE_RESET_ACK_RECEIVED,
-
+    PS2_STATE_IDENTIFY_SENT,
+    PS2_STATE_IDENTIFY_BYTE1_RECEIVED,
+    PS2_STATE_IDENTIFY_BYTE2_RECEIVED,
+    PS2_STATE_IDENTIFY_FAILED,
+    PS2_STATE_UP
 };
 
 
@@ -148,6 +164,7 @@ enum PS2Port_State
 #define PS2_KB_LED_NUM                  BIT(1)
 #define PS2_KB_LED_SCROLL               BIT(0)
 
+#define PS2_KB_LED_MASK     (PS2_KB_LED_CAPS | PS2_KB_LED_NUM | PS2_KB_LED_SCROLL)
 
 /* Scan code sent to prefix a "key release" code */
 #define PS2_SC_RELEASE                  (0xf0)
@@ -165,6 +182,8 @@ enum PS2Controller_Reg
     PS2_INT_CFG_B   = 0x06,
     PS2_UNUSED      = 0x07
 };
+
+#define PS2CONTROLLER_NUM_REGISTERS     (8)     /* # registers exposed by the controller */
 
 
 /* Port-specific register base address offset*/

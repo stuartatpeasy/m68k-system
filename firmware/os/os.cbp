@@ -137,6 +137,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/device/partition.h" />
+		<Unit filename="kernel/device/power.h" />
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>
