@@ -121,6 +121,8 @@ ISR(TIMER2_OVF_vect)
 */
 void init(void)
 {
+	u8 i;
+	
 	cli();
 
 	/* Configure ports */
@@ -141,6 +143,10 @@ void init(void)
 	TCCR1A	= 0;
 	TCCR1B	= 0;
 	TCCR2	= 0;
+	
+	/* Clear all host registers */
+	for(i = 0; i < sizeof(host_regs) / sizeof(host_regs[0]); ++i)
+		host_regs[i] = 0;
 
 	debug_init();
 
@@ -513,8 +519,7 @@ int main(void)
 				else					/* nW asserted - this is a write cycle */
 				{
 					ku8 data = DATA_BUS_PIN;
-					TERMINATE_BUS_CYCLE();
-					
+
 					cli();
 					host_regs[addr] = data;
 					switch(addr)
@@ -527,10 +532,15 @@ int main(void)
 							try_start_tx(&ctx_b, data);
 							break;
 
+						case REG_INT_CFG_A:
+						case REG_INT_CFG_B:
 						case REG_STATUS_A:
 						case REG_STATUS_B:
-							if(!(host_regs[REG_STATUS_A] & host_regs[REG_INT_CFG_A]) && 
-							   !(host_regs[REG_STATUS_B] & host_regs[REG_INT_CFG_B]))
+							if((host_regs[REG_CFG] & CFG_IE) &&
+								((host_regs[REG_STATUS_A] & host_regs[REG_INT_CFG_A]) ||
+								 (host_regs[REG_STATUS_B] & host_regs[REG_INT_CFG_B])))
+								HOST_IRQ_ASSERT();
+							else
 								HOST_IRQ_RELEASE();
 							break;
 
@@ -544,8 +554,18 @@ int main(void)
 								SET_LOW(PWR_PORT, nPWR_B);
 							else
 								SET_HIGH(PWR_PORT, nPWR_B);
+							
+							if(data & CFG_IE)
+							{
+								if((host_regs[REG_STATUS_A] & host_regs[REG_INT_CFG_A]) ||
+								   (host_regs[REG_STATUS_B] & host_regs[REG_INT_CFG_B]))
+									HOST_IRQ_ASSERT();
+							}
+							else
+								HOST_IRQ_RELEASE();
 							break;
 					}
+					TERMINATE_BUS_CYCLE();
 					sei();
 				}
 			}

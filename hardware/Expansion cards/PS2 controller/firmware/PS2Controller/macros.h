@@ -24,7 +24,7 @@
 #define READ_PIN(port, pin)			((port) & (pin))
 
 /* Assert nIRQ (open-drain output) by making the pin (which is always set low) an output */
-#define HOST_IRQ_ASSERT()		SET_OUTPUT(IRQ_DDR, nIRQ);
+#define HOST_IRQ_ASSERT()		SET_OUTPUT(IRQ_DDR, nIRQ)
 
 /* Assert nIRQ if the supplied condition is true */
 #define HOST_IRQ_ASSERT_IF(cond)					\
