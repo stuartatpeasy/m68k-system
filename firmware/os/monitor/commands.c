@@ -1086,7 +1086,7 @@ MONITOR_CMD_HANDLER(test)
 
     ku32 testnum = strtoul(args[0], NULL, 0);
 
-    if(testnum == 2)
+    if(testnum == 1)
     {
         static const unsigned char testapp[] = {
           0x7f, 0x45, 0x4c, 0x46, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1162,40 +1162,7 @@ MONITOR_CMD_HANDLER(test)
                 cpu_nop();
         }
     }
-    else if(testnum == 4)
-    {
-        u8 i = 0;
-        vu8 * const kbdata = (vu8 *) 0xa00000;
-        vu8 * const status = (vu8 *) 0xa00002;
-        while((++i < 10) && (*status & 0x80))
-            printf("ps2_a: %02x\n", *kbdata);
-    }
-    else if(testnum == 5)
-    {
-        /* Try to switch on keyboard LEDs */
-        vu8 * const kbdata   = (vu8 *) 0xa00000;
-        vu8 * const kbstatus = (vu8 *) 0xa00002;
-
-        *kbstatus = 0;
-        *kbdata = 0xed;
-
-        // wait for command TX to complete
-        while(!(*kbstatus & 0x40))
-            ;
-
-        // wait for response byte
-        while(!(*kbstatus & 0x80))
-            ;
-
-        printf("response: %02x\n", *kbdata);
-
-
-        *kbstatus = 0;
-        *kbdata = 0x01;
-        while(!(*kbstatus & 0x40))
-            ;
-    }
-    else if(testnum == 6)
+    else if(testnum == 2)
     {
         net_iface_t *iface = net_interface_get_by_dev("eth0");
         if(iface)
@@ -1205,7 +1172,7 @@ MONITOR_CMD_HANDLER(test)
         else
             puts("Interface eth0 not found");
     }
-    else if(testnum == 7)
+    else if(testnum == 3)
     {
         net_address_t server;
 

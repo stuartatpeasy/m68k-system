@@ -66,8 +66,8 @@ typedef struct
     {
         struct
         {
-            u32     data;
-            u8      flags;
+            u8      leds;
+            u8      modifiers;
         } kb;
 
         struct
@@ -77,10 +77,17 @@ typedef struct
             s16     dz;
             u8      buttons;
         } mouse;
+    } state;
+
+    struct
+    {
+        u32         data;
+        u32         flags;
     } packet;
 
-    u8              err;
     CIRCBUF(u8)     tx_buf;
+    vu8             tx_in_progress;
+    u8              err;
 } ps2controller_port_state_t;
 
 
@@ -134,6 +141,12 @@ enum PS2Port_State
 #define PS2_CMD_READ_DATA               (0xeb)
 #define PS2_CMD_SET_STREAM_MODE         (0xea)
 #define PS2_CMD_STATUS_REQUEST          (0xe9)
+
+
+/* PS/2 keyboard LED flags */
+#define PS2_KB_LED_CAPS                 BIT(2)
+#define PS2_KB_LED_NUM                  BIT(1)
+#define PS2_KB_LED_SCROLL               BIT(0)
 
 
 /* Scan code sent to prefix a "key release" code */

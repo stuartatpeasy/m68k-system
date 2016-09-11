@@ -8,6 +8,7 @@
 */
 
 #include <kernel/include/keyboard.h>
+#include <klibc/ctype.h>
 
 
 /*
@@ -68,10 +69,15 @@ intl_keymap *current_keymap = KEYMAP_DEFAULT;
 */
 char keymap_get(const KeyCode code, const key_modifier mod)
 {
-    if(mod & KMF_SHIFT)
-        return current_keymap->map.shifted[code];
-    else
-        return current_keymap->map.normal[code];
+    u8 c;
 
-    return 0;
+    if(mod & KMF_SHIFT)
+        c = current_keymap->map.shifted[code];
+    else
+        c = current_keymap->map.normal[code];
+
+    if(mod & KMF_CAPS)
+        c = (mod & KMF_SHIFT) ? tolower(c) : toupper(c);
+
+    return c;
 }

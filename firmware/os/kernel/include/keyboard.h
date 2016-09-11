@@ -45,12 +45,16 @@ typedef struct
 
 /*
     Key modifier flags: when resolving a key code to a character, these indicate the combination of
-    modifier keys pressed at the time the character key was pressed.
+    modifier keys pressed, or lock keys active, at the time the character key was pressed.
 */
-#define KMF_NORMAL      (0)
-#define KMF_SHIFT       BIT(1)
-#define KMF_CTRL        BIT(2)
-#define KMF_ALT         BIT(3)
+#define KMF_NORMAL      (0)     /* No modifier keys pressed; no lock keys active    */
+#define KMF_SHIFT       BIT(1)  /* One or more "shift" keys pressed                 */
+#define KMF_CTRL        BIT(2)  /* One or more "ctrl" keys pressed                  */
+#define KMF_ALT         BIT(3)  /* One or more "alt" keys pressed                   */
+#define KMF_GUI         BIT(4)  /* One or more "gui" keys pressed                   */
+#define KMF_CAPS        BIT(5)  /* "Caps lock" key state                            */
+#define KMF_NUM         BIT(6)  /* "Num lock" key state                             */
+#define KMF_SCROLL      BIT(7)  /* "Scroll lock" key state                          */
 
 typedef u8 key_modifier;
 
