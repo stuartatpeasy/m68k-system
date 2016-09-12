@@ -70,6 +70,7 @@ typedef struct
         vu8 *       data;
         vu8 *       status;
         vu8 *       int_cfg;
+        vu8 *       cfg;        /* cfg register for the whole device, not just this port */
         u8          pwr_flag;
     } regs;
 

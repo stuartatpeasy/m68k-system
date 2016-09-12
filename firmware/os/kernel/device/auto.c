@@ -38,7 +38,7 @@ const driver_map_entry_t driver_map[] =
 
     {
         .hw_id      = 0x82,
-        .type       = DEV_TYPE_CHARACTER,
+        .type       = DEV_TYPE_MULTI,
         .subtype    = DEV_SUBTYPE_NONE,
         .name       = "ps2",
         .human_name = "PS/2 port controller",

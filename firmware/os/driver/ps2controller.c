@@ -318,6 +318,7 @@ s32 ps2controller_port_init(dev_t *dev, ku16 reg_offset)
     state->regs.data    = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_DATA);
     state->regs.status  = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_STATUS);
     state->regs.int_cfg = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_INT_CFG);
+    state->regs.cfg     = PS2CTRLR_REG_ADDR(dev->base_addr, PS2_CFG);
 
     /* This is nasty */
     state->regs.pwr_flag = reg_offset ? PS2_CFG_PWR_B : PS2_CFG_PWR_A;
@@ -669,7 +670,7 @@ s32 ps2controller_control(dev_t *dev, const devctl_fn_t fn, const void *in, void
 */
 s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
-    const ps2controller_port_state_t * const state = (ps2controller_port_state_t *) dev->data;
+    ps2controller_port_state_t * const state = (ps2controller_port_state_t *) dev->data;
 
     switch(fn)
     {
@@ -678,22 +679,42 @@ s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in,
             switch(*((PwrState *) in))
             {
                 case PWR_STATE_NORMAL:
-                    *(((u8 *) dev->parent->base_addr) + PS2_CFG) |= state->regs.pwr_flag;
+                    *state->regs.cfg |= state->regs.pwr_flag;
                     break;
 
                 case PWR_STATE_OFF:
-                    *(((u8 *) dev->parent->base_addr) + PS2_CFG) &= ~state->regs.pwr_flag;
+                    *state->regs.cfg &= ~state->regs.pwr_flag;
                     break;
 
                 default:
+                    /* No other power states are supported */
                     return EINVAL;
             }
             break;
 
         /* Get power state: we need to do this via the parent device */
         case dc_get_power_state:
-            *((PwrState *) out) = *(((u8 *) dev->parent->base_addr) + PS2_CFG) ?
+            *((PwrState *) out) = *state->regs.cfg & state->regs.pwr_flag ?
                 PWR_STATE_NORMAL : PWR_STATE_OFF;
+            break;
+
+        /* Set keyboard LED state */
+        case dc_set_leds:
+            if(state->dev_type != PS2_DEV_KEYBOARD)
+                return EPERM;
+
+            state->state.kb.leds = *((u8 *) in) & PS2_KB_LED_MASK;
+            CIRCBUF_WRITE(state->tx_buf, PS2_CMD_SET_LEDS);
+            CIRCBUF_WRITE(state->tx_buf, state->state.kb.leds);
+            ps2controller_port_start_tx(state);
+            break;
+
+        /* Get keyboard LED state */
+        case dc_get_leds:
+            if(state->dev_type != PS2_DEV_KEYBOARD)
+                return EPERM;
+
+            *((u8 *) out) = state->state.kb.leds;
             break;
 
         default:
