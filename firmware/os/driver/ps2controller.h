@@ -3,7 +3,7 @@
 /*
     ATmega8-driven dual PS/2 port controller driver
 
-    Part of the as-yet-unnamed MC68010 operating system
+    Part of ayumos
 
 
     (c) Stuart Wallace <stuartw@atom.net>, December 2015.

@@ -18,6 +18,7 @@
 
 
 void ps2controller_port_irq_handler(ku32 irql, void *data);
+void ps2controller_port_detect(ps2controller_port_t *port);
 void ps2controller_port_start_tx(ps2controller_port_t *port);
 void ps2controller_process_null(ps2controller_port_t *port);
 void ps2controller_process_detect(ps2controller_port_t *port);
@@ -338,12 +339,7 @@ s32 ps2controller_port_init(dev_t *dev, ku16 reg_offset)
     *port->regs.int_cfg = PS2_FLAG_RX | PS2_FLAG_TX | PS2_FLAG_PAR_ERR | PS2_FLAG_OVF;
 
     /* Port power has been enabled by the parent dev init fn; start device detection */
-    port->dev_type = PS2_DEV_NONE;
-    port->packet.data = 0;
-    port->state = PS2_PORT_STATE_ID;
-    port->process_fn = ps2controller_process_detect;
-    CIRCBUF_WRITE(port->tx_buf, PS2_CMD_READ_ID);
-    ps2controller_port_start_tx(port);
+    ps2controller_port_detect(port);
 
     return SUCCESS;
 }
@@ -380,6 +376,25 @@ void ps2controller_port_irq_handler(ku32 irql, void *data)
 
         *port->regs.status = 0;
     }
+}
+
+
+/*
+    ps2controller_port_detect() - initiate device detection on a port.
+*/
+void ps2controller_port_detect(ps2controller_port_t *port)
+{
+    /* Prepare the port for device detection */
+    port->dev_type = PS2_DEV_NONE;
+    port->packet.data = 0;
+    port->state = PS2_PORT_STATE_ID;
+
+    /* Install the device-detection processor function */
+    port->process_fn = ps2controller_process_detect;
+
+    /* Send the "read device ID" command */
+    CIRCBUF_WRITE(port->tx_buf, PS2_CMD_READ_ID);
+    ps2controller_port_start_tx(port);
 }
 
 
