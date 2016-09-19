@@ -11,21 +11,29 @@
 
 #include <driver/ps2controller.h>
 #include <kernel/cpu.h>
+#include <kernel/device/power.h>
 #include <kernel/include/keyboard.h>
-#include <klibc/stdio.h>			/* TODO remove */
+#include <klibc/errors.h>
+#include <klibc/stdio.h>                    // FIXME remove
 
 
 void ps2controller_port_irq_handler(ku32 irql, void *data);
+void ps2controller_port_detect(ps2controller_port_t *port);
+void ps2controller_port_start_tx(ps2controller_port_t *port);
+void ps2controller_process_null(ps2controller_port_t *port);
+void ps2controller_process_detect(ps2controller_port_t *port);
+void ps2controller_process_kb(ps2controller_port_t *port);
+void ps2controller_process_mouse(ps2controller_port_t *port);
 s32 ps2controller_port_a_init(dev_t *dev);
 s32 ps2controller_port_b_init(dev_t *dev);
 s32 ps2controller_port_init(dev_t *dev, ku16 reg_offset);
 s32 ps2controller_port_shut_down(dev_t *dev);
 s32 ps2controller_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
+s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
 s32 ps2controller_read(dev_t *dev, ku32 offset, u32 *len, void *buf);
 s32 ps2controller_write(dev_t *dev, ku32 offset, u32 *len, const void *buf);
 s32 ps2controller_shut_down(dev_t *dev);
 
-void ps2controller_process_key(ps2controller_port_state_t *state);      // FIXME
 
 
 /*
@@ -47,7 +55,7 @@ const KeyCode ps2_sc2_to_internal[] =
     KEY_NONE,       KEY_C,          KEY_X,          KEY_D,
     KEY_E,          KEY_4,          KEY_3,          KEY_NONE,
     KEY_NONE,       KEY_SPACE,      KEY_V,          KEY_F,
-    KEY_T,          KEY_R,          KEY_S,          KEY_NONE,
+    KEY_T,          KEY_R,          KEY_5,          KEY_NONE,
 
     KEY_NONE,       KEY_N,          KEY_B,          KEY_H,
     KEY_G,          KEY_Y,          KEY_6,          KEY_NONE,
@@ -62,11 +70,11 @@ const KeyCode ps2_sc2_to_internal[] =
     KEY_NONE,       KEY_NONE,       KEY_APOS,       KEY_NONE,
     KEY_BKT_L,      KEY_EQUALS,     KEY_NONE,       KEY_NONE,
     KEY_CAPS,       KEY_SHIFT_R,    KEY_ENTER,      KEY_BKT_R,
-    KEY_NONE,       KEY_BKSLASH,    KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_HASH,       KEY_NONE,       KEY_NONE,
 
-    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_BKSLASH,    KEY_NONE,       KEY_NONE,
     KEY_NONE,       KEY_NONE,       KEY_BKSPACE,    KEY_NONE,
-    KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NP_4,
+    KEY_NONE,       KEY_NP_1,       KEY_NONE,       KEY_NP_4,
     KEY_NP_7,       KEY_NONE,       KEY_NONE,       KEY_NONE,
 
     KEY_NP_0,       KEY_NP_DOT,     KEY_NP_2,       KEY_NP_5,
@@ -149,7 +157,7 @@ const KeyCode ps2_sc2_ext1_to_internal[] =
 
     KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
     KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
-    KEY_NONE,       KEY_NP_ENTER,   KEY_NONE,       KEY_NONE,
+    KEY_NONE,       KEY_NONE,       KEY_NP_ENTER,   KEY_NONE,
     KEY_NONE,       KEY_NONE,       KEY_WAKE,       KEY_NONE,
 
     KEY_NONE,       KEY_NONE,       KEY_NONE,       KEY_NONE,
@@ -172,6 +180,7 @@ const KeyCode ps2_sc2_ext1_to_internal[] =
         if(ps2_sc2_single_byte_code_map[scan_code >> 3] & (1 << (scan_code & 0x7)))
             valid = 1;
 */
+#if 0  /* Not currently used */
 const u8 ps2_sc2_single_byte_code_map[32] =
 {
     /* bit       0   1   2   3   4   5   6   7  */
@@ -195,6 +204,7 @@ const u8 ps2_sc2_single_byte_code_map[32] =
     0x00,   /*                                  */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+#endif
 
 
 /*
@@ -206,6 +216,7 @@ const u8 ps2_sc2_single_byte_code_map[32] =
            (ps2_sc2_ext1_code_map[second_byte >> 3] & (1 << (second_byte & 0x7)))
             valid = 1;
 */
+#if 0   /* Not currently used */
 const u8 ps2_sc2_ext1_code_map[16] =
 {
     /* bit       0   1   2   3   4   5   6   7  */
@@ -226,6 +237,7 @@ const u8 ps2_sc2_ext1_code_map[16] =
     0x37,   /*  70  71  72      74  75          */
     0x24,   /*          7a          7d          */
 };
+#endif
 
 
 /*
@@ -234,12 +246,12 @@ const u8 ps2_sc2_ext1_code_map[16] =
 s32 ps2controller_init(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
-    ps2controller_state_t *state;
+    ps2controller_data_t *data;
     s32 ret;
 
-    state = CHECKED_KCALLOC(1, sizeof(ps2controller_state_t));
+    data = CHECKED_KCALLOC(1, sizeof(ps2controller_data_t));
 
-    dev->data = state;
+    dev->data = data;
 
     dev->shut_down  = ps2controller_shut_down;
     dev->read       = ps2controller_read;
@@ -250,20 +262,20 @@ s32 ps2controller_init(dev_t *dev)
 
     /* Set up child devices */
     ret = dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_PS2PORT, dev->name, dev->irql, dev->base_addr,
-                        &state->port_a, "PS/2 port A", dev, ps2controller_port_a_init);
+                        &data->port_a, "PS/2 port A", dev, ps2controller_port_a_init);
     if(ret != SUCCESS)
     {
-        kfree(state);
+        kfree(data);
         dev->data = NULL;
         return ret;
     }
 
     ret = dev_create(DEV_TYPE_CHARACTER, DEV_SUBTYPE_PS2PORT, dev->name, dev->irql, dev->base_addr,
-                        &state->port_b, "PS/2 port B", dev, ps2controller_port_b_init);
+                        &data->port_b, "PS/2 port B", dev, ps2controller_port_b_init);
     if(ret != SUCCESS)
     {
-        dev_destroy(state->port_a);
-        kfree(state);
+        dev_destroy(data->port_a);
+        kfree(data);
         dev->data = NULL;
         return ret;
     }
@@ -301,22 +313,33 @@ s32 ps2controller_port_b_init(dev_t *dev)
 */
 s32 ps2controller_port_init(dev_t *dev, ku16 reg_offset)
 {
-    ps2controller_port_state_t *state = CHECKED_KCALLOC(1, sizeof(ps2controller_port_state_t));
+    ps2controller_port_t * const port = CHECKED_KCALLOC(1, sizeof(ps2controller_port_t));
 
-    state->err = 0;
+    dev->control = ps2controller_port_control;
 
-    state->regs.data    = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_DATA);
-    state->regs.status  = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_STATUS);
-    state->regs.int_cfg = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_INT_CFG);
+    port->err = 0;
 
-    CIRCBUF_INIT(state->tx_buf);
+    port->regs.data    = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_DATA);
+    port->regs.status  = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_STATUS);
+    port->regs.int_cfg = PS2CTRLR_REG_ADDR(dev->base_addr, reg_offset + PS2_INT_CFG);
+    port->regs.cfg     = PS2CTRLR_REG_ADDR(dev->base_addr, PS2_CFG);
 
-    dev->data = state;
+    port->process_fn = ps2controller_process_null;
+
+    /* This is nasty */
+    port->regs.pwr_flag = reg_offset ? PS2_CFG_PWR_B : PS2_CFG_PWR_A;
+
+    CIRCBUF_INIT(port->tx_buf);
+
+    dev->data = port;
 
     cpu_irq_add_handler(dev->irql, dev, ps2controller_port_irq_handler);
 
     /* Enable interrupts */
-    *state->regs.int_cfg = PS2_FLAG_RX | PS2_FLAG_PAR_ERR | PS2_FLAG_OVF;
+    *port->regs.int_cfg = PS2_FLAG_RX | PS2_FLAG_TX | PS2_FLAG_PAR_ERR | PS2_FLAG_OVF;
+
+    /* Port power has been enabled by the parent dev init fn; start device detection */
+    ps2controller_port_detect(port);
 
     return SUCCESS;
 }
@@ -329,64 +352,147 @@ s32 ps2controller_port_init(dev_t *dev, ku16 reg_offset)
 void ps2controller_port_irq_handler(ku32 irql, void *data)
 {
     dev_t * const dev = (dev_t *) data;
-    ps2controller_port_state_t *state = (ps2controller_port_state_t *) dev->data;
+    ps2controller_port_t * const port = (ps2controller_port_t *) dev->data;
     UNUSED(irql);
 
-    ku8 status = *state->regs.status;
+    ku8 status = *port->regs.status;
     if(status)
     {
-        if(status & PS2_FLAG_RX)        // change to while()
-        {
-            ku8 key = *state->regs.data;
+        /* Process received data */
+        while(*port->regs.status & PS2_FLAG_RX)
+            port->process_fn(port);
 
-            if(key == PS2_SC_KB_EXT1)
-                state->packet.kb.flags |= PS2_PKT_KB_EXT1;
-            else if(key == PS2_SC_KB_EXT2)
-                state->packet.kb.flags |= PS2_PKT_KB_EXT2;
-            else if(key == PS2_SC_KB_RELEASE)
-                state->packet.kb.flags |= PS2_PKT_KB_RELEASE;
+        if(status & PS2_FLAG_TX)
+        {
+            /* Transmit complete; send the next byte, if any */
+            if(!CIRCBUF_IS_EMPTY(port->tx_buf))
+                *port->regs.data = CIRCBUF_READ(port->tx_buf);
             else
-            {
-                /* Accumulate the received scan code into the keyboard data buffer */
-                state->packet.kb.data = (state->packet.kb.data << 8) | key;
-
-                ps2controller_process_key(state);
-            }
-        }
-        else if(status & PS2_FLAG_TX)
-        {
-            /* TODO: send next byte in TX buffer, if any */
-            putchar('t');
-        }
-        else if(status & PS2_ERR_MASK)
-        {
-            state->err |= status & PS2_ERR_MASK;
-            printf("[ps2e: %02x]", status & PS2_ERR_MASK);      // FIXME remove this
+                port->tx_in_progress = 0;      /* Transmit finished */
         }
 
-        *state->regs.status = 0;
+        if(status & PS2_ERR_MASK)
+            port->err |= status & PS2_ERR_MASK;
+
+        *port->regs.status = 0;
     }
 }
 
 
-void ps2controller_process_key(ps2controller_port_state_t *state)
+/*
+    ps2controller_port_detect() - initiate device detection on a port.
+*/
+void ps2controller_port_detect(ps2controller_port_t *port)
 {
-    ku32 data = state->packet.kb.data;
-    ku8 flags = state->packet.kb.flags & (PS2_PKT_KB_EXT1 | PS2_PKT_KB_EXT2),
-        release = state->packet.kb.flags & PS2_PKT_KB_RELEASE,
-        scan_code = data & 0xff;
-    u8 c;
+    /* Prepare the port for device detection */
+    port->dev_type = PS2_DEV_NONE;
+    port->packet.data = 0;
+    port->state = PS2_PORT_STATE_ID;
+
+    /* Install the device-detection processor function */
+    port->process_fn = ps2controller_process_detect;
+
+    /* Send the "read device ID" command */
+    CIRCBUF_WRITE(port->tx_buf, PS2_CMD_READ_ID);
+    ps2controller_port_start_tx(port);
+}
+
+
+/*
+    ps2controller_process_null() - processor function which discards data received from a port.
+    This is the default processor function: it is replaced by another one following device
+    detection.
+*/
+void ps2controller_process_null(ps2controller_port_t *port)
+{
+    UNUSED(port);
+}
+
+
+/*
+    ps2controller_process_detect() - process data received during device detection.  It is assumed
+    that a PS2_CMD_READ_ID packet has been sent.  All devices send 0xfa to acknowledge the command;
+    a keyboard will then send 0xab, 0x83; a mouse will send 0x00.
+*/
+void ps2controller_process_detect(ps2controller_port_t *port)
+{
+    ku8 data = *port->regs.data;
+
+    port->packet.data = (port->packet.data << 8) | *port->regs.data;
+
+    if((port->state == PS2_PORT_STATE_ID)
+       && ((data == PS2_RESP_ACK) || (data == PS2_RESP_BAT_PASSED)))
+    {
+        port->state = PS2_PORT_STATE_ID_ACK_RECEIVED;
+        return;
+    }
+    else if(port->state == PS2_PORT_STATE_ID_ACK_RECEIVED)
+    {
+        if(data == PS2_RESP_MOUSE_ID1)
+        {
+            /* Detection successful: this is a mouse */
+            port->dev_type = PS2_DEV_MOUSE;
+            port->state = PS2_PORT_STATE_UP;
+            port->process_fn = ps2controller_process_mouse;
+            return;
+        }
+        else if(data == PS2_RESP_KB_ID1)
+        {
+            /* Received the first byte of a keyboard detection packet */
+            port->state = PS2_PORT_STATE_ID_KB_ID1_RECEIVED;
+            return;
+        }
+    }
+    else if((port->state == PS2_PORT_STATE_ID_KB_ID1_RECEIVED) && (data == PS2_RESP_KB_ID2))
+    {
+        /* Detection successful: this is a keyboard */
+        port->dev_type = PS2_DEV_KEYBOARD;
+        port->state = PS2_PORT_STATE_UP;
+        port->process_fn = ps2controller_process_kb;
+        return;
+    }
+
+    port->state = PS2_PORT_STATE_ID_FAILED;
+}
+
+
+/*
+    ps2controller_process_kb() - process data received from a keyboard device.
+*/
+void ps2controller_process_kb(ps2controller_port_t *port)
+{
+    u32 data;
+    u8 flags, release, scan_code, key_code;
+    u8 * const modifiers = &port->data.kb.modifiers;
+
+    scan_code = *port->regs.data;
+
+    /* Process any "special" scan codes first */
+    switch(scan_code)
+    {
+        case PS2_SC_KB_RELEASE:
+            port->packet.flags |= PS2_PKT_KB_RELEASE;
+            return;
+
+        case PS2_SC_KB_EXT1:
+            port->packet.flags |= PS2_PKT_KB_EXT1;
+            return;
+
+        case PS2_SC_KB_EXT2:
+            port->packet.flags |= PS2_PKT_KB_EXT2;
+            return;
+    }
+
+    flags = port->packet.flags & (PS2_PKT_KB_EXT1 | PS2_PKT_KB_EXT2);
+    release = port->packet.flags & PS2_PKT_KB_RELEASE;
+
+    data = (port->packet.data << 8) | scan_code;
+    port->packet.data = data;
 
     if(flags == 0)
     {
         /* If neither of the EXTx flags is true, this must be a single-byte code */
-        if(!release)
-        {
-            c = keymap_get(ps2_sc2_to_internal[scan_code], KMF_NORMAL);
-
-            if(c)
-                putchar(c);
-        }
+        key_code = ps2_sc2_to_internal[scan_code];
     }
     else if(flags == PS2_PKT_KB_EXT1)
     {
@@ -399,29 +505,25 @@ void ps2controller_process_key(ps2controller_port_state_t *state)
         */
         if(scan_code < 0x80)
         {
-            if(!release)
-            {
-                c = keymap_get(ps2_sc2_ext1_to_internal[scan_code], KMF_NORMAL);
-
-                if(c)
-                    putchar(c);
-            }
+            key_code = ps2_sc2_ext1_to_internal[scan_code];
 
             if(!release)
             {
                 if(scan_code == (PS2_SC2_PRTSC_PRESS >> 8))
                     return;     /* First byte of a PrtSc press - wait for next byte */
                 else if(data == PS2_SC2_PRTSC_PRESS)
-                    put("[prtsc]");
+                    key_code = KEY_PRT_SC;
             }
             else
             {
                 if(scan_code == (PS2_SC2_PRTSC_RELEASE >> 8))
                     return;     /* First byte of a PrtSc release - wait for next byte */
                 else if(data == PS2_SC2_PRTSC_RELEASE)
-                    put("[!prtsc]");
+                    key_code = KEY_PRT_SC;
             }
         }
+        else
+            key_code = KEY_NONE;    /* Invalid sequence */
     }
     else if(flags == PS2_PKT_KB_EXT2)
     {
@@ -436,13 +538,114 @@ void ps2controller_process_key(ps2controller_port_state_t *state)
             return;     /* Wait for another code to arrive */
 
         if(release && (data == PS2_SC2_PAUSE))
-            put("[pause]");
+            key_code = KEY_PAUSE;
+        else
+            key_code = KEY_NONE;
     }
-    /* Note: we ignore sequences where both PS2_PKT_KB_EXT1 and PS2_PKT_KB_EXT2 are set */
+    else
+        key_code = KEY_NONE;    /* Ignore if both PS2_PKT_KB_EXT1 & PS2_PKT_KB_EXT2 are set */
+
+    /* Do stuff here */
+    switch(key_code)
+    {
+        case KEY_SHIFT_L:
+        case KEY_SHIFT_R:
+            if(!release)
+                *modifiers |= KMF_SHIFT;
+            else
+                *modifiers &= ~KMF_SHIFT;
+            break;
+
+        case KEY_CTRL_L:
+        case KEY_CTRL_R:
+            if(!release)
+                *modifiers |= KMF_CTRL;
+            else
+                *modifiers &= ~KMF_CTRL;
+            break;
+
+        case KEY_ALT_L:
+        case KEY_ALT_R:
+            if(!release)
+                *modifiers |= KMF_ALT;
+            else
+                *modifiers &= ~KMF_ALT;
+            break;
+
+        case KEY_CAPS:
+        case KEY_NUM:
+        case KEY_SCROLL:
+            if(release)
+            {
+                u8 * const leds = &port->data.kb.leds;
+
+                switch(key_code)
+                {
+                    case KEY_CAPS:
+                        *modifiers ^= KMF_CAPS;
+                        *leds ^= PS2_KB_LED_CAPS;
+                        break;
+
+                    case KEY_NUM:
+                        *modifiers ^= KMF_NUM;
+                        *leds ^= PS2_KB_LED_NUM;
+                        break;
+
+                    case KEY_SCROLL:
+                        *modifiers ^= KMF_SCROLL;
+                        *leds ^= PS2_KB_LED_SCROLL;
+                        break;
+                }
+
+                /* Update the state of the keyboard LEDs */
+                CIRCBUF_WRITE(port->tx_buf, PS2_CMD_SET_LEDS);
+                CIRCBUF_WRITE(port->tx_buf, *leds);
+                ps2controller_port_start_tx(port);
+            }
+            break;
+
+        default:
+            if(!release)
+                putchar(keymap_get(key_code, *modifiers));
+            break;
+    }
 
     /* Either the scan code was handled, or it was invalid.  Reset state here. */
-    state->packet.kb.data = 0;
-    state->packet.kb.flags = 0;
+    port->packet.data = 0;
+    port->packet.flags = 0;
+}
+
+
+/*
+    ps2controller_process_mouse() - process data received from a mouse device.
+*/
+void ps2controller_process_mouse(ps2controller_port_t *port)
+{
+    UNUSED(port);
+    /* TODO */
+}
+
+
+/*
+    ps2controller_port_start_tx(): if the associated transmit buffer is not empty, start
+    transmission of data on a PS/2 port.  If transmission is already in progress, this function has
+    no effect.  If multiple bytes are queued for transmission, this function will ensure that
+    transmission is scheduled to occur automatically.
+*/
+void ps2controller_port_start_tx(ps2controller_port_t *port)
+{
+    /* Disable "TX Done" interrupt on the port */
+    *port->regs.int_cfg &= ~PS2_FLAG_TX;
+
+    /* At this point, it is safe to test the value of the the tx_in_progress flag. */
+    if(!port->tx_in_progress && !CIRCBUF_IS_EMPTY(port->tx_buf))
+    {
+        port->tx_in_progress = 1;
+        *port->regs.data = CIRCBUF_READ(port->tx_buf);
+    }
+
+    /* Enable "TX Done" interrupt on the port */
+    *port->regs.int_cfg |= PS2_FLAG_TX;
 }
 
 
@@ -473,7 +676,7 @@ s32 ps2controller_shut_down(dev_t *dev)
 */
 s32 ps2controller_port_shut_down(dev_t *dev)
 {
-    ps2controller_port_state_t * const state = (ps2controller_port_state_t *) dev->data;
+    ps2controller_port_t * const state = (ps2controller_port_t *) dev->data;
     if(state != NULL)
     {
         /* Disable all interrupts from the port */
@@ -490,24 +693,18 @@ s32 ps2controller_port_shut_down(dev_t *dev)
 
 
 /*
-    ps2controller_port_a_getc() - read a character from PS/2 port A
-*/
-
-
-/*
-    ps2controller_port_b_getc() - read a character from PS/2 port B
-*/
-
-
-/*
-    ps2controller_read() - read data from the PS/2 port controller.
+    ps2controller_read() - read data from the PS/2 port controller.  This function provides direct
+    access to the PS/2 controller registers.
 */
 s32 ps2controller_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
 {
-    UNUSED(dev);
-    UNUSED(offset);
-    UNUSED(len);
-    UNUSED(buf);
+    const void * const base_addr = dev->base_addr;
+
+    /* Can only read one register at a time, and can't read past the last register */
+    if((offset >= PS2CONTROLLER_NUM_REGISTERS) || (*len != 1))
+        return EINVAL;
+
+    *((u8 *) buf) = *(((u8 *) base_addr) + offset);
 
     return SUCCESS;
 }
@@ -518,17 +715,20 @@ s32 ps2controller_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
 */
 s32 ps2controller_write(dev_t *dev, ku32 offset, u32 *len, const void *buf)
 {
-    UNUSED(dev);
-    UNUSED(offset);
-    UNUSED(len);
-    UNUSED(buf);
+    const void * const base_addr = dev->base_addr;
+
+    /* Can only write one register at a time, and can't write past the last register */
+    if((offset >= PS2CONTROLLER_NUM_REGISTERS) || (*len != 1))
+        return EINVAL;
+
+    *(((u8 *) base_addr) + offset) = *((u8 *) buf);
 
     return SUCCESS;
 }
 
 
 /*
-    ps2controller_control() - devctl responder
+    ps2controller_control() - devctl responder for the controller device.
 */
 s32 ps2controller_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
@@ -542,4 +742,64 @@ s32 ps2controller_control(dev_t *dev, const devctl_fn_t fn, const void *in, void
         default:
             return ENOSYS;
     }
+}
+
+
+/*
+    ps2controller_port_control() - devctl responder for a PS/2 port.
+*/
+s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
+{
+    ps2controller_port_t * const port = (ps2controller_port_t *) dev->data;
+
+    switch(fn)
+    {
+        /* Set power state: we need to do this via the parent device */
+        case dc_set_power_state:
+            switch(*((PwrState *) in))
+            {
+                case PWR_STATE_NORMAL:
+                    *port->regs.cfg |= port->regs.pwr_flag;
+                    break;
+
+                case PWR_STATE_OFF:
+                    *port->regs.cfg &= ~port->regs.pwr_flag;
+                    break;
+
+                default:
+                    /* No other power states are supported */
+                    return EINVAL;
+            }
+            break;
+
+        /* Get power state: we need to do this via the parent device */
+        case dc_get_power_state:
+            *((PwrState *) out) = *port->regs.cfg & port->regs.pwr_flag ?
+                PWR_STATE_NORMAL : PWR_STATE_OFF;
+            break;
+
+        /* Set keyboard LED state */
+        case dc_set_leds:
+            if(port->dev_type != PS2_DEV_KEYBOARD)
+                return EPERM;
+
+            port->data.kb.leds = *((u8 *) in) & PS2_KB_LED_MASK;
+            CIRCBUF_WRITE(port->tx_buf, PS2_CMD_SET_LEDS);
+            CIRCBUF_WRITE(port->tx_buf, port->data.kb.leds);
+            ps2controller_port_start_tx(port);
+            break;
+
+        /* Get keyboard LED state */
+        case dc_get_leds:
+            if(port->dev_type != PS2_DEV_KEYBOARD)
+                return EPERM;
+
+            *((u8 *) out) = port->data.kb.leds;
+            break;
+
+        default:
+            return ENOSYS;
+    }
+
+    return SUCCESS;
 }

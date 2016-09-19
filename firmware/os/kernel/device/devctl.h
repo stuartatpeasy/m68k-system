@@ -36,7 +36,15 @@ typedef enum devctl_fn
     dc_get_hw_addr              = 0x0202,   /* Get hardware address                             */
     dc_get_proto_addr_type      = 0x0203,   /* Get protocol address type                        */
     dc_get_proto_addr           = 0x0204,   /* Get protocol address                             */
-    dc_get_link_flags           = 0x0205    /* Get link status flags                            */
+    dc_get_link_flags           = 0x0205,   /* Get link status flags                            */
+
+    /* Keyboards */
+    dc_get_leds                 = 0x0300,   /* Get keyboard LED status                          */
+    dc_set_leds                 = 0x0301,   /* Set keyboard LED status                          */
+
+    /* Generic devctls */
+    dc_get_power_state          = 0x8000,   /* Get power state for a device                     */
+    dc_set_power_state          = 0x8001    /* Set power state for a device                     */
 } devctl_fn_t;
 
 #endif

@@ -137,6 +137,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/device/partition.h" />
+		<Unit filename="kernel/device/power.h" />
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -184,6 +185,9 @@
 		<Unit filename="kernel/include/list.h" />
 		<Unit filename="kernel/include/types.h" />
 		<Unit filename="kernel/include/version.h" />
+		<Unit filename="kernel/keyboard.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kernel/ksym.c">
 			<Option compilerVar="CC" />
 		</Unit>
