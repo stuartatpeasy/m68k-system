@@ -1,0 +1,29 @@
+96 i/os
+
+   18   a memory
+   16   d memory
+    6   ctrl mem
+40 total mem
+
+    8   pixel out
+    2   sync out
+10 total vga
+
+   16   host d
+   19   host a
+    9   host (i: [cs, ur, lr, uw, lw, reset, id]; o: [ack, irq])
+44 partial host
+
+1  global clock input
+
+4  spi config interface (maybe could be shared?)
+
+99 total (-3 free - FIXME)
+
+
+Options for reducing pin count:
+- encode {cs, [u|l][r|w]} -> {nw, nuds, nlds} : saves 2 pins
+- externally short cs & ack : saves 1 pin
+
+- [??] connect reset -> creset_b : saves 1 pin
+- [in extremis] run memory with nOE tied low : saves 1 pin
