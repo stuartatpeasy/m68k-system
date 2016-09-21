@@ -7,8 +7,8 @@
 
    16   host d
    19   host a
-    9   host (i: [cs, ur, lr, uw, lw, reset, id]; o: [irq])
-43 partial host
+    6   host (i: [nUCS, nLCS, nW, nRESET, nID]; o: [IRQ])
+41 partial host
 
     8   pixel out
     2   sync out
@@ -18,7 +18,7 @@
 
 4  spi config interface
 
-98 total (-2 free - FIXME)
+96 total (0 free)
 
 
 Assumptions:
