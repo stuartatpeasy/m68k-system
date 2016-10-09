@@ -61,8 +61,10 @@ Target device pinout
 
 Pin [1..3] = [FC0..2];
 Pin [4..9] = [A18..23];
+/*
 Pin 10 = !UDS;
 Pin 11 = !LDS;
+*/
 Pin 13 = !AS;
 Pin 14 = WDOG;
 Pin 16 = !EBERR;
@@ -105,14 +107,8 @@ Table [A23..A18] => [SUPERRAM, RAM, EXP, OBPERIPH, ROM]
 	[F00000..FFFFFF] => 'b'00001;
 }
 
-/* Data strobe - either of UDS and LDS asserted */
-DS = UDS # LDS;
-
-/* Detect transfer in progress */
-TRANSFER = DS & AS;
-
 /* Decide whether a cycle in progress is in CPU space or "standard" (user or supervisor) space */
-CPUCYCLE = CPUSPACE & TRANSFER;
+CPUCYCLE = CPUSPACE & AS;
 
 /* User cycle indicator */
 USERCYCLE = USERSPACE & AS;
@@ -129,10 +125,10 @@ BKPTACK = CPUCYCLE & !A19 & !A18;
 IACK = CPUCYCLE & A19 & A18;
 
 /* Generate bus error: transfer error or watchdog timeout */
-BERR = (TRANSFER & ERR) # WDOG;
+BERR = (AS & ERR) # WDOG;
 
 /* Transfer OK - no access violation detected */
-TOK = TRANSFER & !BERR;
+TOK = AS & !BERR;
 
 /* Memory chip select */
 MEMCS = TOK & (SUPERRAM # RAM # ROM);
@@ -141,5 +137,5 @@ MEMCS = TOK & (SUPERRAM # RAM # ROM);
 EPCS = TOK & (OBPERIPH # EXP);
 
 /* DTACK and VPA - transfer acknowledgements */
-VPA = TRANSFER & (IACK # EVPA);
+VPA = AS & (IACK # EVPA);
 DTACK = BKPTACK # (TOK & (EPACK # MEMCS));
