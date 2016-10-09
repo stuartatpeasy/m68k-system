@@ -34,7 +34,11 @@
 *.dSYM/
 *.lss
 
+# Dependency files
+*.d
+
 # Misc
 *.eep
 *.atsuo
 *.layout
+*.abs
