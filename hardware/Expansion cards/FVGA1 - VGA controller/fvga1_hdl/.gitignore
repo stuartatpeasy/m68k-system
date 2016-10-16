@@ -1,0 +1,5 @@
+# Rather extensive .gitignore file to cover the numerous files spewed out by the Lattice tools
+*.log
+*.bak
+*.tcl
+*_Implmnt

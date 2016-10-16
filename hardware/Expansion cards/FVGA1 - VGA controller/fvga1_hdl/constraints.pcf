@@ -1,0 +1,114 @@
+# FVGA1 pin constraints
+# 
+# Stuart Wallace <stuartw@atom.net>, October 2016.
+#
+
+
+# Clock input
+set_io  SYSCLK          128     # 
+
+# Local memory data bus MEM_D[15..0]
+set_io  MEM_D[15]        25
+set_io  MEM_D[14]        24
+set_io  MEM_D[13]        23
+set_io  MEM_D[12]        22
+set_io  MEM_D[11]         2
+set_io  MEM_D[10]         3
+set_io  MEM_D[9]        144
+set_io  MEM_D[8]        143
+set_io  MEM_D[7]          4
+set_io  MEM_D[6]          7
+set_io  MEM_D[5]          8
+set_io  MEM_D[4]          9
+set_io  MEM_D[3]         10
+set_io  MEM_D[2]         11
+set_io  MEM_D[1]         12
+set_io  MEM_D[0]         19
+
+# Local memory address bus MEM_A[17..0]
+set_io  MEM_A[17]        33
+set_io  MEM_A[16]        32
+set_io  MEM_A[15]        31
+set_io  MEM_A[14]       142
+set_io  MEM_A[13]       141
+set_io  MEM_A[12]       139
+set_io  MEM_A[11]       138
+set_io  MEM_A[10]       137
+set_io  MEM_A[9]        122
+set_io  MEM_A[8]        129
+set_io  MEM_A[7]        134
+set_io  MEM_A[6]        135
+set_io  MEM_A[5]        136
+set_io  MEM_A[4]         34
+set_io  MEM_A[3]         37
+set_io  MEM_A[2]         38
+set_io  MEM_A[1]         39
+set_io  MEM_A[0]         41
+
+# Local memory control signals
+set_io  MEM_nCE1         20     # Memory chip select 1
+set_io  MEM_nCE0         21     # Memory chip select 0
+set_io  MEM_nUB          28     # Memory upper byte enable
+set_io  MEM_nLB          26     # Memory lower byte enable
+set_io  MEM_nWE           1     # Memory write enable
+set_io  MEM_nOE          29     # Memory output enable
+
+# Host data bus HOST_D[15..0]
+set_io  HOST_D[15]      116
+set_io  HOST_D[14]      117
+set_io  HOST_D[13]      118
+set_io  HOST_D[12]      119
+set_io  HOST_D[11]      120
+set_io  HOST_D[10]      121
+set_io  HOST_D[9]       115
+set_io  HOST_D[8]       114
+set_io  HOST_D[7]       113
+set_io  HOST_D[6]       112
+set_io  HOST_D[5]       107
+set_io  HOST_D[4]       106
+set_io  HOST_D[3]       105
+set_io  HOST_D[2]       104
+set_io  HOST_D[1]       102
+set_io  HOST_D[0]       101
+
+# Host address bus HOST_A[19..1]
+set_io  HOST_A[19]       99
+set_io  HOST_A[18]       98
+set_io  HOST_A[17]       97
+set_io  HOST_A[16]       96
+set_io  HOST_A[15]       95
+set_io  HOST_A[14]       94
+set_io  HOST_A[13]       93
+set_io  HOST_A[12]       91
+set_io  HOST_A[11]       90
+set_io  HOST_A[10]       88
+set_io  HOST_A[9]        87
+set_io  HOST_A[8]        81
+set_io  HOST_A[7]        80
+set_io  HOST_A[6]        79
+set_io  HOST_A[5]        78
+set_io  HOST_A[4]        76
+set_io  HOST_A[3]        75
+set_io  HOST_A[2]        74
+set_io  HOST_A[1]        73
+
+# Host control signals
+set_io  HOST_nID         58     # Host ID request input
+set_io  HOST_nRESET      60     # Host reset input
+set_io  HOST_nIRQ        61     # Host IRQ output
+set_io  HOST_nW          62     # Host write request
+set_io  HOST_nUCS        63     # Host upper byte chip select
+set_io  HOST_nLCS        64     # Host lower byte chip select
+
+# VGA outputs
+set_io  VGA_VSYNC        43     # Vertical sync output
+set_io  VGA_HSYNC        42     # Horizontal sync output
+set_io  VGA_R[2]         50     # Red output, bit 2
+set_io  VGA_R[1]         52     # Red output, bit 1
+set_io  VGA_R[0]         56     # Red output, bit 0
+set_io  VGA_G[2]         47     # Green output, bit 2 
+set_io  VGA_G[1]         48     # Green output, bit 1
+set_io  VGA_G[0]         49     # Green output, bit 0
+set_io  VGA_B[1]         44     # Blue output, bit 1
+set_io  VGA_B[0]         45     # Blue output, bit 0
+
