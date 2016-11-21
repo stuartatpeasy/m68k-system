@@ -12,7 +12,6 @@
 #include <driver/ps2controller.h>
 #include <kernel/cpu.h>
 #include <kernel/device/power.h>
-#include <kernel/include/keyboard.h>
 #include <klibc/errors.h>
 #include <klibc/stdio.h>                    // FIXME remove
 
@@ -24,6 +23,7 @@ void ps2controller_process_null(ps2controller_port_t *port);
 void ps2controller_process_detect(ps2controller_port_t *port);
 void ps2controller_process_kb(ps2controller_port_t *port);
 void ps2controller_process_mouse(ps2controller_port_t *port);
+void ps2controller_process_intellimouse(ps2controller_port_t *port);
 s32 ps2controller_port_a_init(dev_t *dev);
 s32 ps2controller_port_b_init(dev_t *dev);
 s32 ps2controller_port_init(dev_t *dev, ku16 reg_offset);
@@ -436,6 +436,12 @@ void ps2controller_process_detect(ps2controller_port_t *port)
             port->process_fn = ps2controller_process_mouse;
             return;
         }
+        else if(data == PS2_RESP_INTELLIMOUSE_ID1)
+        {
+            port->dev_type = PS2_DEV_MOUSE;
+            port->state = PS2_PORT_STATE_UP;
+            port->process_fn = ps2controller_process_intellimouse;
+        }
         else if(data == PS2_RESP_KB_ID1)
         {
             /* Received the first byte of a keyboard detection packet */
@@ -448,6 +454,7 @@ void ps2controller_process_detect(ps2controller_port_t *port)
         /* Detection successful: this is a keyboard */
         port->dev_type = PS2_DEV_KEYBOARD;
         port->state = PS2_PORT_STATE_UP;
+        CIRCBUF_INIT(port->data.kb.rx_buf);
         port->process_fn = ps2controller_process_kb;
         return;
     }
@@ -606,7 +613,9 @@ void ps2controller_process_kb(ps2controller_port_t *port)
 
         default:
             if(!release)
+            {
                 putchar(keymap_get(key_code, *modifiers));
+            }
             break;
     }
 
@@ -620,6 +629,17 @@ void ps2controller_process_kb(ps2controller_port_t *port)
     ps2controller_process_mouse() - process data received from a mouse device.
 */
 void ps2controller_process_mouse(ps2controller_port_t *port)
+{
+    UNUSED(port);
+    /* TODO */
+}
+
+
+/*
+    ps2controller_process_intellimouse() - process data received from a mouse device which supports
+    the Microsoft Intellimouse extensions.
+*/
+void ps2controller_process_intellimouse(ps2controller_port_t *port)
 {
     UNUSED(port);
     /* TODO */

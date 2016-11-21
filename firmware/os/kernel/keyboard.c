@@ -69,7 +69,7 @@ intl_keymap *current_keymap = KEYMAP_DEFAULT;
 */
 char keymap_get(const KeyCode code, const key_modifier mod)
 {
-    u8 c;
+    char c;
 
     if(mod & KMF_SHIFT)
         c = current_keymap->map.shifted[code];

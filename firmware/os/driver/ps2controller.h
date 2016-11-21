@@ -14,6 +14,7 @@
 #include <kernel/device/device.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/error.h>
+#include <kernel/include/keyboard.h>
 #include <kernel/include/types.h>
 #include <kernel/util/buffer.h>
 
@@ -92,16 +93,17 @@ typedef struct
     {
         struct
         {
-            u8          leds;
-            u8          modifiers;
+            u8                  leds;
+            u8                  modifiers;
+            CIRCBUF(KeyCode)    rx_buf;
         } kb;
 
         struct
         {
-            s16         dx;
-            s16         dy;
-            s16         dz;
-            u8          buttons;
+            s16                 dx;
+            s16                 dy;
+            s16                 dz;
+            u8                  buttons;
         } mouse;
     } data;
 
@@ -126,6 +128,25 @@ typedef struct
     dev_t   *port_a;
     dev_t   *port_b;
 } ps2controller_data_t;
+
+
+/* Mouse packet - basic mouse */
+typedef struct
+{
+    u8      ovf_sign_buttons;
+    u8      dx;
+    u8      dy;
+} __attribute__((packed)) ps2mouse_packet_t;
+
+
+/* Mouse packet - Microsoft Intellimouse */
+typedef struct
+{
+    u8      ovf_sign_buttons;
+    u8      dx;
+    u8      dy;
+    u8      dz_buttons;
+} __attribute__((packed)) ps2intellimouse_packet_t;
 
 
 /*
@@ -174,6 +195,7 @@ typedef struct
 
 /* Identification (PS2_READ_ID) response for a mouse */
 #define PS2_RESP_MOUSE_ID1              (0x00)
+#define PS2_RESP_INTELLIMOUSE_ID1       (0x03)
 
 /* Scan code sent to prefix a "key release" code */
 #define PS2_SC_RELEASE                  (0xf0)
