@@ -5,19 +5,20 @@
 
 
     (c) Stuart Wallace <stuartw@atom.net>, November 2016.
-
-    FIXME: all sorts of locking problems here, I expect.  Protect g_timer_callbacks with spinlock?
 */
 
 #include <kernel/device/device.h>
 #include <kernel/memory/kmalloc.h>
+#include <kernel/semaphore.h>
 #include <kernel/timer.h>
 #include <kernel/util/kutil.h>
 #include <klibc/stdio.h>
 
 
-timer_callback_t *g_timer_callbacks = NULL;
-u32 g_tick_count = 0;
+static timer_callback_t *callbacks = NULL;
+static u32 tick_count = 0;
+static dev_t *timer = NULL;
+static sem_t callbacks_sem;
 
 
 /*
@@ -32,18 +33,22 @@ s32 timer_init()
     s32 ret;
 
     /* Locate the timer device */
-    dev_t *timer = dev_find(dev_name);
+    timer = dev_find(dev_name);
     if(!timer)
     {
         puts("timer_init: no timer device found");
         return ENODEV;
     }
 
+    ret = sem_init(&callbacks_sem);
+    if(ret != SUCCESS)
+        return ret;
+
     /* Set timer frequency */
     ret = timer->control(timer, dc_timer_set_freq, &requested_freq, &actual_freq);
     if(ret == SUCCESS)
     {
-        printf("timer_init: %s: requested tick rate %dHz; actual tick rate %dHz\n",
+        printf("timer_init: %s: tick rate %dHz requested; %dHz actual\n",
                dev_name, requested_freq, actual_freq);
     }
     else
@@ -81,12 +86,29 @@ s32 timer_init()
 void timer_tick()
 {
     timer_callback_t *item;
+    u32 enable = 0;
+    s32 ret;
 
-    ++g_tick_count;
+    /* Disable the timer */
+    ret = timer->control(timer, dc_timer_set_enable, &enable, NULL);
+    if(ret == SUCCESS)
+    {
+        ++tick_count;
 
-    /* Handle per-tick functions */
-    for(item = g_timer_callbacks; item; item = item->next)
-        item->fn(item->arg);
+        sem_acquire(callbacks_sem);
+
+        /* Handle per-tick functions */
+        for(item = callbacks; item; item = item->next)
+            item->fn(item->arg);
+
+        sem_release(callbacks_sem);
+
+        /* Re-enable the timer */
+        enable = 1;
+        ret = timer->control(timer, dc_timer_set_enable, &enable, NULL);
+        if(ret != SUCCESS)
+            printf("timer_tick: failed to re-enable timer: %s\n", kstrerror(ret));
+    }
 }
 
 
@@ -95,7 +117,7 @@ void timer_tick()
 */
 u32 timer_get_ticks()
 {
-    return g_tick_count;
+    return tick_count;
 }
 
 
@@ -112,16 +134,20 @@ s32 timer_add_callback(timer_callback_fn_t fn, void *arg)
     cbnew->arg = arg;
     cbnew->next = NULL;
 
-    if(!g_timer_callbacks)
-        g_timer_callbacks = cbnew;
+    sem_acquire(callbacks_sem);
+
+    if(!callbacks)
+        callbacks = cbnew;
     else
     {
         timer_callback_t *p;
-        for(p = g_timer_callbacks; p->next; p = p->next)
+        for(p = callbacks; p->next; p = p->next)
             ;
 
         p->next = cbnew;
     }
+
+    sem_release(callbacks_sem);
 
     return SUCCESS;
 }
@@ -135,22 +161,27 @@ s32 timer_remove_callback(timer_callback_fn_t fn)
 {
     timer_callback_t *p, *prev;
 
-    if(g_timer_callbacks)
+    sem_acquire(callbacks_sem);
+
+    if(callbacks)
     {
-        for(prev = NULL, p = g_timer_callbacks; p; prev = p, p = p->next)
+        for(prev = NULL, p = callbacks; p; prev = p, p = p->next)
         {
             if(p->fn == fn)
             {
                 if(!prev)
-                    g_timer_callbacks = p->next;    /* Deleting the first item in the list */
+                    callbacks = p->next;    /* Deleting the first item in the list */
                 else
                     prev->next = p->next;
 
+                sem_release(callbacks_sem);
                 kfree(p);
+
                 return SUCCESS;
             }
         }
     }
 
+    sem_release(callbacks_sem);
     return ENOENT;
 }
