@@ -35,7 +35,7 @@
 #define NAME_MAX_LEN	(255)
 
 /* "Tick rate" - number of timer interrupts per second */
-#define TICK_RATE       (128)
+#define TICK_RATE       (64)
 
 /* Length of kernel stack */
 #define KERNEL_STACK_LEN        (8 * 1024)          /* Kernel stack is 8KB */

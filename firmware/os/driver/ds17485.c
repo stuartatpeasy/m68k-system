@@ -63,9 +63,6 @@ void ds17485_default_tick_handler();
 */
 s32 ds17485_rtc_init(dev_t * const dev)
 {
-    void * const base_addr = dev->base_addr;
-    u8 reg_a_val;
-
     dev->read = ds17485_rtc_read;
     dev->write = ds17485_rtc_write;
     dev->len = sizeof(rtc_time_t);
@@ -75,12 +72,6 @@ s32 ds17485_rtc_init(dev_t * const dev)
 
     /* Configure and enable 2Hz periodic interrupt */
     cpu_irq_add_handler(dev->irql, dev, ds17485_irq);
-
-    reg_a_val = DS17485_REG_READ(base_addr, DS17485_REG_A) & ~DS17485_REG_A_RS_MASK;
-    reg_a_val |= DS17485_SQW_2HZ << DS17485_REG_A_RS_SHIFT;
-    DS17485_REG_WRITE(base_addr, DS17485_REG_A, reg_a_val);
-
-    DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_PIE);
 
     return SUCCESS;
 }
@@ -154,9 +145,9 @@ s32 ds17485_init(dev_t * const dev)
             DV2      = 0    Enable countdown chain
             DV1      = 1    Oscillator on, VCC power-up state
             DV0      = 0    Select standard register bank
-            RS[3..0] = [x]  Set rate-select bits for 2Hz square wave / periodic interrupt
+            RS[3..0] = 0    Disable square wave / periodic interrupt
     */
-    DS17485_REG_WRITE(base_addr, DS17485_REG_A, DS17485_DV1);
+    DS17485_REG_WRITE(base_addr, DS17485_REG_A, DS17485_DV1 | DS17485_SQW_NONE);
 
     /* Set up extended registers */
     DS17485_SELECT_EXT_REG(base_addr);
