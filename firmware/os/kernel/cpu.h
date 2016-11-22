@@ -35,7 +35,7 @@ u32 cpu_swi();                                  /* Raise a software IRQ (=TRAP #
     value was changed by this operation); a nonzero retval indicates that the value at addr was
     already nonzero (i.e. its value was not changed).
 */
-u8 cpu_tas(u8 *addr);
+inline u8 cpu_tas(u8 *addr);
 
 inline u16 bswap_16(u16 x);
 inline u32 bswap_32(u32 x);

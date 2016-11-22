@@ -12,6 +12,7 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 
+
 /* Typedef defining a function handle timer ticks */
 typedef void(*tick_handler_fn_t)();
 

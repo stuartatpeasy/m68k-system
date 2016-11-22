@@ -31,12 +31,37 @@ void sem_destroy(sem_t sem)
 
 
 /*
-    sem_acquire() - attempt to acquire a semaphore.  SUCCESS = semaphore acquired; EAGAIN =
-    semaphore already locked.
+    sem_acquire_busy() - busy-loop until the specified semaphore can be acquired.
+*/
+s32 sem_acquire_busy(sem_t sem)
+{
+    s32 ret;
+
+    do
+    {
+        ret = sem_try_acquire(sem);
+    } while(ret == EAGAIN);
+
+    return ret;
+}
+
+
+/*
+    sem_acquire() - attempt to acquire the specified semaphore, yielding the current task's quantum
+    repeatedly until the semaphore can be acquired.
 */
 s32 sem_acquire(sem_t sem)
 {
-    return cpu_tas(sem) ? EAGAIN : SUCCESS;
+    s32 ret;
+
+    while(1)
+    {
+        ret = sem_try_acquire(sem);
+        if(ret == EAGAIN)
+            cpu_switch_process();
+        else
+            return ret;
+    }
 }
 
 

@@ -203,30 +203,6 @@ u32 cpu_swi(ku32 num)
 
 
 /*
-    cpu_tas() - atomically test and set a byte-sized memory location to 1, returning the previous
-    contents of the location.
-*/
-u8 cpu_tas(u8 *addr)
-{
-    register u32 ret = 0;
-
-    asm volatile
-    (
-        "      moveq    #0, %0          \n"
-        "      tas      %1              \n"
-        "      beq      L_%=            \n"
-        "      moveq    #1, %0          \n"
-        "L_%=:                          \n"
-        : "=&r" (ret)
-        : "m" (*addr)
-        : "cc"
-    );
-
-    return ret;
-}
-
-
-/*
     cpu_proc_init() - perform architecture-specific register initialisation before a new process
     starts.
 */

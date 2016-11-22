@@ -121,7 +121,7 @@ typedef struct mc68010_address_exc_frame
 inline void cpu_nop(void)
 {
     asm volatile("nop" :);
-}
+};
 
 
 /*
@@ -137,7 +137,7 @@ inline void cpu_enable_interrupts(void)
         :
         :
     );
-}
+};
 
 
 inline void cpu_disable_interrupts(void)
@@ -149,7 +149,7 @@ inline void cpu_disable_interrupts(void)
         :
         :
     );
-}
+};
 
 
 /*
@@ -171,7 +171,7 @@ inline u16 bswap_16(u16 x)
     );
 
     return x_;
-}
+};
 
 
 inline u32 bswap_32(u32 x)
@@ -188,7 +188,7 @@ inline u32 bswap_32(u32 x)
     );
 
     return x_;
-}
+};
 
 
 inline u32 wswap_32(u32 x)
@@ -203,7 +203,31 @@ inline u32 wswap_32(u32 x)
     );
 
     return x_;
-}
+};
+
+
+/*
+    cpu_tas() - atomically test and set a byte-sized memory location to 1, returning the previous
+    contents of the location.
+*/
+inline u8 cpu_tas(u8 *addr)
+{
+    register u32 ret = 0;
+
+    asm volatile
+    (
+        "      moveq    #0, %0          \n"
+        "      tas      %1              \n"
+        "      beq      L_%=            \n"
+        "      moveq    #1, %0          \n"
+        "L_%=:                          \n"
+        : "=&r" (ret)
+        : "m" (*addr)
+        : "cc"
+    );
+
+    return ret;
+};
 
 
 /* These are implemented in mc68000/irq.S */

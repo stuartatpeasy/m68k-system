@@ -18,6 +18,19 @@ typedef u8 * sem_t;
 s32 sem_init(sem_t *sem);
 void sem_destroy(sem_t sem);
 s32 sem_acquire(sem_t sem);
+s32 sem_acquire_busy(sem_t sem);
 s32 sem_release(sem_t sem);
+
+
+/*
+    sem_acquire() - attempt to acquire a semaphore.  SUCCESS = semaphore acquired; EAGAIN =
+    semaphore already locked.
+*/
+inline s32 sem_try_acquire(sem_t sem)
+{
+    return cpu_tas(sem) ? EAGAIN : SUCCESS;
+};
+
+
 
 #endif
