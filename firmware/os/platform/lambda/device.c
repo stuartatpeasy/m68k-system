@@ -103,6 +103,10 @@ s32 plat_dev_enumerate()
         /* Child device: extended NVRAM */
         dev_create(DEV_TYPE_NVRAM, DEV_SUBTYPE_NONE, "nvram", IRQL_NONE, LAMBDA_DS17485_BASE, NULL,
                    "DS17485 extended NVRAM", dev, ds17485_ext_ram_init);
+
+        /* Child device: periodic interrupt generator */
+        dev_create(DEV_TYPE_TIMER, DEV_SUBTYPE_NONE, "timer", IRQL_NONE, LAMBDA_DS17485_BASE, NULL,
+                   "DS17485 periodic interrupt", dev, ds17485_timer_init);
     }
 
 

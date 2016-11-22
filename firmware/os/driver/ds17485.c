@@ -9,7 +9,53 @@
 
 #include <driver/ds17485.h>
 #include <kernel/cpu.h>
+#include <kernel/timer.h>
 #include <kernel/util/kutil.h>
+
+
+/* DS17485 state structure - stored in the base device's "data" member */
+typedef struct ds17485_state
+{
+    tick_handler_fn_t   tick_fn;
+} ds17485_state_t;
+
+
+typedef struct ds17485_timer_setting
+{
+    u32 period_ns;
+    u16 freq_hz;
+    u8  bits;
+} ds17485_timer_setting_t;
+
+/* Mapping of period, frequency and DS17485 reg A setting for the programmable square-wave output */
+ds17485_timer_setting_t g_ds17485_timer_settings[] =
+{
+/*   period/ns    freq/hz       RSA bits */
+    {   122070,     8192,       0x03},
+    {   244141,     4096,       0x04},
+    {   488281,     2048,       0x05},
+    {   976563,     1024,       0x06},
+    {  1953125,      512,       0x07},
+    {  3906250,      256,       0x00},
+    {  7812500,      128,       0x01},
+    { 15625000,       64,       0x0a},
+    { 31250000,       32,       0x0b},
+    { 62500000,       16,       0x0c},
+    {125000000,        8,       0x0d},
+    {250000000,        4,       0x0e},
+    {500000000,        2,       0x0f},
+    {        0,        0,       0x00}   /* Timer disabled */
+};
+
+/* Array mapping the lower four bits of DS17485 register A to square-wave output frequency */
+const u16 g_ds17485_timer_freqs[] =
+    {0, 256, 128, 8192, 4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2};
+
+
+s32 ds17485_timer_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);
+s32 ds17485_timer_set_freq(dev_t *dev, ku32 freq, u32 *actual_freq);
+s32 ds17485_timer_get_freq(dev_t *dev, u32 *freq);
+void ds17485_default_tick_handler();
 
 
 /*
@@ -73,11 +119,34 @@ s32 ds17485_ext_ram_init(dev_t * const dev)
 
 
 /*
+    ds17485_timer_init() - device initialiser for the periodic interrupt generator in a DS17485.
+*/
+s32 ds17485_timer_init(dev_t * const dev)
+{
+    dev->control = ds17485_timer_control;
+    dev->len = 0;
+    dev->block_size = 0;
+
+    dev->data = dev->parent->data;
+
+    return SUCCESS;
+}
+
+
+/*
     ds17485_init() - initialise a DS17485 RTC.
 */
 s32 ds17485_init(dev_t * const dev)
 {
+    ds17485_state_t *state;
     void * const base_addr = dev->base_addr;
+
+    state = kmalloc(sizeof(ds17485_state_t));
+    if(!state)
+        return ENOMEM;
+
+    state->tick_fn = ds17485_default_tick_handler;
+    dev->data = state;
 
     /*
         Write register A:
@@ -134,9 +203,11 @@ void ds17485_irq(ku32 irql, void *data)
     /* Read register C to clear the interrupt conditions */
     ku8 intflags = DS17485_REG_READ(base_addr, DS17485_REG_C);
 
+    /* From this point forward, we are no longer in interrupt context. */
     if(intflags & DS17485_PF)
     {
         /* Periodic interrupt */
+        ((ds17485_state_t *) dev->data)->tick_fn();
     }
 
     if(intflags & DS17485_AF)
@@ -367,4 +438,96 @@ void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6])
     sn[3] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_4);
     sn[4] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_5);
     sn[5] = DS17485_REG_READ(base_addr, DS17485_SERIAL_NUM_6);
+}
+
+
+/*
+    ds17485_timer_set_freq() - set the frequency of the DS17485 timer
+*/
+s32 ds17485_timer_set_freq(dev_t *dev, ku32 freq, u32 *actual_freq)
+{
+    ds17485_timer_setting_t *setting;
+    const void * const base_addr = dev->base_addr;
+    u8 ra;
+
+    /*
+        Find the nearest frequency to the requested one.  Note that if the requested frequency is
+        not available, the next-lowest valid frequency will be chosen.
+    */
+    FOR_EACH(setting, g_ds17485_timer_settings)
+    {
+        if(setting->freq_hz <= freq)
+            break;
+    }
+
+    /* Set the square wave frequency */
+    ra = DS17485_REG_READ(base_addr, DS17485_REG_A);
+
+    ra &= ~DS17485_REG_A_RS_MASK;
+    ra |= setting->bits;
+
+    DS17485_REG_WRITE(base_addr, DS17485_REG_A, ra);
+
+    if(actual_freq)
+        *actual_freq = setting->freq_hz;
+
+    return SUCCESS;
+}
+
+
+/*
+    ds17485_timer_get_freq() - get the frequency of the DS17485 timer
+*/
+s32 ds17485_timer_get_freq(dev_t *dev, u32 *freq)
+{
+    ku8 ra = DS17485_REG_READ(dev->base_addr, DS17485_REG_A) & DS17485_REG_A_RS_MASK;
+
+    *freq = (u32) g_ds17485_timer_freqs[ra];
+
+    return SUCCESS;
+}
+
+
+/*
+    ds17485_timer_control() - devctl responder for the DS17485 timer device.
+*/
+s32 ds17485_timer_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
+{
+    const void * const base_addr = dev->base_addr;
+    ds17485_state_t *state = (ds17485_state_t *) dev->data;
+    ku32 u32_in = *((u32 *) in);
+
+    switch(fn)
+    {
+        case dc_timer_set_freq:
+            return ds17485_timer_set_freq(dev, u32_in, (u32 *) out);
+
+        case dc_timer_get_freq:
+            return ds17485_timer_get_freq(dev, (u32 *) out);
+
+        case dc_timer_set_enable:
+            if(u32_in)
+                DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_PIE);
+            else
+                DS17485_REG_CLEAR_BITS(base_addr, DS17485_REG_B, DS17485_PIE);
+
+            return SUCCESS;
+
+        case dc_timer_get_enable:
+            *((u32 *) out) = (DS17485_REG_READ(base_addr, DS17485_REG_B) & DS17485_PIE) ? 1 : 0;
+            return SUCCESS;
+
+        case dc_timer_set_tick_fn:
+            state->tick_fn = u32_in ? (tick_handler_fn_t) in : ds17485_default_tick_handler;
+            return SUCCESS;
+
+        default:
+            return ENOSYS;
+    }
+}
+
+
+void ds17485_default_tick_handler()
+{
+    /* Do nothing */
 }

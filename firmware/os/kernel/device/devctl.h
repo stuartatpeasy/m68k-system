@@ -42,6 +42,13 @@ typedef enum devctl_fn
     dc_get_leds                 = 0x0300,   /* Get keyboard LED status                          */
     dc_set_leds                 = 0x0301,   /* Set keyboard LED status                          */
 
+    /* Timers */
+    dc_timer_set_freq           = 0x0400,   /* Set timer frequency (rate at which IRQs trigger) */
+    dc_timer_get_freq           = 0x0401,   /* Get actual timer frequency (may not == set freq) */
+    dc_timer_set_enable         = 0x0402,   /* Enable/disable timer                             */
+    dc_timer_get_enable         = 0x0403,   /* Determine whether timer is enabled               */
+    dc_timer_set_tick_fn        = 0x0404,   /* Set a function to be called every tick           */
+
     /* Generic devctls */
     dc_get_power_state          = 0x8000,   /* Get power state for a device                     */
     dc_set_power_state          = 0x8001    /* Set power state for a device                     */

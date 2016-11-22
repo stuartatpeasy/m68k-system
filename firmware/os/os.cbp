@@ -297,6 +297,10 @@
 		</Unit>
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.h" />
+		<Unit filename="kernel/timer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="kernel/timer.h" />
 		<Unit filename="kernel/user.c">
 			<Option compilerVar="CC" />
 		</Unit>

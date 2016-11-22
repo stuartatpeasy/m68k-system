@@ -295,6 +295,7 @@ char dev_get_type_char(const dev_t * const dev)
         case DEV_TYPE_RTC:          return 'r';
         case DEV_TYPE_MEM:          return 'm';
         case DEV_TYPE_NVRAM:        return 'M';
+        case DEV_TYPE_TIMER:        return 't';
         case DEV_TYPE_MULTI:        return 'x';
     }
 

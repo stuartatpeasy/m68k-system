@@ -22,6 +22,7 @@
 #include <kernel/net/net.h>
 #include <kernel/platform.h>
 #include <kernel/sched.h>
+#include <kernel/timer.h>
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
 #include <stdio.h>
@@ -134,6 +135,9 @@ void _main()
     /* Display approximate CPU clock speed */
     if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)
         printf("\nCPU fclk ~%2u.%uMHz\n", cpu_clk_hz / 1000000, (cpu_clk_hz % 1000000) / 100000);
+
+    /* Initialise tick handler */
+    timer_init();
 
     /* Display memory information */
 	printf("%u bytes of kernel heap memory available\n"

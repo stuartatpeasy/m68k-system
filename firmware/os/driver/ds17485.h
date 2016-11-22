@@ -193,6 +193,7 @@ void ds17485_irq(ku32 irql, void *data);
 s32 ds17485_rtc_init(dev_t * const dev);
 s32 ds17485_user_ram_init(dev_t * const dev);
 s32 ds17485_ext_ram_init(dev_t * const dev);
+s32 ds17485_timer_init(dev_t * const dev);
 
 s32 ds17485_rtc_read(dev_t * const dev, ku32 offset, u32 *len, void *buffer);
 s32 ds17485_rtc_write(dev_t * const dev, ku32 offset, u32 *len, const void *buffer);

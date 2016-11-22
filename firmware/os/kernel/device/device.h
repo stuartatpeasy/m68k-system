@@ -42,7 +42,8 @@ typedef enum
 	DEV_TYPE_RTC                = 0x05,
 	DEV_TYPE_MEM                = 0x06,
 	DEV_TYPE_NVRAM              = 0x07,
-	DEV_TYPE_MULTI              = 0x08
+	DEV_TYPE_TIMER              = 0x08,
+	DEV_TYPE_MULTI              = 0x09
 } dev_type_t;
 
 
