@@ -95,13 +95,13 @@ void timer_tick()
     {
         ++tick_count;
 
-        sem_acquire(callbacks_sem);
+        sem_acquire(&callbacks_sem);
 
         /* Handle per-tick functions */
         for(item = callbacks; item; item = item->next)
             item->fn(item->arg);
 
-        sem_release(callbacks_sem);
+        sem_release(&callbacks_sem);
 
         /* Re-enable the timer */
         enable = 1;
@@ -134,7 +134,7 @@ s32 timer_add_callback(timer_callback_fn_t fn, void *arg)
     cbnew->arg = arg;
     cbnew->next = NULL;
 
-    sem_acquire(callbacks_sem);
+    sem_acquire(&callbacks_sem);
 
     if(!callbacks)
         callbacks = cbnew;
@@ -147,7 +147,7 @@ s32 timer_add_callback(timer_callback_fn_t fn, void *arg)
         p->next = cbnew;
     }
 
-    sem_release(callbacks_sem);
+    sem_release(&callbacks_sem);
 
     return SUCCESS;
 }
@@ -161,7 +161,7 @@ s32 timer_remove_callback(timer_callback_fn_t fn)
 {
     timer_callback_t *p, *prev;
 
-    sem_acquire(callbacks_sem);
+    sem_acquire(&callbacks_sem);
 
     if(callbacks)
     {
@@ -174,7 +174,7 @@ s32 timer_remove_callback(timer_callback_fn_t fn)
                 else
                     prev->next = p->next;
 
-                sem_release(callbacks_sem);
+                sem_release(&callbacks_sem);
                 kfree(p);
 
                 return SUCCESS;
@@ -182,6 +182,6 @@ s32 timer_remove_callback(timer_callback_fn_t fn)
         }
     }
 
-    sem_release(callbacks_sem);
+    sem_release(&callbacks_sem);
     return ENOENT;
 }

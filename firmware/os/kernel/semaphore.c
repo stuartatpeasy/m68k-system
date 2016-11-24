@@ -16,11 +16,7 @@
 */
 s32 sem_init(sem_t *sem)
 {
-    sem_t s = kcalloc(1, 1);
-    if(!s)
-        return ENOMEM;
-
-    *sem = s;
+    *sem = 0;
     return SUCCESS;
 }
 
@@ -28,9 +24,10 @@ s32 sem_init(sem_t *sem)
 /*
     sem_destroy() - destroy a semaphore object.
 */
-void sem_destroy(sem_t sem)
+void sem_destroy(sem_t *sem)
 {
-    kfree(sem);
+    /* Nothing to do here */
+    UNUSED(sem);
 }
 
 
@@ -38,7 +35,7 @@ void sem_destroy(sem_t sem)
     sem_acquire_busy() - busy-loop until the specified semaphore can be acquired.
     This is effectively a spin-lock.
 */
-void sem_acquire_busy(sem_t sem)
+void sem_acquire_busy(sem_t *sem)
 {
     while(sem_try_acquire(sem) == EAGAIN)
         ;
@@ -49,7 +46,7 @@ void sem_acquire_busy(sem_t sem)
     sem_acquire() - attempt to acquire the specified semaphore, yielding the current task's quantum
     repeatedly until the semaphore can be acquired.
 */
-void sem_acquire(sem_t sem)
+void sem_acquire(sem_t *sem)
 {
     while(sem_try_acquire(sem) == EAGAIN)
         cpu_switch_process();
@@ -59,7 +56,7 @@ void sem_acquire(sem_t sem)
 /*
     sem_release() - release a previously-init'ed semaphore.
 */
-void sem_release(sem_t sem)
+void sem_release(sem_t *sem)
 {
     *sem = 0;
 }
