@@ -12,7 +12,9 @@
 */
 
 #include <kernel/boot.h>
+#include <kernel/device/block.h>
 #include <kernel/device/memconsole.h>
+#include <kernel/device/partition.h>
 #include <kernel/fs/vfs.h>
 #include <kernel/housekeeper.h>
 #include <kernel/include/defs.h>
@@ -64,6 +66,10 @@ void _main()
     /* Initialise kernel heap */
     kmeminit(g_slab_end, mem_get_highest_addr(MEM_EXTENT_KERN | MEM_EXTENT_RAM) - KERNEL_STACK_LEN);
 
+    /* Initialise user heap.  Place it in the largest user RAM extent. */
+    ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
+    umeminit(ramext->base, ramext->base + ramext->len);
+
 	/* By default, all exceptions cause a context-dump followed by a halt. */
 	cpu_irq_init_table();
 
@@ -113,9 +119,15 @@ void _main()
     */
 
     /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
+/*
     put("Clearing user RAM: ");
     mem_zero_extents(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     puts("done");
+*/
+
+    /* Initialise the block cache, then scan mass-storage devices for partitions */
+    block_cache_init(2039);
+    partition_init();
 
     boot_list_mass_storage();
     boot_list_partitions();
@@ -123,10 +135,6 @@ void _main()
     /* ret is set by the call to sched_init(), above */
     if(ret != SUCCESS)
         printf("sched: init failed: %s\n", kstrerror(ret));
-
-    /* Initialise user heap.  Place it in the largest user RAM extent. */
-    ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
-    umeminit(ramext->base, ramext->base + ramext->len);
 
     ret = vfs_init();
 	if(ret != SUCCESS)
@@ -141,8 +149,7 @@ void _main()
 
     /* Display memory information */
 	printf("%u bytes of kernel heap memory available\n"
-           "%u bytes of user memory available\n", kfreemem(),
-                mem_get_total_size(MEM_EXTENT_USER | MEM_EXTENT_RAM));
+           "%u bytes of user memory available\n", kfreemem(), ufreemem());
 
     /* Display platform serial number */
     if(plat_get_serial_number(sn) == SUCCESS)

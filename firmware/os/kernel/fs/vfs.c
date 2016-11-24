@@ -318,22 +318,25 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
 */
 s8 *vfs_dirent_perm_str(const vfs_dirent_t * const dirent, s8 *str)
 {
-    str[0] = (dirent->type == FSNODE_TYPE_DIR) ? 'd' : '-';
-    str[1] = (dirent->permissions & VFS_PERM_UR) ? 'r' : '-';
-    str[2] = (dirent->permissions & VFS_PERM_UW) ? 'w' : '-';
-    str[3] = (dirent->permissions & VFS_PERM_UX) ?
-                ((dirent->permissions & VFS_PERM_UT) ? 's' : 'x') :
-                ((dirent->permissions & VFS_PERM_UT) ? 'S' : '-');
-    str[4] = (dirent->permissions & VFS_PERM_GR) ? 'r' : '-';
-    str[5] = (dirent->permissions & VFS_PERM_GW) ? 'w' : '-';
-    str[6] = (dirent->permissions & VFS_PERM_GW) ?
-                ((dirent->permissions & VFS_PERM_GT) ? 's' : 'x') :
-                ((dirent->permissions & VFS_PERM_GT) ? 'S' : '-');
-    str[7] = (dirent->permissions & VFS_PERM_OR) ? 'r' : '-';
-    str[8] = (dirent->permissions & VFS_PERM_OW) ? 'w' : '-';
-    str[9] = (dirent->permissions & VFS_PERM_OX) ?
-                ((dirent->permissions & VFS_PERM_OT) ? 's' : 'x') :
-                ((dirent->permissions & VFS_PERM_OT) ? 'S' : '-');
+    const file_perm_t perm = dirent->permissions;
+    const fsnode_type_t type = dirent->type;
+
+    str[0] = (type == FSNODE_TYPE_DIR) ? 'd' : '-';
+    str[1] = (perm & VFS_PERM_UR) ? 'r' : '-';
+    str[2] = (perm & VFS_PERM_UW) ? 'w' : '-';
+    str[3] = (perm & VFS_PERM_UX) ?
+                ((perm & VFS_PERM_UT) ? 's' : 'x') :
+                ((perm & VFS_PERM_UT) ? 'S' : '-');
+    str[4] = (perm & VFS_PERM_GR) ? 'r' : '-';
+    str[5] = (perm & VFS_PERM_GW) ? 'w' : '-';
+    str[6] = (perm & VFS_PERM_GW) ?
+                ((perm & VFS_PERM_GT) ? 's' : 'x') :
+                ((perm & VFS_PERM_GT) ? 'S' : '-');
+    str[7] = (perm & VFS_PERM_OR) ? 'r' : '-';
+    str[8] = (perm & VFS_PERM_OW) ? 'w' : '-';
+    str[9] = (perm & VFS_PERM_OX) ?
+                ((perm & VFS_PERM_OT) ? 's' : 'x') :
+                ((perm & VFS_PERM_OT) ? 'S' : '-');
 
     return str;
 }

@@ -7,6 +7,7 @@
 	(c) Stuart Wallace, 9th February 2012.
 */
 
+#include <kernel/device/block.h>
 #include <kernel/device/mbr.h>
 #include <kernel/device/partition.h>
 #include <kernel/include/byteorder.h>
@@ -28,7 +29,6 @@ s32 partition_write(dev_t *dev, ku32 offset, u32 *len, const void* buf);
 s32 partition_init()
 {
     dev_t *dev = NULL;
-    u32 one = 1;
 
     /* Find mass-storage devices */
     while((dev = dev_get_next(dev)) != NULL)
@@ -43,7 +43,7 @@ s32 partition_init()
         struct mbr m;
         u16 part;
 
-        if(dev->read(dev, 0, &one, (u8 *) &m) != SUCCESS)
+        if(block_read(dev, 0, &m) != SUCCESS)
             continue;		/* Failed to read sector TODO: report error */
 
         if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)

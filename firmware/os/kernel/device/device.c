@@ -18,8 +18,11 @@
 #include <kernel/util/kutil.h>
 
 
-/* Characters used to identify "sub-devices", e.g. partitions of devices.  The first sub-device
- * of device xxx will be xxx1, the second xxx2, ..., the 62nd xxxZ */
+/*
+    Characters used to identify "sub-devices", e.g. partitions of devices.  The first sub-device of
+    device xxx will be xxx1, the second xxx2, ..., the 62nd xxxZ.  Similarly, the first sub-device
+    of device xxx2 will be xxx20.
+*/
 const char * const g_device_sub_names = "0123456789abcdefghijklmnopqrstuv"
                                         "wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -51,7 +54,7 @@ s32 dev_enumerate()
     if(ret != SUCCESS)
         printf("Platform device enumeration failed: %s\nContinuing boot...", kstrerror(ret));
 
-    return partition_init();
+    return ret;
 }
 
 
