@@ -8,7 +8,8 @@
 */
 
 #include <kernel/cpu.h>
-#include <kernel/include/defs.h>
+#include <kernel/memory/kmalloc.h>
+#include <klibc/errors.h>
 
 
 irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL];

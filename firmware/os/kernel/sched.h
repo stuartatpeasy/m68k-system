@@ -13,8 +13,6 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/process.h>
-#include <kernel/user.h>
-#include <strings.h>
 
 
 u32 g_ncontext_switches;

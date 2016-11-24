@@ -14,6 +14,7 @@
 #include <kernel/net/ethernet.h>
 #include <kernel/net/net.h>
 #include <kernel/process.h>
+#include <klibc/string.h>
 
 
 s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out);

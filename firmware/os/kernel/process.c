@@ -7,9 +7,11 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <kernel/include/list.h>
 #include <kernel/process.h>
+#include <kernel/include/limits.h>
+#include <kernel/memory/kmalloc.h>
 #include <kernel/sched.h>
+#include <klibc/string.h>
 
 
 list_t g_run_queue = LIST_INIT(g_run_queue);

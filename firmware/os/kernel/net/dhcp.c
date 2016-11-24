@@ -14,6 +14,7 @@
 #include <kernel/net/packet.h>
 #include <kernel/net/protocol.h>
 #include <klibc/stdio.h>        // FIXME remove
+#include <klibc/string.h>
 #include <klibc/strings.h>
 
 

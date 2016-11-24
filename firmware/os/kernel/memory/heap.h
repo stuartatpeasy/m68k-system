@@ -9,8 +9,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 7th August 2011.
 */
 
+#include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-
+#include <kernel/semaphore.h>
 
 #ifdef KMALLOC_HEAP
 
@@ -18,16 +19,17 @@ typedef struct heap_
 {
 	void *			start;
 	unsigned int	size;
+	sem_t           lock;
 } heap_ctx;
 
 
 void heap_init(heap_ctx * const heap, void * const mem, u32 mem_len);
-void *heap_malloc(const heap_ctx * const heap, u32 size);
-void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size);
-void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size);
-void heap_free(const heap_ctx * const heap, const void *ptr);
-u32 heap_freemem(const heap_ctx * const heap);
-u32 heap_usedmem(const heap_ctx * const heap);
+void *heap_malloc(heap_ctx * const heap, u32 size);
+void *heap_calloc(heap_ctx * const heap, ku32 nmemb, ku32 size);
+void *heap_realloc(heap_ctx * const heap, const void *ptr, u32 size);
+void heap_free(heap_ctx * const heap, const void *ptr);
+u32 heap_freemem(heap_ctx * const heap);
+u32 heap_usedmem(heap_ctx * const heap);
 
 #endif	/* KMALLOC_HEAP */
 

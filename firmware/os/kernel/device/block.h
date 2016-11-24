@@ -20,7 +20,9 @@
 #define BC_DIRTY                    BIT(1)  /* Block has been modified                          */
 #define BC_LOCKED                   BIT(2)  /* Block is locked in cache (cannot be evicted)     */
 
+
 typedef u32 block_id;
+
 
 /* Block descriptor - reflects the status of a single block in the block cache */
 typedef struct block_descriptor
@@ -30,6 +32,7 @@ typedef struct block_descriptor
     u16         flags;      /* Information associated with the block    */
     sem_t       sem;        /* Semaphore for locking the block          */
 } block_descriptor_t;
+
 
 /* Block cache statistics */
 typedef struct block_cache_stats

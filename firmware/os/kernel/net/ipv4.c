@@ -12,6 +12,7 @@
 #include <kernel/net/net.h>
 #include <kernel/net/packet.h>
 #include <klibc/stdio.h>
+#include <klibc/string.h>
 #include <klibc/strings.h>
 
 

@@ -11,6 +11,7 @@
 #include <kernel/device/device.h>
 #include <kernel/housekeeper.h>
 #include <kernel/process.h>
+#include <kernel/util/kutil.h>
 
 
 extern time_t g_current_timestamp;

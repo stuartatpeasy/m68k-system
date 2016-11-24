@@ -83,9 +83,11 @@ void heap_init(heap_ctx * const heap, void * const mem, u32 mem_len)
 
 	/* Create end-of-heap marker */
 	p = (heap_memblock *) ((u8 *) heap->start + p->size + sizeof(heap_memblock));
-	
+
 	p->magic = MEMBLOCK_HDR_MAGIC | 0x1;	/* Mark end-of-heap block as used */
 	p->size = 0;
+
+	sem_init(&heap->lock);
 }
 
 
@@ -93,7 +95,7 @@ void heap_init(heap_ctx * const heap, void * const mem, u32 mem_len)
 	heap_malloc(): allocate heap memory.  Returns pointer to allocated block, or 0 (NULL) on
 	failure.
 */
-void *heap_malloc(const heap_ctx * const heap, u32 size)
+void *heap_malloc(heap_ctx * const heap, u32 size)
 {
 	heap_memblock *p = (heap_memblock *) heap->start, *p2;
 
@@ -101,6 +103,8 @@ void *heap_malloc(const heap_ctx * const heap, u32 size)
 		return 0;
 
 	size = (size + MEMBLOCK_ALIGN_MASK) & ~MEMBLOCK_ALIGN_MASK;
+
+    sem_acquire(&heap->lock);
 
 	while(p->size)
 	{
@@ -120,10 +124,16 @@ void *heap_malloc(const heap_ctx * const heap, u32 size)
 			}
 
 			p->magic |= 0x1;		/* Mark the block as allocated */
+
+			sem_release(&heap->lock);
+
 			return (void *) ++p;
 		}
 		p = (heap_memblock *) ((unsigned char *) p + p->size + sizeof(heap_memblock));
 	}
+
+	sem_release(&heap->lock);
+
 	return 0;		/* Reached the end of the heap without finding a free block. */
 }
 
@@ -132,7 +142,7 @@ void *heap_malloc(const heap_ctx * const heap, u32 size)
 	heap_calloc(): allocate and clear heap memory.  Returns a pointer to the allocated and cleared
 	memory or 0 (NULL) on failure.
 */
-void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
+void *heap_calloc(heap_ctx * const heap, ku32 nmemb, ku32 size)
 {
 	u32 n = nmemb * size;
 	void *p = heap_malloc(heap, n);
@@ -162,7 +172,7 @@ void *heap_calloc(const heap_ctx * const heap, ku32 nmemb, ku32 size)
 	heap_realloc(): change the size of the memory block at ptr.  Copy contents to the new memory
 	block to the maximum extent possible.  Newly allocated memory will be uninitialised.
 */
-void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
+void *heap_realloc(heap_ctx * const heap, const void *ptr, u32 size)
 {
 	heap_memblock *p = (heap_memblock *) ((u8 *) ptr - sizeof(heap_memblock));
 	void *pnew;
@@ -218,13 +228,15 @@ void *heap_realloc(const heap_ctx * const heap, const void *ptr, u32 size)
 /*
 	heap_free(): free memory allocated with heap_malloc().
 */
-void heap_free(const heap_ctx * const heap, const void *ptr)
+void heap_free(heap_ctx * const heap, const void *ptr)
 {
 	heap_memblock *p = (heap_memblock *) ((u32) ptr - sizeof(heap_memblock)),
 				  *p_;
 
 	if(!ptr)
-		return;		/* Take no action if ptr is NULL. */
+		return;		/* According to the C standard, it's OK to free(NULL). */
+
+    sem_acquire(&heap->lock);
 
 	if(p->magic == (MEMBLOCK_HDR_MAGIC | 1))
 	{
@@ -251,6 +263,8 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 	else
         printf("heap_free(%p): not allocated\n", ptr);
 #endif
+
+    sem_release(&heap->lock);
 }
 
 
@@ -258,10 +272,12 @@ void heap_free(const heap_ctx * const heap, const void *ptr)
 	heap_freemem(): return the number of free bytes in the specified heap.  Note that it may not
 	be possible to allocate a single block of this size because of fragmentation.
 */
-u32 heap_freemem(const heap_ctx * const heap)
+u32 heap_freemem(heap_ctx * const heap)
 {
 	heap_memblock *p = (heap_memblock *) heap->start;
 	u32 free = 0;
+
+    sem_acquire(&heap->lock);
 
 	while(p < (heap_memblock *) (heap->start + heap->size))
 	{
@@ -271,6 +287,8 @@ u32 heap_freemem(const heap_ctx * const heap)
 		p = (heap_memblock *) ((u8 *) p + p->size + sizeof(heap_memblock));
 	}
 
+    sem_release(&heap->lock);
+
 	return free;
 }
 
@@ -279,10 +297,12 @@ u32 heap_freemem(const heap_ctx * const heap)
 	heap_usedmem(): return the number of allocated bytes in the specified heap.  Note that this
 	figure does not include overhead.
 */
-u32 heap_usedmem(const heap_ctx * const heap)
+u32 heap_usedmem(heap_ctx * const heap)
 {
 	heap_memblock *p = (heap_memblock *) heap->start;
 	u32 used = 0;
+
+    sem_acquire(&heap->lock);
 
 	while(p < (heap_memblock *) (heap->start + heap->size))
 	{
@@ -291,6 +311,8 @@ u32 heap_usedmem(const heap_ctx * const heap)
 
 		p = (heap_memblock *) ((u8 *) p + p->size + sizeof(heap_memblock));
 	}
+
+	sem_release(&heap->lock);
 
 	return used;
 }

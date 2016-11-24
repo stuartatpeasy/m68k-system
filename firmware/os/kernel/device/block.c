@@ -10,7 +10,6 @@
 	NOTE: the block cache statistics object is not protected by locking.  The values stored in this
           object should therefore be regarded as approximate.
 
-	TODO: locking
 	TODO: support for writes
 */
 
@@ -55,8 +54,8 @@ s32 block_cache_init(ku32 size)
         sem_init(&bc.descriptors[i].sem);
     }
 
-    bc.nblocks = size;
     bc.stats = (block_cache_stats_t) {0};
+    bc.nblocks = size;
 
     printf("block cache: allocated %u bytes (%u blocks)\n", size * BLOCK_SIZE, size);
     return SUCCESS;

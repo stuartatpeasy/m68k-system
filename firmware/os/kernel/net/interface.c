@@ -15,6 +15,7 @@
 #include <kernel/net/packet.h>
 #include <kernel/net/net.h>
 #include <kernel/process.h>
+#include <kernel/util/kutil.h>
 #include <klibc/stdio.h>        // FIXME remove
 #include <klibc/strings.h>
 

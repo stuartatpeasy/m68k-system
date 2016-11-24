@@ -7,8 +7,13 @@
     (c) Stuart Wallace <stuartw@atom.net>, July 2015.
 */
 
-#include <kernel/platform.h>
 #include <kernel/sched.h>
+#include <kernel/include/limits.h>
+#include <kernel/memory/kmalloc.h>
+#include <kernel/platform.h>
+#include <kernel/user.h>
+#include <klibc/string.h>
+#include <klibc/strings.h>
 
 
 u32 g_ncontext_switches = 0;
