@@ -12,6 +12,7 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/device/device.h>
+#include <kernel/semaphore.h>
 
 #define GREAT_BIG_PRIME             (0xfffffffb)    /* Largest prime representable as a u32 */
 
@@ -27,6 +28,7 @@ typedef struct block_descriptor
     dev_t       *dev;       /* Device containing the block              */
     block_id    block;      /* ID of the block on the device            */
     u16         flags;      /* Information associated with the block    */
+    sem_t       sem;        /* Semaphore for locking the block          */
 } block_descriptor_t;
 
 /* Block cache statistics */

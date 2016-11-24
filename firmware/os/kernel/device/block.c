@@ -7,7 +7,11 @@
 	(c) Stuart Wallace, November 2016.
 
 	NOTE: this abstraction assumes a 512-byte block size.  This is likely to become a problem.
+	NOTE: the block cache statistics object is not protected by locking.  The values stored in this
+          object should therefore be regarded as approximate.
+
 	TODO: locking
+	TODO: support for writes
 */
 
 #include <kernel/device/block.h>
@@ -47,6 +51,8 @@ s32 block_cache_init(ku32 size)
             .block = 0,
             .flags = 0
         };
+
+        sem_init(&bc.descriptors[i].sem);
     }
 
     bc.nblocks = size;
@@ -86,6 +92,8 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
     bd = bc.descriptors + slot;
     data = bc.cache + (slot * BLOCK_SIZE);
 
+    sem_acquire(&bd->sem);
+
     if((bd->dev != dev) || (bd->block != block))
     {
         if(bd->flags & BC_DIRTY)
@@ -95,7 +103,10 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
             /* FIXME: a failed write here should probably not fail the whole operation */
             ret = bd->dev->write(bd->dev, bd->block, &one, data);
             if(ret != SUCCESS)
+            {
+                sem_release(&bd->sem);
                 return ret;
+            }
 
             ++bc.stats.evictions;
             bd->flags = 0;
@@ -104,7 +115,10 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
         /* Read new block into slot */
         ret = dev->read(dev, block, &one, data);
         if(ret != SUCCESS)
+        {
+            sem_release(&bd->sem);
             return ret;
+        }
 
         /* Update descriptor */
         bd->dev = dev;
@@ -117,6 +131,7 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
 
     ++bc.stats.reads;
     memcpy(buf, data, BLOCK_SIZE);
+    sem_release(&bd->sem);
 
     return SUCCESS;
 }
@@ -152,6 +167,8 @@ s32 block_cache_sync()
 
     for(bd = bc.descriptors; bd != end; ++bd)
     {
+        sem_acquire(&bd->sem);
+
         if(bd->flags & BC_DIRTY)
         {
             void *data = bc.cache + ((bd - bc.descriptors) * BLOCK_SIZE);
@@ -161,6 +178,8 @@ s32 block_cache_sync()
 
             bd->flags &= ~BC_DIRTY;
         }
+
+        sem_release(&bd->sem);
     }
 
     return SUCCESS;
