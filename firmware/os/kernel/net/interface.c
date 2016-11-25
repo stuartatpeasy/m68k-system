@@ -29,10 +29,10 @@ struct net_iface
 {
     net_iface_t *       next;
     dev_t *             dev;            /* The hw device implementing this interface            */
-    net_protocol_t      proto;          /* Interface protocol (e.g. np_ethernet -> Ethernet)    */
     net_address_t       hw_addr;        /* Hardware address                                     */
     net_address_t       proto_addr;     /* Protocol address                                     */
     net_iface_stats_t   stats;
+    net_protocol_t      proto;          /* Interface protocol (e.g. np_ethernet -> Ethernet)    */
 };
 
 

@@ -40,8 +40,8 @@ typedef union net_addr
 /* Composite network address, including address type */
 typedef struct net_address
 {
+    net_addr_t      addr;   /* Needs to be first member in order to ensure alignment */
     net_addr_type_t type;
-    net_addr_t      addr;
 } net_address_t;
 
 
