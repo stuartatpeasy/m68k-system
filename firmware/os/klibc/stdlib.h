@@ -14,7 +14,7 @@
 #include <kernel/memory/kmalloc.h>
 
 
-#define RAND_MAX (32767)
+#define RAND_MAX (2147483647)
 
 /* Parameters for the linear congruential generator used by rand(), srand(), rand32(), etc. */
 #define RAND_LCG_MULTIPLIER     (1103515245)

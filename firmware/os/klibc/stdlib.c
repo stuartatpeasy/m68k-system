@@ -47,7 +47,9 @@ void *malloc(u32 size)
 s32 rand()
 {
     g_rand_next = g_rand_next * RAND_LCG_MULTIPLIER + RAND_LCG_INCREMENT;
-    return (g_rand_next >> 16) % (RAND_MAX + 1);
+
+	/* No scaling needed here as long as RAND_MAX = S32_MAX */
+	return g_rand_next;
 }
 
 
