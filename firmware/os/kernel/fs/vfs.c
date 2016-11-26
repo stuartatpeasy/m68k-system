@@ -238,6 +238,9 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
     u32 i, node;
     s32 ret;
 
+    if(strlen(path) > NAME_MAX_LEN)
+        return ENAMETOOLONG;
+
     vfs = mount_find(path, &rel);
     if(vfs == NULL)
         return ENOENT;      /* Should only happen if no root fs is mounted */
@@ -259,7 +262,7 @@ s32 vfs_lookup(ks8 * path, vfs_dirent_t *ent)
         for(; *rel == DIR_SEPARATOR; ++rel)
             ;                       /* Skip over empty path components */
 
-        for(i = 0; (*rel != DIR_SEPARATOR) && (*rel != '\0') && (i < NAME_MAX_LEN); ++i)
+        for(i = 0; (*rel != DIR_SEPARATOR) && (*rel != '\0'); ++i)
             path_component[i] = *rel++;
 
         if(!i)
