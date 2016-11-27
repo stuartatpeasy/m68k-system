@@ -62,6 +62,11 @@ const ea_size_t g_disasm_sizemap[] =
     ea_byte, ea_word, ea_long, ea_unsized
 };
 
+const ea_size_t g_move_sizemap[] =
+{
+    ea_unsized, ea_byte, ea_long, ea_word
+};
+
 
 int disassemble(unsigned short **p, char *str)
 {
@@ -166,7 +171,7 @@ int disassemble(unsigned short **p, char *str)
         case 0x1:
         case 0x2:
         case 0x3:
-            size = g_disasm_sizemap[instr >> 12];
+            size = g_move_sizemap[instr >> 12];
 
             if(dest_mode == 1)		/* movea */
             {
