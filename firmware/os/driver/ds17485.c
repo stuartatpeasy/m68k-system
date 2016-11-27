@@ -9,7 +9,7 @@
 
 #include <driver/ds17485.h>
 #include <kernel/cpu.h>
-#include <kernel/timer.h>
+#include <kernel/tick.h>
 #include <kernel/util/kutil.h>
 
 

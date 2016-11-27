@@ -24,7 +24,7 @@
 #include <kernel/net/net.h>
 #include <kernel/platform.h>
 #include <kernel/sched.h>
-#include <kernel/timer.h>
+#include <kernel/tick.h>
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
 #include <stdio.h>
@@ -145,7 +145,7 @@ void _main()
         printf("\nCPU fclk ~%2u.%uMHz\n", cpu_clk_hz / 1000000, (cpu_clk_hz % 1000000) / 100000);
 
     /* Initialise tick handler */
-    timer_init();
+    tick_init();
 
     /* Display memory information */
 	printf("%u bytes of kernel heap memory available\n"
@@ -171,7 +171,7 @@ void _main()
     }
 
     /* Create housekeeper process */
-    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);
+//    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);
 
     /* Initialise networking system */
     ret = net_init();

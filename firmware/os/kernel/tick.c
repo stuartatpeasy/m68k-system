@@ -1,5 +1,5 @@
 /*
-    timer.h: periodic timer management functions
+    tick.h: periodic timer management functions
 
     Part of ayumos
 
@@ -10,22 +10,23 @@
 #include <kernel/device/device.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/semaphore.h>
-#include <kernel/timer.h>
+#include <kernel/tick.h>
 #include <kernel/util/kutil.h>
 #include <klibc/stdio.h>
 
 
-static timer_callback_t *callbacks = NULL;
+static tick_callback_t *callbacks = NULL;
 static u32 tick_count = 0;
+static tick_fn_t next_id = 0;   /* TODO: find a better way of generating IDs.  This may overflow */
 static dev_t *timer = NULL;
 static sem_t callbacks_sem;
 
 
 /*
-    timer_init() - find a suitable timer device; register timer_tick() as the tick handler.
+    tick_init() - find a suitable timer device; register timer_tick() as the tick handler.
     TODO: we assume that we'll use the first timer in the system (timer0).  This may not be ideal.
 */
-s32 timer_init()
+s32 tick_init()
 {
     ku32 requested_freq = TICK_RATE, enable = 1;
     u32 actual_freq = 0;
@@ -59,7 +60,7 @@ s32 timer_init()
     }
 
     /* Register tick handler function */
-    ret = timer->control(timer, dc_timer_set_tick_fn, timer_tick, NULL);
+    ret = timer->control(timer, dc_timer_set_tick_fn, tick, NULL);
     if(ret != SUCCESS)
     {
         printf("timer_init: %s: failed to register tick function: %s\n",
@@ -80,12 +81,12 @@ s32 timer_init()
 
 
 /*
-    timer_tick() - called at every timer "tick".  Performs scheduled tasks.  Note: should be called
+    tick() - called at every timer "tick".  Performs scheduled tasks.  Note: should be called
     outside of IRQ context.
 */
-void timer_tick()
+void tick()
 {
-    timer_callback_t *item;
+    tick_callback_t *item;
     u32 enable = 0;
     s32 ret;
 
@@ -99,7 +100,13 @@ void timer_tick()
 
         /* Handle per-tick functions */
         for(item = callbacks; item; item = item->next)
-            item->fn(item->arg);
+        {
+            if(!--item->counter)
+            {
+                item->counter = item->interval;
+                item->fn(item->arg);
+            }
+        }
 
         sem_release(&callbacks_sem);
 
@@ -113,26 +120,35 @@ void timer_tick()
 
 
 /*
-    timer_get_ticks() - get the current "tick count"
+    get_ticks() - get the current "tick count"
 */
-u32 timer_get_ticks()
+u32 get_ticks()
 {
     return tick_count;
 }
 
 
 /*
-    timer_add_callback() - add a callback function to the list of functions called every tick.
+    tick_add_callback() - add a callback function to the list of functions called periodically.
+    The callback function will be called every <interval> ticks.
 */
-s32 timer_add_callback(timer_callback_fn_t fn, void *arg)
+s32 tick_add_callback(tick_callback_fn_t fn, void *arg, ku32 interval, tick_fn_t *id)
 {
-    timer_callback_t *cbnew = (timer_callback_t *) kmalloc(sizeof(timer_callback_t));
+    tick_callback_t *cbnew;
+
+    if(!interval)
+        return EINVAL;
+
+    cbnew = (tick_callback_t *) kmalloc(sizeof(tick_callback_t));
     if(!cbnew)
         return ENOMEM;
 
-    cbnew->fn = fn;
-    cbnew->arg = arg;
-    cbnew->next = NULL;
+    cbnew->id       = ++next_id;
+    cbnew->fn       = fn;
+    cbnew->arg      = arg;
+    cbnew->next     = NULL;
+    cbnew->interval = interval;
+    cbnew->counter  = interval;
 
     sem_acquire(&callbacks_sem);
 
@@ -140,7 +156,7 @@ s32 timer_add_callback(timer_callback_fn_t fn, void *arg)
         callbacks = cbnew;
     else
     {
-        timer_callback_t *p;
+        tick_callback_t *p;
         for(p = callbacks; p->next; p = p->next)
             ;
 
@@ -149,17 +165,20 @@ s32 timer_add_callback(timer_callback_fn_t fn, void *arg)
 
     sem_release(&callbacks_sem);
 
+    if(*id)
+        *id = cbnew->id;
+
     return SUCCESS;
 }
 
 
 /*
-    timer_remove_callback() - remove the specified callback function from the list of functions
+    tick_remove_callback() - remove the specified callback function from the list of functions
     called every tick.
 */
-s32 timer_remove_callback(timer_callback_fn_t fn)
+s32 tick_remove_callback(const tick_fn_t id)
 {
-    timer_callback_t *p, *prev;
+    tick_callback_t *p, *prev;
 
     sem_acquire(&callbacks_sem);
 
@@ -167,7 +186,7 @@ s32 timer_remove_callback(timer_callback_fn_t fn)
     {
         for(prev = NULL, p = callbacks; p; prev = p, p = p->next)
         {
-            if(p->fn == fn)
+            if(p->id == id)
             {
                 if(!prev)
                     callbacks = p->next;    /* Deleting the first item in the list */

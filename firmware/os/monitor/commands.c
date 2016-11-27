@@ -1075,10 +1075,14 @@ MONITOR_CMD_HANDLER(srec)
 
     Used to trigger a test of some sort
 */
+
+
 #include <kernel/process.h>
 #include <kernel/elf.h>
 #include <kernel/net/dhcp.h>
 #include <kernel/net/tftp.h>
+#include <kernel/tick.h>
+
 MONITOR_CMD_HANDLER(test)
 {
     if(num_args < 1)
