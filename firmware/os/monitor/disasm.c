@@ -10,6 +10,8 @@
 #include <monitor/disasm.h>
 
 
+void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
+              const unsigned char src_reg, char *a1, char *a2);
 char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz);
 void movem_regs(char *str, unsigned short regs, char mode);
 
@@ -56,6 +58,7 @@ ks8 * const g_disasm_misc2[] =
 {
     "ori", "andi", "subi", "addi", "???", "eori", "cmpi", "moves"
 };
+
 
 const ea_size_t g_disasm_sizemap[] =
 {
@@ -729,6 +732,15 @@ int disassemble(unsigned short **p, char *str)
                 a2[1] = '0' + src_reg;
             }
             break;
+
+        case 0xf:       /* coprocessor instructions */
+            switch(dest_reg)        /* dest_reg contains CpID for F-line instructions */
+            {
+                case 1:             /* CpID 1 = FPU */
+                    fp_instr(instr, p, &pf, src_mode, src_reg, a1, a2);
+                    break;
+            }
+            break;
 	}
 
 
@@ -759,6 +771,82 @@ int disassemble(unsigned short **p, char *str)
 }
 
 
+/*
+    fp_instr() - decode an FPU instruction
+    FIXME - this function needs to be completed.
+*/
+void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
+              const unsigned char src_reg, char *a1, char *a2)
+{
+    const unsigned short ext = HTOP_SHORT(*(*p)++);
+    const unsigned char type = (instr >> 6) & 0x7,     /* Instruction type */
+            src_spec = (ext >> 10) & 0x7,
+            dest_reg = (ext >> 7) & 0x7,
+            opmode = ext & 0x7f,
+            ext_bit15 = ext >> 15,
+            rm = (ext >> 14) & 1,
+            dir = (ext >> 13) & 1;
+
+    UNUSED(src_spec);
+
+    if(type == 0)
+    {
+        if(!ext_bit15 && !dir)
+        {
+            if(!src_mode && !src_reg && rm && (src_spec == 7))
+            {
+                *pf = "fmove";
+                sprintf(a1, "cr[%02x]", opmode);
+                *a2++ = 'f';
+                *a2++ = 'p';
+                *a2++ = '0' + dest_reg;
+            }
+            else
+            {
+                /* FIXME: fsincos needs special handling */
+                /* FIXME: fabs, fadd, fdiv, fmove[m], fmul, fneg, fsqrt, fsub, fscc, fbcc, fsave,
+                frestore, fdbcc, ftrapcc */
+                switch(opmode)
+                {
+                    case 0x01:      *pf = "fint";       break;
+                    case 0x02:      *pf = "fsinh";      break;
+                    case 0x03:      *pf = "fintrz";     break;
+                    case 0x06:      *pf = "flognp1";    break;
+                    case 0x08:      *pf = "fetoxm1";    break;
+                    case 0x09:      *pf = "ftanh";      break;
+                    case 0x0a:      *pf = "fatan";      break;
+                    case 0x0c:      *pf = "fasin";      break;
+                    case 0x0d:      *pf = "fatanh";     break;
+                    case 0x0e:      *pf = "fsin";       break;
+                    case 0x0f:      *pf = "ftan";       break;
+                    case 0x10:      *pf = "fetox";      break;
+                    case 0x11:      *pf = "ftwotox";    break;
+                    case 0x12:      *pf = "ftentox";    break;
+                    case 0x14:      *pf = "flogn";      break;
+                    case 0x15:      *pf = "flog10";     break;
+                    case 0x16:      *pf = "flog2";      break;
+                    case 0x19:      *pf = "fcosh";      break;
+                    case 0x1c:      *pf = "facos";      break;
+                    case 0x1d:      *pf = "fcos";       break;
+                    case 0x1e:      *pf = "fgetexp";    break;
+                    case 0x1f:      *pf = "fgetman";    break;
+                    case 0x21:      *pf = "fmod";       break;
+                    case 0x24:      *pf = "fsgldiv";    break;
+                    case 0x25:      *pf = "frem";       break;
+                    case 0x26:      *pf = "fscale";     break;
+                    case 0x27:      *pf = "fsglmul";    break;
+                    case 0x38:      *pf = "fcmp";       break;
+                    case 0x3a:      *pf = "ftst";       break;
+                }
+            }
+        }
+    }
+}
+
+
+/*
+    ea() - decode an effective address into a string
+*/
 char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz)
 {
 	mode &= 0x7;
@@ -861,6 +949,9 @@ char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, c
 }
 
 
+/*
+    movem_regs() - decode a MOVEM register list into a string
+*/
 void movem_regs(char *str, unsigned short regs, char mode)
 {
 	char c, type, any = 0;
