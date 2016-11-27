@@ -636,7 +636,7 @@ int disassemble(unsigned short **p, char *str)
                         a1[4] = a2[4] = ')';
 
                         a1[3] = '0' + src_reg;
-                        a1[3] = '0' + dest_reg;
+                        a2[3] = '0' + dest_reg;
                     }
                     else
                     {
