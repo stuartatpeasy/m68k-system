@@ -63,4 +63,4 @@ void slab_dump(void);
 void slab_free(void *obj);
 void slab_init(void *slab_base);
 
-#endif // MEMORY_BLOCKALLOC_H_INC
+#endif

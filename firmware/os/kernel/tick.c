@@ -8,8 +8,8 @@
 */
 
 #include <kernel/device/device.h>
+#include <kernel/include/lock.h>
 #include <kernel/memory/kmalloc.h>
-#include <kernel/semaphore.h>
 #include <kernel/tick.h>
 #include <kernel/util/kutil.h>
 #include <klibc/stdio.h>
@@ -19,7 +19,7 @@ static tick_callback_t *callbacks = NULL;
 static u32 tick_count = 0;
 static tick_fn_t next_id = 0;   /* TODO: find a better way of generating IDs.  This may overflow */
 static dev_t *timer = NULL;
-static sem_t callbacks_sem;
+static lock_t tick_lock;
 
 
 /*
@@ -33,6 +33,8 @@ s32 tick_init()
     const char * const dev_name = "timer0";
     s32 ret;
 
+    lock_init(&tick_lock);
+
     /* Locate the timer device */
     timer = dev_find(dev_name);
     if(!timer)
@@ -40,10 +42,6 @@ s32 tick_init()
         puts("timer_init: no timer device found");
         return ENODEV;
     }
-
-    ret = sem_init(&callbacks_sem);
-    if(ret != SUCCESS)
-        return ret;
 
     /* Set timer frequency */
     ret = timer->control(timer, dc_timer_set_freq, &requested_freq, &actual_freq);
@@ -96,7 +94,7 @@ void tick()
     {
         ++tick_count;
 
-        sem_acquire(&callbacks_sem);
+        lock_enter(&tick_lock);
 
         /* Handle per-tick functions */
         for(item = callbacks; item; item = item->next)
@@ -108,7 +106,7 @@ void tick()
             }
         }
 
-        sem_release(&callbacks_sem);
+        lock_leave(&tick_lock);
 
         /* Re-enable the timer */
         enable = 1;
@@ -150,7 +148,7 @@ s32 tick_add_callback(tick_callback_fn_t fn, void *arg, ku32 interval, tick_fn_t
     cbnew->interval = interval;
     cbnew->counter  = interval;
 
-    sem_acquire(&callbacks_sem);
+    lock_enter(&tick_lock);
 
     if(!callbacks)
         callbacks = cbnew;
@@ -163,7 +161,7 @@ s32 tick_add_callback(tick_callback_fn_t fn, void *arg, ku32 interval, tick_fn_t
         p->next = cbnew;
     }
 
-    sem_release(&callbacks_sem);
+    lock_leave(&tick_lock);
 
     if(*id)
         *id = cbnew->id;
@@ -180,7 +178,7 @@ s32 tick_remove_callback(const tick_fn_t id)
 {
     tick_callback_t *p, *prev;
 
-    sem_acquire(&callbacks_sem);
+    lock_enter(&tick_lock);
 
     if(callbacks)
     {
@@ -193,7 +191,7 @@ s32 tick_remove_callback(const tick_fn_t id)
                 else
                     prev->next = p->next;
 
-                sem_release(&callbacks_sem);
+                lock_leave(&tick_lock);
                 kfree(p);
 
                 return SUCCESS;
@@ -201,6 +199,6 @@ s32 tick_remove_callback(const tick_fn_t id)
         }
     }
 
-    sem_release(&callbacks_sem);
+    lock_leave(&tick_lock);
     return ENOENT;
 }

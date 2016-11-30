@@ -11,7 +11,7 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/semaphore.h>
+#include <kernel/include/lock.h>
 
 #ifdef KMALLOC_HEAP
 
@@ -19,7 +19,7 @@ typedef struct heap_
 {
 	void *			start;
 	unsigned int	size;
-	sem_t           lock;
+	lock_t          lock;
 } heap_ctx;
 
 

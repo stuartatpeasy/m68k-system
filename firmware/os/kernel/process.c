@@ -9,6 +9,7 @@
 
 #include <kernel/process.h>
 #include <kernel/include/limits.h>
+#include <kernel/include/lock.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/sched.h>
 #include <klibc/string.h>
@@ -20,6 +21,7 @@ list_t g_exited_queue = LIST_INIT(g_exited_queue);
 
 proc_t *g_current_proc = NULL;
 pid_t g_next_pid = 0;
+static lock_t proc_lock = LOCK_INIT();
 extern time_t g_current_timestamp;
 
 
@@ -33,8 +35,6 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     proc_t *p;
     u32 *ustack_top, *kstack_top;
     s32 ret;
-
-    cpu_disable_interrupts();
 
     p = CHECKED_KCALLOC(1, sizeof(proc_t));
 
@@ -72,7 +72,6 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     ustack_top = (u32 *) ((u8 *) p->ustack + stack_len);
     kstack_top = (u32 *) ((u8 *) p->kstack + PROC_KSTACK_LEN);
 
-    p->id = g_next_pid++;
     p->exit_code = S32_MIN;
     p->parent = parent;
     p->uid = uid;
@@ -99,12 +98,15 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
 
     p->state = ps_runnable; /* Mark process as runnable so scheduler will pick it up. */
 
-    if(newpid != NULL)
-        *newpid = p->id;
+    lock_enter(&proc_lock);
 
+    p->id = g_next_pid++;
     list_insert(&p->queue, &g_run_queue);
 
-    cpu_enable_interrupts();
+    lock_leave(&proc_lock);
+
+    if(newpid != NULL)
+        *newpid = p->id;
 
     return SUCCESS;
 }
