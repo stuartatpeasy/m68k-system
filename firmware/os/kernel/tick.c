@@ -8,7 +8,7 @@
 */
 
 #include <kernel/device/device.h>
-#include <kernel/include/lock.h>
+#include <kernel/include/preempt.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/tick.h>
 #include <kernel/util/kutil.h>
@@ -19,7 +19,6 @@ static tick_callback_t *callbacks = NULL;
 static u32 tick_count = 0;
 static tick_fn_t next_id = 0;   /* TODO: find a better way of generating IDs.  This may overflow */
 static dev_t *timer = NULL;
-static lock_t tick_lock;
 
 
 /*
@@ -32,8 +31,6 @@ s32 tick_init()
     u32 actual_freq = 0;
     const char * const dev_name = "timer0";
     s32 ret;
-
-    lock_init(&tick_lock);
 
     /* Locate the timer device */
     timer = dev_find(dev_name);
@@ -94,7 +91,7 @@ void tick()
     {
         ++tick_count;
 
-        lock_enter(&tick_lock);
+        preempt_disable();
 
         /* Handle per-tick functions */
         for(item = callbacks; item; item = item->next)
@@ -106,7 +103,7 @@ void tick()
             }
         }
 
-        lock_leave(&tick_lock);
+        preempt_enable();
 
         /* Re-enable the timer */
         enable = 1;
@@ -148,7 +145,7 @@ s32 tick_add_callback(tick_callback_fn_t fn, void *arg, ku32 interval, tick_fn_t
     cbnew->interval = interval;
     cbnew->counter  = interval;
 
-    lock_enter(&tick_lock);
+    preempt_disable();
 
     if(!callbacks)
         callbacks = cbnew;
@@ -161,7 +158,7 @@ s32 tick_add_callback(tick_callback_fn_t fn, void *arg, ku32 interval, tick_fn_t
         p->next = cbnew;
     }
 
-    lock_leave(&tick_lock);
+    preempt_enable();
 
     if(*id)
         *id = cbnew->id;
@@ -178,7 +175,7 @@ s32 tick_remove_callback(const tick_fn_t id)
 {
     tick_callback_t *p, *prev;
 
-    lock_enter(&tick_lock);
+    preempt_disable();
 
     if(callbacks)
     {
@@ -191,7 +188,7 @@ s32 tick_remove_callback(const tick_fn_t id)
                 else
                     prev->next = p->next;
 
-                lock_leave(&tick_lock);
+                preempt_enable();
                 kfree(p);
 
                 return SUCCESS;
@@ -199,6 +196,6 @@ s32 tick_remove_callback(const tick_fn_t id)
         }
     }
 
-    lock_leave(&tick_lock);
+    preempt_enable();
     return ENOENT;
 }

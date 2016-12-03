@@ -9,7 +9,7 @@
 
 #include <kernel/process.h>
 #include <kernel/include/limits.h>
-#include <kernel/include/lock.h>
+#include <kernel/include/preempt.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/sched.h>
 #include <klibc/string.h>
@@ -21,7 +21,6 @@ list_t g_exited_queue = LIST_INIT(g_exited_queue);
 
 proc_t *g_current_proc = NULL;
 pid_t g_next_pid = 0;
-static lock_t proc_lock = LOCK_INIT();
 extern time_t g_current_timestamp;
 
 
@@ -98,12 +97,12 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
 
     p->state = ps_runnable; /* Mark process as runnable so scheduler will pick it up. */
 
-    lock_enter(&proc_lock);
+    preempt_disable();
 
     p->id = g_next_pid++;
     list_insert(&p->queue, &g_run_queue);
 
-    lock_leave(&proc_lock);
+    preempt_enable();
 
     if(newpid != NULL)
         *newpid = p->id;

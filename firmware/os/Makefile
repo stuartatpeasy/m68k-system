@@ -16,8 +16,8 @@ CSOURCES:=	cpu/$(CPU)/$(CPU).c \
 			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
 			kernel/fs/fat/fat.c kernel/fs/romfs.c \
 			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/error.c \
-			kernel/housekeeper.c kernel/keyboard.c kernel/ksym.c kernel/process.c kernel/sched.c \
-			kernel/semaphore.c kernel/syscall.c kernel/tick.c kernel/user.c \
+			kernel/housekeeper.c kernel/keyboard.c kernel/ksym.c kernel/preempt.c kernel/process.c \
+			kernel/sched.c kernel/semaphore.c kernel/syscall.c kernel/tick.c kernel/user.c \
 			kernel/net/address.c kernel/net/arp.c kernel/net/dhcp.c \
 			kernel/net/ethernet.c kernel/net/icmp.c kernel/net/interface.c kernel/net/ipv4.c \
 			kernel/net/net.c kernel/net/packet.c kernel/net/protocol.c kernel/net/raw.c \
@@ -268,6 +268,9 @@ kernel/net/net.o: \
 kernel/net/packet.o: \
 	kernel/net/packet.c kernel/net/packet.h kernel/include/defs.h kernel/include/types.h \
 	kernel/net/net.h
+
+kernel/preempt.o: \
+	kernel/preempt.c kernel/include/preempt.h kernel/include/defs.h kernel/include/types.h
 
 kernel/net/protocol.o: \
 	kernel/net/protocol.c kernel/net/protocol.h kernel/include/defs.h kernel/include/types.h \

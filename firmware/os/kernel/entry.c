@@ -18,6 +18,7 @@
 #include <kernel/fs/vfs.h>
 #include <kernel/housekeeper.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/preempt.h>
 #include <kernel/memory/extents.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
@@ -47,7 +48,7 @@ void _main()
         This section runs with interrupts disabled.  The boot console is not available in this
         section.
     */
-    cpu_disable_interrupts();   /* Just in case we were called manually */
+    preempt_disable();
 
     /* Copy kernel read/write data areas into kernel RAM */
     memcpy(&_sdata, &_etext, &_edata - &_sdata);        /* Copy .data section to kernel RAM */
@@ -104,7 +105,7 @@ void _main()
     /*
         Enable interrupts and continue booting
     */
-    cpu_enable_interrupts();
+    preempt_enable();
 
     /* Copy the contents of the temporary console to the real console; close the temp console. */
     early_boot_console_close();

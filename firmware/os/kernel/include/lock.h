@@ -10,6 +10,7 @@
 */
 
 #include <kernel/cpu.h>
+#include <kernel/include/preempt.h>
 
 
 typedef vu32 lock_t;
@@ -40,7 +41,7 @@ inline void lock_init(lock_t *lock)
 */
 inline void lock_enter(lock_t *lock)
 {
-    cpu_disable_interrupts();
+    preempt_disable();
     ++*lock;
 }
 
@@ -52,7 +53,7 @@ inline void lock_enter(lock_t *lock)
 inline void lock_leave(lock_t *lock)
 {
     if(!--*lock)
-        cpu_enable_interrupts();
+        preempt_enable();
 }
 
 #endif
