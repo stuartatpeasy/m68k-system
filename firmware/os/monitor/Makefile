@@ -35,7 +35,7 @@ history.o: \
 
 monitor.o: \
 	monitor.c include/monitor.h commands.o include/disasm.h include/history.h include/readline.h \
-	include/srec.h ../kernel/device/nvram.h $(KERN_INC)/fs/mount.h $(KERN_INC)/defs.h \
+	include/srec.h $(KERN_INC)/device/nvram.h $(KERN_INC)/fs/mount.h $(KERN_INC)/defs.h \
 	$(KERN_INC)/version.h ../kernel/util/kutil.h $(KERN_INC)/memory/kmalloc.h \
 	$(KERN_INC)/memory/slab.h
 

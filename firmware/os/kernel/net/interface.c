@@ -9,7 +9,7 @@
     FIXME - replace printf() with kernel logging call of some sort, and remove #include stdio
 */
 
-#include <kernel/device/device.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/process.h>
 #include <kernel/include/net/interface.h>

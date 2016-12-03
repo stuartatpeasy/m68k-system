@@ -30,9 +30,9 @@ clean:
 	rm -f $(LIBNAME) $(OBJECTS)
 
 device.o: \
-	$(STDDEPS) device.c include/device.h $(SRC_ROOT)/kernel/device/ata.h \
-	$(SRC_ROOT)/kernel/device/auto.h $(SRC_ROOT)/driver/ds17485.h $(SRC_ROOT)/driver/mc68681.h \
-	$(KERN_INC)/memory/kmalloc.h $(KERN_ROOT)/util/kutil.h $(KLIBC_INC)/stdio.h \
+	$(STDDEPS) device.c include/device.h $(KERN_INC)/device/ata.h $(KERN_INC)/device/auto.h \
+	$(SRC_ROOT)/driver/ds17485.h $(SRC_ROOT)/driver/mc68681.h $(KERN_INC)/memory/kmalloc.h \
+	$(KERN_ROOT)/util/kutil.h $(KLIBC_INC)/stdio.h \
 	$(KLIBC_INC)/string.h
 
 dfu.o: \

@@ -10,9 +10,9 @@
 */
 
 #include <kernel/include/defs.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/types.h>
 #include <kernel/include/semaphore.h>
-#include <kernel/device/device.h>
 
 #define GREAT_BIG_PRIME             (0xfffffffb)    /* Largest prime representable as a u32 */
 

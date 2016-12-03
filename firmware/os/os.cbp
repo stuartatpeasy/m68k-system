@@ -110,34 +110,24 @@
 		<Unit filename="kernel/device/ata.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/device/ata.h" />
 		<Unit filename="kernel/device/auto.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/device/auto.h" />
 		<Unit filename="kernel/device/block.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/device/block.h" />
-		<Unit filename="kernel/device/devctl.h" />
 		<Unit filename="kernel/device/device.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/device/device.h" />
-		<Unit filename="kernel/device/mbr.h" />
 		<Unit filename="kernel/device/memconsole.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/device/memconsole.h" />
 		<Unit filename="kernel/device/nvram.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/device/nvram.h" />
 		<Unit filename="kernel/device/partition.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/device/partition.h" />
-		<Unit filename="kernel/device/power.h" />
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -177,6 +167,16 @@
 		<Unit filename="kernel/include/console.h" />
 		<Unit filename="kernel/include/cpu.h" />
 		<Unit filename="kernel/include/defs.h" />
+		<Unit filename="kernel/include/device/ata.h" />
+		<Unit filename="kernel/include/device/auto.h" />
+		<Unit filename="kernel/include/device/block.h" />
+		<Unit filename="kernel/include/device/devctl.h" />
+		<Unit filename="kernel/include/device/device.h" />
+		<Unit filename="kernel/include/device/mbr.h" />
+		<Unit filename="kernel/include/device/memconsole.h" />
+		<Unit filename="kernel/include/device/nvram.h" />
+		<Unit filename="kernel/include/device/partition.h" />
+		<Unit filename="kernel/include/device/power.h" />
 		<Unit filename="kernel/include/elf.h" />
 		<Unit filename="kernel/include/error.h" />
 		<Unit filename="kernel/include/fs/file.h" />

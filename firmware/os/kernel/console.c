@@ -9,7 +9,7 @@
 
 #include <kernel/include/cpu.h>
 #include <kernel/include/console.h>
-#include <kernel/device/memconsole.h>
+#include <kernel/include/device/memconsole.h>
 
 
 dev_t *g_console_dev = NULL;

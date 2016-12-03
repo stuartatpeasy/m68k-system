@@ -7,9 +7,9 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <kernel/device/device.h>
 #include <kernel/error.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/ethernet.h>
 #include <kernel/include/net/icmp.h>

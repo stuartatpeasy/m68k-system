@@ -10,10 +10,10 @@
 */
 
 #include <kernel/include/defs.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/types.h>
 #include <kernel/include/net/net.h>
 #include <kernel/include/net/address.h>
-#include <kernel/device/device.h>
 
 
 #define NET_INTERFACE_ANY           ((net_iface_t *) NULL)

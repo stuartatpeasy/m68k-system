@@ -11,8 +11,8 @@
           many other things
 */
 
-#include <kernel/device/block.h>
 #include <kernel/fs/fat/fat.h>
+#include <kernel/include/device/block.h>
 #include <kernel/include/fs/vfs.h>
 
 

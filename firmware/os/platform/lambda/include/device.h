@@ -8,8 +8,8 @@
 
 #include <cpu/mc68000/exceptions.h>
 
-#include <kernel/device/device.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/types.h>
 
 

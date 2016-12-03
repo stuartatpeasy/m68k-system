@@ -8,8 +8,8 @@
 
 #include <klibc/include/stdio.h>
 #include <klibc/include/string.h>
-#include <kernel/device/ata.h>              /* ATA interface    						*/
-#include <kernel/device/auto.h>				/* Automatic peripheral driver selection	*/
+#include <kernel/include/device/ata.h>      /* ATA interface    						*/
+#include <kernel/include/device/auto.h>		/* Automatic peripheral driver selection	*/
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 #include <platform/lambda/include/device.h>

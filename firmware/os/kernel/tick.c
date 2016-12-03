@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, November 2016.
 */
 
-#include <kernel/device/device.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/preempt.h>
 #include <kernel/include/tick.h>

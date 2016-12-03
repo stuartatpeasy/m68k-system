@@ -110,7 +110,7 @@ driver/ds17485.o: \
 	driver/ds17485.c driver/ds17485.h kernel/include/types.h kernel/util/kutil.h
 
 driver/encx24j600.o: \
-	driver/encx24j600.c driver/encx24j600.h kernel/include/cpu.h kernel/device/device.h \
+	driver/encx24j600.c driver/encx24j600.h kernel/include/cpu.h kernel/include/device/device.h \
 	kernel/include/byteorder.h kernel/include/defs.h kernel/include/error.h kernel/include/types.h
 
 driver/mc68681.o: \
@@ -123,7 +123,8 @@ driver/ps2controller.o: \
 
 kernel/boot.o: \
 	kernel/boot.c kernel/include/boot.h kernel/include/defs.h kernel/include/types.h \
-	kernel/device/devctl.h kernel/device/device.h klibc/include/stdio.h kernel/include/platform.h
+	kernel/include/device/devctl.h kernel/include/device/device.h klibc/include/stdio.h \
+	kernel/include/platform.h
 
 kernel/console.o: \
 	kernel/console.c kernel/include/console.h kernel/include/defs.h kernel/include/types.h
@@ -132,33 +133,36 @@ kernel/cpu/cpu.o: \
 	kernel/cpu/cpu.c kernel/include/cpu.h cpu/arch_specific.h kernel/include/types.h
 
 kernel/device/ata.o: \
-	kernel/device/ata.c kernel/device/ata.h kernel/device/block.h kernel/device/devctl.h \
-	kernel/device/device.h kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h \
-	kernel/include/types.h klibc/include/stdio.h klibc/include/string.h klibc/include/strings.h
+	kernel/device/ata.c kernel/include/device/ata.h kernel/include/device/block.h \
+	kernel/include/device/devctl.h kernel/include/device/device.h kernel/include/byteorder.h \
+	kernel/include/defs.h kernel/include/device/mbr.h kernel/include/types.h klibc/include/stdio.h \
+	klibc/include/string.h klibc/include/strings.h
 
 kernel/device/auto.o: \
-	kernel/device/auto.c kernel/device/auto.h kernel/include/defs.h kernel/include/types.h \
-	kernel/device/device.h
+	kernel/device/auto.c kernel/include/device/auto.h kernel/include/defs.h kernel/include/types.h \
+	kernel/include/device/device.h
 
 kernel/device/block.o: \
-	kernel/device/block.c kernel/device/block.h kernel/include/defs.h kernel/include/types.h
+	kernel/device/block.c kernel/include/device/block.h kernel/include/defs.h kernel/include/types.h
 
 kernel/device/device.o: \
-	kernel/device/device.c kernel/device/devctl.h kernel/device/device.h kernel/util/kutil.h \
-	kernel/device/ata.h kernel/device/partition.h kernel/include/types.h klibc/include/errno.h
+	kernel/device/device.c kernel/include/device/devctl.h kernel/include/device/device.h \
+	kernel/util/kutil.h kernel/include/device/ata.h kernel/include/device/partition.h \
+	kernel/include/types.h klibc/include/errno.h
 
 kernel/device/memconsole.o: \
-	kernel/device/memconsole.c kernel/device/memconsole.h kernel/include/defs.h \
+	kernel/device/memconsole.c kernel/include/device/memconsole.h kernel/include/defs.h \
 	kernel/include/types.h
 
 kernel/device/nvram.o: \
-	kernel/device/nvram.c kernel/device/nvram.h driver/ds17485.h kernel/include/defs.h \
+	kernel/device/nvram.c kernel/include/device/nvram.h driver/ds17485.h kernel/include/defs.h \
 	kernel/include/error.h kernel/include/types.h kernel/util/kutil.h
 
 kernel/device/partition.o: \
-	kernel/device/partition.c kernel/device/partition.h kernel/device/device.h \
-	kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h kernel/include/types.h \
-	klibc/include/stdio.h kernel/util/kutil.h kernel/include/cpu.h kernel/device/devctl.h
+	kernel/device/partition.c kernel/include/device/partition.h kernel/include/device/device.h \
+	kernel/include/byteorder.h kernel/include/defs.h kernel/include/device/mbr.h \
+	kernel/include/types.h klibc/include/stdio.h kernel/util/kutil.h kernel/include/cpu.h \
+	kernel/include/device/devctl.h
 
 kernel/elf.o: \
 	kernel/elf.c kernel/include/byteorder.h kernel/include/defs.h kernel/include/elf.h \
@@ -193,13 +197,13 @@ kernel/fs/file.o: \
 
 kernel/fs/mount.o: \
 	kernel/fs/mount.c kernel/include/fs/mount.h kernel/include/defs.h kernel/include/types.h \
-	kernel/device/device.h kernel/include/fs/vfs.h kernel/include/defs.h klibc/include/errno.h \
-	kernel/util/kutil.h kernel/include/memory/kmalloc.h
+	kernel/include/device/device.h kernel/include/fs/vfs.h kernel/include/defs.h \
+	klibc/include/errno.h kernel/util/kutil.h kernel/include/memory/kmalloc.h
 
 kernel/fs/vfs.o: \
-	kernel/fs/vfs.c kernel/include/fs/vfs.h kernel/include/fs/mount.h kernel/device/nvram.h \
-	kernel/device/devctl.h kernel/device/device.h kernel/include/defs.h kernel/include/types.h \
-	klibc/include/stdio.h
+	kernel/fs/vfs.c kernel/include/fs/vfs.h kernel/include/fs/mount.h \
+	kernel/include/device/nvram.h kernel/include/device/devctl.h kernel/include/device/device.h \
+	kernel/include/defs.h kernel/include/types.h klibc/include/stdio.h
 
 kernel/housekeeper.o: \
 	kernel/housekeeper.c kernel/housekeeper.h kernel/include/defs.h kernel/include/types.h

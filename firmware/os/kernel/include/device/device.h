@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, 9th February 2012.
 */
 
-#include <kernel/device/devctl.h>
+#include <kernel/include/device/devctl.h>
 #include <kernel/include/types.h>
 #include <klibc/include/errno.h>
 

@@ -13,9 +13,9 @@
 
 #include <kernel/include/cpu.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/memory/extents.h>
 #include <kernel/include/types.h>
-#include <kernel/device/device.h>
 
 /* Parse platform-specific header */
 #include <platform/platform_specific.h>

@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, March 2012.
 */
 
-#include <kernel/device/device.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/fs/vfs.h>
 #include <kernel/include/types.h>
 #include <klibc/include/strings.h>

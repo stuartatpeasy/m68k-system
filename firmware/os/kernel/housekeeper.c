@@ -8,8 +8,8 @@
 */
 
 
-#include <kernel/device/device.h>
 #include <kernel/housekeeper.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/process.h>
 #include <kernel/util/kutil.h>
 

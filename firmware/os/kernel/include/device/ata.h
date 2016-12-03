@@ -9,8 +9,8 @@
 	(c) Stuart Wallace, December 2011.
 */
 
-#include <kernel/device/block.h>
-#include <kernel/device/device.h>
+#include <kernel/include/device/block.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/platform.h>        /* for platform-specific definitions */
 #include <kernel/include/types.h>
 

@@ -13,7 +13,7 @@
 	TODO: support for writes
 */
 
-#include <kernel/device/block.h>
+#include <kernel/include/device/block.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/semaphore.h>
 #include <klibc/include/stdio.h>

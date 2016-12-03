@@ -9,8 +9,8 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include <kernel/device/device.h>
-#include <kernel/device/devctl.h>
+#include <kernel/include/device/device.h>
+#include <kernel/include/device/devctl.h>
 
 
 /* devctls */

@@ -7,7 +7,7 @@
 */
 
 #include <driver/mc68681.h>
-#include <kernel/device/device.h>
+#include <kernel/include/device/device.h>
 
 
 /* Firmware ROM memory start address and length */

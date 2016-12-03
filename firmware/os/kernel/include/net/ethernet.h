@@ -9,9 +9,9 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <kernel/device/device.h>
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/types.h>
 #include <kernel/include/net/interface.h>
 #include <kernel/include/net/net.h>

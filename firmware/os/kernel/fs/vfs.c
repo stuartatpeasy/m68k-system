@@ -7,9 +7,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include <kernel/device/devctl.h>
-#include <kernel/device/device.h>
-#include <kernel/device/nvram.h>
+#include <kernel/include/device/devctl.h>
+#include <kernel/include/device/device.h>
+#include <kernel/include/device/nvram.h>
 #include <kernel/include/fs/vfs.h>
 #include <kernel/include/fs/mount.h>
 

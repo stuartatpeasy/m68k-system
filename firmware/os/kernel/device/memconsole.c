@@ -13,7 +13,7 @@
 	(c) Stuart Wallace, January 2016.
 */
 
-#include <kernel/device/memconsole.h>
+#include <kernel/include/device/memconsole.h>
 #include <kernel/include/memory/kmalloc.h>
 
 

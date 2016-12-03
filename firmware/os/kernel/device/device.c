@@ -12,8 +12,8 @@
 #include <klibc/include/string.h>
 #include <klibc/include/strings.h>
 
-#include <kernel/device/device.h>
-#include <kernel/device/partition.h>
+#include <kernel/include/device/device.h>
+#include <kernel/include/device/partition.h>
 #include <kernel/include/platform.h>
 #include <kernel/util/kutil.h>
 

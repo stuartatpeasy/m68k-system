@@ -9,7 +9,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include <kernel/device/device.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/types.h>
 #include <kernel/include/defs.h>
 #include <klibc/include/stdio.h>

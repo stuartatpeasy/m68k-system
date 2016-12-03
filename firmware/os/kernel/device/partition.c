@@ -7,10 +7,10 @@
 	(c) Stuart Wallace, 9th February 2012.
 */
 
-#include <kernel/device/block.h>
-#include <kernel/device/mbr.h>
-#include <kernel/device/partition.h>
 #include <kernel/include/byteorder.h>
+#include <kernel/include/device/block.h>
+#include <kernel/include/device/mbr.h>
+#include <kernel/include/device/partition.h>
 #include <kernel/util/kutil.h>
 #include <klibc/include/strings.h>
 
