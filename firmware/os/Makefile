@@ -41,17 +41,18 @@ CSOURCES := $(KERNEL_SOURCES) $(KLIBC_SOURCES) $(MONITOR_SOURCES)
 
 SOURCES := $(CSOURCES) $(ASMSOURCES)
 
-LDSCRIPT :=platform/$(PLATFORM)/kernel.ld
-
-OBJECTS := $(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
+LDSCRIPT := platform/$(PLATFORM)/kernel.ld
 
 DEPDIR := .deps
-$(shell mkdir -p $(DEPDIR) >/dev/null)
+OBJDIR := .obj
+$(shell mkdir -p $(DEPDIR) $(OBJDIR) >/dev/null)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
-COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-COMPILE.S = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+OBJECTS := $(patsubst %.c,%.o,$(CSOURCES)) $(patsubst %.S,%.o,$(ASMSOURCES))
+
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c
+COMPILE.S = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c
 
 %.o : %.c $(DEPDIR)/%.d
 	$(CC) -o$@ $<
@@ -59,10 +60,14 @@ COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 %.o : %.S $(DEPDIR)/%.d
 	$(CC) -o$@ $<
 
+$(OBJDIR)/%.o:
+	@mkdir -p $(dir $@)
+
 $(DEPDIR)/%.d:
 	@mkdir -p $(dir $@)
 
 .PRECIOUS: $(DEPDIR)/%.d
+.PRECIOUS: $(OBJDIR)/%.o
 
 TOOLS:=tools/bin/makemap
 
@@ -105,7 +110,7 @@ dfu:
 
 clean:
 	rm -f $(APPNAME) $(OBJECTS) $(APPNAME).?.rom $(APPNAME).rom
-	rm -rf $(DEPDIR)
+	rm -rf $(DEPDIR) $(OBJDIR)
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Ctools clean
 
