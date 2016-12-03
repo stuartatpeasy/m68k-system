@@ -190,7 +190,14 @@
 		<Unit filename="kernel/include/lock.h" />
 		<Unit filename="kernel/include/platform.h" />
 		<Unit filename="kernel/include/preempt.h" />
+		<Unit filename="kernel/include/process.h" />
+		<Unit filename="kernel/include/sched.h" />
+		<Unit filename="kernel/include/semaphore.h" />
+		<Unit filename="kernel/include/syscall.h" />
+		<Unit filename="kernel/include/syscalls.h" />
+		<Unit filename="kernel/include/tick.h" />
 		<Unit filename="kernel/include/types.h" />
+		<Unit filename="kernel/include/user.h" />
 		<Unit filename="kernel/include/version.h" />
 		<Unit filename="kernel/keyboard.c">
 			<Option compilerVar="CC" />
@@ -291,28 +298,21 @@
 		<Unit filename="kernel/process.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/process.h" />
 		<Unit filename="kernel/sched.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/sched.h" />
 		<Unit filename="kernel/semaphore.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/semaphore.h" />
 		<Unit filename="kernel/syscall.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/syscall.h" />
-		<Unit filename="kernel/syscalls.h" />
 		<Unit filename="kernel/tick.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/tick.h" />
 		<Unit filename="kernel/user.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/user.h" />
 		<Unit filename="kernel/util/buffer.c">
 			<Option compilerVar="CC" />
 		</Unit>

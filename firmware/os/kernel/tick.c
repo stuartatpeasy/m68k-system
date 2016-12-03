@@ -9,8 +9,8 @@
 
 #include <kernel/device/device.h>
 #include <kernel/include/preempt.h>
+#include <kernel/include/tick.h>
 #include <kernel/memory/kmalloc.h>
-#include <kernel/tick.h>
 #include <kernel/util/kutil.h>
 #include <klibc/stdio.h>
 

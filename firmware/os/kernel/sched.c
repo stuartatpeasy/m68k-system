@@ -7,11 +7,11 @@
     (c) Stuart Wallace <stuartw@atom.net>, July 2015.
 */
 
-#include <kernel/sched.h>
+#include <kernel/include/sched.h>
 #include <kernel/include/limits.h>
-#include <kernel/memory/kmalloc.h>
 #include <kernel/include/platform.h>
-#include <kernel/user.h>
+#include <kernel/include/user.h>
+#include <kernel/memory/kmalloc.h>
 #include <klibc/string.h>
 #include <klibc/strings.h>
 

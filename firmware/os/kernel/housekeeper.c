@@ -10,7 +10,7 @@
 
 #include <kernel/device/device.h>
 #include <kernel/housekeeper.h>
-#include <kernel/process.h>
+#include <kernel/include/process.h>
 #include <kernel/util/kutil.h>
 
 

@@ -12,7 +12,7 @@
 #include <kernel/fs/vfs.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/user.h>
+#include <kernel/include/user.h>
 
 
 /* file_open() flags */

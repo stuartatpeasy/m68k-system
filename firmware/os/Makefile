@@ -167,7 +167,7 @@ kernel/elf.o: \
 kernel/entry.o: \
 	kernel/entry.c driver/ds17485.h kernel/fs/vfs.h kernel/include/defs.h klibc/stdio.h \
 	klibc/strings.h kernel/util/kutil.h kernel/memory/extents.o kernel/memory/kmalloc.h \
-	kernel/memory/slab.h monitor/monitor.h kernel/device/device.o kernel/sched.h
+	kernel/memory/slab.h monitor/monitor.h kernel/device/device.o kernel/include/sched.h
 
 kernel/error.o: \
 	kernel/error.c kernel/error.h kernel/include/defs.h kernel/include/types.h
@@ -298,21 +298,21 @@ kernel/net/udp.o: \
 	kernel/net/udp.c kernel/net/udp.h kernel/net/net.h kernel/include/defs.h kernel/include/types.h
 
 kernel/process.o: \
-	kernel/process.c kernel/process.h kernel/include/defs.h kernel/include/types.h
+	kernel/process.c kernel/include/process.h kernel/include/defs.h kernel/include/types.h
 
 kernel/sched.o: \
-	kernel/sched.c kernel/sched.h kernel/include/cpu.h kernel/include/defs.h \
-	kernel/include/types.h kernel/user.h klibc/strings.h
+	kernel/sched.c kernel/include/sched.h kernel/include/cpu.h kernel/include/defs.h \
+	kernel/include/types.h kernel/include/user.h klibc/strings.h
 
 kernel/semaphore.o: \
-	kernel/semaphore.c kernel/semaphore.h kernel/include/defs.h kernel/include/types.h \
+	kernel/semaphore.c kernel/include/semaphore.h kernel/include/defs.h kernel/include/types.h \
 	kernel/include/cpu.h
 
 kernel/syscall.o: \
-	kernel/syscall.c kernel/syscall.h kernel/syscalls.h
+	kernel/syscall.c kernel/include/syscall.h kernel/include/syscalls.h
 
 kernel/tick.o: \
-	kernel/tick.c kernel/tick.h kernel/include/defs.h kernel/include/types.h
+	kernel/tick.c kernel/include/tick.h kernel/include/defs.h kernel/include/types.h
 
 kernel/user.o: \
-	kernel/user.c kernel/user.h kernel/include/defs.h kernel/include/types.h
+	kernel/user.c kernel/include/user.h kernel/include/defs.h kernel/include/types.h

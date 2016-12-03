@@ -11,7 +11,7 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/syscalls.h>
+#include <kernel/include/syscalls.h>
 
 
 typedef struct syscall_table_entry

@@ -10,10 +10,10 @@
 */
 
 #include <driver/encx24j600.h>
+#include <kernel/include/process.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/net.h>
-#include <kernel/process.h>
 #include <klibc/string.h>
 
 

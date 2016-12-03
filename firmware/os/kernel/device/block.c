@@ -14,8 +14,8 @@
 */
 
 #include <kernel/device/block.h>
+#include <kernel/include/semaphore.h>
 #include <kernel/memory/kmalloc.h>
-#include <kernel/semaphore.h>
 #include <klibc/stdio.h>
 #include <klibc/string.h>
 

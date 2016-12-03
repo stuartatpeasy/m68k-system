@@ -13,7 +13,7 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/list.h>
 #include <kernel/include/types.h>
-#include <kernel/user.h>
+#include <kernel/include/user.h>
 
 
 #define PROC_KSTACK_LEN     (2048)      /* Per-process kernel stack size        */

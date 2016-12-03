@@ -8,7 +8,7 @@
 */
 
 #include <kernel/include/cpu.h>
-#include <kernel/semaphore.h>
+#include <kernel/include/semaphore.h>
 
 
 /*

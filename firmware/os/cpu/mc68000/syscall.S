@@ -8,7 +8,7 @@
 */
 
 #include <cpu/mc68000/regs.h>
-#include <kernel/syscalls.h>
+#include <kernel/include/syscalls.h>
 #include <klibc/errors.h>
 .include "cpu/mc68000/macros.S"
 

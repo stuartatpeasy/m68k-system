@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <kernel/user.h>
+#include <kernel/include/user.h>
 #include <klibc/errno.h>
 
 

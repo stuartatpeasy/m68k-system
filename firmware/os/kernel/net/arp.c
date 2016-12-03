@@ -13,7 +13,7 @@
 #include <kernel/net/packet.h>
 #include <kernel/net/protocol.h>
 #include <kernel/memory/kmalloc.h>
-#include <kernel/process.h>
+#include <kernel/include/process.h>
 #include <klibc/stdlib.h>
 
 

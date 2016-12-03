@@ -10,6 +10,7 @@
 #include <kernel/device/device.h>
 #include <kernel/error.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/process.h>
 #include <kernel/net/arp.h>
 #include <kernel/net/ethernet.h>
 #include <kernel/net/icmp.h>
@@ -21,7 +22,6 @@
 #include <kernel/net/route.h>
 #include <kernel/net/tcp.h>
 #include <kernel/net/udp.h>
-#include <kernel/process.h>
 #include <kernel/util/kutil.h>
 #include <klibc/strings.h>
 #include <klibc/stdio.h>

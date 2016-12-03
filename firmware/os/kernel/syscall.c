@@ -8,8 +8,8 @@
 */
 
 #include <kernel/include/console.h>
-#include <kernel/process.h>
-#include <kernel/syscall.h>
+#include <kernel/include/process.h>
+#include <kernel/include/syscall.h>
 #include <klibc/stdio.h>
 
 
