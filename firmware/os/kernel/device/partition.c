@@ -12,8 +12,7 @@
 #include <kernel/device/partition.h>
 #include <kernel/include/byteorder.h>
 #include <kernel/util/kutil.h>
-
-#include <strings.h>
+#include <klibc/include/strings.h>
 
 
 /* Module-private function declarations */

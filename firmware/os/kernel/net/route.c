@@ -9,7 +9,7 @@
     FIXME - remove printf()s and the #include stdio.h
 */
 
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 #include <kernel/include/net/route.h>
 
 

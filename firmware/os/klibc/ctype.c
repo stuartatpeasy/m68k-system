@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, June 2015
 */
 
-#include <klibc/ctype.h>
+#include <klibc/include/ctype.h>
 
 
 /*

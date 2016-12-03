@@ -11,7 +11,6 @@
 #include <kernel/device/device.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <stdio.h>
 
 
 /*

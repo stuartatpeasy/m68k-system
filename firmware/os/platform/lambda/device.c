@@ -6,8 +6,8 @@
 
 #include <kernel/include/platform.h>
 
-#include <stdio.h>
-#include <string.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
 #include <kernel/device/ata.h>              /* ATA interface    						*/
 #include <kernel/device/auto.h>				/* Automatic peripheral driver selection	*/
 #include <kernel/include/memory/kmalloc.h>

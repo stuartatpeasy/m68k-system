@@ -15,7 +15,7 @@
 #include <kernel/include/error.h>
 #include <kernel/include/types.h>
 #include <kernel/util/kutil.h>
-#include <klibc/strings.h>
+#include <klibc/include/strings.h>
 
 
 struct fat_bpb_block

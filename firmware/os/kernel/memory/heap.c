@@ -40,7 +40,7 @@
 
 #include <kernel/include/memory/heap.h>
 #include <kernel/include/preempt.h>
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 
 #ifdef KMALLOC_HEAP
 

@@ -11,10 +11,10 @@
 
 #include <kernel/include/types.h>
 #include <monitor/readline.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
+#include <klibc/include/ctype.h>
+#include <klibc/include/stdlib.h>
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 #define SREC_MAX_LINE_LENGTH		(256)

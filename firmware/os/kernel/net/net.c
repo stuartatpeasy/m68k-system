@@ -23,8 +23,8 @@
 #include <kernel/include/net/udp.h>
 #include <kernel/include/process.h>
 #include <kernel/util/kutil.h>
-#include <klibc/strings.h>
-#include <klibc/stdio.h>
+#include <klibc/include/strings.h>
+#include <klibc/include/stdio.h>
 
 
 net_init_fn_t g_net_init_fns[] =

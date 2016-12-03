@@ -11,7 +11,8 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <klibc/strings.h>
+#include <klibc/include/strings.h>
+
 
 #define MEM_EXTENT_USER     (0x00000001)    /* User-accessible memory                       */
 #define MEM_EXTENT_KERN     (0x00000002)    /* Kernel mem - access violation on user access */

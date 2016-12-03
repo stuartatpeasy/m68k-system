@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, January 2012.
 */
 
-#include <string.h>
+#include <klibc/include/string.h>
 
 #include <kernel/include/cpu.h>
 #include <kernel/include/error.h>

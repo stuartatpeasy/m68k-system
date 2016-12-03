@@ -8,8 +8,8 @@
 */
 
 #include <kernel/util/kutil.h>
-#include <ctype.h>
-#include <stdio.h>
+#include <klibc/include/ctype.h>
+#include <klibc/include/stdio.h>
 
 
 s32 dump_hex(const void *p, ku32 word_size, ku32 offset, ku32 num_bytes)

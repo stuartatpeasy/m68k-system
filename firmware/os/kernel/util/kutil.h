@@ -12,7 +12,8 @@
 #include <stdarg.h>
 #include <kernel/include/types.h>
 #include <kernel/include/error.h>
-#include <klibc/string.h>
+#include <klibc/include/string.h>
+
 
 /*
     Checksum functions

@@ -11,7 +11,7 @@
 
 #include <kernel/device/devctl.h>
 #include <kernel/include/types.h>
-#include <klibc/errno.h>
+#include <klibc/include/errno.h>
 
 
 #define DEVICE_NAME_LEN			(8)		/* Max length of device name, including terminating \0 	*/

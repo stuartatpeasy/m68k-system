@@ -11,9 +11,9 @@
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/net.h>
 #include <kernel/include/net/packet.h>
-#include <klibc/stdio.h>
-#include <klibc/string.h>
-#include <klibc/strings.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 ipv4_protocol_t ipv4_get_ipproto(const net_protocol_t proto);

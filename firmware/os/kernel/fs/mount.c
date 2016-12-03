@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include <errno.h>
+#include <klibc/include/errno.h>
 #include <kernel/fs/mount.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/memory/kmalloc.h>

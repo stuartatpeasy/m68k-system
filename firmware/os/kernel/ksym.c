@@ -9,8 +9,8 @@
 
 #include <kernel/include/ksym.h>
 #include <kernel/include/limits.h>
-#include <klibc/stdio.h>
-#include <klibc/string.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
 
 #define for_each_sym(sym) \
     for(sym = (symentry_t *) &_ssym; sym->len; sym = (symentry_t *) (sym->len + ((u8 *) sym)))

@@ -10,7 +10,7 @@
 */
 
 #include <kernel/include/types.h>
-#include <klibc/errors.h>
+#include <klibc/include/errors.h>
 
 
 extern s32 errno;

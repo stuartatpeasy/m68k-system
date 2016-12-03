@@ -9,9 +9,9 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
+#include <klibc/include/assert.h>
 #include <kernel/util/kutil.h>
 
 

@@ -12,7 +12,7 @@
 
 #include <kernel/error.h>
 #include <kernel/include/cpu.h>
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 
 
 /*

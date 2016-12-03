@@ -14,7 +14,7 @@
 #include <kernel/include/net/protocol.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/process.h>
-#include <klibc/stdlib.h>
+#include <klibc/include/stdlib.h>
 
 
 arp_cache_item_t *g_arp_cache = NULL;

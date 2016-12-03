@@ -12,7 +12,7 @@
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/preempt.h>
 #include <kernel/include/sched.h>
-#include <klibc/string.h>
+#include <klibc/include/string.h>
 
 
 list_t g_run_queue = LIST_INIT(g_run_queue);

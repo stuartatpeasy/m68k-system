@@ -12,9 +12,9 @@
 #include <kernel/include/net/interface.h>
 #include <kernel/include/net/ipv4.h>
 #include <kernel/include/net/packet.h>
-#include <klibc/stdio.h>
-#include <klibc/string.h>
-#include <klibc/strings.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 s32 eth_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);

@@ -11,7 +11,7 @@
 */
 
 #include <stdarg.h>
-#include <stdlib.h>
+#include <klibc/include/stdlib.h>
 
 #include <kernel/include/limits.h>
 #include <kernel/include/types.h>

@@ -8,7 +8,6 @@
 */
 
 #include <kernel/include/memory/slab.h>
-#include <klibc/stdio.h>
 
 
 slab_t g_slabs[NSLABS];
@@ -98,12 +97,6 @@ s32 slab_create(void *p, const u8 alloc_unit, slab_t *s)
     s->alloc_unit = alloc_unit;
 
     return SUCCESS;
-}
-
-
-void slab_dump()
-{
-
 }
 
 

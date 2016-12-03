@@ -13,9 +13,9 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/memory/kmalloc.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
+#include <klibc/include/stdlib.h>
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 struct command_history

@@ -12,8 +12,8 @@
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/platform.h>
 #include <kernel/include/user.h>
-#include <klibc/string.h>
-#include <klibc/strings.h>
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 u32 g_ncontext_switches = 0;

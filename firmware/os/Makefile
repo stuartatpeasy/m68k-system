@@ -123,7 +123,7 @@ driver/ps2controller.o: \
 
 kernel/boot.o: \
 	kernel/boot.c kernel/include/boot.h kernel/include/defs.h kernel/include/types.h \
-	kernel/device/devctl.h kernel/device/device.h klibc/stdio.h kernel/include/platform.h
+	kernel/device/devctl.h kernel/device/device.h klibc/include/stdio.h kernel/include/platform.h
 
 kernel/console.o: \
 	kernel/console.c kernel/include/console.h kernel/include/defs.h kernel/include/types.h
@@ -134,7 +134,7 @@ kernel/cpu/cpu.o: \
 kernel/device/ata.o: \
 	kernel/device/ata.c kernel/device/ata.h kernel/device/block.h kernel/device/devctl.h \
 	kernel/device/device.h kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h \
-	kernel/include/types.h klibc/stdio.h klibc/string.h klibc/strings.h
+	kernel/include/types.h klibc/include/stdio.h klibc/include/string.h klibc/include/strings.h
 
 kernel/device/auto.o: \
 	kernel/device/auto.c kernel/device/auto.h kernel/include/defs.h kernel/include/types.h \
@@ -145,7 +145,7 @@ kernel/device/block.o: \
 
 kernel/device/device.o: \
 	kernel/device/device.c kernel/device/devctl.h kernel/device/device.h kernel/util/kutil.h \
-	kernel/device/ata.h kernel/device/partition.h kernel/include/types.h klibc/errno.h
+	kernel/device/ata.h kernel/device/partition.h kernel/include/types.h klibc/include/errno.h
 
 kernel/device/memconsole.o: \
 	kernel/device/memconsole.c kernel/device/memconsole.h kernel/include/defs.h \
@@ -158,27 +158,29 @@ kernel/device/nvram.o: \
 kernel/device/partition.o: \
 	kernel/device/partition.c kernel/device/partition.h kernel/device/device.h \
 	kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h kernel/include/types.h \
-	klibc/stdio.h kernel/util/kutil.h kernel/include/cpu.h kernel/device/devctl.h
+	klibc/include/stdio.h kernel/util/kutil.h kernel/include/cpu.h kernel/device/devctl.h
 
 kernel/elf.o: \
 	kernel/elf.c kernel/include/byteorder.h kernel/include/defs.h kernel/include/elf.h \
-	kernel/include/types.h klibc/errno.h klibc/stdio.h klibc/string.h klibc/strings.h
+	kernel/include/types.h klibc/include/errno.h klibc/include/stdio.h klibc/include/string.h \
+	klibc/include/strings.h
 
 kernel/entry.o: \
-	kernel/entry.c driver/ds17485.h kernel/fs/vfs.h kernel/include/defs.h klibc/stdio.h \
-	klibc/strings.h kernel/util/kutil.h kernel/memory/extents.o kernel/include/memory/kmalloc.h \
-	kernel/include/memory/slab.h monitor/monitor.h kernel/device/device.o kernel/include/sched.h
+	kernel/entry.c driver/ds17485.h kernel/fs/vfs.h kernel/include/defs.h klibc/include/stdio.h \
+	klibc/include/strings.h kernel/util/kutil.h kernel/memory/extents.o \
+	kernel/include/memory/kmalloc.h kernel/include/memory/slab.h monitor/monitor.h \
+	kernel/device/device.o kernel/include/sched.h
 
 kernel/error.o: \
 	kernel/error.c kernel/error.h kernel/include/defs.h kernel/include/types.h
 
 kernel/fs/ext2/ext2.o: \
-	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h kernel/include/defs.h klibc/errno.h klibc/stdio.h \
-	klibc/string.h kernel/util/kutil.h kernel/include/memory/kmalloc.h
+	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h kernel/include/defs.h klibc/include/errno.h \
+	klibc/include/stdio.h klibc/include/string.h kernel/util/kutil.h kernel/include/memory/kmalloc.h
 
 kernel/fs/fat/fat.o: \
 	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/fs/vfs.h kernel/include/byteorder.h \
-	kernel/include/defs.h kernel/include/error.h kernel/include/types.h klibc/strings.h \
+	kernel/include/defs.h kernel/include/error.h kernel/include/types.h klibc/include/strings.h \
 	kernel/util/kutil.h
 
 kernel/fs/romfs.o: \
@@ -190,13 +192,13 @@ kernel/fs/file.o: \
 
 kernel/fs/mount.o: \
 	kernel/fs/mount.c kernel/fs/mount.h kernel/include/defs.h kernel/include/types.h \
-	kernel/device/device.h kernel/fs/vfs.h kernel/include/defs.h klibc/errno.h kernel/util/kutil.h \
-	kernel/include/memory/kmalloc.h
+	kernel/device/device.h kernel/fs/vfs.h kernel/include/defs.h klibc/include/errno.h \
+	kernel/util/kutil.h kernel/include/memory/kmalloc.h
 
 kernel/fs/vfs.o: \
 	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h kernel/device/nvram.h \
 	kernel/device/devctl.h kernel/device/device.h kernel/include/defs.h kernel/include/types.h \
-	klibc/stdio.h
+	klibc/include/stdio.h
 
 kernel/housekeeper.o: \
 	kernel/housekeeper.c kernel/housekeeper.h kernel/include/defs.h kernel/include/types.h
@@ -211,22 +213,22 @@ kernel/ksym.o: \
 	kernel/ksym.c kernel/include/ksym.h kernel/include/defs.h kernel/include/types.h
 
 kernel/memory/buddy.o: \
-	kernel/memory/buddy.c kernel/include/memory/buddy.h kernel/include/types.h klibc/stdio.h \
-	kernel/util/kutil.h libkutil.a
+	kernel/memory/buddy.c kernel/include/memory/buddy.h kernel/include/types.h \
+	klibc/include/stdio.h kernel/util/kutil.h libkutil.a
 
 kernel/memory/extents.o: \
 	kernel/memory/extents.c kernel/include/memory/extents.h kernel/include/defs.h \
-	kernel/include/types.h klibc/strings.h
+	kernel/include/types.h klibc/include/strings.h
 
 kernel/memory/heap.o: \
-	kernel/memory/heap.c kernel/include/memory/heap.h kernel/include/types.h klibc/stdio.h
+	kernel/memory/heap.c kernel/include/memory/heap.h kernel/include/types.h klibc/include/stdio.h
 
 kernel/memory/kmalloc.o: \
 	kernel/memory/kmalloc.c kernel/include/memory/kmalloc.h kernel/include/types.h
 
 kernel/memory/slab.o: \
 	kernel/memory/slab.c kernel/include/memory/slab.h kernel/include/defs.h kernel/include/types.h \
-	klibc/stdio.h
+	klibc/include/stdio.h
 
 kernel/net/address.o: \
 	kernel/net/address.c kernel/include/net/address.h kernel/include/defs.h kernel/include/types.h \
@@ -295,7 +297,7 @@ kernel/net/tcp.o: \
 
 kernel/net/tftp.o: \
 	kernel/net/tftp.c kernel/include/net/tftp.h kernel/include/net/ipv4.h kernel/include/net/net.h \
-	kernel/include/net/udp.h kernel/include/defs.h kernel/include/types.h klibc/string.h
+	kernel/include/net/udp.h kernel/include/defs.h kernel/include/types.h klibc/include/string.h
 
 kernel/net/udp.o: \
 	kernel/net/udp.c kernel/include/net/udp.h kernel/include/net/net.h kernel/include/defs.h \
@@ -306,7 +308,7 @@ kernel/process.o: \
 
 kernel/sched.o: \
 	kernel/sched.c kernel/include/sched.h kernel/include/cpu.h kernel/include/defs.h \
-	kernel/include/types.h kernel/include/user.h klibc/strings.h
+	kernel/include/types.h kernel/include/user.h klibc/include/strings.h
 
 kernel/semaphore.o: \
 	kernel/semaphore.c kernel/include/semaphore.h kernel/include/defs.h kernel/include/types.h \

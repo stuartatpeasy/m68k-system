@@ -7,8 +7,8 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
-#include <klibc/stdlib.h>
-#include <klibc/errno.h>
+#include <klibc/include/stdlib.h>
+#include <klibc/include/errno.h>
 
 
 static s32 g_rand_next = 1;

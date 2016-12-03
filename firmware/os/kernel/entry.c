@@ -27,9 +27,9 @@
 #include <kernel/include/memory/slab.h>
 #include <kernel/include/net/net.h>
 #include <kernel/util/kutil.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/strings.h>
 #include <monitor/monitor.h>
-#include <stdio.h>
-#include <strings.h>
 
 
 const char * const g_warmup_message = "\n  \\   ayumos"

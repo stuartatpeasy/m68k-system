@@ -11,7 +11,7 @@
 #include <kernel/include/net/tftp.h>
 #include <kernel/include/net/ipv4.h>
 #include <kernel/include/net/packet.h>
-#include <klibc/string.h>
+#include <klibc/include/string.h>
 
 
 /*

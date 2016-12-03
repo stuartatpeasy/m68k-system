@@ -12,7 +12,7 @@
 #include <kernel/include/process.h>
 #include <kernel/include/memory/extents.h>
 #include <kernel/util/kutil.h>
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 
 
 void mc68000_bus_error_handler(void *dummy);

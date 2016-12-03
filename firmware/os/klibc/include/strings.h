@@ -10,7 +10,7 @@
 */
 
 #include <kernel/include/types.h>
-#include <klibc/ctype.h>
+#include <klibc/include/ctype.h>
 
 
 void bcopy(const void *src, void *dest, u32 n);

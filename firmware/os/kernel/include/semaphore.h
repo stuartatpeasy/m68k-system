@@ -12,7 +12,7 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/cpu.h>
-#include <klibc/errors.h>
+#include <klibc/include/errors.h>
 
 
 typedef u8 sem_t;

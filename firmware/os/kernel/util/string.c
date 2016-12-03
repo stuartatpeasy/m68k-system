@@ -8,8 +8,8 @@
 */
 
 #include <kernel/util/kutil.h>
-#include <ctype.h>
-#include <string.h>
+#include <klibc/include/ctype.h>
+#include <klibc/include/string.h>
 
 
 /*

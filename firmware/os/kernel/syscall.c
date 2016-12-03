@@ -10,7 +10,7 @@
 #include <kernel/include/console.h>
 #include <kernel/include/process.h>
 #include <kernel/include/syscall.h>
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 
 
 /*

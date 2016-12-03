@@ -16,8 +16,8 @@
 #include <kernel/include/net/packet.h>
 #include <kernel/include/net/net.h>
 #include <kernel/util/kutil.h>
-#include <klibc/stdio.h>        // FIXME remove
-#include <klibc/strings.h>
+#include <klibc/include/stdio.h>        // FIXME remove
+#include <klibc/include/strings.h>
 
 
 s32 net_interface_add(dev_t *dev);

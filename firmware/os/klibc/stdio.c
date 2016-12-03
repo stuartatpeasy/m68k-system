@@ -7,7 +7,7 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 #include <kernel/include/console.h>
 
 

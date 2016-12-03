@@ -14,9 +14,9 @@
 #include <kernel/include/types.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
-#include <klibc/errno.h>
-#include <klibc/stdio.h>
-#include <klibc/string.h>
+#include <klibc/include/errno.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
 
 
 #define EXT2_SUPER_MAGIC		(0xef53)

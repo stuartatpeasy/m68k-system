@@ -9,7 +9,7 @@
 
 #include <kernel/util/buffer.h>
 #include <kernel/include/memory/kmalloc.h>
-#include <klibc/string.h>
+#include <klibc/include/string.h>
 
 
 /*

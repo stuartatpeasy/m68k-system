@@ -16,8 +16,9 @@
 #include <kernel/device/block.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/semaphore.h>
-#include <klibc/stdio.h>
-#include <klibc/string.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
+
 
 static block_cache_t bc;
 

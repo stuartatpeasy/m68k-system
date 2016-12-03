@@ -7,10 +7,10 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
+#include <klibc/include/errno.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 #include <kernel/device/device.h>
 #include <kernel/device/partition.h>

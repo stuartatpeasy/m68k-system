@@ -21,13 +21,13 @@
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/ipv4.h>
 #include <kernel/util/kutil.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/stdlib.h>
+#include <klibc/include/string.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>
 #include <monitor/readline.h>
 #include <monitor/srec.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 
 

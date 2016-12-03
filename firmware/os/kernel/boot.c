@@ -11,7 +11,7 @@
 #include <kernel/device/devctl.h>
 #include <kernel/include/platform.h>
 #include <kernel/util/kutil.h>
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 
 
 const char * const unknown = "(unknown)";

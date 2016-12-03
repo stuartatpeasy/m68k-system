@@ -13,8 +13,8 @@
 #include <kernel/include/types.h>
 #include <kernel/include/limits.h>
 #include <kernel/include/net/ipv4.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <klibc/include/stdlib.h>
+#include <klibc/include/errno.h>
 
 
 s32 memcmp(const void *s1, const void *s2, u32 n);

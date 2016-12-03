@@ -13,9 +13,9 @@
 #include <kernel/include/net/udp.h>
 #include <kernel/include/net/packet.h>
 #include <kernel/include/net/protocol.h>
-#include <klibc/stdio.h>        // FIXME remove
-#include <klibc/string.h>
-#include <klibc/strings.h>
+#include <klibc/include/stdio.h>        // FIXME remove
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 /*

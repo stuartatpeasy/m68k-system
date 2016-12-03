@@ -8,7 +8,7 @@
 */
 
 #include <kernel/include/user.h>
-#include <klibc/errno.h>
+#include <klibc/include/errno.h>
 
 
 s32 group_member(const uid_t uid, const gid_t gid)

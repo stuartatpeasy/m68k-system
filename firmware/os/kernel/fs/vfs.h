@@ -12,7 +12,7 @@
 #include <kernel/device/device.h>
 #include <kernel/include/types.h>
 #include <kernel/include/defs.h>
-#include <stdio.h>
+#include <klibc/include/stdio.h>
 
 
 typedef u16 file_perm_t;

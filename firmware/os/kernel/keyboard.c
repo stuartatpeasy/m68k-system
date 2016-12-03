@@ -8,7 +8,7 @@
 */
 
 #include <kernel/include/keyboard.h>
-#include <klibc/ctype.h>
+#include <klibc/include/ctype.h>
 
 
 /*

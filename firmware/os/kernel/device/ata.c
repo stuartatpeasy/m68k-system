@@ -11,9 +11,9 @@
 #include <kernel/include/byteorder.h>
 #include <kernel/include/error.h>
 #include <kernel/util/kutil.h>
-#include <klibc/stdio.h>            // FIXME REMOVE
-#include <klibc/string.h>
-#include <klibc/strings.h>
+#include <klibc/include/stdio.h>            // FIXME REMOVE
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 /*

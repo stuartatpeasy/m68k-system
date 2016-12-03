@@ -347,36 +347,37 @@
 		<Unit filename="klibc/assert.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="klibc/assert.h" />
 		<Unit filename="klibc/ctype.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="klibc/ctype.h" />
 		<Unit filename="klibc/errno.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="klibc/errno.h" />
-		<Unit filename="klibc/errors.h" />
-		<Unit filename="klibc/limits.h" />
+		<Unit filename="klibc/include/assert.h" />
+		<Unit filename="klibc/include/ctype.h" />
+		<Unit filename="klibc/include/errno.h" />
+		<Unit filename="klibc/include/errors.h" />
+		<Unit filename="klibc/include/limits.h" />
+		<Unit filename="klibc/include/stdint.h" />
+		<Unit filename="klibc/include/stdio.h" />
+		<Unit filename="klibc/include/stdlib.h" />
+		<Unit filename="klibc/include/string.h" />
+		<Unit filename="klibc/include/strings.h" />
 		<Unit filename="klibc/printf.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="klibc/stdio.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="klibc/stdio.h" />
 		<Unit filename="klibc/stdlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="klibc/stdlib.h" />
 		<Unit filename="klibc/string.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="klibc/string.h" />
 		<Unit filename="klibc/strings.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="klibc/strings.h" />
 		<Unit filename="monitor/Makefile" />
 		<Unit filename="monitor/commands.c">
 			<Option compilerVar="CC" />

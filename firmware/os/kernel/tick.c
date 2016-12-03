@@ -12,7 +12,7 @@
 #include <kernel/include/preempt.h>
 #include <kernel/include/tick.h>
 #include <kernel/util/kutil.h>
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 
 
 static tick_callback_t *callbacks = NULL;

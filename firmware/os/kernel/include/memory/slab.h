@@ -59,7 +59,6 @@ void *g_slab_end;
 void *slab_alloc_pow2(ku32 radix);
 void *slab_alloc_obj(slab_t * const s);
 s32 slab_create(void *p, u8 const alloc_unit, slab_t *s);
-void slab_dump(void);
 void slab_free(void *obj);
 void slab_init(void *slab_base);
 

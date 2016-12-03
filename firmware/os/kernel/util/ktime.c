@@ -12,7 +12,7 @@
 #include <kernel/include/limits.h>
 #include <kernel/include/types.h>
 #include <kernel/util/kutil.h>
-#include <klibc/stdio.h>
+#include <klibc/include/stdio.h>
 
 
 #define DATETIME_TS_MAX (S32_MAX)

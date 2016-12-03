@@ -1,6 +1,7 @@
 SRC_ROOT=../..
 KERN_ROOT=$(SRC_ROOT)/kernel
 KERN_INC=$(KERN_ROOT)/include
+KLIBC_INC=$(SRC_ROOT)/klibc/include
 
 include $(SRC_ROOT)/global.mk
 
@@ -31,7 +32,7 @@ clean:
 device.o: \
 	$(STDDEPS) device.c device.h $(SRC_ROOT)/kernel/device/ata.h $(SRC_ROOT)/kernel/device/auto.h \
 	$(SRC_ROOT)/driver/ds17485.h $(SRC_ROOT)/driver/mc68681.h $(KERN_INC)/memory/kmalloc.h \
-	$(KERN_ROOT)/util/kutil.h $(SRC_ROOT)/klibc/stdio.h $(SRC_ROOT)/klibc/string.h
+	$(KERN_ROOT)/util/kutil.h $(KLIBC_INC)/stdio.h $(KLIBC_INC)/string.h
 
 dfu.o: \
 	$(STDDEPS) dfu.c dfu.h lambda.h $(KERN_INC)/platform.h $(KERN_ROOT)/util/kutil.h \

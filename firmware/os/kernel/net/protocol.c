@@ -16,9 +16,9 @@
 #include <kernel/include/net/protocol.h>
 #include <kernel/include/net/packet.h>
 #include <kernel/include/net/route.h>
-#include <klibc/stdio.h>
-#include <klibc/string.h>
-#include <klibc/strings.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 /* Network protocol driver */

@@ -9,7 +9,7 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <klibc/string.h>
+#include <klibc/include/string.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/net/net.h>

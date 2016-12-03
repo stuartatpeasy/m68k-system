@@ -24,26 +24,26 @@ clean:
 #
 
 assert.o: \
-	assert.c assert.h $(KERN_INC)/types.h stdio.h
+	assert.c include/assert.h $(KERN_INC)/types.h include/stdio.h
 
 ctype.o: \
-	ctype.c ctype.h $(KERN_INC)/types.h
+	ctype.c include/ctype.h $(KERN_INC)/types.h
 
 errno.o: \
-	errno.c errno.h $(KERN_INC)/types.h
+	errno.c include/errno.h $(KERN_INC)/types.h
 
 printf.o: \
-	printf.c stdio.h string.h $(KERN_INC)/memory/kmalloc.h $(KERN_INC)/limits.h \
+	printf.c include/stdio.h include/string.h $(KERN_INC)/memory/kmalloc.h $(KERN_INC)/limits.h \
 	$(KERN_INC)/types.h $(KERN_INC)/platform.h
 
 stdio.o: \
 	stdio.c $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/platform.h
 
 stdlib.o: \
-	stdlib.c stdlib.h $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/memory/kmalloc.h
+	stdlib.c include/stdlib.h $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/memory/kmalloc.h
 
 string.o: \
-	string.c string.h $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/memory/kmalloc.h
+	string.c include/string.h $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/memory/kmalloc.h
 
 strings.o: \
-	strings.c ctype.h $(KERN_INC)/types.h
+	strings.c include/ctype.h $(KERN_INC)/types.h
