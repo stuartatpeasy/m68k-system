@@ -7,8 +7,8 @@
 	(c) Stuart Wallace, January 2016.
 */
 
-#include <kernel/console.h>
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
+#include <kernel/include/console.h>
 #include <kernel/device/memconsole.h>
 
 

@@ -13,7 +13,7 @@
 #include <kernel/device/nvram.h>
 #include <kernel/fs/mount.h>
 #include <kernel/fs/vfs.h>
-#include <kernel/console.h>
+#include <kernel/include/console.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/version.h>
 #include <kernel/memory/kmalloc.h>

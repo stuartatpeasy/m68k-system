@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <kernel/semaphore.h>
 
 

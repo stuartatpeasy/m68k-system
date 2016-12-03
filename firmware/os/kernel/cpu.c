@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <kernel/memory/kmalloc.h>
 #include <klibc/errors.h>
 

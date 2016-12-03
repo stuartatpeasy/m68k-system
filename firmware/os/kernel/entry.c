@@ -11,12 +11,12 @@
     - look for additional mounts in /etc/mnttab (plenty to do to reach this point!)
 */
 
-#include <kernel/boot.h>
 #include <kernel/device/block.h>
 #include <kernel/device/memconsole.h>
 #include <kernel/device/partition.h>
 #include <kernel/fs/vfs.h>
 #include <kernel/housekeeper.h>
+#include <kernel/include/boot.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/preempt.h>
 #include <kernel/memory/extents.h>

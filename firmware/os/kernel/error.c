@@ -11,7 +11,7 @@
 */
 
 #include <kernel/error.h>
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <klibc/stdio.h>
 
 

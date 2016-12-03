@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <kernel/include/error.h>
 #include <kernel/include/types.h>
 #include <kernel/memory/kmalloc.h>

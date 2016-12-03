@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, 17th October 2015.
 */
 
-#include <kernel/boot.h>
+#include <kernel/include/boot.h>
 #include <kernel/device/devctl.h>
 #include <kernel/platform.h>
 #include <kernel/util/kutil.h>

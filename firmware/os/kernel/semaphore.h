@@ -11,7 +11,7 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <klibc/errors.h>
 
 

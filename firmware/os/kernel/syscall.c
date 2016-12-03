@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015
 */
 
-#include <kernel/console.h>
+#include <kernel/include/console.h>
 #include <kernel/process.h>
 #include <kernel/syscall.h>
 #include <klibc/stdio.h>

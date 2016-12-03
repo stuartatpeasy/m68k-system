@@ -100,7 +100,7 @@ $(TOOLS):
 #
 
 cpu/$(CPU)/$(CPU).o: \
-	kernel/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c kernel/include/defs.h \
+	kernel/include/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c kernel/include/defs.h \
 	kernel/include/types.h
 
 cpu/$(CPU)/process.o: \
@@ -110,7 +110,7 @@ driver/ds17485.o: \
 	driver/ds17485.c driver/ds17485.h kernel/include/types.h kernel/util/kutil.h
 
 driver/encx24j600.o: \
-	driver/encx24j600.c driver/encx24j600.h kernel/cpu.h kernel/device/device.h \
+	driver/encx24j600.c driver/encx24j600.h kernel/include/cpu.h kernel/device/device.h \
 	kernel/include/byteorder.h kernel/include/defs.h kernel/include/error.h kernel/include/types.h
 
 driver/mc68681.o: \
@@ -122,14 +122,14 @@ driver/ps2controller.o: \
 	kernel/include/types.h
 
 kernel/boot.o: \
-	kernel/boot.c kernel/boot.h kernel/include/defs.h kernel/include/types.h \
+	kernel/boot.c kernel/include/boot.h kernel/include/defs.h kernel/include/types.h \
 	kernel/device/devctl.h kernel/device/device.h klibc/stdio.h kernel/platform.h
 
 kernel/console.o: \
-	kernel/console.c kernel/console.h kernel/include/defs.h kernel/include/types.h
+	kernel/console.c kernel/include/console.h kernel/include/defs.h kernel/include/types.h
 
 kernel/cpu/cpu.o: \
-	kernel/cpu/cpu.c kernel/cpu.h cpu/arch_specific.h kernel/include/types.h
+	kernel/cpu/cpu.c kernel/include/cpu.h cpu/arch_specific.h kernel/include/types.h
 
 kernel/device/ata.o: \
 	kernel/device/ata.c kernel/device/ata.h kernel/device/block.h kernel/device/devctl.h \
@@ -158,7 +158,7 @@ kernel/device/nvram.o: \
 kernel/device/partition.o: \
 	kernel/device/partition.c kernel/device/partition.h kernel/device/device.h \
 	kernel/include/byteorder.h kernel/include/defs.h kernel/device/mbr.h kernel/include/types.h \
-	klibc/stdio.h kernel/util/kutil.h kernel/cpu.h kernel/device/devctl.h
+	klibc/stdio.h kernel/util/kutil.h kernel/include/cpu.h kernel/device/devctl.h
 
 kernel/elf.o: \
 	kernel/elf.c kernel/include/byteorder.h kernel/include/defs.h kernel/elf.h \
@@ -202,7 +202,7 @@ kernel/housekeeper.o: \
 	kernel/housekeeper.c kernel/housekeeper.h kernel/include/defs.h kernel/include/types.h
 
 kernel/include/byteorder.h: \
-	kernel/cpu.h
+	kernel/include/cpu.h
 
 kernel/keyboard.o: \
 	kernel/keyboard.c kernel/include/keyboard.h kernel/include/defs.h kernel/include/types.h
@@ -301,11 +301,12 @@ kernel/process.o: \
 	kernel/process.c kernel/process.h kernel/include/defs.h kernel/include/types.h
 
 kernel/sched.o: \
-	kernel/sched.c kernel/sched.h kernel/cpu.h kernel/include/defs.h kernel/include/types.h \
-	kernel/user.h klibc/strings.h
+	kernel/sched.c kernel/sched.h kernel/include/cpu.h kernel/include/defs.h \
+	kernel/include/types.h kernel/user.h klibc/strings.h
 
 kernel/semaphore.o: \
-	kernel/semaphore.c kernel/semaphore.h kernel/include/defs.h kernel/include/types.h kernel/cpu.h
+	kernel/semaphore.c kernel/semaphore.h kernel/include/defs.h kernel/include/types.h \
+	kernel/include/cpu.h
 
 kernel/syscall.o: \
 	kernel/syscall.c kernel/syscall.h kernel/syscalls.h

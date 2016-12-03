@@ -9,9 +9,10 @@
     (c) Stuart Wallace, December 2016.
 */
 
+#include <kernel/include/cpu.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/cpu.h>
+
 
 extern vu32 preempt_count;
 

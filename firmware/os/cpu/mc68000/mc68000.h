@@ -14,7 +14,7 @@
 
 #define CPU_MAX_IRQL        255
 
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 
 #define VECTOR_TABLE_START      ((u32 *) 0x00000000)
 #define VECTOR_TABLE_END        ((u32 *) 0x00000400)

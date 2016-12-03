@@ -11,9 +11,9 @@
     This device has driver ID 0x81.
 */
 
-#include <kernel/cpu.h>
 #include <kernel/device/device.h>
 #include <kernel/include/byteorder.h>
+#include <kernel/include/cpu.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/error.h>
 #include <kernel/include/list.h>

@@ -9,7 +9,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/list.h>
 #include <kernel/include/types.h>

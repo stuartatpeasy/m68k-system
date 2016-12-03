@@ -10,7 +10,7 @@
 	TODO: get rid of "echo" stuff; implement separate length-limited read function.
 */
 
-#include <kernel/console.h>
+#include <kernel/include/console.h>
 #include <monitor/readline.h>
 
 

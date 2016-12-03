@@ -10,7 +10,7 @@
 */
 
 #include <driver/mc68681.h>
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <kernel/memory/kmalloc.h>
 
 

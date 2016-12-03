@@ -11,8 +11,8 @@
 
 #define IN_PLATFORM_H
 
+#include <kernel/include/cpu.h>
 #include <kernel/include/types.h>
-#include <kernel/cpu.h>
 #include <kernel/device/device.h>
 #include <kernel/include/defs.h>
 #include <kernel/memory/extents.h>

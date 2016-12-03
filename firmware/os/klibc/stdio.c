@@ -8,7 +8,7 @@
 */
 
 #include <klibc/stdio.h>
-#include <kernel/console.h>
+#include <kernel/include/console.h>
 
 
 /*
