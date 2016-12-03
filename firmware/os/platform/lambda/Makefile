@@ -1,46 +1,40 @@
 SRC_ROOT=../..
-KERN_ROOT=$(SRC_ROOT)/kernel
-KERN_INC=$(KERN_ROOT)/include
-KLIBC_INC=$(SRC_ROOT)/klibc/include
 
 include $(SRC_ROOT)/global.mk
 
-LIBNAME=$(SRC_ROOT)/libplatform.a
+LIBNAME := $(SRC_ROOT)/libplatform.a
 
-CSOURCES=device.c dfu.c lambda.c
+CSOURCES := device.c dfu.c lambda.c
 
-ASMSOURCES=startup.S
+ASMSOURCES := startup.S
 
-OBJECTS=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
+OBJECTS := $(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
 
-STDDEPS=$(KERN_INC)/platform.h $(KERN_INC)/defs.h $(KERN_INC)/error.h $(KERN_INC)/types.h
+DEPDIR := .deps
+$(shell mkdir -p $(DEPDIR) >/dev/null)
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
+
+COMPILE.S = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+
+%.o : %.c $(DEPDIR)/%.d
+	$(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -o$@ $<
+
+%.o : %.S $(DEPDIR)/%.d
+	$(CC) -o$@ $<
+#	$(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -o$@ $<
+
+$(DEPDIR)/%.d:
+	@mkdir -p $(dir $@)
+
+.PRECIOUS: $(DEPDIR)/%.d
 
 all: $(LIBNAME)
 
-.c.o:
-	$(CC) $(CFLAGS) -o$@ $<
-
-.S.o:
-	$(CC) $(CFLAGS) -o$@ $<
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(CSOURCES)))
 
 $(LIBNAME): $(OBJECTS)
 	$(AR) rcs $(LIBNAME) $(OBJECTS)
 
 clean:
 	rm -f $(LIBNAME) $(OBJECTS)
-
-device.o: \
-	$(STDDEPS) device.c include/device.h $(KERN_INC)/device/ata.h $(KERN_INC)/device/auto.h \
-	$(SRC_ROOT)/driver/ds17485.h $(SRC_ROOT)/driver/mc68681.h $(KERN_INC)/memory/kmalloc.h \
-	$(KERN_ROOT)/util/kutil.h $(KLIBC_INC)/stdio.h \
-	$(KLIBC_INC)/string.h
-
-dfu.o: \
-	$(STDDEPS) dfu.c include/dfu.h include/lambda.h $(KERN_INC)/platform.h \
-	$(KERN_ROOT)/util/kutil.h $(KERN_INC)/memory/kmalloc.h
-
-lambda.o: \
-	$(STDDEPS) lambda.c include/lambda.h
-
-startup.o: \
-	startup.S
+	rm -rf $(DEPDIR)

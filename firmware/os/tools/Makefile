@@ -1,6 +1,6 @@
 # Makefile for host tools
 #
-# Part of the as-yet-unnamed MC68010 operating system
+# Part of ayumos
 #
 #
 # Stuart Wallace <stuartw@atom.net>, September 2015.
@@ -23,7 +23,7 @@ all: $(TARGET)
 	$(HOSTCC) $(CFLAGS) -o$@ $<
 
 $(TARGET): $(OBJECTS)
-	$(HOSTCC) $(OBJECTS) -o$(TARGET)
+	$(HOSTCC) -o$(TARGET) $(OBJECTS)
 
 clean:
 	rm -f $(TARGET) $(OBJECTS)

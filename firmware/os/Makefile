@@ -1,4 +1,4 @@
-# Makefile for the as-yet-unnamed MC68010 operating system
+# Makefile for ayumos
 #
 # Stuart Wallace <stuartw@atom.net>, 2011-2015.
 #
@@ -9,46 +9,72 @@ FLASHTOOL=/usr/local/bin/flashtool
 DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
-CSOURCES:=	cpu/$(CPU)/$(CPU).c \
-			driver/ds17485.c driver/encx24j600.c driver/mc68681.c driver/ps2controller.c \
-			kernel/device/ata.c kernel/device/auto.c kernel/device/block.c kernel/device/device.c \
-			kernel/device/memconsole.c kernel/device/nvram.c kernel/device/partition.c \
-			kernel/fs/file.c kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c \
-			kernel/fs/fat/fat.c kernel/fs/romfs.c \
-			kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/error.c \
-			kernel/housekeeper.c kernel/keyboard.c kernel/ksym.c kernel/preempt.c kernel/process.c \
-			kernel/sched.c kernel/semaphore.c kernel/syscall.c kernel/tick.c kernel/user.c \
-			kernel/net/address.c kernel/net/arp.c kernel/net/dhcp.c \
-			kernel/net/ethernet.c kernel/net/icmp.c kernel/net/interface.c kernel/net/ipv4.c \
-			kernel/net/net.c kernel/net/packet.c kernel/net/protocol.c kernel/net/raw.c \
-			kernel/net/route.c kernel/net/socket.c kernel/net/tcp.c \
-			kernel/net/tftp.c kernel/net/udp.c \
-			kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c \
-			kernel/memory/kmalloc.c kernel/memory/slab.c
+KERNEL_SOURCES := \
+	cpu/$(CPU)/$(CPU).c \
+	driver/ds17485.c driver/encx24j600.c driver/mc68681.c driver/ps2controller.c \
+	kernel/device/ata.c kernel/device/auto.c kernel/device/block.c kernel/device/device.c \
+	kernel/device/memconsole.c kernel/device/nvram.c kernel/device/partition.c kernel/fs/file.c \
+	kernel/fs/mount.c kernel/fs/vfs.c kernel/fs/ext2/ext2.c kernel/fs/fat/fat.c kernel/fs/romfs.c \
+	kernel/boot.c kernel/console.c kernel/cpu.c kernel/elf.c kernel/entry.c kernel/error.c \
+	kernel/housekeeper.c kernel/keyboard.c kernel/ksym.c kernel/preempt.c kernel/process.c \
+	kernel/sched.c kernel/semaphore.c kernel/syscall.c kernel/tick.c kernel/user.c \
+	kernel/net/address.c kernel/net/arp.c kernel/net/dhcp.c kernel/net/ethernet.c \
+	kernel/net/icmp.c kernel/net/interface.c kernel/net/ipv4.c kernel/net/net.c \
+	kernel/net/packet.c kernel/net/protocol.c kernel/net/raw.c kernel/net/route.c \
+	kernel/net/socket.c kernel/net/tcp.c kernel/net/tftp.c kernel/net/udp.c \
+	kernel/memory/buddy.c kernel/memory/extents.c kernel/memory/heap.c kernel/memory/kmalloc.c \
+	kernel/memory/slab.c \
+	kernel/util/bvec.c kernel/util/buffer.c kernel/util/checksum.c kernel/util/dump.c \
+	kernel/util/hash.c kernel/util/ktime.c kernel/util/numeric.c kernel/util/string.c
 
-ASMSOURCES:=cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S
+KLIBC_SOURCES := \
+	klibc/assert.c klibc/ctype.c klibc/errno.c klibc/printf.c klibc/stdio.c klibc/stdlib.c \
+	klibc/string.c klibc/strings.c
 
-LDSCRIPT:=platform/$(PLATFORM)/kernel.ld
+MONITOR_SOURCES := \
+	monitor/commands.c monitor/disasm.c monitor/env.c monitor/history.c monitor/monitor.o \
+	monitor/readline.c monitor/srec.c
 
-OBJLIBS:=libc.a libkutil.a libmonitor.a
+ASMSOURCES := cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S
+
+CSOURCES := $(KERNEL_SOURCES) $(KLIBC_SOURCES) $(MONITOR_SOURCES)
+
+SOURCES := $(CSOURCES) $(ASMSOURCES)
+
+LDSCRIPT :=platform/$(PLATFORM)/kernel.ld
+
+OBJECTS := $(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
+
+DEPDIR := .deps
+$(shell mkdir -p $(DEPDIR) >/dev/null)
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
+
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE.S = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+
+%.o : %.c $(DEPDIR)/%.d
+	$(CC) -o$@ $<
+
+%.o : %.S $(DEPDIR)/%.d
+	$(CC) -o$@ $<
+
+$(DEPDIR)/%.d:
+	@mkdir -p $(dir $@)
+
+.PRECIOUS: $(DEPDIR)/%.d
 
 TOOLS:=tools/bin/makemap
 
 LDFLAGS:=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
-LIBS:=-lgcc -lc -lkutil -lmonitor -lplatform
-
-OBJECTS:=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
+LIBS:=-lgcc -lplatform
 
 all: $(APPNAME)
 
-.c.o:
-	$(CC) $(CFLAGS) -o$@ $<
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SOURCES)))
 
-.S.o:
-	$(CC) $(CFLAGS) -o$@ $<
-
-$(APPNAME): $(OBJECTS) $(OBJLIBS) $(TOOLS)
+$(APPNAME): $(OBJECTS) $(TOOLS)
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
@@ -57,6 +83,10 @@ $(APPNAME): $(OBJECTS) $(OBJLIBS) $(TOOLS)
 	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
 	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
 	chmod -f -x $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom || true
+
+$(TOOLS):
+	mkdir -p tools/bin
+	$(MAKE) $(MFLAGS) -Ctools
 
 evenrom:
 	$(FLASHTOOL) --program --infile $(APPNAME).E.rom --verify --device $(FLASHPROGDEV)
@@ -75,255 +105,7 @@ dfu:
 
 clean:
 	rm -f $(APPNAME) $(OBJECTS) $(APPNAME).?.rom $(APPNAME).rom
+	rm -rf $(DEPDIR)
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
-	$(MAKE) $(MFLAGS) -Cklibc clean
-	$(MAKE) $(MFLAGS) -Ckernel/util clean
-	$(MAKE) $(MFLAGS) -Cmonitor clean
 	$(MAKE) $(MFLAGS) -Ctools clean
 
-libc.a:
-	$(MAKE) $(MFLAGS) -Cklibc
-
-libkutil.a:
-	$(MAKE) $(MFLAGS) -Ckernel/util
-
-libmonitor.a:
-	$(MAKE) $(MFLAGS) -Cmonitor
-
-$(TOOLS):
-	mkdir -p tools/bin
-	$(MAKE) $(MFLAGS) -Ctools
-
-
-#
-# Dependencies below this point
-#
-
-cpu/$(CPU)/$(CPU).o: \
-	kernel/include/cpu.h cpu/$(CPU)/$(CPU).h cpu/$(CPU)/$(CPU).c kernel/include/defs.h \
-	kernel/include/types.h
-
-cpu/$(CPU)/process.o: \
-	cpu/$(CPU)/process.S
-
-driver/ds17485.o: \
-	driver/ds17485.c driver/ds17485.h kernel/include/types.h kernel/util/kutil.h
-
-driver/encx24j600.o: \
-	driver/encx24j600.c driver/encx24j600.h kernel/include/cpu.h kernel/include/device/device.h \
-	kernel/include/byteorder.h kernel/include/defs.h kernel/include/error.h kernel/include/types.h
-
-driver/mc68681.o: \
-	driver/mc68681.c driver/mc68681.h kernel/include/defs.h kernel/include/error.h \
-	kernel/include/types.h
-
-driver/ps2controller.o: \
-	driver/ps2controller.c driver/ps2controller.h kernel/include/defs.h kernel/include/error.h \
-	kernel/include/types.h
-
-kernel/boot.o: \
-	kernel/boot.c kernel/include/boot.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/device/devctl.h kernel/include/device/device.h klibc/include/stdio.h \
-	kernel/include/platform.h
-
-kernel/console.o: \
-	kernel/console.c kernel/include/console.h kernel/include/defs.h kernel/include/types.h
-
-kernel/cpu/cpu.o: \
-	kernel/cpu/cpu.c kernel/include/cpu.h cpu/arch_specific.h kernel/include/types.h
-
-kernel/device/ata.o: \
-	kernel/device/ata.c kernel/include/device/ata.h kernel/include/device/block.h \
-	kernel/include/device/devctl.h kernel/include/device/device.h kernel/include/byteorder.h \
-	kernel/include/defs.h kernel/include/device/mbr.h kernel/include/types.h klibc/include/stdio.h \
-	klibc/include/string.h klibc/include/strings.h
-
-kernel/device/auto.o: \
-	kernel/device/auto.c kernel/include/device/auto.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/device/device.h
-
-kernel/device/block.o: \
-	kernel/device/block.c kernel/include/device/block.h kernel/include/defs.h kernel/include/types.h
-
-kernel/device/device.o: \
-	kernel/device/device.c kernel/include/device/devctl.h kernel/include/device/device.h \
-	kernel/util/kutil.h kernel/include/device/ata.h kernel/include/device/partition.h \
-	kernel/include/types.h klibc/include/errno.h
-
-kernel/device/memconsole.o: \
-	kernel/device/memconsole.c kernel/include/device/memconsole.h kernel/include/defs.h \
-	kernel/include/types.h
-
-kernel/device/nvram.o: \
-	kernel/device/nvram.c kernel/include/device/nvram.h driver/ds17485.h kernel/include/defs.h \
-	kernel/include/error.h kernel/include/types.h kernel/util/kutil.h
-
-kernel/device/partition.o: \
-	kernel/device/partition.c kernel/include/device/partition.h kernel/include/device/device.h \
-	kernel/include/byteorder.h kernel/include/defs.h kernel/include/device/mbr.h \
-	kernel/include/types.h klibc/include/stdio.h kernel/util/kutil.h kernel/include/cpu.h \
-	kernel/include/device/devctl.h
-
-kernel/elf.o: \
-	kernel/elf.c kernel/include/byteorder.h kernel/include/defs.h kernel/include/elf.h \
-	kernel/include/types.h klibc/include/errno.h klibc/include/stdio.h klibc/include/string.h \
-	klibc/include/strings.h
-
-kernel/entry.o: \
-	kernel/entry.c driver/ds17485.h kernel/include/fs/vfs.h kernel/include/defs.h \
-	klibc/include/stdio.h klibc/include/strings.h kernel/util/kutil.h kernel/memory/extents.o \
-	kernel/include/memory/kmalloc.h kernel/include/memory/slab.h monitor/include/monitor.h \
-	kernel/device/device.o kernel/include/sched.h
-
-kernel/error.o: \
-	kernel/error.c kernel/error.h kernel/include/defs.h kernel/include/types.h
-
-kernel/fs/ext2/ext2.o: \
-	kernel/fs/ext2/ext2.c kernel/fs/ext2/ext2.h kernel/include/defs.h klibc/include/errno.h \
-	klibc/include/stdio.h klibc/include/string.h kernel/util/kutil.h kernel/include/memory/kmalloc.h
-
-kernel/fs/fat/fat.o: \
-	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/include/fs/vfs.h kernel/include/byteorder.h \
-	kernel/include/defs.h kernel/include/error.h kernel/include/types.h klibc/include/strings.h \
-	kernel/util/kutil.h
-
-kernel/fs/romfs.o: \
-	kernel/fs/romfs.c kernel/include/fs/romfs.h kernel/include/fs/vfs.h kernel/include/defs.h \
-	kernel/include/error.h kernel/include/types.h
-
-kernel/fs/file.o: \
-	kernel/fs/file.c kernel/include/fs/file.h kernel/include/fs/vfs.h kernel/include/defs.h \
-	kernel/include/types.h
-
-kernel/fs/mount.o: \
-	kernel/fs/mount.c kernel/include/fs/mount.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/device/device.h kernel/include/fs/vfs.h kernel/include/defs.h \
-	klibc/include/errno.h kernel/util/kutil.h kernel/include/memory/kmalloc.h
-
-kernel/fs/vfs.o: \
-	kernel/fs/vfs.c kernel/include/fs/vfs.h kernel/include/fs/mount.h \
-	kernel/include/device/nvram.h kernel/include/device/devctl.h kernel/include/device/device.h \
-	kernel/include/defs.h kernel/include/types.h klibc/include/stdio.h
-
-kernel/housekeeper.o: \
-	kernel/housekeeper.c kernel/housekeeper.h kernel/include/defs.h kernel/include/types.h
-
-kernel/include/byteorder.h: \
-	kernel/include/cpu.h
-
-kernel/keyboard.o: \
-	kernel/keyboard.c kernel/include/keyboard.h kernel/include/defs.h kernel/include/types.h
-
-kernel/ksym.o: \
-	kernel/ksym.c kernel/include/ksym.h kernel/include/defs.h kernel/include/types.h
-
-kernel/memory/buddy.o: \
-	kernel/memory/buddy.c kernel/include/memory/buddy.h kernel/include/types.h \
-	klibc/include/stdio.h kernel/util/kutil.h libkutil.a
-
-kernel/memory/extents.o: \
-	kernel/memory/extents.c kernel/include/memory/extents.h kernel/include/defs.h \
-	kernel/include/types.h klibc/include/strings.h
-
-kernel/memory/heap.o: \
-	kernel/memory/heap.c kernel/include/memory/heap.h kernel/include/types.h klibc/include/stdio.h
-
-kernel/memory/kmalloc.o: \
-	kernel/memory/kmalloc.c kernel/include/memory/kmalloc.h kernel/include/types.h
-
-kernel/memory/slab.o: \
-	kernel/memory/slab.c kernel/include/memory/slab.h kernel/include/defs.h kernel/include/types.h \
-	klibc/include/stdio.h
-
-kernel/net/address.o: \
-	kernel/net/address.c kernel/include/net/address.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/net/net.h
-
-kernel/net/arp.o: \
-	kernel/net/arp.c kernel/include/net/arp.h kernel/include/byteorder.h kernel/include/defs.h \
-	kernel/include/error.h kernel/include/types.h kernel/include/net/net.h \
-	kernel/include/net/ethernet.h
-
-kernel/net/dhcp.o: \
-	kernel/net/dhcp.c kernel/include/net/dhcp.h kernel/include/byteorder.h kernel/include/defs.h \
-	kernel/include/types.h kernel/include/net/ethernet.h kernel/include/net/ipv4.h \
-	kernel/include/net/net.h kernel/include/net/udp.h
-
-kernel/net/ethernet.o: \
-	kernel/net/ethernet.c kernel/include/net/ethernet.h kernel/include/byteorder.h \
-	kernel/include/defs.h kernel/include/types.h kernel/include/net/ipv4.h kernel/include/net/net.h
-
-kernel/net/icmp.o: \
-	kernel/net/icmp.c kernel/include/net/icmp.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/net/net.h
-
-kernel/net/interface.o: \
-	kernel/net/interface.c kernel/include/net/interface.h kernel/include/defs.h \
-	kernel/include/types.h kernel/include/net/net.h
-
-kernel/net/ipv4.o: \
-	kernel/net/ipv4.c kernel/include/net/ipv4.h kernel/include/byteorder.h kernel/include/defs.h \
-	kernel/include/types.h kernel/include/net/net.h kernel/include/net/ethernet.h
-
-kernel/net/ipv4route.o: \
-	kernel/net/ipv4route.c kernel/include/net/ipv4route.h kernel/include/defs.h \
-	kernel/include/types.h kernel/include/net/ethernet.h kernel/include/net/ipv4.h \
-	kernel/include/net/net.h
-
-kernel/net/net.o: \
-	kernel/net/net.c kernel/include/net/net.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/memory/kmalloc.h kernel/include/net/arp.h
-
-kernel/net/packet.o: \
-	kernel/net/packet.c kernel/include/net/packet.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/net/net.h
-
-kernel/preempt.o: \
-	kernel/preempt.c kernel/include/preempt.h kernel/include/defs.h kernel/include/types.h
-
-kernel/net/protocol.o: \
-	kernel/net/protocol.c kernel/include/net/protocol.h kernel/include/defs.h \
-	kernel/include/types.h kernel/include/net/net.h
-
-kernel/net/raw.o: \
-	kernel/net/raw.c kernel/include/net/raw.h kernel/include/defs.h kernel/include/types.h
-
-kernel/net/route.o: \
-	kernel/net/route.c kernel/include/net/route.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/net/net.h
-
-kernel/net/socket.o: \
-	kernel/net/socket.c kernel/include/net/socket.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/net/net.h
-
-kernel/net/tcp.o: \
-	kernel/net/tcp.c kernel/include/net/tcp.h kernel/include/net/net.h kernel/include/defs.h \
-	kernel/include/types.h
-
-kernel/net/tftp.o: \
-	kernel/net/tftp.c kernel/include/net/tftp.h kernel/include/net/ipv4.h kernel/include/net/net.h \
-	kernel/include/net/udp.h kernel/include/defs.h kernel/include/types.h klibc/include/string.h
-
-kernel/net/udp.o: \
-	kernel/net/udp.c kernel/include/net/udp.h kernel/include/net/net.h kernel/include/defs.h \
-	kernel/include/types.h
-
-kernel/process.o: \
-	kernel/process.c kernel/include/process.h kernel/include/defs.h kernel/include/types.h
-
-kernel/sched.o: \
-	kernel/sched.c kernel/include/sched.h kernel/include/cpu.h kernel/include/defs.h \
-	kernel/include/types.h kernel/include/user.h klibc/include/strings.h
-
-kernel/semaphore.o: \
-	kernel/semaphore.c kernel/include/semaphore.h kernel/include/defs.h kernel/include/types.h \
-	kernel/include/cpu.h
-
-kernel/syscall.o: \
-	kernel/syscall.c kernel/include/syscall.h kernel/include/syscalls.h
-
-kernel/tick.o: \
-	kernel/tick.c kernel/include/tick.h kernel/include/defs.h kernel/include/types.h
-
-kernel/user.o: \
-	kernel/user.c kernel/include/user.h kernel/include/defs.h kernel/include/types.h
