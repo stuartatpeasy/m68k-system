@@ -8,7 +8,7 @@
 #include <driver/mc68681.h>
 #include <kernel/device/device.h>
 #include <kernel/include/console.h>
-#include <kernel/platform.h>
+#include <kernel/include/platform.h>
 #include <platform/lambda/lambda.h>
 #include <platform/lambda/device.h>
 

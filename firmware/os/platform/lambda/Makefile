@@ -12,7 +12,7 @@ ASMSOURCES=startup.S
 
 OBJECTS=$(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
 
-STDDEPS=$(KERN_ROOT)/platform.h $(KERN_INC)/defs.h $(KERN_INC)/error.h $(KERN_INC)/types.h
+STDDEPS=$(KERN_INC)/platform.h $(KERN_INC)/defs.h $(KERN_INC)/error.h $(KERN_INC)/types.h
 
 all: $(LIBNAME)
 
@@ -34,7 +34,7 @@ device.o: \
 	$(KERN_ROOT)/util/kutil.h $(SRC_ROOT)/klibc/stdio.h $(SRC_ROOT)/klibc/string.h
 
 dfu.o: \
-	$(STDDEPS) dfu.c dfu.h lambda.h $(KERN_ROOT)/platform.h $(KERN_ROOT)/util/kutil.h \
+	$(STDDEPS) dfu.c dfu.h lambda.h $(KERN_INC)/platform.h $(KERN_ROOT)/util/kutil.h \
 	$(KERN_ROOT)/memory/kmalloc.h
 
 lambda.o: \

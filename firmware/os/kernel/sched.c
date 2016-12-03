@@ -10,7 +10,7 @@
 #include <kernel/sched.h>
 #include <kernel/include/limits.h>
 #include <kernel/memory/kmalloc.h>
-#include <kernel/platform.h>
+#include <kernel/include/platform.h>
 #include <kernel/user.h>
 #include <klibc/string.h>
 #include <klibc/strings.h>

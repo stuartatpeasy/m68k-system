@@ -4,7 +4,7 @@
     Stuart Wallace, September 2015
 */
 
-#include <kernel/platform.h>
+#include <kernel/include/platform.h>
 
 #include <stdio.h>
 #include <string.h>

@@ -123,7 +123,7 @@ driver/ps2controller.o: \
 
 kernel/boot.o: \
 	kernel/boot.c kernel/include/boot.h kernel/include/defs.h kernel/include/types.h \
-	kernel/device/devctl.h kernel/device/device.h klibc/stdio.h kernel/platform.h
+	kernel/device/devctl.h kernel/device/device.h klibc/stdio.h kernel/include/platform.h
 
 kernel/console.o: \
 	kernel/console.c kernel/include/console.h kernel/include/defs.h kernel/include/types.h
@@ -161,7 +161,7 @@ kernel/device/partition.o: \
 	klibc/stdio.h kernel/util/kutil.h kernel/include/cpu.h kernel/device/devctl.h
 
 kernel/elf.o: \
-	kernel/elf.c kernel/include/byteorder.h kernel/include/defs.h kernel/elf.h \
+	kernel/elf.c kernel/include/byteorder.h kernel/include/defs.h kernel/include/elf.h \
 	kernel/include/types.h klibc/errno.h klibc/stdio.h klibc/string.h klibc/strings.h
 
 kernel/entry.o: \
@@ -208,7 +208,7 @@ kernel/keyboard.o: \
 	kernel/keyboard.c kernel/include/keyboard.h kernel/include/defs.h kernel/include/types.h
 
 kernel/ksym.o: \
-	kernel/ksym.c kernel/ksym.h kernel/include/defs.h kernel/include/types.h
+	kernel/ksym.c kernel/include/ksym.h kernel/include/defs.h kernel/include/types.h
 
 kernel/memory/buddy.o: \
 	kernel/memory/buddy.c kernel/memory/buddy.h kernel/include/types.h klibc/stdio.h \

@@ -8,7 +8,7 @@
 */
 
 #include <cpu/mc68000/mc68000.h>
-#include <kernel/ksym.h>
+#include <kernel/include/ksym.h>
 #include <kernel/process.h>
 #include <kernel/memory/extents.h>
 #include <kernel/util/kutil.h>

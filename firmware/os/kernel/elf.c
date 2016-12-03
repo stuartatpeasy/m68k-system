@@ -7,8 +7,8 @@
 	Stuart Wallace, August 2015.
 */
 
-#include <kernel/elf.h>
 #include <kernel/include/byteorder.h>
+#include <kernel/include/elf.h>
 #include <kernel/include/error.h>
 #include <klibc/errno.h>
 #include <stdio.h>

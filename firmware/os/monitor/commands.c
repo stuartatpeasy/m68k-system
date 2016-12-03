@@ -1078,7 +1078,7 @@ MONITOR_CMD_HANDLER(srec)
 
 
 #include <kernel/process.h>
-#include <kernel/elf.h>
+#include <kernel/include/elf.h>
 #include <kernel/net/dhcp.h>
 #include <kernel/net/tftp.h>
 #include <kernel/tick.h>

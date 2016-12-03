@@ -11,8 +11,8 @@
 
 #include <kernel/device/block.h>
 #include <kernel/device/device.h>
+#include <kernel/include/platform.h>        /* for platform-specific definitions */
 #include <kernel/include/types.h>
-#include <kernel/platform.h>        /* for platform-specific definitions */
 
 
 typedef enum ata_drive

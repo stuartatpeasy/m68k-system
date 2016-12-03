@@ -14,7 +14,7 @@
 
 #include <kernel/device/device.h>
 #include <kernel/device/partition.h>
-#include <kernel/platform.h>
+#include <kernel/include/platform.h>
 #include <kernel/util/kutil.h>
 
 

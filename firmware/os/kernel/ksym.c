@@ -7,8 +7,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
+#include <kernel/include/ksym.h>
 #include <kernel/include/limits.h>
-#include <kernel/ksym.h>
 #include <klibc/stdio.h>
 #include <klibc/string.h>
 

@@ -101,15 +101,12 @@
 		<Unit filename="kernel/boot.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/boot.h" />
 		<Unit filename="kernel/console.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/console.h" />
 		<Unit filename="kernel/cpu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/cpu.h" />
 		<Unit filename="kernel/device/ata.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -118,6 +115,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/device/auto.h" />
+		<Unit filename="kernel/device/block.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kernel/device/block.h" />
 		<Unit filename="kernel/device/devctl.h" />
 		<Unit filename="kernel/device/device.c">
@@ -141,7 +141,6 @@
 		<Unit filename="kernel/elf.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/elf.h" />
 		<Unit filename="kernel/entry.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -177,12 +176,20 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/housekeeper.h" />
+		<Unit filename="kernel/include/boot.h" />
 		<Unit filename="kernel/include/byteorder.h" />
+		<Unit filename="kernel/include/console.h" />
+		<Unit filename="kernel/include/cpu.h" />
 		<Unit filename="kernel/include/defs.h" />
+		<Unit filename="kernel/include/elf.h" />
 		<Unit filename="kernel/include/error.h" />
 		<Unit filename="kernel/include/keyboard.h" />
+		<Unit filename="kernel/include/ksym.h" />
 		<Unit filename="kernel/include/limits.h" />
 		<Unit filename="kernel/include/list.h" />
+		<Unit filename="kernel/include/lock.h" />
+		<Unit filename="kernel/include/platform.h" />
+		<Unit filename="kernel/include/preempt.h" />
 		<Unit filename="kernel/include/types.h" />
 		<Unit filename="kernel/include/version.h" />
 		<Unit filename="kernel/keyboard.c">
@@ -191,7 +198,6 @@
 		<Unit filename="kernel/ksym.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/ksym.h" />
 		<Unit filename="kernel/memory/blockalloc.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -279,7 +285,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="kernel/net/udp.h" />
-		<Unit filename="kernel/platform.h" />
+		<Unit filename="kernel/preempt.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kernel/process.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -297,10 +305,10 @@
 		</Unit>
 		<Unit filename="kernel/syscall.h" />
 		<Unit filename="kernel/syscalls.h" />
-		<Unit filename="kernel/timer.c">
+		<Unit filename="kernel/tick.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/timer.h" />
+		<Unit filename="kernel/tick.h" />
 		<Unit filename="kernel/user.c">
 			<Option compilerVar="CC" />
 		</Unit>

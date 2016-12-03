@@ -38,7 +38,7 @@ monitor.o: \
 	../kernel/util/kutil.h ../kernel/memory/kmalloc.h ../kernel/memory/slab.h
 
 readline.o: \
-	readline.c readline.h ../kernel/platform.h
+	readline.c readline.h ../kernel/include/platform.h
 
 srec.o: \
 	srec.c srec.h readline.o ../kernel/util/kutil.h

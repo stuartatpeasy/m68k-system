@@ -18,12 +18,12 @@
 #include <kernel/housekeeper.h>
 #include <kernel/include/boot.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/platform.h>
 #include <kernel/include/preempt.h>
 #include <kernel/memory/extents.h>
 #include <kernel/memory/kmalloc.h>
 #include <kernel/memory/slab.h>
 #include <kernel/net/net.h>
-#include <kernel/platform.h>
 #include <kernel/sched.h>
 #include <kernel/tick.h>
 #include <kernel/util/kutil.h>

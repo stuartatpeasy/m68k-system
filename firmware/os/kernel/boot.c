@@ -9,7 +9,7 @@
 
 #include <kernel/include/boot.h>
 #include <kernel/device/devctl.h>
-#include <kernel/platform.h>
+#include <kernel/include/platform.h>
 #include <kernel/util/kutil.h>
 #include <klibc/stdio.h>
 

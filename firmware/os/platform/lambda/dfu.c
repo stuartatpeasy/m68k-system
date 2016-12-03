@@ -13,7 +13,7 @@
 	It may not be suitable for other devices.
 */
 
-#include <kernel/platform.h>
+#include <kernel/include/platform.h>
 #include <platform/lambda/dfu.h>
 
 
