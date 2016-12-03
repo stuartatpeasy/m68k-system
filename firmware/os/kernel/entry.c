@@ -29,7 +29,7 @@
 #include <kernel/util/kutil.h>
 #include <klibc/include/stdio.h>
 #include <klibc/include/strings.h>
-#include <monitor/monitor.h>
+#include <monitor/include/monitor.h>
 
 
 const char * const g_warmup_message = "\n  \\   ayumos"

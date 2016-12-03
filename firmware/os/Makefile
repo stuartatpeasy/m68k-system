@@ -168,7 +168,7 @@ kernel/elf.o: \
 kernel/entry.o: \
 	kernel/entry.c driver/ds17485.h kernel/include/fs/vfs.h kernel/include/defs.h \
 	klibc/include/stdio.h klibc/include/strings.h kernel/util/kutil.h kernel/memory/extents.o \
-	kernel/include/memory/kmalloc.h kernel/include/memory/slab.h monitor/monitor.h \
+	kernel/include/memory/kmalloc.h kernel/include/memory/slab.h monitor/include/monitor.h \
 	kernel/device/device.o kernel/include/sched.h
 
 kernel/error.o: \

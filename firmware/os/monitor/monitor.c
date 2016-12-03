@@ -9,7 +9,7 @@
 
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
-#include <monitor/monitor.h>
+#include <monitor/include/monitor.h>
 
 
 #define CMD_MAX_LEN (255)

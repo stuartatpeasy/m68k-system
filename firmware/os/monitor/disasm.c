@@ -7,7 +7,7 @@
 	(c) Stuart Wallace <stuartw@atom.net>, 2011.
 */
 
-#include <monitor/disasm.h>
+#include <monitor/include/disasm.h>
 
 
 void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,

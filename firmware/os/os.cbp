@@ -385,27 +385,27 @@
 		<Unit filename="monitor/disasm.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="monitor/disasm.h" />
 		<Unit filename="monitor/env.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="monitor/env.h" />
 		<Unit filename="monitor/history.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="monitor/history.h" />
+		<Unit filename="monitor/include/disasm.h" />
+		<Unit filename="monitor/include/env.h" />
+		<Unit filename="monitor/include/history.h" />
+		<Unit filename="monitor/include/monitor.h" />
+		<Unit filename="monitor/include/readline.h" />
+		<Unit filename="monitor/include/srec.h" />
 		<Unit filename="monitor/monitor.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="monitor/monitor.h" />
 		<Unit filename="monitor/readline.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="monitor/readline.h" />
 		<Unit filename="monitor/srec.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="monitor/srec.h" />
 		<Unit filename="platform/lambda/Makefile" />
 		<Unit filename="platform/lambda/device.c">
 			<Option compilerVar="CC" />

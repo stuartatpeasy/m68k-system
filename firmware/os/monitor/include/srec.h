@@ -10,7 +10,7 @@
 */
 
 #include <kernel/include/types.h>
-#include <monitor/readline.h>
+#include <monitor/include/readline.h>
 #include <klibc/include/ctype.h>
 #include <klibc/include/stdlib.h>
 #include <klibc/include/string.h>

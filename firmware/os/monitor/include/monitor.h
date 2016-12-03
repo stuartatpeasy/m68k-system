@@ -24,10 +24,10 @@
 #include <klibc/include/stdio.h>
 #include <klibc/include/stdlib.h>
 #include <klibc/include/string.h>
-#include <monitor/disasm.h>
-#include <monitor/history.h>
-#include <monitor/readline.h>
-#include <monitor/srec.h>
+#include <monitor/include/disasm.h>
+#include <monitor/include/history.h>
+#include <monitor/include/readline.h>
+#include <monitor/include/srec.h>
 
 
 

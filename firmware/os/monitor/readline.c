@@ -11,7 +11,7 @@
 */
 
 #include <kernel/include/console.h>
-#include <monitor/readline.h>
+#include <monitor/include/readline.h>
 
 
 #define MAX_LINE_LENGTH 	(255)

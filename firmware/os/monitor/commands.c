@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <monitor/monitor.h>
+#include <monitor/include/monitor.h>
 
 /* lsdev command output-formatting flags */
 #define LSDEV_LONG_FORMAT       BIT(0)

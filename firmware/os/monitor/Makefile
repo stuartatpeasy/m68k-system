@@ -22,24 +22,25 @@ clean:
 	rm -f $(LIBNAME) $(OBJECTS)
 
 commands.o: \
-	commands.c monitor.h disasm.o srec.o $(KERN_INC)/memory/kmalloc.h ../kernel/util/kutil.h
+	commands.c include/monitor.h disasm.o srec.o $(KERN_INC)/memory/kmalloc.h ../kernel/util/kutil.h
 
 disasm.o: \
-	disasm.c disasm.h ../kernel/util/kutil.h
+	disasm.c include/disasm.h ../kernel/util/kutil.h
 
 env.o: \
-	env.c env.h
+	env.c include/env.h
 
 history.o: \
-	history.c history.h $(KERN_INC)/defs.h $(KERN_INC)/types.h
+	history.c include/history.h $(KERN_INC)/defs.h $(KERN_INC)/types.h
 
 monitor.o: \
-	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../kernel/device/nvram.h \
-	$(KERN_INC)/fs/mount.h $(KERN_INC)/defs.h $(KERN_INC)/version.h \
-	../kernel/util/kutil.h $(KERN_INC)/memory/kmalloc.h $(KERN_INC)/memory/slab.h
+	monitor.c include/monitor.h commands.o include/disasm.h include/history.h include/readline.h \
+	include/srec.h ../kernel/device/nvram.h $(KERN_INC)/fs/mount.h $(KERN_INC)/defs.h \
+	$(KERN_INC)/version.h ../kernel/util/kutil.h $(KERN_INC)/memory/kmalloc.h \
+	$(KERN_INC)/memory/slab.h
 
 readline.o: \
-	readline.c readline.h $(KERN_INC)/platform.h
+	readline.c include/readline.h $(KERN_INC)/platform.h
 
 srec.o: \
-	srec.c srec.h readline.o ../kernel/util/kutil.h
+	srec.c include/srec.h readline.o ../kernel/util/kutil.h
