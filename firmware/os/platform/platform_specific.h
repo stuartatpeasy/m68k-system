@@ -40,7 +40,7 @@
     #define ATA_ALT_REG_BASE    (0x10000)
     #define ATA_REG_SHIFT       (1)
 
-    #include <platform/lambda/lambda.h>
+    #include <platform/lambda/include/lambda.h>
 #else
     /*
         Error: Undefined/unknown target platform.  Maybe add a section to this file to support your

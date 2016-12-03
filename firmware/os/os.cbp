@@ -410,16 +410,16 @@
 		<Unit filename="platform/lambda/device.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="platform/lambda/device.h" />
 		<Unit filename="platform/lambda/dfu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="platform/lambda/dfu.h" />
+		<Unit filename="platform/lambda/include/device.h" />
+		<Unit filename="platform/lambda/include/dfu.h" />
+		<Unit filename="platform/lambda/include/lambda.h" />
 		<Unit filename="platform/lambda/kernel.ld" />
 		<Unit filename="platform/lambda/lambda.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="platform/lambda/lambda.h" />
 		<Unit filename="platform/lambda/startup.S" />
 		<Unit filename="platform/platform_specific.h" />
 		<Extensions>

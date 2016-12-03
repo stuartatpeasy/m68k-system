@@ -9,8 +9,8 @@
 #include <kernel/device/device.h>
 #include <kernel/include/console.h>
 #include <kernel/include/platform.h>
-#include <platform/lambda/lambda.h>
-#include <platform/lambda/device.h>
+#include <platform/lambda/include/lambda.h>
+#include <platform/lambda/include/device.h>
 
 
 mem_extent_t g_lambda_mem_extents[] =

@@ -9,7 +9,7 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <platform/lambda/dfu.h>
+#include <platform/lambda/include/dfu.h>
 #include <kernel/include/fs/mount.h>
 #include <kernel/include/console.h>
 #include <kernel/include/defs.h>

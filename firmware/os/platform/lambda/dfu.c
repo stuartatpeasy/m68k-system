@@ -14,7 +14,7 @@
 */
 
 #include <kernel/include/platform.h>
-#include <platform/lambda/dfu.h>
+#include <platform/lambda/include/dfu.h>
 
 
 void write_flash(ku16 *data, ku32 len)

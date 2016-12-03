@@ -16,7 +16,7 @@
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/types.h>
 #include <kernel/util/kutil.h>
-#include <platform/lambda/lambda.h>
+#include <platform/lambda/include/lambda.h>
 
 
 #define FLASH_OFFSET(x)		*((vu16 *) (LAMBDA_ROM_START + (x << 1)))

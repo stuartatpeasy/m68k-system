@@ -12,7 +12,7 @@
 #include <kernel/device/auto.h>				/* Automatic peripheral driver selection	*/
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
-#include <platform/lambda/device.h>
+#include <platform/lambda/include/device.h>
 #include <driver/mc68681.h>                 /* DUART            						*/
 #include <driver/ds17485.h>                 /* RTC              						*/
 
