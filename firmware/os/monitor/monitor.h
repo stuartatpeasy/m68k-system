@@ -10,16 +10,16 @@
 */
 
 #include <platform/lambda/dfu.h>
-#include <kernel/device/nvram.h>
-#include <kernel/fs/mount.h>
-#include <kernel/fs/vfs.h>
+#include <kernel/include/fs/mount.h>
 #include <kernel/include/console.h>
 #include <kernel/include/defs.h>
-#include <kernel/include/version.h>
+#include <kernel/device/nvram.h>
+#include <kernel/include/fs/vfs.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/memory/slab.h>
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/ipv4.h>
+#include <kernel/include/version.h>
 #include <kernel/util/kutil.h>
 #include <klibc/include/stdio.h>
 #include <klibc/include/stdlib.h>

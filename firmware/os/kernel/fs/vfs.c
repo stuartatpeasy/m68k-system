@@ -10,8 +10,8 @@
 #include <kernel/device/devctl.h>
 #include <kernel/device/device.h>
 #include <kernel/device/nvram.h>
-#include <kernel/fs/vfs.h>
-#include <kernel/fs/mount.h>
+#include <kernel/include/fs/vfs.h>
+#include <kernel/include/fs/mount.h>
 
 
 /*

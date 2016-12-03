@@ -9,10 +9,10 @@
     (c) Stuart Wallace, July 2015
 */
 
-#include <kernel/fs/vfs.h>
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/error.h>
+#include <kernel/include/fs/vfs.h>
 #include <kernel/include/types.h>
 #include <kernel/util/kutil.h>
 #include <klibc/include/strings.h>

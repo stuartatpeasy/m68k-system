@@ -14,10 +14,10 @@
 #include <kernel/device/block.h>
 #include <kernel/device/memconsole.h>
 #include <kernel/device/partition.h>
-#include <kernel/fs/vfs.h>
 #include <kernel/housekeeper.h>
 #include <kernel/include/boot.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/fs/vfs.h>
 #include <kernel/include/platform.h>
 #include <kernel/include/preempt.h>
 #include <kernel/include/sched.h>

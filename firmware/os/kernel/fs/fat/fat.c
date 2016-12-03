@@ -13,7 +13,7 @@
 
 #include <kernel/device/block.h>
 #include <kernel/fs/fat/fat.h>
-#include <kernel/fs/vfs.h>
+#include <kernel/include/fs/vfs.h>
 
 
 s32 fat_init();

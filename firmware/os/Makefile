@@ -166,8 +166,8 @@ kernel/elf.o: \
 	klibc/include/strings.h
 
 kernel/entry.o: \
-	kernel/entry.c driver/ds17485.h kernel/fs/vfs.h kernel/include/defs.h klibc/include/stdio.h \
-	klibc/include/strings.h kernel/util/kutil.h kernel/memory/extents.o \
+	kernel/entry.c driver/ds17485.h kernel/include/fs/vfs.h kernel/include/defs.h \
+	klibc/include/stdio.h klibc/include/strings.h kernel/util/kutil.h kernel/memory/extents.o \
 	kernel/include/memory/kmalloc.h kernel/include/memory/slab.h monitor/monitor.h \
 	kernel/device/device.o kernel/include/sched.h
 
@@ -179,24 +179,25 @@ kernel/fs/ext2/ext2.o: \
 	klibc/include/stdio.h klibc/include/string.h kernel/util/kutil.h kernel/include/memory/kmalloc.h
 
 kernel/fs/fat/fat.o: \
-	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/fs/vfs.h kernel/include/byteorder.h \
+	kernel/fs/fat/fat.c kernel/fs/fat/fat.h kernel/include/fs/vfs.h kernel/include/byteorder.h \
 	kernel/include/defs.h kernel/include/error.h kernel/include/types.h klibc/include/strings.h \
 	kernel/util/kutil.h
 
 kernel/fs/romfs.o: \
-	kernel/fs/romfs.c kernel/fs/romfs.h kernel/fs/vfs.h kernel/include/defs.h \
+	kernel/fs/romfs.c kernel/include/fs/romfs.h kernel/include/fs/vfs.h kernel/include/defs.h \
 	kernel/include/error.h kernel/include/types.h
 
 kernel/fs/file.o: \
-	kernel/fs/file.c kernel/fs/file.h kernel/fs/vfs.h kernel/include/defs.h kernel/include/types.h
+	kernel/fs/file.c kernel/include/fs/file.h kernel/include/fs/vfs.h kernel/include/defs.h \
+	kernel/include/types.h
 
 kernel/fs/mount.o: \
-	kernel/fs/mount.c kernel/fs/mount.h kernel/include/defs.h kernel/include/types.h \
-	kernel/device/device.h kernel/fs/vfs.h kernel/include/defs.h klibc/include/errno.h \
+	kernel/fs/mount.c kernel/include/fs/mount.h kernel/include/defs.h kernel/include/types.h \
+	kernel/device/device.h kernel/include/fs/vfs.h kernel/include/defs.h klibc/include/errno.h \
 	kernel/util/kutil.h kernel/include/memory/kmalloc.h
 
 kernel/fs/vfs.o: \
-	kernel/fs/vfs.c kernel/fs/vfs.h kernel/fs/mount.h kernel/device/nvram.h \
+	kernel/fs/vfs.c kernel/include/fs/vfs.h kernel/include/fs/mount.h kernel/device/nvram.h \
 	kernel/device/devctl.h kernel/device/device.h kernel/include/defs.h kernel/include/types.h \
 	klibc/include/stdio.h
 

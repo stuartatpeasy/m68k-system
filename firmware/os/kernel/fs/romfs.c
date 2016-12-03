@@ -7,8 +7,8 @@
     (c) Stuart Wallace, January 2016
 */
 
-#include <kernel/fs/romfs.h>
-#include <kernel/fs/vfs.h>
+#include <kernel/include/fs/romfs.h>
+#include <kernel/include/fs/vfs.h>
 
 
 s32 romfs_init();

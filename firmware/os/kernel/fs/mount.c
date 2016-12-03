@@ -8,7 +8,7 @@
 */
 
 #include <klibc/include/errno.h>
-#include <kernel/fs/mount.h>
+#include <kernel/include/fs/mount.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>

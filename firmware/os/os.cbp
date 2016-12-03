@@ -159,19 +159,15 @@
 		<Unit filename="kernel/fs/file.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/fs/file.h" />
 		<Unit filename="kernel/fs/mount.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/fs/mount.h" />
 		<Unit filename="kernel/fs/romfs.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/fs/romfs.h" />
 		<Unit filename="kernel/fs/vfs.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/fs/vfs.h" />
 		<Unit filename="kernel/housekeeper.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -183,6 +179,10 @@
 		<Unit filename="kernel/include/defs.h" />
 		<Unit filename="kernel/include/elf.h" />
 		<Unit filename="kernel/include/error.h" />
+		<Unit filename="kernel/include/fs/file.h" />
+		<Unit filename="kernel/include/fs/mount.h" />
+		<Unit filename="kernel/include/fs/romfs.h" />
+		<Unit filename="kernel/include/fs/vfs.h" />
 		<Unit filename="kernel/include/keyboard.h" />
 		<Unit filename="kernel/include/ksym.h" />
 		<Unit filename="kernel/include/limits.h" />

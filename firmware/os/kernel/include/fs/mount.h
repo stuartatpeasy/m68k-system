@@ -10,7 +10,7 @@
 */
 
 #include <kernel/device/device.h>
-#include <kernel/fs/vfs.h>
+#include <kernel/include/fs/vfs.h>
 #include <kernel/include/types.h>
 #include <klibc/include/strings.h>
 

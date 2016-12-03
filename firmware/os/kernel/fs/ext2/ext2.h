@@ -9,8 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, December 2012.
 */
 
-#include <kernel/fs/vfs.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/fs/vfs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
