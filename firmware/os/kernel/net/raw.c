@@ -7,10 +7,10 @@
     (c) Stuart Wallace, May 2016.
 */
 
-#include <kernel/memory/kmalloc.h>
-#include <kernel/net/raw.h>
-#include <kernel/net/packet.h>
-#include <kernel/net/protocol.h>
+#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/net/raw.h>
+#include <kernel/include/net/packet.h>
+#include <kernel/include/net/protocol.h>
 
 
 /*

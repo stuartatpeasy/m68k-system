@@ -12,7 +12,7 @@
 #include <kernel/fs/vfs.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 #include <klibc/errno.h>
 #include <klibc/stdio.h>

@@ -7,10 +7,10 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <kernel/net/ipv4.h>
-#include <kernel/net/arp.h>
-#include <kernel/net/net.h>
-#include <kernel/net/packet.h>
+#include <kernel/include/net/ipv4.h>
+#include <kernel/include/net/arp.h>
+#include <kernel/include/net/net.h>
+#include <kernel/include/net/packet.h>
 #include <klibc/stdio.h>
 #include <klibc/string.h>
 #include <klibc/strings.h>

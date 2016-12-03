@@ -7,8 +7,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <kernel/net/icmp.h>
-#include <kernel/net/packet.h>
+#include <kernel/include/net/icmp.h>
+#include <kernel/include/net/packet.h>
 
 
 s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet_t *packet);

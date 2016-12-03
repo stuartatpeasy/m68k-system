@@ -11,7 +11,7 @@
 
 #include <kernel/include/limits.h>
 #include <kernel/include/types.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 
 
 #define RAND_MAX (2147483647)

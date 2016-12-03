@@ -10,7 +10,7 @@
 #include <cpu/mc68000/mc68000.h>
 #include <kernel/include/ksym.h>
 #include <kernel/include/process.h>
-#include <kernel/memory/extents.h>
+#include <kernel/include/memory/extents.h>
 #include <kernel/util/kutil.h>
 #include <klibc/stdio.h>
 

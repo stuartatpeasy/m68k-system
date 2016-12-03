@@ -11,7 +11,7 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>
+#include <kernel/include/net/net.h>
 
 
 s32 socket_init();

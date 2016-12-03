@@ -30,12 +30,12 @@ clean:
 
 device.o: \
 	$(STDDEPS) device.c device.h $(SRC_ROOT)/kernel/device/ata.h $(SRC_ROOT)/kernel/device/auto.h \
-	$(SRC_ROOT)/driver/ds17485.h $(SRC_ROOT)/driver/mc68681.h $(KERN_ROOT)/memory/kmalloc.h \
+	$(SRC_ROOT)/driver/ds17485.h $(SRC_ROOT)/driver/mc68681.h $(KERN_INC)/memory/kmalloc.h \
 	$(KERN_ROOT)/util/kutil.h $(SRC_ROOT)/klibc/stdio.h $(SRC_ROOT)/klibc/string.h
 
 dfu.o: \
 	$(STDDEPS) dfu.c dfu.h lambda.h $(KERN_INC)/platform.h $(KERN_ROOT)/util/kutil.h \
-	$(KERN_ROOT)/memory/kmalloc.h
+	$(KERN_INC)/memory/kmalloc.h
 
 lambda.o: \
 	$(STDDEPS) lambda.c lambda.h

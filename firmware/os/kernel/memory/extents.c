@@ -10,7 +10,7 @@
     been initialised.  They therefore must not attempt to use heap memory or slabs.
 */
 
-#include <kernel/memory/extents.h>
+#include <kernel/include/memory/extents.h>
 
 
 /*

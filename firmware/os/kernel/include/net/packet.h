@@ -10,9 +10,9 @@
 */
 
 #include <kernel/include/types.h>
-#include <kernel/net/address.h>
-#include <kernel/net/interface.h>
-#include <kernel/net/protocol.h>
+#include <kernel/include/net/address.h>
+#include <kernel/include/net/interface.h>
+#include <kernel/include/net/protocol.h>
 
 
 /* Object representing a network packet */

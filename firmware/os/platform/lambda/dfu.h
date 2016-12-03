@@ -13,8 +13,8 @@
 
 #include <kernel/include/cpu.h>
 #include <kernel/include/error.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/types.h>
-#include <kernel/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 #include <platform/lambda/lambda.h>
 

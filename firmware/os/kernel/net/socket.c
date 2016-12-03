@@ -7,7 +7,7 @@
     (c) Stuart Wallace, April 2016.
 */
 
-#include <kernel/net/socket.h>
+#include <kernel/include/net/socket.h>
 
 
 /*

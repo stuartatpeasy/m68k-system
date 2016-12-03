@@ -22,7 +22,7 @@
 	Use heap allocator
 */
 
-#include <kernel/memory/heap.h>
+#include <kernel/include/memory/heap.h>
 
 #define ALLOCATOR_FN(name) heap_##name
 typedef heap_ctx mem_ctx;

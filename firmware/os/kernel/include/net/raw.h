@@ -10,7 +10,7 @@
 */
 
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>
+#include <kernel/include/net/net.h>
 
 
 s32 raw_init();

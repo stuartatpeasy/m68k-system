@@ -8,7 +8,7 @@
 */
 
 #include <kernel/util/buffer.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <klibc/string.h>
 
 

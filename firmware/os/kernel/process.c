@@ -9,9 +9,9 @@
 
 #include <kernel/include/process.h>
 #include <kernel/include/limits.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/preempt.h>
 #include <kernel/include/sched.h>
-#include <kernel/memory/kmalloc.h>
 #include <klibc/string.h>
 
 

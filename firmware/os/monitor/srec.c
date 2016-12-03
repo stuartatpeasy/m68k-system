@@ -8,8 +8,8 @@
 */
 
 #include <monitor/srec.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
-#include <kernel/memory/kmalloc.h>
 
 
 static u32 readhex(ks8 * const p, ku32 num)

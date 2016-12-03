@@ -6,6 +6,8 @@ CSOURCES=assert.c ctype.c errno.c printf.c stdio.c stdlib.c string.c strings.c
 
 OBJECTS=$(CSOURCES:.c=.o)
 
+KERN_INC=../kernel/include
+
 all: $(LIBNAME)
 
 .c.o:
@@ -22,28 +24,26 @@ clean:
 #
 
 assert.o: \
-	assert.c assert.h ../kernel/include/types.h ../klibc/stdio.h
+	assert.c assert.h $(KERN_INC)/types.h stdio.h
 
 ctype.o: \
-	ctype.c ctype.h ../kernel/include/types.h
+	ctype.c ctype.h $(KERN_INC)/types.h
 
 errno.o: \
-	errno.c errno.h ../kernel/include/types.h
+	errno.c errno.h $(KERN_INC)/types.h
 
 printf.o: \
-	printf.c stdio.h string.h ../kernel/memory/kmalloc.h ../kernel/include/limits.h \
-	../kernel/include/types.h ../kernel/include/platform.h
+	printf.c stdio.h string.h $(KERN_INC)/memory/kmalloc.h $(KERN_INC)/limits.h \
+	$(KERN_INC)/types.h $(KERN_INC)/platform.h
 
 stdio.o: \
-	stdio.c ../kernel/include/limits.h ../kernel/include/types.h ../kernel/include/platform.h
+	stdio.c $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/platform.h
 
 stdlib.o: \
-	stdlib.c stdlib.h ../kernel/include/limits.h ../kernel/include/types.h \
-	../kernel/memory/kmalloc.h
+	stdlib.c stdlib.h $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/memory/kmalloc.h
 
 string.o: \
-	string.c string.h ../kernel/include/limits.h ../kernel/include/types.h \
-	../kernel/memory/kmalloc.h
+	string.c string.h $(KERN_INC)/limits.h $(KERN_INC)/types.h $(KERN_INC)/memory/kmalloc.h
 
 strings.o: \
-	strings.c ctype.h ../kernel/include/types.h
+	strings.c ctype.h $(KERN_INC)/types.h

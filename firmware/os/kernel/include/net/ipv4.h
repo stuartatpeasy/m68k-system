@@ -12,10 +12,10 @@
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>
-#include <kernel/net/address.h>
-#include <kernel/net/interface.h>
-#include <kernel/net/protocol.h>
+#include <kernel/include/net/net.h>
+#include <kernel/include/net/address.h>
+#include <kernel/include/net/interface.h>
+#include <kernel/include/net/protocol.h>
 
 
 #define IPV4_ADDR_NONE              ((ipv4_addr_t) 0)

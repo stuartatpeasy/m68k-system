@@ -13,8 +13,8 @@
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/interface.h>
-#include <kernel/net/net.h>
+#include <kernel/include/net/interface.h>
+#include <kernel/include/net/net.h>
 #include <kernel/util/buffer.h>
 
 

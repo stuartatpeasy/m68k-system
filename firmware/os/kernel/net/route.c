@@ -10,7 +10,7 @@
 */
 
 #include <klibc/stdio.h>
-#include <kernel/net/route.h>
+#include <kernel/include/net/route.h>
 
 
 /* A network route */

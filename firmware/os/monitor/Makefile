@@ -8,6 +8,8 @@ CFLAGS+=-I..
 
 OBJECTS=$(CSOURCES:.c=.o)
 
+KERN_INC=../kernel/include
+
 all: $(LIBNAME)
 
 .c.o:
@@ -20,8 +22,7 @@ clean:
 	rm -f $(LIBNAME) $(OBJECTS)
 
 commands.o: \
-	commands.c monitor.h disasm.o srec.o ../kernel/memory/kmalloc.h ../kernel/memory/kmalloc.c \
-	../kernel/util/kutil.h
+	commands.c monitor.h disasm.o srec.o $(KERN_INC)/memory/kmalloc.h ../kernel/util/kutil.h
 
 disasm.o: \
 	disasm.c disasm.h ../kernel/util/kutil.h
@@ -30,15 +31,15 @@ env.o: \
 	env.c env.h
 
 history.o: \
-	history.c history.h ../kernel/include/defs.h ../kernel/include/types.h
+	history.c history.h $(KERN_INC)/defs.h $(KERN_INC)/types.h
 
 monitor.o: \
 	monitor.c monitor.h commands.o disasm.h history.h readline.h srec.h ../kernel/device/nvram.h \
-	../kernel/fs/mount.h ../kernel/include/defs.h ../kernel/include/version.h \
-	../kernel/util/kutil.h ../kernel/memory/kmalloc.h ../kernel/memory/slab.h
+	../kernel/fs/mount.h $(KERN_INC)/defs.h $(KERN_INC)/version.h \
+	../kernel/util/kutil.h $(KERN_INC)/memory/kmalloc.h $(KERN_INC)/memory/slab.h
 
 readline.o: \
-	readline.c readline.h ../kernel/include/platform.h
+	readline.c readline.h $(KERN_INC)/platform.h
 
 srec.o: \
 	srec.c srec.h readline.o ../kernel/util/kutil.h

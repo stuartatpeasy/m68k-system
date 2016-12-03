@@ -188,6 +188,27 @@
 		<Unit filename="kernel/include/limits.h" />
 		<Unit filename="kernel/include/list.h" />
 		<Unit filename="kernel/include/lock.h" />
+		<Unit filename="kernel/include/memory/buddy.h" />
+		<Unit filename="kernel/include/memory/extents.h" />
+		<Unit filename="kernel/include/memory/heap.h" />
+		<Unit filename="kernel/include/memory/kmalloc.h" />
+		<Unit filename="kernel/include/memory/slab.h" />
+		<Unit filename="kernel/include/net/address.h" />
+		<Unit filename="kernel/include/net/arp.h" />
+		<Unit filename="kernel/include/net/dhcp.h" />
+		<Unit filename="kernel/include/net/ethernet.h" />
+		<Unit filename="kernel/include/net/icmp.h" />
+		<Unit filename="kernel/include/net/interface.h" />
+		<Unit filename="kernel/include/net/ipv4.h" />
+		<Unit filename="kernel/include/net/net.h" />
+		<Unit filename="kernel/include/net/packet.h" />
+		<Unit filename="kernel/include/net/protocol.h" />
+		<Unit filename="kernel/include/net/raw.h" />
+		<Unit filename="kernel/include/net/route.h" />
+		<Unit filename="kernel/include/net/socket.h" />
+		<Unit filename="kernel/include/net/tcp.h" />
+		<Unit filename="kernel/include/net/tftp.h" />
+		<Unit filename="kernel/include/net/udp.h" />
 		<Unit filename="kernel/include/platform.h" />
 		<Unit filename="kernel/include/preempt.h" />
 		<Unit filename="kernel/include/process.h" />
@@ -211,87 +232,66 @@
 		<Unit filename="kernel/memory/buddy.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/memory/buddy.h" />
 		<Unit filename="kernel/memory/extents.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/memory/extents.h" />
 		<Unit filename="kernel/memory/heap.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/memory/heap.h" />
 		<Unit filename="kernel/memory/kmalloc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/memory/kmalloc.h" />
 		<Unit filename="kernel/memory/slab.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/memory/slab.h" />
 		<Unit filename="kernel/net/address.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/address.h" />
 		<Unit filename="kernel/net/arp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/arp.h" />
 		<Unit filename="kernel/net/dhcp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/dhcp.h" />
 		<Unit filename="kernel/net/ethernet.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/ethernet.h" />
 		<Unit filename="kernel/net/icmp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/icmp.h" />
 		<Unit filename="kernel/net/interface.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/interface.h" />
 		<Unit filename="kernel/net/ipv4.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/ipv4.h" />
 		<Unit filename="kernel/net/net.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/net.h" />
 		<Unit filename="kernel/net/packet.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/packet.h" />
 		<Unit filename="kernel/net/protocol.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/protocol.h" />
 		<Unit filename="kernel/net/raw.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/raw.h" />
 		<Unit filename="kernel/net/route.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/route.h" />
 		<Unit filename="kernel/net/socket.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/socket.h" />
 		<Unit filename="kernel/net/tcp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/tcp.h" />
 		<Unit filename="kernel/net/tftp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/tftp.h" />
 		<Unit filename="kernel/net/udp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/net/udp.h" />
 		<Unit filename="kernel/preempt.c">
 			<Option compilerVar="CC" />
 		</Unit>

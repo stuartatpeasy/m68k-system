@@ -11,8 +11,8 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/udp.h>
-#include <kernel/net/net.h>
+#include <kernel/include/net/udp.h>
+#include <kernel/include/net/net.h>
 
 
 #define TFTP_SERVER_PORT        (69)

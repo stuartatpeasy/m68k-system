@@ -10,7 +10,8 @@
 */
 
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>
+#include <kernel/include/net/net.h>
+
 
 /* Lengths of the various supported network address types */
 #define NET_ADDR_LEN_ETHERNET           (6)     /* Ethernet (MAC) address       */

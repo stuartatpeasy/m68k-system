@@ -7,12 +7,12 @@
     (c) Stuart Wallace, May 2016.
 */
 
-#include <kernel/net/packet.h>
-#include <kernel/net/route.h>
-#include <kernel/net/ethernet.h>
-#include <kernel/net/ipv4.h>
-#include <kernel/net/udp.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/net/packet.h>
+#include <kernel/include/net/route.h>
+#include <kernel/include/net/ethernet.h>
+#include <kernel/include/net/ipv4.h>
+#include <kernel/include/net/udp.h>
 
 
 struct net_packet

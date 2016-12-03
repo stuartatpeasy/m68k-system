@@ -11,8 +11,8 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/ipv4.h>
-#include <kernel/net/net.h>
+#include <kernel/include/net/ipv4.h>
+#include <kernel/include/net/net.h>
 
 
 /* UDP header */

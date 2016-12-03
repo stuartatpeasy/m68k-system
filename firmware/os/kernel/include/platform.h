@@ -12,10 +12,10 @@
 #define IN_PLATFORM_H
 
 #include <kernel/include/cpu.h>
+#include <kernel/include/defs.h>
+#include <kernel/include/memory/extents.h>
 #include <kernel/include/types.h>
 #include <kernel/device/device.h>
-#include <kernel/include/defs.h>
-#include <kernel/memory/extents.h>
 
 /* Parse platform-specific header */
 #include <platform/platform_specific.h>

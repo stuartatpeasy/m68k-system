@@ -7,7 +7,7 @@
 	(c) Stuart Wallace, 2011.
 */
 
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
 

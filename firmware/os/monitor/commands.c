@@ -1080,8 +1080,8 @@ MONITOR_CMD_HANDLER(srec)
 #include <kernel/include/elf.h>
 #include <kernel/include/process.h>
 #include <kernel/include/tick.h>
-#include <kernel/net/dhcp.h>
-#include <kernel/net/tftp.h>
+#include <kernel/include/net/dhcp.h>
+#include <kernel/include/net/tftp.h>
 
 MONITOR_CMD_HANDLER(test)
 {

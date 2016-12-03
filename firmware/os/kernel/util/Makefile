@@ -24,7 +24,8 @@ clean:
 #
 
 bvec.o: \
-	bvec.c bvec.h kutil.h $(STDDEPS) ../../klibc/errno.h ../../klibc/string.h ../memory/kmalloc.h
+	bvec.c bvec.h kutil.h $(STDDEPS) ../../klibc/errno.h ../../klibc/string.h \
+	../include/memory/kmalloc.h
 
 buffer.o: \
 	buffer.c buffer.h $(STDDEPS)
@@ -33,7 +34,7 @@ checksum.o: \
 	checksum.c $(STDDEPS)
 
 dump.o: \
-	dump.c kutil.h $(STDDEPS) ../../klibc/ctype.h ../memory/kmalloc.h
+	dump.c kutil.h $(STDDEPS) ../../klibc/ctype.h ../include/memory/kmalloc.h
 
 hash.o: \
 	hash.c $(STDDEPS)

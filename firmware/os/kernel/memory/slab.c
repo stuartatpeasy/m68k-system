@@ -7,7 +7,7 @@
     (c) Stuart Wallace, July 2015.
 */
 
-#include <kernel/memory/slab.h>
+#include <kernel/include/memory/slab.h>
 #include <klibc/stdio.h>
 
 

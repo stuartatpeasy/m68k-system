@@ -10,9 +10,9 @@
 */
 
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>
-#include <kernel/net/address.h>
-#include <kernel/net/interface.h>
+#include <kernel/include/net/net.h>
+#include <kernel/include/net/address.h>
+#include <kernel/include/net/interface.h>
 
 
 typedef enum net_protocol

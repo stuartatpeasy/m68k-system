@@ -22,10 +22,10 @@
 #include <kernel/include/preempt.h>
 #include <kernel/include/sched.h>
 #include <kernel/include/tick.h>
-#include <kernel/memory/extents.h>
-#include <kernel/memory/kmalloc.h>
-#include <kernel/memory/slab.h>
-#include <kernel/net/net.h>
+#include <kernel/include/memory/extents.h>
+#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
+#include <kernel/include/net/net.h>
 #include <kernel/util/kutil.h>
 #include <monitor/monitor.h>
 #include <stdio.h>

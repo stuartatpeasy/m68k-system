@@ -7,8 +7,8 @@
     (c) Stuart Wallace, January 2016.
 */
 
-#include <kernel/net/tcp.h>
-#include <kernel/net/protocol.h>
+#include <kernel/include/net/tcp.h>
+#include <kernel/include/net/protocol.h>
 
 
 /*

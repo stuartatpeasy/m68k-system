@@ -16,10 +16,10 @@
 #include <kernel/include/console.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/version.h>
-#include <kernel/memory/kmalloc.h>
-#include <kernel/memory/slab.h>
-#include <kernel/net/arp.h>
-#include <kernel/net/ipv4.h>
+#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
+#include <kernel/include/net/arp.h>
+#include <kernel/include/net/ipv4.h>
 #include <kernel/util/kutil.h>
 #include <monitor/disasm.h>
 #include <monitor/history.h>

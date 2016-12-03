@@ -10,10 +10,10 @@
             then remove #includes for protos
 */
 
-#include <kernel/net/address.h>
-#include <kernel/net/ethernet.h>
-#include <kernel/net/ipv4.h>
-#include <kernel/net/route.h>
+#include <kernel/include/net/address.h>
+#include <kernel/include/net/ethernet.h>
+#include <kernel/include/net/ipv4.h>
+#include <kernel/include/net/route.h>
 
 
 /*

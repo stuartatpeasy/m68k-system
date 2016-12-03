@@ -7,10 +7,10 @@
     (c) Stuart Wallace, May 2016.
 */
 
-#include <kernel/net/address.h>
-#include <kernel/net/tftp.h>
-#include <kernel/net/ipv4.h>
-#include <kernel/net/packet.h>
+#include <kernel/include/net/address.h>
+#include <kernel/include/net/tftp.h>
+#include <kernel/include/net/ipv4.h>
+#include <kernel/include/net/packet.h>
 #include <klibc/string.h>
 
 

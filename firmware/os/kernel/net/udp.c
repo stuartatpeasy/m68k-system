@@ -7,9 +7,9 @@
     (c) Stuart Wallace, November 2015.
 */
 
-#include <kernel/net/udp.h>
-#include <kernel/net/dhcp.h>
-#include <kernel/net/packet.h>
+#include <kernel/include/net/udp.h>
+#include <kernel/include/net/dhcp.h>
+#include <kernel/include/net/packet.h>
 
 
 /*

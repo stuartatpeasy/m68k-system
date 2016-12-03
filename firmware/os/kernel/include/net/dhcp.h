@@ -11,10 +11,10 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
-#include <kernel/net/ethernet.h>
-#include <kernel/net/ipv4.h>
-#include <kernel/net/net.h>
-#include <kernel/net/udp.h>
+#include <kernel/include/net/ethernet.h>
+#include <kernel/include/net/ipv4.h>
+#include <kernel/include/net/net.h>
+#include <kernel/include/net/udp.h>
 
 
 #define DHCP_MAGIC_COOKIE           (0x63825363)

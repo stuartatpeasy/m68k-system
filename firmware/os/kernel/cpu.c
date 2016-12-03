@@ -8,7 +8,7 @@
 */
 
 #include <kernel/include/cpu.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <klibc/errors.h>
 
 

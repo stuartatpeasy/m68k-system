@@ -9,10 +9,10 @@
     FIXME: remove debug printf()s and remove #include stdio.h
 */
 
-#include <kernel/net/dhcp.h>
-#include <kernel/net/udp.h>
-#include <kernel/net/packet.h>
-#include <kernel/net/protocol.h>
+#include <kernel/include/net/dhcp.h>
+#include <kernel/include/net/udp.h>
+#include <kernel/include/net/packet.h>
+#include <kernel/include/net/protocol.h>
 #include <klibc/stdio.h>        // FIXME remove
 #include <klibc/string.h>
 #include <klibc/strings.h>

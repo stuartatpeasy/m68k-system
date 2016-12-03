@@ -11,9 +11,9 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
+#include <kernel/include/net/net.h>
+#include <kernel/include/net/address.h>
 #include <kernel/device/device.h>
-#include <kernel/net/net.h>
-#include <kernel/net/address.h>
 
 
 #define NET_INTERFACE_ANY           ((net_iface_t *) NULL)

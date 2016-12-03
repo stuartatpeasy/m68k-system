@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <kernel/fs/mount.h>
 #include <kernel/include/defs.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 
 

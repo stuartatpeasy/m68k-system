@@ -12,10 +12,10 @@
           much faster.
 */
 
-#include <kernel/net/protocol.h>
-#include <kernel/memory/kmalloc.h>
-#include <kernel/net/packet.h>
-#include <kernel/net/route.h>
+#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/net/protocol.h>
+#include <kernel/include/net/packet.h>
+#include <kernel/include/net/route.h>
 #include <klibc/stdio.h>
 #include <klibc/string.h>
 #include <klibc/strings.h>

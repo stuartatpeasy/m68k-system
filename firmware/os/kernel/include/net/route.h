@@ -10,8 +10,8 @@
 */
 
 #include <kernel/include/types.h>
-#include <kernel/net/net.h>
-#include <kernel/net/interface.h>
+#include <kernel/include/net/net.h>
+#include <kernel/include/net/interface.h>
 
 typedef struct net_route net_route_t;
 

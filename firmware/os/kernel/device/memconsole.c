@@ -14,7 +14,7 @@
 */
 
 #include <kernel/device/memconsole.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 
 
 /*

@@ -11,7 +11,7 @@
 
 #include <driver/mc68681.h>
 #include <kernel/include/cpu.h>
-#include <kernel/memory/kmalloc.h>
+#include <kernel/include/memory/kmalloc.h>
 
 
 static void mc68681_set_brg(dev_t *dev, ku8 brg_set, ku8 brg_test);
