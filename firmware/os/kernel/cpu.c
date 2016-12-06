@@ -12,7 +12,7 @@
 #include <klibc/include/errors.h>
 
 
-irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL];
+irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL + 1];
 
 s32 cpu_irq_set_default_handler(ku32 irql);
 
