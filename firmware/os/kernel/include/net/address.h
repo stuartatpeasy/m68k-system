@@ -1,5 +1,5 @@
-#ifndef KERNEL_NET_ADDRESS_H_INC
-#define KERNEL_NET_ADDRESS_H_INC
+#ifndef KERNEL_INCLUDE_NET_ADDRESS_H_INC
+#define KERNEL_INCLUDE_NET_ADDRESS_H_INC
 /*
     Network address abstraction
 

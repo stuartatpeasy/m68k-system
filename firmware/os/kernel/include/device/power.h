@@ -1,5 +1,5 @@
-#ifndef KERNEL_DEVICE_POWER_H_INC
-#define KERNEL_DEVICE_POWER_H_INC
+#ifndef KERNEL_INCLUDE_DEVICE_POWER_H_INC
+#define KERNEL_INCLUDE_DEVICE_POWER_H_INC
 /*
 	power.h: declarations related to power management.
 

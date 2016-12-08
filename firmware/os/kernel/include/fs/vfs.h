@@ -1,5 +1,5 @@
-#ifndef KERNEL_FS_VFS_H_INC
-#define KERNEL_FS_VFS_H_INC
+#ifndef KERNEL_INCLUDE_FS_VFS_H_INC
+#define KERNEL_INCLUDE_FS_VFS_H_INC
 /*
 	Virtual file system abstraction
 

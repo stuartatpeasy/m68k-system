@@ -1,5 +1,5 @@
-#ifndef KERNEL_ELF_H
-#define KERNEL_ELF_H
+#ifndef KERNEL_INCLUDE_ELF_H
+#define KERNEL_INCLUDE_ELF_H
 /*
 	ELF file format parsing/loading
 

@@ -1,5 +1,5 @@
-#ifndef KERNEL_NET_ETHERNET_H_INC
-#define KERNEL_NET_ETHERNET_H_INC
+#ifndef KERNEL_INCLUDE_NET_ETHERNET_H_INC
+#define KERNEL_INCLUDE_NET_ETHERNET_H_INC
 /*
     Ethernet implementation
 

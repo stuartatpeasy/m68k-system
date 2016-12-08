@@ -1,5 +1,5 @@
-#ifndef PLATFORM_PLATFORM_H_INC
-#define PLATFORM_PLATFORM_H_INC
+#ifndef KERNEL_INCLUDE_PLATFORM_H_INC
+#define KERNEL_INCLUDE_PLATFORM_H_INC
 /*
 	Platform call specification
 

@@ -1,5 +1,5 @@
-#ifndef KERNEL_NET_PROTOCOL_H_INC
-#define KERNEL_NET_PROTOCOL_H_INC
+#ifndef KERNEL_INCLUDE_NET_PROTOCOL_H_INC
+#define KERNEL_INCLUDE_NET_PROTOCOL_H_INC
 /*
     Network protocol abstraction
 

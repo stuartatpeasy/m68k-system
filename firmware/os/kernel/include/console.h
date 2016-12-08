@@ -1,5 +1,5 @@
-#ifndef KERNEL_CONSOLE_H_INC
-#define KERNEL_CONSOLE_H_INC
+#ifndef KERNEL_INCLUDE_CONSOLE_H_INC
+#define KERNEL_INCLUDE_CONSOLE_H_INC
 /*
 	Console-related declarations
 

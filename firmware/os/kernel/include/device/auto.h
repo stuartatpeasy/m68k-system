@@ -1,5 +1,5 @@
-#ifndef KERNEL_DEVICE_AUTO_H_INC
-#define KERNEL_DEVICE_AUTO_H_INC
+#ifndef KERNEL_INCLUDE_DEVICE_AUTO_H_INC
+#define KERNEL_INCLUDE_DEVICE_AUTO_H_INC
 /*
 	Automatic device init and driver selection, based on hardware device ID
 

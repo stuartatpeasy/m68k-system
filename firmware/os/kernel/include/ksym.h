@@ -1,5 +1,5 @@
-#ifndef KERNEL_KSYM_H_INC
-#define KERNEL_KSYM_H_INC
+#ifndef KERNEL_INCLUDE_KSYM_H_INC
+#define KERNEL_INCLUDE_KSYM_H_INC
 /*
 	Kernel symbol table lookup functions
 

@@ -1,5 +1,5 @@
-#ifndef KERNEL_PROCESS_H_INC
-#define KERNEL_PROCESS_H_INC
+#ifndef KERNEL_INCLUDE_PROCESS_H_INC
+#define KERNEL_INCLUDE_PROCESS_H_INC
 /*
     Declarations relating to processes
 

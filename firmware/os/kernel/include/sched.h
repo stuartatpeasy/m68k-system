@@ -1,5 +1,5 @@
-#ifndef KERNEL_SCHED_H_INC
-#define KERNEL_SCHED_H_INC
+#ifndef KERNEL_INCLUDE_SCHED_H_INC
+#define KERNEL_INCLUDE_SCHED_H_INC
 /*
 	Scheduler
 

@@ -1,5 +1,5 @@
-#ifndef KERNEL_SYSCALL_H_INC
-#define KERNEL_SYSCALL_H_INC
+#ifndef KERNEL_INCLUDE_SYSCALL_H_INC
+#define KERNEL_INCLUDE_SYSCALL_H_INC
 /*
 	System call handler declarations
 

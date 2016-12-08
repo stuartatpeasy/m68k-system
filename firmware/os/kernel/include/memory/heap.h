@@ -1,5 +1,5 @@
-#ifndef KERNEL_MEMORY_HEAP_H_INC
-#define KERNEL_MEMORY_HEAP_H_INC
+#ifndef KERNEL_INCLUDE_MEMORY_HEAP_H_INC
+#define KERNEL_INCLUDE_MEMORY_HEAP_H_INC
 /*
 	heap.h: declarations of functions and types for the simple and rubbish heap memory allocator
 

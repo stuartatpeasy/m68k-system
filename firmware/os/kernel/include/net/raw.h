@@ -1,5 +1,5 @@
-#ifndef KERNEL_NET_RAW_H_INC
-#define KERNEL_NET_RAW_H_INC
+#ifndef KERNEL_INCLUDE_NET_RAW_H_INC
+#define KERNEL_INCLUDE_NET_RAW_H_INC
 /*
     "Raw" protocol implementation
 

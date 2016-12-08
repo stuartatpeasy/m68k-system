@@ -1,5 +1,5 @@
-#ifndef KERNEL_NET_ARP_H_INC
-#define KERNEL_NET_ARP_H_INC
+#ifndef KERNEL_INCLUDE_NET_ARP_H_INC
+#define KERNEL_INCLUDE_NET_ARP_H_INC
 /*
     ARP implementation
 

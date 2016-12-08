@@ -1,5 +1,5 @@
-#ifndef KERNEL_FS_ROMFS_H_INC
-#define KERNEL_FS_ROMFS_H_INC
+#ifndef KERNEL_INCLUDE_FS_ROMFS_H_INC
+#define KERNEL_INCLUDE_FS_ROMFS_H_INC
 /*
     romfs (trivial read-only file system) support
 

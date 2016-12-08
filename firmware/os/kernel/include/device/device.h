@@ -1,5 +1,5 @@
-#ifndef KERNEL_DEVICE_DEVICE_H_INC
-#define KERNEL_DEVICE_DEVICE_H_INC
+#ifndef KERNEL_INCLUDE_DEVICE_DEVICE_H_INC
+#define KERNEL_INCLUDE_DEVICE_DEVICE_H_INC
 /*
 	device.h: declarations of functions and types relating to the hardware abstraction layer
 

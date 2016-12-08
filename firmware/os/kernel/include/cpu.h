@@ -1,5 +1,5 @@
-#ifndef CPU_CPU_H_INC
-#define CPU_CPU_H_INC
+#ifndef KERNEL_INCLUDE_CPU_H_INC
+#define KERNEL_INCLUDE_CPU_H_INC
 /*
     Non-CPU-specific, but CPU-related, declarations
 

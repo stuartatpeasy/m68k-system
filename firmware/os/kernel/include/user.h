@@ -1,5 +1,5 @@
-#ifndef KERNEL_USER_H_INC
-#define KERNEL_USER_H_INC
+#ifndef KERNEL_INCLUDE_USER_H_INC
+#define KERNEL_INCLUDE_USER_H_INC
 /*
     Declarations and functions relating to users and groups
 

@@ -1,5 +1,5 @@
-#ifndef KERNEL_SEMAPHORE_H_INC
-#define KERNEL_SEMAPHORE_H_INC
+#ifndef KERNEL_INCLUDE_SEMAPHORE_H_INC
+#define KERNEL_INCLUDE_SEMAPHORE_H_INC
 /*
     Kernel lock and semaphore functions
 

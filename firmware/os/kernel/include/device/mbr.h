@@ -1,5 +1,5 @@
-#ifndef INCLUDE_MBR_H_INC
-#define INCLUDE_MBR_H_INC
+#ifndef KERNEL_INCLUDE_DEVICE_MBR_H_INC
+#define KERNEL_INCLUDE_DEVICE_MBR_H_INC
 /*
 	Declarations relating to master boot records (MBR)
 

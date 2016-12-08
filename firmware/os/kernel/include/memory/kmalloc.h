@@ -1,5 +1,5 @@
-#ifndef KERNEL_MEMORY_KMALLOC_H_INC
-#define KERNEL_MEMORY_KMALLOC_H_INC
+#ifndef KERNEL_INCLUDE_MEMORY_KMALLOC_H_INC
+#define KERNEL_INCLUDE_MEMORY_KMALLOC_H_INC
 /*
 	kmalloc.h - kernel memory allocation/deallocation functions
 

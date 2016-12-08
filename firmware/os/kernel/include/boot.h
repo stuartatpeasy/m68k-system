@@ -1,5 +1,5 @@
-#ifndef KERNEL_BOOT_H_INC
-#define KERNEL_BOOT_H_INC
+#ifndef KERNEL_INCLUDE_BOOT_H_INC
+#define KERNEL_INCLUDE_BOOT_H_INC
 /*
 	boot.h: declarations of functions useful during boot
 

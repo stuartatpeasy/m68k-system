@@ -1,5 +1,5 @@
-#ifndef KERNEL_DEVICE_NVRAM_H_INC
-#define KERNEL_DEVICE_NVRAM_H_INC
+#ifndef KERNEL_INCLUDE_DEVICE_NVRAM_H_INC
+#define KERNEL_INCLUDE_DEVICE_NVRAM_H_INC
 /*
 	Functions for managing a boot parameter block (BPB), stored in a non-volatile RAM block
 

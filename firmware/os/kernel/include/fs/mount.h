@@ -1,5 +1,5 @@
-#ifndef KERNEL_FS_MOUNT_H_INC
-#define KERNEL_FS_MOUNT_H_INC
+#ifndef KERNEL_INCLUDE_FS_MOUNT_H_INC
+#define KERNEL_INCLUDE_FS_MOUNT_H_INC
 /*
 	Mount point functions
 

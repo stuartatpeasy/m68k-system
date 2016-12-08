@@ -1,5 +1,5 @@
-#ifndef KERNEL_DEVICE_BLOCK_H_INC
-#define KERNEL_DEVICE_BLOCK_H_INC
+#ifndef KERNEL_INCLUDE_DEVICE_BLOCK_H_INC
+#define KERNEL_INCLUDE_DEVICE_BLOCK_H_INC
 /*
 	Block device generic functions and declarations
 

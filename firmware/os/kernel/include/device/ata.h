@@ -1,5 +1,5 @@
-#ifndef KERNEL_DEVICE_ATA_H_INC
-#define KERNEL_DEVICE_ATA_H_INC
+#ifndef KERNEL_INCLUDE_DEVICE_ATA_H_INC
+#define KERNEL_INCLUDE_DEVICE_ATA_H_INC
 /*
 	AT Attachment (ATA) interface driver function and macro declarations
 

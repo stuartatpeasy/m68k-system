@@ -1,5 +1,5 @@
-#ifndef KERNEL_TICK_H_INC
-#define KERNEL_TICK_H_INC
+#ifndef KERNEL_INCLUDE_TICK_H_INC
+#define KERNEL_INCLUDE_TICK_H_INC
 /*
     tick.h: periodic timer management functions
 
