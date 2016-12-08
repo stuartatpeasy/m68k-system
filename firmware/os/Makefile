@@ -69,11 +69,11 @@ $(DEPDIR)/%.d:
 .PRECIOUS: $(DEPDIR)/%.d
 .PRECIOUS: $(OBJDIR)/%.o
 
-TOOLS:=tools/bin/makemap
+TOOLS := tools/bin/makemap
 
-LDFLAGS:=-g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
+LDFLAGS := -g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
 
-LIBS:=-lgcc -lplatform
+LIBS := -lgcc -lplatform
 
 all: $(APPNAME)
 
