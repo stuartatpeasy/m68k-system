@@ -24,7 +24,7 @@
 
 #define TARGET_BIGENDIAN
 
-#include <cpu/mc68000/mc68000.h>
+#include <cpu/m68000/m68000.h>
 #else
 /*
     Error: Undefined/unknown architecture

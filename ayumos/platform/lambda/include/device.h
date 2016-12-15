@@ -6,7 +6,7 @@
     Stuart Wallace, September 2015
 */
 
-#include <cpu/mc68000/exceptions.h>
+#include <cpu/m68000/exceptions.h>
 
 #include <kernel/include/defs.h>
 #include <kernel/include/device/device.h>

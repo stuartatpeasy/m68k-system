@@ -3,7 +3,7 @@
 /*
     Slab allocator
 
-    Part of the as-yet-unnamed MC68010 operating system
+    Part of ayumos
 
 
     (c) Stuart Wallace, July 2015.

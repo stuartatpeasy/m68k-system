@@ -7,10 +7,10 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
-#include <cpu/mc68000/regs.h>
+#include <cpu/m68000/regs.h>
 #include <kernel/include/syscalls.h>
 #include <klibc/include/errors.h>
-.include "cpu/mc68000/macros.S"
+.include "cpu/m68000/macros.S"
 
 .text
 .global syscall_dispatcher

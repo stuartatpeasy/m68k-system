@@ -26,9 +26,9 @@
 					<Add option="-DTARGET_MC68010" />
 					<Add option="-DPLATFORM_LAMBDA_REV0" />
 					<Add option="-DBUG_ATA_BYTE_SWAP" />
-					<Add directory="/home/swallace/projects/m68k-system/firmware/os/" />
-					<Add directory="/home/swallace/projects/m68k-system/firmware/os/klibc" />
-					<Add directory="/home/swallace/projects/m68k-system/firmware/os/include" />
+					<Add directory="/home/swallace/projects/m68k-system/ayumos/" />
+					<Add directory="/home/swallace/projects/m68k-system/ayumos/klibc" />
+					<Add directory="/home/swallace/projects/m68k-system/ayumos/include" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -71,16 +71,17 @@
 		<Unit filename="Makefile" />
 		<Unit filename="buildcfg.h" />
 		<Unit filename="cpu/arch_specific.h" />
-		<Unit filename="cpu/mc68000/exceptions.h" />
-		<Unit filename="cpu/mc68000/irq.S" />
-		<Unit filename="cpu/mc68000/macros.S" />
-		<Unit filename="cpu/mc68000/mc68000.c">
+		<Unit filename="cpu/m68000/defs.mk" />
+		<Unit filename="cpu/m68000/exceptions.h" />
+		<Unit filename="cpu/m68000/irq.S" />
+		<Unit filename="cpu/m68000/m68000.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="cpu/mc68000/mc68000.h" />
-		<Unit filename="cpu/mc68000/process.S" />
-		<Unit filename="cpu/mc68000/regs.h" />
-		<Unit filename="cpu/mc68000/syscall.S" />
+		<Unit filename="cpu/m68000/m68000.h" />
+		<Unit filename="cpu/m68000/macros.S" />
+		<Unit filename="cpu/m68000/process.S" />
+		<Unit filename="cpu/m68000/regs.h" />
+		<Unit filename="cpu/m68000/syscall.S" />
 		<Unit filename="driver/ds17485.c">
 			<Option compilerVar="CC" />
 		</Unit>

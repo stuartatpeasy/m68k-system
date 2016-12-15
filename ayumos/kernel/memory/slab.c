@@ -9,7 +9,12 @@
 
 #include <kernel/include/memory/slab.h>
 
-
+/*
+    g_slabs is an array of linked lists of slab_t objects, indexed by slab radix (i.e. allocation
+    unit size).  When an allocation is requested, the list corresponding to the allocation unit size
+    is searched for a free block.  If no free block exists, a new slab will be initialised and
+    added to the list.
+*/
 slab_t g_slabs[NSLABS];
 void *g_slab_base;
 void *g_slab_end;

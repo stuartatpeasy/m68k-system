@@ -1,16 +1,16 @@
 # Makefile for ayumos
 #
-# Stuart Wallace <stuartw@atom.net>, 2011-2015.
+# Stuart Wallace <stuartw@atom.net>, 2011-2016.
 #
 #
 include global.mk
+include cpu/$(ARCH)/defs.mk
 
 FLASHTOOL=/usr/local/bin/flashtool
 DFU=/usr/local/bin/dfu
 FLASHPROGDEV=/dev/ttyS1
 
 KERNEL_SOURCES := \
-	cpu/$(CPU)/$(CPU).c \
 	driver/ds17485.c driver/encx24j600.c driver/mc68681.c driver/ps2controller.c \
 	kernel/device/ata.c kernel/device/auto.c kernel/device/block.c kernel/device/device.c \
 	kernel/device/memconsole.c kernel/device/nvram.c kernel/device/partition.c kernel/fs/file.c \
@@ -35,9 +35,10 @@ MONITOR_SOURCES := \
 	monitor/commands.c monitor/disasm.c monitor/env.c monitor/history.c monitor/monitor.o \
 	monitor/readline.c monitor/srec.c
 
-ASMSOURCES := cpu/$(CPU)/syscall.S cpu/$(CPU)/irq.S cpu/$(CPU)/process.S
+ASMSOURCES := $(addprefix cpu/$(ARCH)/,$(CPU_ASMSOURCES))
 
-CSOURCES := $(KERNEL_SOURCES) $(KLIBC_SOURCES) $(MONITOR_SOURCES)
+CSOURCES := $(addprefix cpu/$(ARCH)/,$(CPU_CSOURCES)) $(KERNEL_SOURCES) $(KLIBC_SOURCES) \
+            $(MONITOR_SOURCES)
 
 SOURCES := $(CSOURCES) $(ASMSOURCES)
 
@@ -71,7 +72,7 @@ $(DEPDIR)/%.d:
 
 TOOLS := tools/bin/makemap
 
-LDFLAGS := -g -T $(LDSCRIPT) -nostdlib -static -L$(BASEDIR)/m68000 -L.
+LDFLAGS := -g -T $(LDSCRIPT) -nostdlib -static -L$(LIBGCCDIR) -L.
 
 LIBS := -lgcc -lplatform
 

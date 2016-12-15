@@ -10,7 +10,7 @@
 */
 
 #include <kernel/include/types.h>
-#include <cpu/mc68000/exceptions.h>
+#include <cpu/m68000/exceptions.h>
 
 #define CPU_MAX_IRQL        255
 

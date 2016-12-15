@@ -7,7 +7,7 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
-#include <cpu/mc68000/mc68000.h>
+#include <cpu/m68000/m68000.h>
 #include <kernel/include/ksym.h>
 #include <kernel/include/process.h>
 #include <kernel/include/memory/extents.h>

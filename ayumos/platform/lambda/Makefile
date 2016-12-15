@@ -2,6 +2,8 @@ SRC_ROOT=../..
 
 include $(SRC_ROOT)/global.mk
 
+CFLAGS += -I$(SRC_ROOT)
+
 LIBNAME := $(SRC_ROOT)/libplatform.a
 
 CSOURCES := device.c dfu.c lambda.c

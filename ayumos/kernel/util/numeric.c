@@ -31,7 +31,7 @@ u16 log10(ku32 n)
 
 
 /*
-    log2() - return the integer log to base 2 of n.
+    log2() - return the integer log to base 2 of n, always rounding down [i.e. floor(log2(n))]
 
     NOTE: log2(0) returns 0!
 */
