@@ -15,6 +15,21 @@
 #include <kernel/util/buffer.h>
 
 
+typedef enum net_protocol
+{
+    np_unknown = 0,
+    np_raw,                 /* Raw packets - no protocol wrapper    */
+    np_ethernet,            /* Ethernet protocol                    */
+    np_arp,                 /* Address Resolution Protocol          */
+    np_ipv4,                /* IP v4                                */
+    np_ipv6,                /* IP v6                                */
+    np_tcp,                 /* TCP                                  */
+    np_udp,                 /* UDP                                  */
+    np_icmp,                /* ICMP (ping, etc.)                    */
+    np_invalid              /* Used as a delimiter for validation   */
+} net_protocol_t;
+
+
 /*
     Forward declarations of various types (an attempt to avoid circular-dependency hell)
 */

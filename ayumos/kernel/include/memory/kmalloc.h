@@ -75,7 +75,7 @@ u32 uusedmem();
     and returning ENOMEM if so.
 */
 #define CHECKED_KMALLOC(size)           \
-({                                      \
+__extension__ ({                        \
     void *_ptr = kmalloc(size);         \
     if(_ptr == NULL)                    \
         return ENOMEM;                  \
@@ -83,7 +83,7 @@ u32 uusedmem();
 })
 
 #define CHECKED_KCALLOC(nmemb, size)    \
-({                                      \
+__extension__ ({                        \
     void *_ptr = kcalloc(nmemb, size);  \
     if(_ptr == NULL)                    \
         return ENOMEM;                  \
@@ -91,7 +91,7 @@ u32 uusedmem();
 })
 
 #define CHECKED_UMALLOC(size)           \
-({                                      \
+__extension__ ({                        \
     void *_ptr = umalloc(size);         \
     if(_ptr) == NULL)                   \
         return ENOMEM;                  \
@@ -99,7 +99,7 @@ u32 uusedmem();
 })
 
 #define CHECKED_UCALLOC(nmemb, size)    \
-({                                      \
+__extension__ ({                        \
     void *_ptr = ucalloc(nmemb, size);  \
     if(_ptr) == NULL)                   \
         return ENOMEM;                  \

@@ -120,7 +120,7 @@ typedef struct mc68010_address_exc_frame
 inline void cpu_nop(void)
 {
     asm volatile("nop" :);
-};
+}
 
 
 /*
@@ -136,7 +136,7 @@ inline void cpu_enable_interrupts(void)
         :
         :
     );
-};
+}
 
 
 inline void cpu_disable_interrupts(void)
@@ -148,7 +148,7 @@ inline void cpu_disable_interrupts(void)
         :
         :
     );
-};
+}
 
 
 /*
@@ -170,7 +170,7 @@ inline u16 bswap_16(u16 x)
     );
 
     return x_;
-};
+}
 
 
 inline u32 bswap_32(u32 x)
@@ -187,7 +187,7 @@ inline u32 bswap_32(u32 x)
     );
 
     return x_;
-};
+}
 
 
 inline u32 wswap_32(u32 x)
@@ -202,7 +202,7 @@ inline u32 wswap_32(u32 x)
     );
 
     return x_;
-};
+}
 
 
 /*
@@ -226,7 +226,7 @@ inline u8 cpu_tas(u8 *addr)
     );
 
     return ret;
-};
+}
 
 
 /* These are implemented in mc68000/irq.S */

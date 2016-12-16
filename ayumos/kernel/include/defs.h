@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_DEFS_H_INC
 #define KERNEL_INCLUDE_DEFS_H_INC
 /*
-	Miscellaneous definitions
+    Miscellaneous definitions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
+    (c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
 #include <kernel/include/types.h>
@@ -22,17 +22,17 @@
 #endif
 
 /* API-like functions try to return zero on success and nonzero on failure */
-#define SUCCESS			(0)
+#define SUCCESS         (0)
 
 /* Directory separator character used in file paths */
-#define DIR_SEPARATOR	('/')
+#define DIR_SEPARATOR   ('/')
 
 /* Block device block size */
-#define BLOCK_SIZE		(512)
-#define LOG_BLOCK_SIZE	(9)
+#define BLOCK_SIZE      (512)
+#define LOG_BLOCK_SIZE  (9)
 
 /* Maximum length of a name (i.e. a component in a file system path) */
-#define NAME_MAX_LEN	(255)
+#define NAME_MAX_LEN    (255)
 
 /* "Tick rate" - number of timer interrupts per second */
 #define TICK_RATE       (64)
@@ -65,30 +65,30 @@
 #define offsetof(st, m) ((s32) (&((st *) 0)->m))
 
 /* Given ptr, pointing to a member of struct "type", return a ptr to the struct */
-#define containerof(ptr, type, member)                  \
-({                                                      \
-    const typeof(((type *) 0)->member) *mptr = (ptr);   \
-    (type *) ((char *) mptr - offsetof(type, member));  \
-})
+#define containerof(ptr, type, member)                      \
+    __extension__ ({                                        \
+        const typeof(((type *) 0)->member) *mptr = (ptr);   \
+        (type *) ((char *) mptr - offsetof(type, member));  \
+    })
 
 /* Obtain the size of a struct member */
 #define membersize(type, member)        sizeof(((type *) 0)->member)
 
 /* Return the minimum of two values; accesses each value exactly once. */
-#define MIN(a, b)           \
-({                          \
-    typeof(a) _a = (a);     \
-    typeof(b) _b = (b);     \
-    _a < _b ? _a : _b;      \
-})
+#define MIN(a, b)               \
+    __extension__ ({            \
+        typeof(a) _a = (a);     \
+        typeof(b) _b = (b);     \
+        _a < _b ? _a : _b;      \
+    })
 
 /* Return the maximum of two values; accesses each value exactly once. */
-#define MAX(a, b)           \
-({                          \
-    typeof(a) _a = (a);     \
-    typeof(b) _b = (b);     \
-    _a > _b ? _a : _b;      \
-})
+#define MAX(a, b)               \
+    __extension__ ({            \
+        typeof(a) _a = (a);     \
+        typeof(b) _b = (b);     \
+        _a > _b ? _a : _b;      \
+    })
 
 /* Return a val with bit x set (i.e. compute 2^x). */
 #define BIT(x)          (1 << (x))
@@ -97,44 +97,44 @@
 #define UNUSED(x)       (void) (x)
 
 /*
-	CEIL_LOG2() - use the preprocessor to compute ceil(log2(x)), where 0 < x < 2^32.  x should be
-	something the preprocessor knows to be constant, e.g. sizeof(foo).
+    CEIL_LOG2() - use the preprocessor to compute ceil(log2(x)), where 0 < x < 2^32.  x should be
+    something the preprocessor knows to be constant, e.g. sizeof(foo).
 
-	Note: yields 0 for x < 1.
+    Note: yields 0 for x < 1.
 */
 #define CEIL_LOG2(x) \
-	  (((x) > (1 << 30)) ? 31 \
-	: (((x) > (1 << 29)) ? 30 \
-	: (((x) > (1 << 28)) ? 29 \
-	: (((x) > (1 << 27)) ? 28 \
-	: (((x) > (1 << 26)) ? 27 \
-	: (((x) > (1 << 25)) ? 26 \
-	: (((x) > (1 << 24)) ? 25 \
-	: (((x) > (1 << 23)) ? 24 \
-	: (((x) > (1 << 22)) ? 23 \
-	: (((x) > (1 << 21)) ? 22 \
-	: (((x) > (1 << 20)) ? 21 \
-	: (((x) > (1 << 19)) ? 20 \
-	: (((x) > (1 << 18)) ? 19 \
-	: (((x) > (1 << 17)) ? 18 \
-	: (((x) > (1 << 16)) ? 17 \
-	: (((x) > (1 << 15)) ? 16 \
-	: (((x) > (1 << 14)) ? 15 \
-	: (((x) > (1 << 13)) ? 14 \
-	: (((x) > (1 << 12)) ? 13 \
-	: (((x) > (1 << 11)) ? 12 \
-	: (((x) > (1 << 10)) ? 11 \
-	: (((x) > (1 <<  9)) ? 10 \
-	: (((x) > (1 <<  8)) ?  9 \
-	: (((x) > (1 <<  7)) ?  8 \
-	: (((x) > (1 <<  6)) ?  7 \
-	: (((x) > (1 <<  5)) ?  6 \
-	: (((x) > (1 <<  4)) ?  5 \
-	: (((x) > (1 <<  3)) ?  4 \
-	: (((x) > (1 <<  2)) ?  3 \
-	: (((x) > (1 <<  1)) ?  2 \
-	: (((x) > (1 <<  0)) ?  1 \
-	: 0)))))))))))))))))))))))))))))))
+      (((x) > (1 << 30)) ? 31 \
+    : (((x) > (1 << 29)) ? 30 \
+    : (((x) > (1 << 28)) ? 29 \
+    : (((x) > (1 << 27)) ? 28 \
+    : (((x) > (1 << 26)) ? 27 \
+    : (((x) > (1 << 25)) ? 26 \
+    : (((x) > (1 << 24)) ? 25 \
+    : (((x) > (1 << 23)) ? 24 \
+    : (((x) > (1 << 22)) ? 23 \
+    : (((x) > (1 << 21)) ? 22 \
+    : (((x) > (1 << 20)) ? 21 \
+    : (((x) > (1 << 19)) ? 20 \
+    : (((x) > (1 << 18)) ? 19 \
+    : (((x) > (1 << 17)) ? 18 \
+    : (((x) > (1 << 16)) ? 17 \
+    : (((x) > (1 << 15)) ? 16 \
+    : (((x) > (1 << 14)) ? 15 \
+    : (((x) > (1 << 13)) ? 14 \
+    : (((x) > (1 << 12)) ? 13 \
+    : (((x) > (1 << 11)) ? 12 \
+    : (((x) > (1 << 10)) ? 11 \
+    : (((x) > (1 <<  9)) ? 10 \
+    : (((x) > (1 <<  8)) ?  9 \
+    : (((x) > (1 <<  7)) ?  8 \
+    : (((x) > (1 <<  6)) ?  7 \
+    : (((x) > (1 <<  5)) ?  6 \
+    : (((x) > (1 <<  4)) ?  5 \
+    : (((x) > (1 <<  3)) ?  4 \
+    : (((x) > (1 <<  2)) ?  3 \
+    : (((x) > (1 <<  1)) ?  2 \
+    : (((x) > (1 <<  0)) ?  1 \
+    : 0)))))))))))))))))))))))))))))))
 
 
 extern u8 _sdata,       /* .data section start      */

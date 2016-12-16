@@ -18,12 +18,12 @@ mem_ctx g_uheap;    /* user heap (shared by all userland processes) */
 
 void kmeminit(void * const start, void * const end)
 {
-	heap_init(&g_kheap, start, end - start);
+	heap_init(&g_kheap, start, (u8 *) end - (u8 *) start);
 }
 
 void umeminit(void * const start, void * const end)
 {
-    heap_init(&g_uheap, start, end - start);
+    heap_init(&g_uheap, start, (u8 *) end - (u8 *) start);
 }
 
 #elif defined(KMALLOC_BUDDY)

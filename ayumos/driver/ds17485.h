@@ -37,28 +37,28 @@
 
 /* Read from register r */
 #define DS17485_REG_READ(base, r)           \
-    ({                                      \
+    __extension__ ({                        \
         DS17485_ADDR(base) = r;             \
         DS17485_DATA(base);                 \
     })
 
 /* Write data to register r */
 #define DS17485_REG_WRITE(base, r, data)    \
-    ({                                      \
+    __extension__ ({                        \
         DS17485_ADDR(base) = r;             \
         DS17485_DATA(base) = data;          \
     })
 
 /* Set bits b in register r */
 #define DS17485_REG_SET_BITS(base, r, b)    \
-    ({                                      \
+    __extension__ ({                        \
         DS17485_ADDR(base) = r;             \
         DS17485_DATA(base) |= b;            \
     })
 
 /* Clear bits b in register r */
 #define DS17485_REG_CLEAR_BITS(base, r, b)  \
-    ({                                      \
+    __extension__ ({                        \
         DS17485_ADDR(base) = r;             \
         DS17485_DATA(base) &= ~b;           \
     })

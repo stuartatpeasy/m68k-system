@@ -192,28 +192,28 @@ typedef u16 fat16_cluster_id;
 }
 
 #define FAT_DATETIME_TO_TIMESTAMP(fdate, ftime)             \
-({                                                          \
-    struct rtc_time tm;                                     \
-    s32 ts;                                                 \
-    FAT_DATE_TO_RTC_DATE(fdate, tm);                        \
-    FAT_TIME_TO_RTC_DATE(ftime, tm);                        \
-    rtc_time_to_timestamp(&tm, &ts);                        \
-    ts;                                                     \
-})
+	__extension__ ({                                        \
+	    struct rtc_time tm;                                 \
+	    s32 ts;                                             \
+	    FAT_DATE_TO_RTC_DATE(fdate, tm);                    \
+	    FAT_TIME_TO_RTC_DATE(ftime, tm);                    \
+    	rtc_time_to_timestamp(&tm, &ts);                    \
+	    ts;                                                 \
+	})
 
 #define RTC_DATE_TO_FAT_DATE(rdate)                         \
-({                                                          \
-    (u16) (((rdate)->year - 1980) << 9) |                   \
-            ((rdate)->month << 5) |                         \
-            ((rdate)->day);                                 \
-})
+	__extension__ ({                                        \
+	    (u16) (((rdate)->year - 1980) << 9) |               \
+    	        ((rdate)->month << 5) |                     \
+        	    ((rdate)->day);                             \
+	})
 
 #define RTC_DATE_TO_FAT_TIME(rdate)                         \
-({                                                          \
-    (u16) ((rdate)->hour << 11) |                           \
-            ((rdate)->minute << 5) |                        \
-            ((rdate)->second >> 1);                         \
-})
+	__extension__ ({                                        \
+	    (u16) ((rdate)->hour << 11) |                       \
+    	        ((rdate)->minute << 5) |                    \
+        	    ((rdate)->second >> 1);                     \
+	})
 
 
 vfs_driver_t g_fat_ops;

@@ -50,7 +50,8 @@
 
 #define LAMBDA_EXP_NUM_SLOTS        (4)
 
-#define LAMBDA_EXP_BASE(slot)       ((void *) (LAMBDA_EXP_BASE_ADDR + (slot * LAMBDA_EXP_ADDR_LEN)))
+#define LAMBDA_EXP_BASE(slot)       ((void *) (((u8 *) LAMBDA_EXP_BASE_ADDR) + \
+                                                (slot * LAMBDA_EXP_ADDR_LEN)))
 
 
 /*

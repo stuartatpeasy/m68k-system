@@ -16,7 +16,7 @@
 
 typedef struct heap_
 {
-	void *			start;
+	u8 *			start;
 	unsigned int	size;
 } heap_ctx;
 

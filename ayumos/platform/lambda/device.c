@@ -144,7 +144,7 @@ s32 plat_dev_enumerate()
 void expansion_init()
 {
     u16 i;
-    void *base_addr;
+    u8 *base_addr;
 
 	for(base_addr = LAMBDA_EXP_BASE_ADDR, i = 0; i < LAMBDA_EXP_NUM_SLOTS;
         ++i, base_addr += LAMBDA_EXP_ADDR_LEN)
