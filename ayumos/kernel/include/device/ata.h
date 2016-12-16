@@ -184,7 +184,7 @@ blockdev_stats_t g_ata_stats;
     *(ATA_REG_DATA_ADDR(base_addr))
 
 #define ATA_REG(base_addr, off)	\
-    *((vu8 *) ((base_addr) + off))
+    *((vu8 *) (base_addr) + off)
 
 
 /*
