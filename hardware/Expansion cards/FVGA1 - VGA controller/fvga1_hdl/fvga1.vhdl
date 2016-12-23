@@ -93,8 +93,9 @@ end;
 
 
 architecture behaviour of fvga1 is
-    signal pixel_clk        : std_logic;
-    signal pixel_data: std_logic_vector(15 downto 0);
+    signal pixel_clk    : std_logic;
+    signal pixel_data   : std_logic_vector(15 downto 0);
+    signal pixel_next   : std_logic_vector(7 downto 0);
 begin
     pll_inst: entity work.pll
         generic map(
@@ -122,11 +123,14 @@ begin
         );
 
     process(HOST_nRESET, pixel_clk, HOST_nUCS, HOST_nLCS, HOST_nW, HOST_A, HOST_D)
-        variable cycle: integer range 0 to 1 := 0;
+        variable cycle      : integer range 0 to 1 := 0;
+        variable pixel_addr : std_logic_vector(18 downto 0);    -- address of the next pair of pixels
     begin
         if(HOST_nRESET = '0') then
             -- Negate host interrupt request
-            HOST_nIRQ <= '1';
+            HOST_nIRQ   <= '1';
+
+            HOST_D      <= (others => 'Z');
 
             -- Deactivate local memory interface
             MEM_A       <= (others => '0');
@@ -146,9 +150,10 @@ begin
             VGA_VSYNC   <= '0';
             VGA_HSYNC   <= '0';
 
-            HOST_D      <= (others => 'Z');
-
-            cycle := 0;
+            pixel_data  <= (others => '0');
+            pixel_next  <= (others => '0');
+            pixel_addr  := 0;
+            cycle       := 0;
         elsif(rising_edge(pixel_clk)) then
             if(cycle = 0) then
                 -- Cycle 0: latch host read data, if a read cycle was requested; set the bus up to
@@ -162,12 +167,27 @@ begin
                 end if;
 
                 -- Start a 16-bit read cycle to obtain pixel data
+                MEM_A(17 downto 0) <= pixel_addr(17 downto 0);
+
+                if(pixel_addr(18) = '1') then
+                    MEM_nCE1 <= '0';
+                    MEM_nCE0 <= '1';
+                else
+                    MEM_nCE1 <= '1';
+                    MEM_nCE0 <= '0';
+                end if;
+
                 MEM_nUB <= '0';
                 MEM_nLB <= '0';
                 MEM_nWE <= '1';
                 MEM_nOE <= '0';
 
-                MEM_A <= (others => '0');       -- temporary
+                -- Scan out the upper half of pixel_data
+                VGA_R <= pixel_data(15 downto 13);
+                VGA_G <= pixel_data(12 downto 10);
+                VGA_B <= pixel_data(9 downto 8);
+
+                pixel_next <= pixel_data(7 downto 0);
 
                 cycle := 1;
             else
@@ -191,8 +211,10 @@ begin
 
                     if(HOST_nW = '1') then
                         -- Host read cycle
+                        HOST_D <= MEM_D;
                     else
                         -- Host write cycle
+                        MEM_D <= HOST_D;
                     end if;
                 else
                     MEM_nCE1    <= '1';
@@ -202,10 +224,15 @@ begin
                     MEM_nWE     <= '1';
                     MEM_nOE     <= '1';
     
-                    MEM_A       <= (others => '0');
-                    MEM_D       <= (others => '0');
+--                    MEM_A   <= (others => '0');
+--                    MEM_D   <= (others => '0');
                 end if;
 
+                VGA_R <= pixel_next(7 downto 5);
+                VGA_G <= pixel_next(4 downto 2);
+                VGA_B <= pixel_next(1 downto 0);
+
+                pixel_addr := pixel_addr + 1;
                 cycle := 0;
             end if;
         end if;

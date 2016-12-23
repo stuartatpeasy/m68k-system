@@ -67,7 +67,7 @@ VHDL2008=False
 VerilogIncludeSearchPath=
 
 [tool options]
-PlacerEffortLevel=std
+PlacerEffortLevel=high
 PlacerAutoLutCascade=yes
 PlacerAutoRamCascade=yes
 PlacerPowerDriven=no
@@ -83,5 +83,5 @@ BitmapSetSecurity=no
 BitmapSetNoUsedIONoPullup=no
 FloorPlannerShowFanInNets=yes
 FloorPlannerShowFanOutNets=yes
-HookTo3rdPartyTextEditor=
+HookTo3rdPartyTextEditor=no
 
