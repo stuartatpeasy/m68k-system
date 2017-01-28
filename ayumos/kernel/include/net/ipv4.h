@@ -9,6 +9,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
@@ -129,4 +131,5 @@ s32 ipv4_route_get_iface(const net_address_t * const proto_addr, net_iface_t **i
 s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr);
 
+#endif /* WITH_NETWORKING */
 #endif

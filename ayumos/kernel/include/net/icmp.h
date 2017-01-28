@@ -9,6 +9,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <klibc/include/string.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
@@ -56,4 +58,5 @@ typedef icmp_echo_request_t icmp_echo_reply_t;
 s32 icmp_init();
 s32 icmp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 
+#endif /* WITH_NETWORKING */
 #endif

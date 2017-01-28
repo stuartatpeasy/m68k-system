@@ -11,8 +11,8 @@
     This device has driver ID 0x82.
 */
 
-#include <kernel/device/device.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/device/device.h>
 #include <kernel/include/error.h>
 #include <kernel/include/keyboard.h>
 #include <kernel/include/types.h>
@@ -53,7 +53,9 @@
 #define PS2_SC_KB_EXT2          (0xe1)  /* Second extended key set                              */
 
 
-typedef void (*ps2port_process_fn)();
+typedef struct ps2controller_port ps2controller_port_t;
+
+typedef void (*ps2port_process_fn)(ps2controller_port_t *port);
 
 
 /* Types of device which may be attached to a PS/2 port */
@@ -69,16 +71,19 @@ typedef enum
 /* PS/2 port state machine states */
 typedef enum
 {
+    PS2_PORT_STATE_RESET,
+    PS2_PORT_STATE_RESET_ACK,
     PS2_PORT_STATE_ID,
     PS2_PORT_STATE_ID_ACK_RECEIVED,
     PS2_PORT_STATE_ID_KB_ID1_RECEIVED,
     PS2_PORT_STATE_ID_FAILED,
+    PS2_PORT_STATE_DEVICE_FAILED,
     PS2_PORT_STATE_UP
 } PS2Port_State;
 
 
 /* State of a single PS/2 port */
-typedef struct
+struct ps2controller_port
 {
     struct
     {
@@ -113,13 +118,15 @@ typedef struct
         u32             flags;
     } packet;
 
+//    u8                  rx_buf[256];        // FIXME parameterise this
+//    u8                  rx_ptr;
     CIRCBUF(u8)         tx_buf;
     vu8                 tx_in_progress;
     u8                  err;
     PS2_DevType         dev_type;
     PS2Port_State       state;
     ps2port_process_fn  process_fn;
-} ps2controller_port_t;
+};
 
 
 /* Overall controller state */

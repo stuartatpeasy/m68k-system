@@ -10,10 +10,10 @@
 */
 
 #include <driver/ps2controller.h>
-#include <kernel/cpu.h>
-#include <kernel/device/power.h>
-#include <klibc/errors.h>
-#include <klibc/stdio.h>                    // FIXME remove
+#include <kernel/include/device/power.h>
+#include <kernel/include/cpu.h>
+#include <klibc/include/errors.h>
+#include <klibc/include/stdio.h>                    // FIXME remove
 
 
 void ps2controller_port_irq_handler(ku32 irql, void *data);
@@ -359,8 +359,14 @@ void ps2controller_port_irq_handler(ku32 irql, void *data)
     if(status)
     {
         /* Process received data */
-        while(*port->regs.status & PS2_FLAG_RX)
-            port->process_fn(port);
+        if(*port->regs.status & PS2_FLAG_RX)
+        {
+            while(*port->regs.status & PS2_FLAG_RX)
+            {
+//                putchar('*');             // FIXME remove this
+                port->process_fn(port);
+            }
+        }
 
         if(status & PS2_FLAG_TX)
         {
@@ -387,13 +393,13 @@ void ps2controller_port_detect(ps2controller_port_t *port)
     /* Prepare the port for device detection */
     port->dev_type = PS2_DEV_NONE;
     port->packet.data = 0;
-    port->state = PS2_PORT_STATE_ID;
+    port->state = PS2_PORT_STATE_RESET;
 
     /* Install the device-detection processor function */
     port->process_fn = ps2controller_process_detect;
 
-    /* Send the "read device ID" command */
-    CIRCBUF_WRITE(port->tx_buf, PS2_CMD_READ_ID);
+    /* Send the "reset" command */
+    CIRCBUF_WRITE(port->tx_buf, PS2_CMD_RESET);
     ps2controller_port_start_tx(port);
 }
 
@@ -418,13 +424,34 @@ void ps2controller_process_detect(ps2controller_port_t *port)
 {
     ku8 data = *port->regs.data;
 
-    port->packet.data = (port->packet.data << 8) | *port->regs.data;
+//    printf("[%02x]", data);
+    port->packet.data = (port->packet.data << 8) | data;
 
-    if((port->state == PS2_PORT_STATE_ID)
-       && ((data == PS2_RESP_ACK) || (data == PS2_RESP_BAT_PASSED)))
+    if(port->state == PS2_PORT_STATE_RESET)
+    {
+        if(data == PS2_RESP_ACK)
+        {
+            /* Received an ack for the reset command.  Now wait for a pass/fail. */
+            port->state = PS2_PORT_STATE_RESET_ACK;
+        }
+        else if(data != PS2_RESP_BAT_PASSED)    /* Ignore a post-power-on BAT-passed byte */
+            port->state = PS2_PORT_STATE_DEVICE_FAILED;
+    }
+    else if(port->state == PS2_PORT_STATE_RESET_ACK)
+    {
+        if(data == PS2_RESP_BAT_PASSED)
+        {
+            /* Reset command successful.  Now send an ID request. */
+            port->state = PS2_PORT_STATE_ID;
+            CIRCBUF_WRITE(port->tx_buf, PS2_CMD_READ_ID);
+            ps2controller_port_start_tx(port);
+        }
+        else
+            port->state = PS2_PORT_STATE_DEVICE_FAILED;
+    }
+    else if((port->state == PS2_PORT_STATE_ID) && (data == PS2_RESP_ACK))
     {
         port->state = PS2_PORT_STATE_ID_ACK_RECEIVED;
-        return;
     }
     else if(port->state == PS2_PORT_STATE_ID_ACK_RECEIVED)
     {
@@ -434,7 +461,6 @@ void ps2controller_process_detect(ps2controller_port_t *port)
             port->dev_type = PS2_DEV_MOUSE;
             port->state = PS2_PORT_STATE_UP;
             port->process_fn = ps2controller_process_mouse;
-            return;
         }
         else if(data == PS2_RESP_INTELLIMOUSE_ID1)
         {
@@ -446,7 +472,6 @@ void ps2controller_process_detect(ps2controller_port_t *port)
         {
             /* Received the first byte of a keyboard detection packet */
             port->state = PS2_PORT_STATE_ID_KB_ID1_RECEIVED;
-            return;
         }
     }
     else if((port->state == PS2_PORT_STATE_ID_KB_ID1_RECEIVED) && (data == PS2_RESP_KB_ID2))
@@ -456,10 +481,12 @@ void ps2controller_process_detect(ps2controller_port_t *port)
         port->state = PS2_PORT_STATE_UP;
         CIRCBUF_INIT(port->data.kb.rx_buf);
         port->process_fn = ps2controller_process_kb;
-        return;
     }
-
-    port->state = PS2_PORT_STATE_ID_FAILED;
+    else
+    {
+        port->state = PS2_PORT_STATE_ID_FAILED;
+    }
+    /* FIXME: enable port RX interrupt */
 }
 
 
@@ -607,7 +634,7 @@ void ps2controller_process_kb(ps2controller_port_t *port)
                 /* Update the state of the keyboard LEDs */
                 CIRCBUF_WRITE(port->tx_buf, PS2_CMD_SET_LEDS);
                 CIRCBUF_WRITE(port->tx_buf, *leds);
-                ps2controller_port_start_tx(port);
+//                ps2controller_port_start_tx(port);
             }
             break;
 
@@ -632,6 +659,7 @@ void ps2controller_process_mouse(ps2controller_port_t *port)
 {
     UNUSED(port);
     /* TODO */
+    putchar('M');
 }
 
 
@@ -643,6 +671,7 @@ void ps2controller_process_intellimouse(ps2controller_port_t *port)
 {
     UNUSED(port);
     /* TODO */
+    putchar('I');
 }
 
 

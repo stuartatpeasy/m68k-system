@@ -9,6 +9,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/defs.h>
 #include <kernel/include/device/device.h>
 #include <kernel/include/types.h>
@@ -55,4 +57,5 @@ void net_interface_stats_inc_cksum_err(net_iface_t * const iface);
 void net_interface_stats_inc_rx_dropped(net_iface_t * const iface);
 const net_iface_stats_t * net_interface_get_stats(net_iface_t * const iface);
 
+#endif /* WITH_NETWORKING */
 #endif

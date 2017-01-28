@@ -9,6 +9,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/error.h>
@@ -86,4 +88,5 @@ s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
 s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_t *hw_addr);
 s32 arp_send_request(const net_address_t *addr);
 
+#endif /* WITH_NETWORKING */
 #endif

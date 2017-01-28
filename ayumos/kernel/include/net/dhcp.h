@@ -9,6 +9,8 @@
     (c) Stuart Wallace, February 2016
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/net/ethernet.h>
@@ -126,4 +128,5 @@ typedef struct dhcp_client_status
 s32 dhcp_discover(net_iface_t *iface);
 s32 dhcp_rx(net_packet_t *packet);
 
+#endif /* WITH_NETWORKING */
 #endif

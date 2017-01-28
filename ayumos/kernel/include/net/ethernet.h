@@ -9,6 +9,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/device/device.h>
@@ -58,4 +60,5 @@ net_protocol_t eth_proto_from_ethertype(ku16 ethertype);
 ethertype_t eth_ethertype_from_proto(const net_protocol_t proto);
 s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len);
 
+#endif /* WITH_NETWORKING */
 #endif

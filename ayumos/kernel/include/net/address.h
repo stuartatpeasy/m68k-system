@@ -9,6 +9,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/types.h>
 #include <kernel/include/net/net.h>
 
@@ -55,4 +57,5 @@ net_protocol_t net_address_get_hw_proto(const net_address_t * const addr);
 s32 net_address_print(const net_address_t * const addr, char * const buf, s32 len);
 net_addr_type_t net_address_type_from_proto(const net_protocol_t proto);
 
+#endif /* WITH_NETWORKING */
 #endif
