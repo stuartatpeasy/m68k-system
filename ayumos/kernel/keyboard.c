@@ -7,6 +7,8 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2016.
 */
 
+#ifdef WITH_KEYBOARD
+
 #include <kernel/include/keyboard.h>
 #include <klibc/include/ctype.h>
 
@@ -81,3 +83,5 @@ char keymap_get(const KeyCode code, const key_modifier mod)
 
     return c;
 }
+
+#endif /* WITH_KEYBOARD */

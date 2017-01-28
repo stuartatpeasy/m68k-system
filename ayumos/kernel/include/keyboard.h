@@ -9,6 +9,8 @@
     (c) Stuart Wallace <stuartw@atom.net>, September 2016.
 */
 
+#ifdef WITH_KEYBOARD
+
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 
@@ -184,4 +186,5 @@ typedef enum
 
 char keymap_get(const KeyCode code, const key_modifier mod);
 
+#endif /* WITH_KEYBOARD */
 #endif

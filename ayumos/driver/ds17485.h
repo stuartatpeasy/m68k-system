@@ -9,6 +9,11 @@
     (c) Stuart Wallace, June 2015.
 */
 
+#ifdef WITH_DRV_RTC_DS17485
+#ifndef WITH_RTC
+#error This driver requires kernel real-time clock support (build option WITH_RTC)
+#else
+
 #include <kernel/include/device/device.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
@@ -208,5 +213,6 @@ s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 *len, const void * bu
 u8 ds17485_get_model_number(const dev_t * const dev);
 void ds17485_get_serial_number(const dev_t * const dev, u8 sn[6]);
 
-
-#endif // DS17485_H_INCLUDED
+#endif /* WITH_RTC */
+#endif /* WITH_DRV_RTC_DS17485 */
+#endif

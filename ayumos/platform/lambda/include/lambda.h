@@ -9,6 +9,27 @@
 #include <driver/mc68681.h>
 #include <kernel/include/device/device.h>
 
+/* Verify build configuration */
+#ifndef WITH_MASS_STORAGE
+#error This port requires kernel mass-storage support (build option WITH_MASS_STORAGE)
+#endif
+
+#ifndef WITH_RTC
+#error This port requires kernel real-time clock support (build option WITH_RTC)
+#endif
+
+#ifndef WITH_DRV_MST_ATA
+#error This port requires the ATA driver (build option WITH_DRV_MST_ATA)
+#endif
+
+#ifndef WITH_DRV_SER_MC68681
+#error This port requires the MC68681 driver (build option WITH_DRV_SER_MC68681)
+#endif
+
+#ifndef WITH_DRV_RTC_DS17485
+#error This port requires the DS17485 driver (build option WITH_DRV_RTC_DS17485)
+#endif
+/* End verification of build configuration */
 
 /* Firmware ROM memory start address and length */
 #define LAMBDA_ROM_START        (0xf00000)      /* Start of OS ROM in memory map    */

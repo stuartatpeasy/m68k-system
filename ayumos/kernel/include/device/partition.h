@@ -9,6 +9,11 @@
 	(c) Stuart Wallace, 9th Febrary 2012.
 */
 
+#ifdef WITH_DRV_MST_PARTITION
+#ifndef WITH_MASS_STORAGE
+#error This driver requires kernel mass-storage support (build option WITH_MASS_STORAGE)
+#else
+
 #include <kernel/include/device/device.h>
 #include <kernel/include/device/devctl.h>
 
@@ -45,5 +50,6 @@ s32 partition_shut_down(dev_t *dev);
 s8 *partition_type_name(ku8 type);
 s8 *partition_status_desc(ku8 status);
 
+#endif /* WITH_MASS_STORAGE */
+#endif /* WITH_DRV_MST_PARTITION */
 #endif
-

@@ -9,11 +9,10 @@
     This device has driver ID 0x81.
 */
 
-#ifdef WITH_DRV_ENCX24J600
-
+#ifdef WITH_DRV_NET_ENCX24J600
 #ifndef WITH_NETWORKING
-#error Cannot build this driver without the WITH_NETWORKING build option
-#endif
+#error This driver requires kernel networking support (build option WITH_NETWORKING)
+#else
 
 #include <driver/encx24j600.h>
 #include <kernel/include/memory/kmalloc.h>
@@ -438,4 +437,5 @@ s32 encx24j600_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *o
     }
 }
 
-#endif /* WITH_DRV_ENCX24J600 */
+#endif /* WITH_NETWORKING */
+#endif /* WITH_DRV_NET_ENCX24J600 */

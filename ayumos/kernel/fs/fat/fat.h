@@ -9,6 +9,8 @@
     (c) Stuart Wallace, July 2015
 */
 
+#ifdef WITH_FS_FAT
+
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/error.h>
@@ -218,4 +220,5 @@ typedef u16 fat16_cluster_id;
 
 vfs_driver_t g_fat_ops;
 
+#endif /* WITH_FS_FAT */
 #endif

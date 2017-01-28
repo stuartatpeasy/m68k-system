@@ -128,7 +128,9 @@ void _main()
 
     /* Initialise the block cache, then scan mass-storage devices for partitions */
     block_cache_init(2039);
+#ifdef WITH_DRV_MST_PARTITION
     partition_init();
+#endif /* WITH_DRV_MST_PARTITION */
 
     boot_list_mass_storage();
     boot_list_partitions();
@@ -159,6 +161,7 @@ void _main()
                 sn[0], sn[1], sn[2], sn[3], sn[4], sn[5]);
     }
 
+#ifdef WITH_RTC
     /* Display the current date and time */
     if(get_time(&tm) == SUCCESS)
     {
@@ -170,6 +173,7 @@ void _main()
         else
             puts("Date/time invalid - please set clock");
     }
+#endif /* WITH_RTC */
 
     /* Create housekeeper process */
 //    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);

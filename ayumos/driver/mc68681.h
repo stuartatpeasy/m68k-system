@@ -9,6 +9,8 @@
 	(c) Stuart Wallace, December 2011.
 */
 
+#ifdef WITH_DRV_SER_MC68681
+
 #include <kernel/include/defs.h>
 #include <kernel/include/device/device.h>
 #include <kernel/include/error.h>
@@ -380,5 +382,5 @@ inline void mc68681_stop_counter(dev_t *dev)
     dummy += 0;     /* silence the "var set but not used" compiler warning */
 }
 
-
+#endif /* WITH_DRV_SER_MC68681 */
 #endif

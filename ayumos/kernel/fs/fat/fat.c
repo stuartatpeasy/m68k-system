@@ -11,6 +11,8 @@
           many other things
 */
 
+#ifdef WITH_FS_FAT
+
 #include <kernel/fs/fat/fat.h>
 #include <kernel/include/device/block.h>
 #include <kernel/include/fs/vfs.h>
@@ -814,3 +816,5 @@ void fat_debug_dump_superblock(vfs_t * vfs)
            fs->root_dir_clusters, fs->first_fat_sector, fs->first_data_sector,
            (fs->total_sectors * BLOCK_SIZE) >> 20, (fs->total_data_sectors * BLOCK_SIZE) >> 20);
 }
+
+#endif /* WITH_FS_FAT */

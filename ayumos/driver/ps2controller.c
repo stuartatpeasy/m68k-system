@@ -9,7 +9,10 @@
     This device has driver ID 0x82.
 */
 
-#ifdef WITH_DRV_PS2CONTROLLER
+#ifdef WITH_DRV_HID_PS2CONTROLLER
+#ifndef WITH_KEYBOARD
+#error This driver requires kernel keyboard support (build option WITH_KEYBOARD)
+#else
 
 #include <driver/ps2controller.h>
 #include <kernel/include/device/power.h>
@@ -855,4 +858,5 @@ s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in,
     return SUCCESS;
 }
 
-#endif /* WITH_DRV_PS2CONTROLLER */
+#endif /* WITH_KEYBOARD */
+#endif /* WITH_DRV_HID_PS2CONTROLLER */

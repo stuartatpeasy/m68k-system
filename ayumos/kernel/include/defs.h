@@ -58,8 +58,7 @@
 
 /* Iterate over a static array. */
 #define FOR_EACH(p, a) \
-    for(p = (a); p < &a[ARRAY_COUNT(a)]; ++p)
-
+    for(p = (a); p != &a[ARRAY_COUNT(a)]; ++p)
 
 /* Return the offset of member m in struct st.  Not strictly-valid C. */
 #define offsetof(st, m) ((s32) (&((st *) 0)->m))

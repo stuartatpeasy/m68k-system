@@ -9,6 +9,11 @@
 	(c) Stuart Wallace, December 2011.
 */
 
+#ifdef WITH_DRV_MST_ATA
+#ifndef WITH_MASS_STORAGE
+#error This driver requires kernel mass-storage support (build option WITH_MASS_STORAGE)
+#else
+
 #include <kernel/include/device/block.h>
 #include <kernel/include/device/device.h>
 #include <kernel/include/platform.h>        /* for platform-specific definitions */
@@ -351,5 +356,6 @@ typedef struct ata_identify_device_ret
 	u16 integrity_word;				/* 255: Integrity word										*/
 } __attribute__((packed)) ata_identify_device_ret_t;
 
-
+#endif /* WITH_MASS_STORAGE */
+#endif /* WITH_DRV_MST_ATA */
 #endif

@@ -20,9 +20,11 @@
 #include <kernel/fs/fat/fat.h>
 #include <kernel/fs/ext2/ext2.h>
 
-vfs_driver_t *g_fs_drivers[] =
+vfs_driver_t * g_fs_drivers[] =
 {
+#ifdef WITH_FS_FAT
     &g_fat_ops
+#endif
 };
 
 
@@ -30,31 +32,36 @@ s32 vfs_init()
 {
 	nvram_bpb_t bpb;
 	s32 ret;
-	u32 u;
 	dev_t *dev;
+	vfs_driver_t ** ppdrv;
 
 	/* Init file system drivers */
-	for(u = 0; u < ARRAY_COUNT(g_fs_drivers); ++u)
+    FOR_EACH(ppdrv, g_fs_drivers)
     {
-        vfs_driver_t * const drv = g_fs_drivers[u];
+        vfs_driver_t * const pdrv = *ppdrv;
 
-        printf("vfs: initialising '%s' fs driver: ", drv->name);
-        if(drv->init() == SUCCESS)
-            puts("OK");
+        ret = pdrv->init();
+        if(ret == SUCCESS)
+        {
+            /*
+                If the driver has chosen not to expose any function, point it at the default version
+                of that function.  The default version simply returns ENOSYS.
+            */
+            if(NULL == pdrv->mount)           pdrv->mount           = vfs_default_mount;
+            if(NULL == pdrv->umount)          pdrv->umount          = vfs_default_umount;
+            if(NULL == pdrv->get_root_dirent) pdrv->get_root_dirent = vfs_default_get_root_dirent;
+            if(NULL == pdrv->open_dir)        pdrv->open_dir        = vfs_default_open_dir;
+            if(NULL == pdrv->read_dir)        pdrv->read_dir        = vfs_default_read_dir;
+            if(NULL == pdrv->close_dir)       pdrv->close_dir       = vfs_default_close_dir;
+            if(NULL == pdrv->stat)            pdrv->stat            = vfs_default_stat;
+
+            printf("vfs: initialised '%s' fs driver\n", pdrv->name);
+        }
         else
-            puts("failed");     /* TODO handle this - make the fs driver unavailable */
-
-        /*
-            If the driver has chosen not to expose any function, point it at the default version
-            of that function.  The default version simply returns ENOSYS.
-        */
-        if(NULL == drv->mount)           drv->mount           = vfs_default_mount;
-        if(NULL == drv->umount)          drv->umount          = vfs_default_umount;
-        if(NULL == drv->get_root_dirent) drv->get_root_dirent = vfs_default_get_root_dirent;
-        if(NULL == drv->open_dir)        drv->open_dir        = vfs_default_open_dir;
-        if(NULL == drv->read_dir)        drv->read_dir        = vfs_default_read_dir;
-        if(NULL == drv->close_dir)       drv->close_dir       = vfs_default_close_dir;
-        if(NULL == drv->stat)            drv->stat            = vfs_default_stat;
+        {
+            /* TODO handle this - make the fs driver unavailable */
+            printf("vfs: failed to initialise '%s' fs driver: %s\n", pdrv->name, kstrerror(ret));
+        }
     }
 
     ret = mount_init();
@@ -168,12 +175,14 @@ s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st)
 */
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 {
-    vfs_driver_t **p;
+    vfs_driver_t **ppdrv;
 
-    FOR_EACH(p, g_fs_drivers)
+    FOR_EACH(ppdrv, g_fs_drivers)
     {
-        if(!strcmp((*p)->name, name))
-            return *p;
+        vfs_driver_t * const pdrv = *ppdrv;
+
+        if(!strcmp(pdrv->name, name))
+            return pdrv;
     }
 
     return NULL;

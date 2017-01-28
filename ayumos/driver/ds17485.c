@@ -7,6 +7,11 @@
     (c) Stuart Wallace, June 2015.
 */
 
+#ifdef WITH_DRV_RTC_DS17485
+#ifndef WITH_RTC
+#error This driver requires kernel real-time clock support (build option WITH_RTC)
+#else
+
 #include <driver/ds17485.h>
 #include <kernel/include/cpu.h>
 #include <kernel/include/tick.h>
@@ -524,3 +529,6 @@ void ds17485_default_tick_handler()
 {
     /* Do nothing */
 }
+
+#endif /* WITH_RTC */
+#endif /* WITH_DRV_RTC_DS17485 */

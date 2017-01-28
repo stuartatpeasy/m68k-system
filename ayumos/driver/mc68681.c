@@ -9,6 +9,8 @@
             inline void mc68681_stop_counter(dev_t *dev);
 */
 
+#ifdef WITH_DRV_SER_MC68681
+
 #include <driver/mc68681.h>
 #include <kernel/include/cpu.h>
 #include <kernel/include/memory/kmalloc.h>
@@ -711,3 +713,5 @@ void mc68681_reset_op_bits(dev_t *dev, ku8 bits)
 {
     MC68681_REG(dev->base_addr, MC68681_SOPR) = bits;
 }
+
+#endif /* WITH_DRV_SER_MC68681 */

@@ -27,7 +27,7 @@ typedef struct driver_map_entry
 
 const driver_map_entry_t driver_map[] =
 {
-#ifdef WITH_DRV_ENCX24J600
+#if defined(WITH_NETWORKING) && defined(WITH_DRV_NET_ENCX24J600)
     {
         .hw_id      = 0x81,
         .type       = DEV_TYPE_NET,
@@ -38,7 +38,7 @@ const driver_map_entry_t driver_map[] =
     },
 #endif /* WITH_DRV_ENCX24J600 */
 
-#ifdef WITH_DRV_PS2CONTROLLER
+#if defined(WITH_KEYBOARD) && defined(WITH_DRV_HID_PS2CONTROLLER)
     {
         .hw_id      = 0x82,
         .type       = DEV_TYPE_MULTI,
@@ -47,7 +47,7 @@ const driver_map_entry_t driver_map[] =
         .human_name = "PS/2 port controller",
         .init_fn    = ps2controller_init
     }
-#endif /* WITH_DRV_PS2CONTROLLER */
+#endif /* WITH_DRV_HID_PS2CONTROLLER */
 };
 
 

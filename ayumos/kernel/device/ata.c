@@ -7,6 +7,11 @@
     (c) Stuart Wallace, December 2011.
 */
 
+#ifdef WITH_DRV_MST_ATA
+#ifndef WITH_MASS_STORAGE
+#error This driver requires kernel mass-storage support (build option WITH_MASS_STORAGE)
+#else
+
 #include <kernel/include/device/ata.h>
 #include <kernel/include/byteorder.h>
 #include <kernel/include/error.h>
@@ -536,3 +541,6 @@ s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *ou
 
     return SUCCESS;
 }
+
+#endif /* WITH_MASS_STORAGE */
+#endif /* WITH_DRV_MST_ATA */
