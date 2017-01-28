@@ -15,6 +15,7 @@
 #define DEBUG_KMALLOC
 #define DEBUG_KSYM
 
+#define WITH_NETWORKING
 
 #define IPV4_VERIFY_CHECKSUM 1      /* Verify checksum on incoming IPv4 packets                 */
 #define ICMP_VERIFY_CHECKSUM 1      /* Verify checksum on incoming ICMP packets                 */
@@ -24,7 +25,7 @@
 #define TARGET_MC68010
 
 #define PLATFORM_LAMBDA
-#define PLATFORM_REV    0
+#define PLATFORM_REV    1
 
 #endif
 

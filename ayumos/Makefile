@@ -41,7 +41,6 @@ LDSCRIPT := platform/$(PLATFORM)/kernel.ld
 DEPDIR := .deps
 OBJDIR := .obj
 
-$(shell mkdir -p $(DEPDIR) $(OBJDIR) >/dev/null)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
 OBJECTS := $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(CSOURCES)) $(patsubst %.S,%.o,$(ASMSOURCES)))
