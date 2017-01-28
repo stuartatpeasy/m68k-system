@@ -7,6 +7,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/address.h>
 #include <kernel/include/net/tftp.h>
 #include <kernel/include/net/ipv4.h>
@@ -57,3 +59,5 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
 
     return ret;
 }
+
+#endif /* WITH_NETWORKING */

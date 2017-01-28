@@ -9,6 +9,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/types.h>
 #include <kernel/include/net/net.h>
 #include <kernel/include/net/interface.h>
@@ -18,4 +20,5 @@ typedef struct net_route net_route_t;
 
 net_iface_t *net_route_get(const net_address_t *addr);
 
+#endif /* WITH_NETWORKING */
 #endif

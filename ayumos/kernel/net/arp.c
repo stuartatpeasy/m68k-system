@@ -7,6 +7,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/interface.h>
 #include <kernel/include/net/ipv4.h>
@@ -310,3 +312,5 @@ arp_cache_item_t *arp_cache_get_item(ku32 n)
 
     return g_arp_cache + n;
 }
+
+#endif /* WITH_NETWORKING */

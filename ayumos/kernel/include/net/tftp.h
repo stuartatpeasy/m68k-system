@@ -9,6 +9,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/net/udp.h>
@@ -34,4 +36,5 @@ typedef enum tftp_opcode
 
 s32 tftp_read_request(net_address_t *peer, const char *fn);
 
+#endif /* WITH_NETWORKING */
 #endif

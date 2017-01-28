@@ -7,6 +7,8 @@
     (c) Stuart Wallace, January 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/tcp.h>
 #include <kernel/include/net/protocol.h>
 
@@ -37,3 +39,5 @@ s32 tcp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 
     return SUCCESS;
 }
+
+#endif /* WITH_NETWORKING */

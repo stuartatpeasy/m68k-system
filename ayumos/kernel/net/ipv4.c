@@ -7,6 +7,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/ipv4.h>
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/net.h>
@@ -497,3 +499,5 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
 
     return EHOSTUNREACH;
 }
+
+#endif /* WITH_NETWORKING */

@@ -7,6 +7,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/net/raw.h>
 #include <kernel/include/net/packet.h>
@@ -49,3 +51,5 @@ s32 raw_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * c
 
     return SUCCESS;
 }
+
+#endif /* WITH_NETWORKING */

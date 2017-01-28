@@ -20,7 +20,9 @@ u32 g_echo;
 
 const struct command g_commands[] =
 {
+#ifdef WITH_NETWORKING
     {"arp",             cmd_arp},
+#endif /* WITH_NETWORKING */
     {"date",            cmd_date},
 	{"dfu",				cmd_dfu},
 	{"disassemble",		cmd_disassemble},
@@ -40,10 +42,14 @@ const struct command g_commands[] =
 	{"lsdev",           cmd_lsdev},
 	{"map",             cmd_map},
 	{"mount",           cmd_mount},
+#ifdef WITH_NETWORKING
 	{"netif",           cmd_netif},
+#endif /* WITH_NETWORKING */
 	{"raw",				cmd_raw},
 	{"rootfs",          cmd_rootfs},
+#ifdef WITH_NETWORKING
 	{"route",           cmd_route},
+#endif /* WITH_NETWORKING */
 	{"schedule",        cmd_schedule},
 	{"serial",          cmd_serial},
 	{"slabs",           cmd_slabs},

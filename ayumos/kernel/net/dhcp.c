@@ -9,6 +9,8 @@
     FIXME: remove debug printf()s and remove #include stdio.h
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/dhcp.h>
 #include <kernel/include/net/udp.h>
 #include <kernel/include/net/packet.h>
@@ -186,3 +188,5 @@ s32 dhcp_discover(net_iface_t *iface)
 
     return ret;
 }
+
+#endif /* WITH_NETWORKING */

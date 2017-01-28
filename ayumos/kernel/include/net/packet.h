@@ -9,6 +9,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/types.h>
 #include <kernel/include/net/address.h>
 #include <kernel/include/net/interface.h>
@@ -36,4 +38,5 @@ s32 net_packet_insert(net_packet_t * const packet, ku32 len);
 s32 net_packet_consume(net_packet_t * const packet, ku32 len);
 s32 net_packet_encapsulate(net_packet_t * const packet, const net_protocol_t proto, ku32 len);
 
+#endif /* WITH_NETWORKING */
 #endif

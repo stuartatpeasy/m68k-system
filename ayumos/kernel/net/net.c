@@ -7,6 +7,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/error.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/device/device.h>
@@ -136,3 +138,5 @@ s16 net_cksum(const void *buf, u32 len)
 
     return ~(sum + (sum >> 16));
 }
+
+#endif /* WITH_NETWORKING */

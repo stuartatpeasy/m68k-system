@@ -9,6 +9,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/types.h>
 #include <kernel/include/net/net.h>
 
@@ -17,4 +19,5 @@ s32 raw_init();
 s32 raw_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t * const iface,
                      net_packet_t **packet);
 
+#endif /* WITH_NETWORKING */
 #endif

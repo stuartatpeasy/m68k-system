@@ -7,6 +7,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/icmp.h>
 #include <kernel/include/net/packet.h>
 
@@ -78,3 +80,5 @@ s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet
 
     return net_protocol_tx(dest, src, packet);
 }
+
+#endif /* WITH_NETWORKING */

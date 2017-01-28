@@ -27,6 +27,7 @@ typedef struct driver_map_entry
 
 const driver_map_entry_t driver_map[] =
 {
+#ifdef WITH_DRV_ENCX24J600
     {
         .hw_id      = 0x81,
         .type       = DEV_TYPE_NET,
@@ -35,6 +36,7 @@ const driver_map_entry_t driver_map[] =
         .human_name = "ENCx24J600 Ethernet controller",
         .init_fn    = encx24j600_init
     },
+#endif /* WITH_DRV_ENCX24J600 */
 
     {
         .hw_id      = 0x82,

@@ -11,6 +11,8 @@
     This device has driver ID 0x81.
 */
 
+#ifdef WITH_DRV_ENCX24J600
+
 #include <kernel/include/byteorder.h>
 #include <kernel/include/cpu.h>
 #include <kernel/include/defs.h>
@@ -468,4 +470,5 @@ enum ENC624J600_PHYReg
      | BIT(EIE_LINKIE) | BIT(EIE_PKTIE) | BIT(EIE_DMAIE) | BIT(EIE_TXIE) \
      | BIT(EIE_TXABTIE) | BIT(EIE_RXABTIE) | BIT(EIE_PCFULIE))
 
+#endif /* WITH_DRV_ENCX24J600 */
 #endif

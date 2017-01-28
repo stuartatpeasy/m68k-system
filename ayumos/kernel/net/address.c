@@ -10,6 +10,8 @@
             then remove #includes for protos
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/address.h>
 #include <kernel/include/net/ethernet.h>
 #include <kernel/include/net/ipv4.h>
@@ -131,3 +133,5 @@ s32 net_address_print(const net_address_t * const addr, char * const buf, s32 le
     else
         return -EINVAL;
 }
+
+#endif /* WITH_NETWORKING */

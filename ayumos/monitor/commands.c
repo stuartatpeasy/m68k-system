@@ -18,6 +18,7 @@
 
     Work with the ARP cache
 */
+#ifdef WITH_NETWORKING
 MONITOR_CMD_HANDLER(arp)
 {
     if(num_args >= 1)
@@ -64,6 +65,7 @@ MONITOR_CMD_HANDLER(arp)
 
     return EINVAL;
 }
+#endif /* WITH_NETWORKING */
 
 
 /*
@@ -760,6 +762,7 @@ MONITOR_CMD_HANDLER(mount)
 
     Manipulate network interfaces
 */
+#ifdef WITH_NETWORKING
 MONITOR_CMD_HANDLER(netif)
 {
     net_iface_t *iface;
@@ -807,6 +810,7 @@ MONITOR_CMD_HANDLER(netif)
 
     return EINVAL;
 }
+#endif /* WITH_NETWORKING */
 
 
 /*
@@ -894,6 +898,7 @@ MONITOR_CMD_HANDLER(rootfs)
 
     List or manipulate the routing table
 */
+#ifdef WITH_NETWORKING
 MONITOR_CMD_HANDLER(route)
 {
     /*
@@ -971,6 +976,7 @@ MONITOR_CMD_HANDLER(route)
     else
         return EINVAL;
 }
+#endif /* WITH_NETWORKING */
 
 
 /*
@@ -1161,6 +1167,7 @@ MONITOR_CMD_HANDLER(test)
             printf("(%d)\n", pid);
         }
     }
+#ifdef WITH_NETWORKING
     else if(testnum == 2)
     {
         net_iface_t *iface = net_interface_get_by_dev("eth0");
@@ -1179,6 +1186,7 @@ MONITOR_CMD_HANDLER(test)
 
         return tftp_read_request(&server, "test.txt");
     }
+#endif /* WITH_NETWORKING */
 
     return SUCCESS;
 }

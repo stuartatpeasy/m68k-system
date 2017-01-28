@@ -9,6 +9,8 @@
     FIXME - replace printf() with kernel logging call of some sort, and remove #include stdio
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/device/device.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/process.h>
@@ -279,3 +281,5 @@ const net_iface_stats_t * net_interface_get_stats(net_iface_t * const iface)
 {
     return &iface->stats;
 }
+
+#endif /* WITH_NETWORKING */

@@ -9,6 +9,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/defs.h>
 #include <kernel/include/device/device.h>
 #include <kernel/include/types.h>
@@ -47,4 +49,5 @@ s32 net_tx(net_packet_t *packet);
 s16 net_cksum(const void *buf, u32 len);
 void net_receive(void *arg);
 
+#endif /* WITH_NETWORKING */
 #endif

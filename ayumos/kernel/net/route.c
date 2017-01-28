@@ -9,6 +9,8 @@
     FIXME - remove printf()s and the #include stdio.h
 */
 
+#ifdef WITH_NETWORKING
+
 #include <klibc/include/stdio.h>
 #include <kernel/include/net/route.h>
 
@@ -34,3 +36,5 @@ net_iface_t *net_route_get(const net_address_t *addr)
 
     return NULL;
 }
+
+#endif /* WITH_NETWORKING */

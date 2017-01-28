@@ -7,6 +7,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/net/packet.h>
 #include <kernel/include/net/route.h>
@@ -245,3 +247,5 @@ s32 net_packet_consume(net_packet_t * const packet, ku32 len)
 
     return SUCCESS;
 }
+
+#endif /* WITH_NETWORKING */

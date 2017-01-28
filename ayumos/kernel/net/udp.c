@@ -7,6 +7,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/udp.h>
 #include <kernel/include/net/dhcp.h>
 #include <kernel/include/net/packet.h>
@@ -97,3 +99,5 @@ s32 udp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *if
 
     return net_packet_consume(*packet, sizeof(udp_hdr_t));
 }
+
+#endif /* WITH_NETWORKING */

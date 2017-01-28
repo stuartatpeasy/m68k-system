@@ -9,6 +9,8 @@
     (c) Stuart Wallace, May 2016.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/types.h>
 #include <kernel/include/net/net.h>
 #include <kernel/include/net/address.h>
@@ -46,4 +48,5 @@ s32 net_route_get_iface(const net_address_t * const addr, net_iface_t **iface);
 net_protocol_t net_protocol_from_address(const net_address_t * const addr);
 net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const addr);
 
+#endif /* WITH_NETWORKING */
 #endif

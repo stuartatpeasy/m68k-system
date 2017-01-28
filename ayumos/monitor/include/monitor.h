@@ -57,7 +57,13 @@ void monitor_main(void);
 void dispatch_command(char *cmdline);
 
 /* command handler declarations */
+
+#ifdef WITH_NETWORKING
 MONITOR_CMD_HANDLER(arp);
+MONITOR_CMD_HANDLER(netif);
+MONITOR_CMD_HANDLER(route);
+#endif /* WITH_NETWORKING */
+
 MONITOR_CMD_HANDLER(date);
 MONITOR_CMD_HANDLER(dfu);
 MONITOR_CMD_HANDLER(disassemble);
@@ -77,10 +83,8 @@ MONITOR_CMD_HANDLER(ls);
 MONITOR_CMD_HANDLER(lsdev);
 MONITOR_CMD_HANDLER(map);
 MONITOR_CMD_HANDLER(mount);
-MONITOR_CMD_HANDLER(netif);
 MONITOR_CMD_HANDLER(raw);
 MONITOR_CMD_HANDLER(rootfs);
-MONITOR_CMD_HANDLER(route);
 MONITOR_CMD_HANDLER(schedule);
 MONITOR_CMD_HANDLER(serial);
 MONITOR_CMD_HANDLER(slabs);

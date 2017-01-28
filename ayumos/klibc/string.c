@@ -7,6 +7,7 @@
     (c) Stuart Wallace, 2012-2015.
 */
 
+#include <kernel/include/byteorder.h>
 #include <klibc/include/string.h>
 
 

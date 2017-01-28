@@ -12,6 +12,8 @@
           much faster.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/net/protocol.h>
 #include <kernel/include/net/packet.h>
@@ -296,3 +298,5 @@ net_protocol_t net_protocol_hwproto_from_address(const net_address_t * const add
     return (net_route_get_iface(addr, &iface) == SUCCESS) ?
                 net_interface_get_proto(iface) : np_unknown;
 }
+
+#endif /* WITH_NETWORKING */

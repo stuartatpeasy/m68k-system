@@ -174,10 +174,12 @@ void _main()
     /* Create housekeeper process */
 //    proc_create(0, 0, "[hk]", NULL, housekeeper, 0, 0, PROC_TYPE_KERNEL, NULL, NULL);
 
+#ifdef WITH_NETWORKING
     /* Initialise networking system */
     ret = net_init();
     if(ret != SUCCESS)
         printf("net: init failed: %s\n", kstrerror(ret));
+#endif /* WITH_NETWORKING */
 
     /* Startup complete - activate green LED */
 	plat_led_off(LED_RED);

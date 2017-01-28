@@ -7,6 +7,8 @@
     (c) Stuart Wallace, November 2015.
 */
 
+#ifdef WITH_NETWORKING
+
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/ethernet.h>
 #include <kernel/include/net/interface.h>
@@ -243,3 +245,5 @@ s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len)
     return snprintf(buf, len, "%02x:%02x:%02x:%02x:%02x:%02x",
                     m->b[0], m->b[1], m->b[2], m->b[3], m->b[4], m->b[5]);
 }
+
+#endif /* WITH_NETWORKING */
