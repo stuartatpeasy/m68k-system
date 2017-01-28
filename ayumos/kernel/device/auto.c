@@ -38,6 +38,7 @@ const driver_map_entry_t driver_map[] =
     },
 #endif /* WITH_DRV_ENCX24J600 */
 
+#ifdef WITH_DRV_PS2CONTROLLER
     {
         .hw_id      = 0x82,
         .type       = DEV_TYPE_MULTI,
@@ -46,6 +47,7 @@ const driver_map_entry_t driver_map[] =
         .human_name = "PS/2 port controller",
         .init_fn    = ps2controller_init
     }
+#endif /* WITH_DRV_PS2CONTROLLER */
 };
 
 

@@ -9,6 +9,8 @@
     This device has driver ID 0x82.
 */
 
+#ifdef WITH_DRV_PS2CONTROLLER
+
 #include <driver/ps2controller.h>
 #include <kernel/include/device/power.h>
 #include <kernel/include/cpu.h>
@@ -852,3 +854,5 @@ s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in,
 
     return SUCCESS;
 }
+
+#endif /* WITH_DRV_PS2CONTROLLER */

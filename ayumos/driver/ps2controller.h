@@ -11,6 +11,8 @@
     This device has driver ID 0x82.
 */
 
+#ifdef WITH_DRV_PS2CONTROLLER
+
 #include <kernel/include/defs.h>
 #include <kernel/include/device/device.h>
 #include <kernel/include/error.h>
@@ -405,4 +407,5 @@ enum PS2ScanCodes_Set2_Ext1
 
 s32 ps2controller_init(dev_t *dev);
 
+#endif /* WITH_DRV_PS2CONTROLLER */
 #endif
