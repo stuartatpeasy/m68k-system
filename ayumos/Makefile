@@ -1,6 +1,6 @@
 # Makefile for ayumos
 #
-# Stuart Wallace <stuartw@atom.net>, 2011-2016.
+# Stuart Wallace <stuartw@atom.net>, 2011-2017.
 #
 #
 include global.mk

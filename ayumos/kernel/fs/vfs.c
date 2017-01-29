@@ -23,7 +23,10 @@
 vfs_driver_t * g_fs_drivers[] =
 {
 #ifdef WITH_FS_FAT
-    &g_fat_ops
+    &g_fat_ops,
+#endif
+#ifdef WITH_FS_EXT2
+    &g_ext2_ops,
 #endif
 };
 

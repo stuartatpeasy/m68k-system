@@ -35,6 +35,9 @@
 	     is greater than the file system block size.
 */
 
+#ifdef WITH_FS_EXT2
+
+#include <kernel/include/device/block.h>
 #include <kernel/fs/ext2/ext2.h>
 
 
@@ -92,8 +95,10 @@ s32 ext2_mount(vfs_t *vfs)
 
     printf("ext2: superblock size is %d\n", (u32) sizeof(ext2_superblock_t));
 
-    ret = vfs->dev->read(vfs->dev, 1024 / BLOCK_SIZE, sizeof(ext2_superblock_t) / BLOCK_SIZE,
-                        fs->sblk);
+    ret = block_read_multi(vfs->dev, 1024 / BLOCK_SIZE,
+                           (sizeof(ext2_superblock_t) + BLOCK_SIZE - 1) / BLOCK_SIZE,
+                           fs->sblk);
+
 	if(ret != SUCCESS)
 	{
 	    kfree(vfs->data);
@@ -644,4 +649,6 @@ void ext2()
 		}
 	}
 }
+
+#endif /* WITH_FS_EXT2 */
 #endif

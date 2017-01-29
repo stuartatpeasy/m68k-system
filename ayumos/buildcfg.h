@@ -16,6 +16,7 @@
 #define DEBUG_KSYM
 
 /* Main build options */
+#define WITH_FS_EXT2
 #define WITH_FS_FAT
 #define WITH_KEYBOARD
 #define WITH_MASS_STORAGE

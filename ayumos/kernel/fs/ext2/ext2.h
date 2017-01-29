@@ -9,6 +9,8 @@
 	(c) Stuart Wallace <stuartw@atom.net>, December 2012.
 */
 
+#ifdef WITH_FS_EXT2
+
 #include <kernel/include/defs.h>
 #include <kernel/include/fs/vfs.h>
 #include <kernel/include/types.h>
@@ -192,6 +194,7 @@ typedef struct ext2_filesystem ext2_filesystem_t;
 
 typedef u32 inum_t;
 
+vfs_driver_t g_ext2_ops;
 
 s32 ext2_init();
 s32 ext2_mount(vfs_t *vfs);
@@ -211,5 +214,5 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
 u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum);
 void ext2();
 
+#endif /* WITH_FS_EXT2 */
 #endif
-

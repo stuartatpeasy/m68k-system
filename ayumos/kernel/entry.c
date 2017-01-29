@@ -33,7 +33,7 @@
 
 
 const char * const g_warmup_message = "\n  \\   ayumos"
-                                      "\n  /\\  Stuart Wallace, 2011-2016.\n";
+                                      "\n  /\\  Stuart Wallace, 2011-2017.\n";
 
 
 void _main()
