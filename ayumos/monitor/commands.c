@@ -73,6 +73,7 @@ MONITOR_CMD_HANDLER(arp)
 
     Get/set the date
 */
+#ifdef WITH_RTC
 MONITOR_CMD_HANDLER(date)
 {
     rtc_time_t tm;
@@ -115,6 +116,7 @@ MONITOR_CMD_HANDLER(date)
 
     return SUCCESS;
 }
+#endif /* WITH_RTC */
 
 
 /*
@@ -481,12 +483,16 @@ MONITOR_CMD_HANDLER(help)
     UNUSED(args);
 
 	puts("Available commands (all can be abbreviated):\n\n"
+#ifdef WITH_NETWORKING
 		  "arp list\n"
 		  "arp request <ipv4_addr>\n"
 		  "    Display or manipulate the ARP cache, or send an ARP request.\n\n"
+#endif
+#ifdef WITH_RTC
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
           "    in YYYYMMDDHHMMSS format, set the RTC date and time accordingly.\n\n"
+#endif
 		  "dfu <size> <checksum>\n"
 		  "    Receive <size> bytes and re-flash the firmware ROMs with this data.  <size> must\n"
 		  "    be an even number.  <checksum> is the Fletcher16 checksum of the data.\n\n"
@@ -510,26 +516,36 @@ MONITOR_CMD_HANDLER(help)
 		  "    Display command history\n\n"
 		  "id\n"
 		  "    Display device identity\n\n"
+#ifdef WITH_MASS_STORAGE
 		  "ls [<path>]\n"
 		  "    List directory contents\n\n"
+#endif
 		  "lsdev\n"
 		  "    List devices\n\n"
 		  "map\n"
 		  "    Display memory map\n\n"
+#ifdef WITH_MASS_STORAGE
 		  "mount [<dev> <fstype> <mountpoint>]\n"
 		  "    With no arguments, list current mounts.  With arguments, mount block device <dev>\n"
 		  "    containing a file system of type <fstype> at <mountpoint>\n\n"
+#endif
+#ifdef WITH_NETWORKING
 		  "netif show <interface>\n"
 		  "netif ipv4 <interface> <address>\n"
 		  "    Display or set the protocol address associated with a network interface\n\n"
+#endif
 		  "raw\n"
 		  "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
+#ifdef WITH_MASS_STORAGE
 		  "rootfs [<partition> <type>]\n"
 		  "    Set/read root partition in BIOS data area.\n\n"
+#endif
+#ifdef WITH_NETWORKING
 		  "route list\n"
 		  "route add <dest> <mask> <gateway> <metric> <interface>\n"
 		  "route rm <dest> <mask> <gateway> <metric> <interface>\n"
 		  "    Display or manipulate the kernel IPv4 routing table\n\n"
+#endif
 		  "schedule\n"
 		  "    Start task scheduler\n\n"
 		  "serial\n"
@@ -594,6 +610,7 @@ MONITOR_CMD_HANDLER(id)
 
     List directory contents
 */
+#ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(ls)
 {
     vfs_dirent_t dirent;
@@ -648,6 +665,7 @@ MONITOR_CMD_HANDLER(ls)
 
     return SUCCESS;
 }
+#endif /* WITH_MASS_STORAGE */
 
 
 /*
@@ -727,6 +745,7 @@ MONITOR_CMD_HANDLER(map)
     Display mount table, or mount a filesystem at the specified location.
     Syntax: mount [<dev> <fstype> <mountpoint>]
 */
+#ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(mount)
 {
     UNUSED(num_args);
@@ -755,6 +774,7 @@ MONITOR_CMD_HANDLER(mount)
 
     return SUCCESS;
 }
+#endif /* WITH_MASS_STORAGE */
 
 
 /*
@@ -843,6 +863,7 @@ MONITOR_CMD_HANDLER(raw)
 
     Set/read root partition name in BIOS data area
 */
+#ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(rootfs)
 {
     nvram_bpb_t bpb;
@@ -891,6 +912,7 @@ MONITOR_CMD_HANDLER(rootfs)
 
     return SUCCESS;
 }
+#endif /* WITH_MASS_STORAGE */
 
 
 /*
