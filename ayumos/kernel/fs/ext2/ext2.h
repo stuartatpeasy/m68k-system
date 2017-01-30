@@ -179,7 +179,7 @@ struct ext2_dirent
 } __attribute__((packed));
 
 
-struct ext2_filesystem
+struct ext2_fs
 {
 	struct ext2_superblock *sblk;
 	struct ext2_bgd *bgd;
@@ -190,7 +190,7 @@ typedef struct ext2_superblock ext2_superblock_t;
 typedef struct ext2_bgd ext2_bgd_t;
 typedef struct ext2_inode ext2_inode_t;
 typedef struct ext2_dirent ext2_dirent_t;
-typedef struct ext2_filesystem ext2_filesystem_t;
+typedef struct ext2_fs ext2_fs_t;
 
 typedef u32 inum_t;
 
@@ -205,7 +205,7 @@ s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8* const n
 s32 ext2_close_dir(vfs_t *vfs, void *ctx);
 s32 ext2_stat(vfs_t *vfs, fs_stat_t *st);
 
-u32 block_group_contains_superblock(const ext2_filesystem_t *fs, ku32 block_group);
+u32 block_group_contains_superblock(const ext2_fs_t *fs, ku32 block_group);
 u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf);
 u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode);
 u32 unaligned_read(u32 start, u32 len, void *data);

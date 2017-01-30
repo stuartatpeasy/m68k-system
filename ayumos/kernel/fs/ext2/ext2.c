@@ -39,6 +39,7 @@
 
 #include <kernel/include/device/block.h>
 #include <kernel/fs/ext2/ext2.h>
+#include <klibc/include/strings.h>
 
 
 vfs_driver_t g_ext2_ops =
@@ -71,7 +72,7 @@ s32 ext2_init()
  */
 s32 ext2_mount(vfs_t *vfs)
 {
-	ext2_filesystem_t *fs;
+	ext2_fs_t *fs;
 	u32 ret, buf_size, num_block_groups;
 	u8 *buf;
     ku32 sblk_nblocks = (sizeof(ext2_superblock_t) + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -89,7 +90,7 @@ s32 ext2_mount(vfs_t *vfs)
 		return ret;
 	}
 
-    fs = (ext2_filesystem_t *) kmalloc(sizeof(ext2_filesystem_t));
+    fs = (ext2_fs_t *) kmalloc(sizeof(ext2_fs_t));
     if(!fs)
     {
         kfree(buf);
@@ -221,7 +222,7 @@ s32 ext2_stat(vfs_t *vfs, fs_stat_t *st)
 /*
 	Return nonzero if the specified block group should contain a superblock backup.
 */
-u32 block_group_contains_superblock(const ext2_filesystem_t *fs, ku32 block_group)
+u32 block_group_contains_superblock(const ext2_fs_t *fs, ku32 block_group)
 {
 	/* Originally superblock backups were stored in every block group.  The "sparse superblock"
 	   feature saves space by storing backups in block groups 0, 1, and powers of 3, 5 and 7. */
@@ -279,7 +280,7 @@ u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf)
 	u8 *buf;
 	u32 len;
 
-    const ext2_filesystem_t *fs = (const ext2_filesystem_t *) vfs->data;
+    const ext2_fs_t *fs = (const ext2_fs_t *) vfs->data;
 
 	/* allocate a new buffer if needed */
 	if(*ppbuf == NULL)
@@ -320,7 +321,7 @@ printf("[read block %u]\n", block);
 */
 u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode)
 {
-    const ext2_filesystem_t *fs = (const ext2_filesystem_t *) vfs->data;
+    const ext2_fs_t *fs = (const ext2_fs_t *) vfs->data;
     u32 one = 1;
 
 	if(inum < fs->sblk->s_inodes_count)
@@ -368,7 +369,7 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
 	u32 ret, block_id = 0;
 	u32 *buf = NULL;
 
-    ext2_filesystem_t *fs = (ext2_filesystem_t *) vfs->data;
+    ext2_fs_t *fs = (ext2_fs_t *) vfs->data;
 
 	/* Each indirect block stores some number of block IDs.  The size of a block ID is fixed (4
 	   bytes) so the number stored per block is proportional to the size of the block.  In order
@@ -505,7 +506,7 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 	inum_t in = EXT2_ROOT_INO;
 	u8 name[NAME_MAX_LEN + 1];
 
-	ext2_filesystem_t *fs = (ext2_filesystem_t *) vfs->data;
+	ext2_fs_t *fs = (ext2_fs_t *) vfs->data;
 
 	/* Fail if the first character of the path is anything other than a directory separator (/).
 	   e.g. the path is non-absolute, or is empty */
@@ -607,7 +608,21 @@ s32 ext2_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
     UNUSED(vfs);
     UNUSED(dirent);
 
-    return ENOSYS;
+    const ext2_fs_t * const fs = (const ext2_fs_t *) vfs->data;
+
+    /* Zero out the dirent struct - that way we only have to set nonzero fields */
+    bzero(dirent, sizeof(vfs_dirent_t));
+
+    dirent->vfs = vfs;
+    dirent->name[0] = DIR_SEPARATOR;
+    dirent->type = FSNODE_TYPE_DIR;
+    dirent->permissions = VFS_PERM_UGORWX;      /* FIXME - read this */
+
+    /* FIXME - 32 bit overflow */
+    dirent->size = LE2N32(fs->sblk->s_blocks_count) << (LE2N32(fs->sblk->s_log_block_size) + 9);
+    dirent->first_node = EXT2_ROOT_INO;
+
+    return SUCCESS;
 }
 
 #if 0
@@ -616,7 +631,7 @@ void ext2()
 {
 	u32 ret, block_num;
 	inum_t inum;
-	ext2_filesystem_t *fs;
+	ext2_fs_t *fs;
 	u8 *buf = NULL;
 
 	if(ext2_init_filesystem(&fs))
