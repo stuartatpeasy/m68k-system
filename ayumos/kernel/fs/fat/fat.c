@@ -223,8 +223,10 @@ s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
     dirent->name[0] = DIR_SEPARATOR;
     dirent->type = FSNODE_TYPE_DIR;
     dirent->permissions = VFS_PERM_UGORWX;
-    dirent->size = fs->root_dir_clusters * fs->bytes_per_cluster;
+    dirent->size = fs->root_dir_clusters * fs->bytes_per_cluster;   /* FIXME - 32-bit limit!! */
     dirent->first_node = FAT_ROOT_NODE;
+
+    /* TODO: fill in ctime, mtime, atime? */
 
     return SUCCESS;
 }
