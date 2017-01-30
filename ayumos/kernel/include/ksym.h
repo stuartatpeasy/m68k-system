@@ -38,5 +38,6 @@ typedef struct symentry
 s32 ksym_find_by_name(const char * const name, symentry_t **ent);
 s32 ksym_find_nearest_prev(void *addr, symentry_t **ent);
 s32 ksym_format_nearest_prev(void *addr, char *buf, u32 buf_len);
+const char *ksym_get_description(const symtype_t type);
 
 #endif

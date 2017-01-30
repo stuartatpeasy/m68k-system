@@ -95,3 +95,26 @@ s32 ksym_format_nearest_prev(void *addr, char *buf, u32 buf_len)
     strncpy(buf, "<\?\?\?>", buf_len);  /* \-escape '?' chars to avoid trigraph warning */
     return ENOENT;
 }
+
+
+
+/*
+    ksym_get_description() - obtain a human-readable description of the specified symbol type.
+*/
+const char *ksym_get_description(const symtype_t type)
+{
+    switch(type)
+    {
+        case EXT_BSS:       return "bss ext";
+        case INT_BSS:       return "bss int";
+    	case EXT_DATA:      return "data int";
+    	case INT_DATA:      return "data ext";
+    	case EXT_RO:        return "ro ext";
+    	case INT_RO:        return "ro int";
+    	case EXT_TEXT:      return "text ext";
+    	case INT_TEXT:      return "text int";
+    }
+
+    return "unknown";
+}
+
