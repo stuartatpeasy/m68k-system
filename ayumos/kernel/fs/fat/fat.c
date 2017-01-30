@@ -33,7 +33,12 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_find_free_node(vfs_t *vfs, u32 *node);
 s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
 u8 fat_lfn_checksum(u8 *short_name);
+
+#ifdef FAT_DEBUG
 void fat_debug_dump_superblock(vfs_t *vfs);
+#else
+#define fat_debug_dump_superblock(dummy) ((void) dummy)
+#endif
 
 
 vfs_driver_t g_fat_ops =
@@ -235,18 +240,16 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     s32 ret;
 
     /* Allocate space to hold a directory context */
-    *ctx = kmalloc(sizeof(fat_dir_ctx_t));
-    if(!*ctx)
+    dir_ctx = (fat_dir_ctx_t *) kmalloc(sizeof(fat_dir_ctx_t));
+    if(!dir_ctx)
         return ENOMEM;
-
-    dir_ctx = (fat_dir_ctx_t *) *ctx;
 
     /* Allocate space within the directory context to hold a node */
     bytes_per_cluster = ((fat_fs_t *) vfs->data)->bytes_per_cluster;
     dir_ctx->buffer = (fat_dirent_t *) kmalloc(bytes_per_cluster);
     if(!dir_ctx->buffer)
     {
-        kfree(*ctx);
+        kfree(dir_ctx);
         return ENOMEM;
     }
 
@@ -255,7 +258,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     if(ret != SUCCESS)
     {
         kfree(dir_ctx->buffer);
-        kfree(*ctx);
+        kfree(dir_ctx);
         return ret;
     }
 
@@ -263,6 +266,8 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     dir_ctx->node = node;
     dir_ctx->de = dir_ctx->buffer;   /* Point de (addr of current dirent) at start of node buffer */
     dir_ctx->is_root_dir = (node == FAT_ROOT_NODE);
+
+    *ctx = dir_ctx;
 
     return SUCCESS;
 }
@@ -795,6 +800,7 @@ u8 fat_lfn_checksum(u8 *short_name)
 /*
     Dump superblock contents for debugging
 */
+#ifdef FAT_DEBUG
 void fat_debug_dump_superblock(vfs_t * vfs)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
@@ -816,5 +822,6 @@ void fat_debug_dump_superblock(vfs_t * vfs)
            fs->root_dir_clusters, fs->first_fat_sector, fs->first_data_sector,
            (fs->total_sectors * BLOCK_SIZE) >> 20, (fs->total_data_sectors * BLOCK_SIZE) >> 20);
 }
+#endif /* 0 */
 
 #endif /* WITH_FS_FAT */
