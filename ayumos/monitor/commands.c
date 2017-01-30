@@ -748,9 +748,6 @@ MONITOR_CMD_HANDLER(map)
 #ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(mount)
 {
-    UNUSED(num_args);
-    UNUSED(args);
-
     if(num_args == 0)
     {
         /* Display mount table */
@@ -767,7 +764,7 @@ MONITOR_CMD_HANDLER(mount)
     else if(num_args == 3)
     {
         /* Mount filesystem */
-        return ENOSYS;
+        return mount_add(args[2], vfs_get_driver_by_name(args[1]), dev_find(args[0]));
     }
     else
         return EINVAL;

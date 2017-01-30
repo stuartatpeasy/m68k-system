@@ -74,11 +74,27 @@ s32 ext2_mount(vfs_t *vfs)
 	ext2_filesystem_t *fs;
 	u32 ret, buf_size, num_block_groups;
 	u8 *buf;
-	u32 len;
+    ku32 sblk_nblocks = (sizeof(ext2_superblock_t) + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    /* Allocate a buffer large enough to hold the number of blocks occupied by the superblock */
+    buf = kmalloc(sblk_nblocks * BLOCK_SIZE);
+    if(!buf)
+        return ENOMEM;
+
+    ret = block_read_multi(vfs->dev, 1024 / BLOCK_SIZE, sblk_nblocks, buf);
+
+	if(ret != SUCCESS)
+	{
+	    kfree(buf);
+		return ret;
+	}
 
     vfs->data = kmalloc(sizeof(ext2_filesystem_t));
     if(!vfs->data)
+    {
+        kfree(buf);
         return ENOMEM;
+    }
 
     fs = (ext2_filesystem_t *) vfs->data;
 
@@ -90,27 +106,17 @@ s32 ext2_mount(vfs_t *vfs)
 	if(!fs->sblk)
     {
         kfree(vfs->data);
+        kfree(buf);
 		return ENOMEM;
     }
 
-    printf("ext2: superblock size is %d\n", (u32) sizeof(ext2_superblock_t));
+	memcpy(fs->sblk, buf, sizeof(ext2_superblock_t));
+	kfree(buf);
 
-    ret = block_read_multi(vfs->dev, 1024 / BLOCK_SIZE,
-                           (sizeof(ext2_superblock_t) + BLOCK_SIZE - 1) / BLOCK_SIZE,
-                           fs->sblk);
-
-	if(ret != SUCCESS)
-	{
-	    kfree(vfs->data);
-		kfree(fs->sblk);
-		return ret;
-	}
-
-	if(fs->sblk->s_magic != EXT2_SUPER_MAGIC)
+	if(LE2N16(fs->sblk->s_magic) != EXT2_SUPER_MAGIC)
 	{
 		kfree(fs->sblk);
-		printf("%s: bad ext2 superblock magic: expected 0x%04x, read 0x%04x\n", vfs->dev->name,
-                EXT2_SUPER_MAGIC, fs->sblk->s_magic);
+		kfree(vfs->data);
 
 		return EBADSBLK;	/* bad superblock (invalid magic number) */
 	}
@@ -122,27 +128,32 @@ s32 ext2_mount(vfs_t *vfs)
 		Read the block group descriptor table
 	*/
 
-	num_block_groups = fs->sblk->s_inodes_count / fs->sblk->s_inodes_per_group;
+    dump_hex(fs->sblk, 1, 0, sizeof(ext2_superblock_t));
+
+	num_block_groups = LE2N32(fs->sblk->s_inodes_count) / LE2N32(fs->sblk->s_inodes_per_group);
 
 	/* Calculate the size of a buffer to hold the BGD table, rounding up to the nearest block */
-	buf_size = num_block_groups * EXT2_BGD_SIZE;
+	buf_size = ((num_block_groups * EXT2_BGD_SIZE) + BLOCK_SIZE - 1) & ~(BLOCK_SIZE - 1);
 
 	if(!(buf = kmalloc(buf_size)))
 	{
+	    kfree(fs->sblk);
 		kfree(fs->sblk);
+	    kfree(vfs->data);
 		return ENOMEM;
 	}
 
-    len = buf_size >> LOG_BLOCK_SIZE;
-    ret = vfs->dev->read(vfs->dev, (fs->sblk->s_log_block_size ? 1 : 2) <<
-                                    (10 + fs->sblk->s_log_block_size - LOG_BLOCK_SIZE),
-                         &len, buf);
+    ret = block_read_multi(vfs->dev,
+                           (1024 << LE2N32(fs->sblk->s_log_block_size)) >> LOG_BLOCK_SIZE,
+                           buf_size >> LOG_BLOCK_SIZE,
+                           buf);
 
-    /* TODO - check for short read */
 	if(ret)
 	{
+	    kfree(buf);
+	    kfree(fs->sblk);
 		kfree(fs->sblk);
-		kfree(buf);
+	    kfree(vfs->data);
 		return ret;
 	}
 
@@ -216,7 +227,7 @@ u32 block_group_contains_superblock(const ext2_filesystem_t *fs, ku32 block_grou
 {
 	/* Originally superblock backups were stored in every block group.  The "sparse superblock"
 	   feature saves space by storing backups in block groups 0, 1, and powers of 3, 5 and 7. */
-	if(fs->sblk->s_feature_ro_compat & EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER)
+	if(LE2N32(fs->sblk->s_feature_ro_compat) & EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER)
 	{
 		/* This file system has the "sparse superblock" feature */
 

@@ -29,6 +29,10 @@ s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev)
 	s32 ret;
 	mount_ent_t *new_ent;
 
+    /* TODO: look up driver, if none is supplied */
+    if((mount_point == NULL) || (driver == NULL) || (dev == NULL))
+        return EINVAL;
+
     new_ent = CHECKED_KMALLOC(sizeof(mount_ent_t));
 
 	new_ent->mount_point = strdup(mount_point);
