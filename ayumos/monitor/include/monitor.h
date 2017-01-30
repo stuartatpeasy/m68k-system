@@ -15,6 +15,7 @@
 #include <kernel/include/defs.h>
 #include <kernel/include/device/nvram.h>
 #include <kernel/include/fs/vfs.h>
+#include <kernel/include/ksym.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/memory/slab.h>
 #include <kernel/include/net/arp.h>
@@ -55,6 +56,7 @@ command_history_t *g_hist;
 void monitor(void);
 void monitor_main(void);
 void dispatch_command(char *cmdline);
+s32 parse_numeric_arg(const char *arg, unsigned int *val);
 
 /* command handler declarations */
 
@@ -95,6 +97,7 @@ MONITOR_CMD_HANDLER(schedule);
 MONITOR_CMD_HANDLER(serial);
 MONITOR_CMD_HANDLER(slabs);
 MONITOR_CMD_HANDLER(srec);
+MONITOR_CMD_HANDLER(symbol);
 MONITOR_CMD_HANDLER(test);
 MONITOR_CMD_HANDLER(upload);
 MONITOR_CMD_HANDLER(write);

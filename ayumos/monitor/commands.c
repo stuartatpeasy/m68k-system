@@ -355,6 +355,11 @@ MONITOR_CMD_HANDLER(echo)
 }
 
 
+/*
+    fill <start> <count> <val>
+
+    Fill <count> bytes, starting at <start>, with the value <val>.
+*/
 MONITOR_CMD_HANDLER(fill)
 {
 	u32 count, data;
@@ -383,6 +388,12 @@ MONITOR_CMD_HANDLER(fill)
 }
 
 
+/*
+    fillh <start> <count> <val>
+
+    Fill <count> half-words, starting at <start>, with the value <val>.  <start> must be half-word
+    aligned.
+*/
 MONITOR_CMD_HANDLER(fillh)
 {
 	u32 count, data;
@@ -411,6 +422,11 @@ MONITOR_CMD_HANDLER(fillh)
 }
 
 
+/*
+    fillw <start> <count> <val>
+
+    Fill <count> words, starting at <start>, with the value <val>.  <start> must be word-aligned.
+*/
 MONITOR_CMD_HANDLER(fillw)
 {
 	u32 *start, count, data;
@@ -556,6 +572,9 @@ MONITOR_CMD_HANDLER(help)
 		  "    Display slab allocation status\n\n"
 		  "srec\n"
 		  "    Start the upload of an S-record file\n\n"
+          "symbol [-v] <name>\n"
+          "    Display the memory location of symbol <name>, if available.  If the -v (verbose)\n"
+          "    option is given, display symbol type information.\n\n"
 		  "upload <count>\n"
 		  "    Receive <count> bytes and place them in memory\n\n"
 		  "write[h|w] <address> <data>\n"
@@ -568,7 +587,7 @@ MONITOR_CMD_HANDLER(help)
 /*
     history
 
-    Display command history
+    Display command history.
 */
 MONITOR_CMD_HANDLER(history)
 {
@@ -593,7 +612,7 @@ MONITOR_CMD_HANDLER(history)
 /*
     id
 
-    Display device identity
+    Display device identity (OS name, version, CPU architecture, build date/time).
 */
 MONITOR_CMD_HANDLER(id)
 {
@@ -606,9 +625,9 @@ MONITOR_CMD_HANDLER(id)
 
 
 /*
-    ls
+    ls <path>
 
-    List directory contents
+    List directory contents.
 */
 #ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(ls)
@@ -669,9 +688,9 @@ MONITOR_CMD_HANDLER(ls)
 
 
 /*
-    lsdev
+    lsdev [-l]
 
-    List devices
+    List devices.  If the "-l" option is supplied, list extra information about each device.
 */
 MONITOR_CMD_HANDLER(lsdev)
 {
@@ -708,7 +727,7 @@ MONITOR_CMD_HANDLER(lsdev)
 /*
     map
 
-    Display memory map
+    Display memory map.
 */
 MONITOR_CMD_HANDLER(map)
 {
@@ -775,9 +794,9 @@ MONITOR_CMD_HANDLER(mount)
 
 
 /*
-    netif
+    netif <"show"|"ipv4"> <interface> [<args...>]
 
-    Manipulate network interfaces
+    Manipulate network interfaces.  Args are described in greater detail below.
 */
 #ifdef WITH_NETWORKING
 MONITOR_CMD_HANDLER(netif)
@@ -913,9 +932,9 @@ MONITOR_CMD_HANDLER(rootfs)
 
 
 /*
-    route
+    route <args...>
 
-    List or manipulate the routing table
+    List or manipulate the routing table.  Args are described below.
 */
 #ifdef WITH_NETWORKING
 MONITOR_CMD_HANDLER(route)
@@ -1001,7 +1020,7 @@ MONITOR_CMD_HANDLER(route)
 /*
     sched
 
-    Start scheduler
+    Start the process scheduler.
 */
 MONITOR_CMD_HANDLER(schedule)
 {
@@ -1014,9 +1033,9 @@ MONITOR_CMD_HANDLER(schedule)
 
 
 /*
-    serial
+    serial <"echo" <"on"|"off">>
 
-    Configure serial line discipline
+    Configure serial line discipline.  Currently only supports switching echo on and off.
 */
 MONITOR_CMD_HANDLER(serial)
 {
@@ -1071,7 +1090,8 @@ MONITOR_CMD_HANDLER(slabs)
 /*
 	srec
 
-	Receive data in S-record format and put it in memory somewhere
+	Receive data in S-record format and put it in user memory somewhere.  Display the address of the
+    received data.
 */
 MONITOR_CMD_HANDLER(srec)
 {
@@ -1096,12 +1116,52 @@ MONITOR_CMD_HANDLER(srec)
 
 
 /*
+    symbol [-v] <sym>
+
+    Display the address of the kernel symbol <sym>.  If the "-v" option is supplied, display
+    detailed information.
+*/
+MONITOR_CMD_HANDLER(symbol)
+{
+    u8 verbose;
+    char *sym;
+    symentry_t *ent;
+    s32 ret;
+
+    if(num_args == 2)
+    {
+        if(strcmp(args[0], "-v"))
+            return EINVAL;
+
+        verbose = 1;
+        sym = args[1];
+    }
+    else if(num_args == 1)
+    {
+        verbose = 0;
+        sym = args[0];
+    }
+    else
+        return EINVAL;
+
+    ret = ksym_find_by_name(sym, &ent);
+    if(ret != SUCCESS)
+        return ret;
+
+    if(!verbose)
+        printf("%p\n", ent->addr);
+    else
+        printf("%p    %s    %s\n", ent->addr, sym, ksym_get_description(ent->type));
+
+    return ENOSYS;
+}
+
+
+/*
     test
 
     Used to trigger a test of some sort
 */
-
-
 #include <kernel/include/elf.h>
 #include <kernel/include/process.h>
 #include <kernel/include/tick.h>
@@ -1212,9 +1272,10 @@ MONITOR_CMD_HANDLER(test)
 
 
 /*
-    upload
+    upload <len>
 
-    Allocate memory, receive bytes, store them in the allocated region
+    Allocate memory in user space, receive <len> bytes, store them in the allocated region.  Return
+    the address of the allocated memory.
 */
 MONITOR_CMD_HANDLER(upload)
 {
@@ -1241,9 +1302,9 @@ MONITOR_CMD_HANDLER(upload)
 
 
 /*
-    write
+    write <addr> <val>
 
-    Write a byte to the specified address
+    Write the byte <val> to address <addr>.
 */
 MONITOR_CMD_HANDLER(write)
 {
@@ -1268,9 +1329,9 @@ MONITOR_CMD_HANDLER(write)
 
 
 /*
-    writeh
+    writeh <addr> <val>
 
-    Write a half-word (16 bits) to the specified address
+    Write the half-word <val> to the address <addr>.  <addr> must be half-word aligned.
 */
 MONITOR_CMD_HANDLER(writeh)
 {
@@ -1295,9 +1356,9 @@ MONITOR_CMD_HANDLER(writeh)
 
 
 /*
-    writew
+    writew <addr> <val>
 
-    Write a word (32 bits) to the specified address
+    Write the word <val> to the address <addr>.  <addr> must be word-aligned.
 */
 MONITOR_CMD_HANDLER(writew)
 {

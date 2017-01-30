@@ -64,6 +64,11 @@ const struct command g_commands[] =
 };
 
 
+
+/*
+    monitor() - entry point for the ROM monitor application.  This function just initialises the
+    command history, and then calls monitor_main() in an eternal loop.
+*/
 void monitor(void)
 {
     history_init(&g_hist, 10);
@@ -73,6 +78,9 @@ void monitor(void)
 }
 
 
+/*
+    monitor_main() - read a command from the console, execute it, return.
+*/
 void monitor_main(void)
 {
 	char buffer[CMD_MAX_LEN + 1];
@@ -93,6 +101,9 @@ void monitor_main(void)
 }
 
 
+/*
+    dispatch_command() - extract the arguments from a command, then execute it.
+*/
 void dispatch_command(char *cmdline)
 {
 	const struct command *p, *pcommand = NULL;
@@ -192,3 +203,35 @@ void dispatch_command(char *cmdline)
         kfree(args[c]);
 }
 
+
+/*
+    parse_numeric_arg() - parse a numeric arg into an unsigned integer.  The format "&<symbol>"
+    is understood to represent a request to return the address of <symbol>.
+*/
+s32 parse_numeric_arg(const char *arg, unsigned int *val)
+{
+    if(arg[0] == '&')
+    {
+        symentry_t *ent;
+        s32 ret;
+
+        ret = ksym_find_by_name(++arg, &ent);
+        if(ret != SUCCESS)
+            return ret;
+
+        *val = (unsigned int) ent->addr;
+    }
+    else
+    {
+        char *endptr;
+        unsigned int val_;
+
+        val_ = strtoul(arg, &endptr, 0);
+        if(*endptr)
+            return EINVAL;
+ 
+        *val = val_;
+    }
+
+    return SUCCESS;
+}
