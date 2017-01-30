@@ -89,14 +89,12 @@ s32 ext2_mount(vfs_t *vfs)
 		return ret;
 	}
 
-    vfs->data = kmalloc(sizeof(ext2_filesystem_t));
-    if(!vfs->data)
+    fs = (ext2_filesystem_t *) kmalloc(sizeof(ext2_filesystem_t));
+    if(!fs)
     {
         kfree(buf);
         return ENOMEM;
     }
-
-    fs = (ext2_filesystem_t *) vfs->data;
 
 	/*
 		Read the superblock
@@ -105,7 +103,7 @@ s32 ext2_mount(vfs_t *vfs)
 	fs->sblk = kmalloc(sizeof(ext2_superblock_t));
 	if(!fs->sblk)
     {
-        kfree(vfs->data);
+        kfree(fs);
         kfree(buf);
 		return ENOMEM;
     }
@@ -116,7 +114,7 @@ s32 ext2_mount(vfs_t *vfs)
 	if(LE2N16(fs->sblk->s_magic) != EXT2_SUPER_MAGIC)
 	{
 		kfree(fs->sblk);
-		kfree(vfs->data);
+		kfree(fs);
 
 		return EBADSBLK;	/* bad superblock (invalid magic number) */
 	}
@@ -137,9 +135,8 @@ s32 ext2_mount(vfs_t *vfs)
 
 	if(!(buf = kmalloc(buf_size)))
 	{
-	    kfree(fs->sblk);
 		kfree(fs->sblk);
-	    kfree(vfs->data);
+	    kfree(fs);
 		return ENOMEM;
 	}
 
@@ -151,14 +148,15 @@ s32 ext2_mount(vfs_t *vfs)
 	if(ret)
 	{
 	    kfree(buf);
-	    kfree(fs->sblk);
 		kfree(fs->sblk);
-	    kfree(vfs->data);
+	    kfree(fs);
 		return ret;
 	}
 
 	fs->bgd = (struct ext2_bgd *) buf;
 	fs->bgd_table_clean = 1;
+
+    vfs->data = fs;
 
 	return SUCCESS;
 }
