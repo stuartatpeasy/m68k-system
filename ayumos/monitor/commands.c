@@ -178,21 +178,27 @@ MONITOR_CMD_HANDLER(dfu)
 MONITOR_CMD_HANDLER(disassemble)
 {
 	u32 num_bytes, start;
-	s8 *endptr;
+	s32 ret;
 	u16 *addr;
 	s8 line[80], instr_printed;
 
 	if(!num_args || (num_args > 2))
 		return EINVAL;
 
-	start = strtoul(args[0], &endptr, 0);
-	if(*endptr || (start & 1))
-		return EINVAL;
+    ret = parse_numeric_arg(args[0], &start);
+    if(ret != SUCCESS)
+        return ret;
 
-	if(num_args == 2)
-	{
-		num_bytes = strtoul(args[1], &endptr, 0);
-		if(*endptr || (num_bytes < 2) || (num_bytes & 1))
+    if(start & 1)           /* TODO - add flags to parse_numeric_arg to detect this */
+        return EINVAL;
+
+    if(num_args == 2)
+    {
+	    ret = parse_numeric_arg(args[1], &num_bytes);
+	    if(ret != SUCCESS)
+            return ret;
+
+		if((num_bytes < 2) || (num_bytes & 1))
 			return EINVAL;
 	}
 	else num_bytes = 256;
@@ -1153,7 +1159,7 @@ MONITOR_CMD_HANDLER(symbol)
     else
         printf("%p    %s    %s\n", ent->addr, sym, ksym_get_description(ent->type));
 
-    return ENOSYS;
+    return SUCCESS;
 }
 
 

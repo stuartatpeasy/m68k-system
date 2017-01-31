@@ -54,6 +54,7 @@ const struct command g_commands[] =
 	{"serial",          cmd_serial},
 	{"slabs",           cmd_slabs},
 	{"srec",			cmd_srec},
+	{"symbol",          cmd_symbol},
 	{"test",            cmd_test},
 	{"upload",			cmd_upload},
 	{"write",			cmd_write},
@@ -229,7 +230,7 @@ s32 parse_numeric_arg(const char *arg, unsigned int *val)
         val_ = strtoul(arg, &endptr, 0);
         if(*endptr)
             return EINVAL;
- 
+
         *val = val_;
     }
 
