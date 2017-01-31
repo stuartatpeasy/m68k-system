@@ -420,34 +420,32 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
             else if((ch == 'x') || (ch == 'X') || (ch == 'p'))
             {
                 const char *hex;
+                char pad;
                 u32 val;
-                s32 nybble = 7;
+                s32 nybble;
 
-                if((ch == 'p') && ((n + 1) < size_))
+                pad = (flags & PF_LEADING_ZERO) ? '0' : ' ';
+
+                if(ch == 'p')
                 {
-                    if(!field_width)
-                        field_width = 8;
+                    if((n + 1) < size_)
+                    {
+                        if(!field_width)
+                            field_width = 8;
 
-                    str[n++] = '0';
-                    str[n++] = 'x';
-                    flags |= PF_LEADING_ZERO;
+                        str[n++] = '0';
+                        str[n++] = 'x';
+                        flags |= PF_LEADING_ZERO;
+                    }
+                    pad = '0';
                 }
+                else
+                    pad = (flags & PF_LEADING_ZERO) ? '0' : ' ';
 
                 if(ch == 'X')
                     hex = "0123456789ABCDEF";
                 else
                     hex = "0123456789abcdef";
-
-                if(!field_width)
-                    field_width = 1;
-                else
-                {
-                    if(field_width > 8)
-                        field_width = 8;
-
-                    nybble = --field_width;
-                    flags |= PF_NUM_OUTPUT_STARTED;
-                }
 
                 /* put hex val / ptr */
                 if(!(flags & PF_LONG_LONG))
@@ -455,13 +453,29 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                     /* Treat the arg as an unsigned long (32-bit) integer */
                     u = va_arg(ap, u32);
                     nybble = 28;    /* Offset of highest-order nybble, in bits) */
-                    
+
+                    /* If field width > value length, write leading zeroes / spaces */
+                    for(; field_width > 8; --field_width)
+                    {
+                        if(n < size_)
+                            str[n] = pad;
+                        ++n;
+                    }
+
+                    /* Convert field width to a bit offset */
+                    field_width <<= 2;
+
                     for(; nybble >= 0; nybble -= 4)
                     {
                         val = (u >> nybble) & 0xf;
+
+                        if(nybble < field_width)
+                            flags |= PF_NUM_OUTPUT_STARTED;
+
                         if(val || !nybble)
                         {
                             flags |= PF_NUM_OUTPUT_STARTED | PF_LEADING_ZERO;
+                            pad = '0';
                             if(n < size_)
                                 str[n] = hex[val];
                             ++n;
@@ -469,7 +483,7 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                         else if(flags & PF_NUM_OUTPUT_STARTED)
                         {
                             if(n < size_)
-                                str[n] = (flags & PF_LEADING_ZERO) ? '0' : ' ';
+                                str[n] = pad;
                             ++n;
                         }
                     }
@@ -478,14 +492,30 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                 {
                     /* Treat the arg as an unsigned long-long (64-bit) integer */
                     u64 lu = va_arg(ap, u64);
-                    nybble = 60;    /* Offset of highest-order nybble, in bits */
-                    
+                    nybble = 60;    /* Offset of highest-order nybble, in bits) */
+
+                    /* If field width > value length, write leading zeroes / spaces */
+                    for(; field_width > 16; --field_width)
+                    {
+                        if(n < size_)
+                            str[n] = pad;
+                        ++n;
+                    }
+
+                    /* Convert field width to a bit offset */
+                    field_width <<= 2;
+
                     for(; nybble >= 0; nybble -= 4)
                     {
                         val = (lu >> nybble) & 0xf;
+
+                        if(nybble < field_width)
+                            flags |= PF_NUM_OUTPUT_STARTED;
+
                         if(val || !nybble)
                         {
                             flags |= PF_NUM_OUTPUT_STARTED | PF_LEADING_ZERO;
+                            pad = '0';
                             if(n < size_)
                                 str[n] = hex[val];
                             ++n;
@@ -493,7 +523,7 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                         else if(flags & PF_NUM_OUTPUT_STARTED)
                         {
                             if(n < size_)
-                                str[n] = (flags & PF_LEADING_ZERO) ? '0' : ' ';
+                                str[n] = pad;
                             ++n;
                         }
                     }
