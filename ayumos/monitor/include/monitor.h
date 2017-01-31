@@ -31,7 +31,6 @@
 #include <monitor/include/srec.h>
 
 
-
 #define MON_VERB_MAX_LENGTH		(16)	/* maximum length of the "verb", i.e. the first word in a
 										   command line */
 #define MON_MAX_ARGS			(8)		/* maximum number of arguments that may be passed to a
@@ -43,6 +42,15 @@
 #define MONITOR_CMD_HANDLER(name)    \
     s32 cmd_ ## name(ks32 num_args, s8 ** args)
 
+
+/* Flags that can be used with monitor_parse_arg() to validate arg values */
+#define MPA_NONE            (0)         /* Placeholder meaning "skip value validation"          */
+#define MPA_BYTE            (1 << 0)    /* Fail if val > 0xff                                   */
+#define MPA_HWORD           (1 << 1)    /* Fail if val > 0xffff                                 */
+#define MPA_ALIGN_HWORD     (1 << 2)    /* Fail if (val & 1) != 0                               */
+#define MPA_ALIGN_WORD      (1 << 3)    /* Fail if (val & 3) != 0                               */
+#define MPA_NOT_ZERO        (1 << 4)    /* Fail if val == 0                                     */
+#define MPA_AT_LEAST_2      (1 << 5)    /* Fail if val < 2                                      */
 
 struct command
 {
@@ -56,7 +64,7 @@ command_history_t *g_hist;
 void monitor(void);
 void monitor_main(void);
 void dispatch_command(char *cmdline);
-s32 parse_numeric_arg(const char *arg, unsigned int *val);
+s32 monitor_parse_arg(const char *arg, unsigned int *val, unsigned int flags);
 
 /* command handler declarations */
 

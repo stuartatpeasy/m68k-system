@@ -206,33 +206,56 @@ void dispatch_command(char *cmdline)
 
 
 /*
-    parse_numeric_arg() - parse a numeric arg into an unsigned integer.  The format "&<symbol>"
-    is understood to represent a request to return the address of <symbol>.
+    parse_numeric_arg() - parse a command argument (*arg) into an unsigned integer (*val).  The
+    argument may be given in decimal or hexadecimal format.  If the kernel includes a symbol table,
+    the name of a symbol may be used as an argument.  In this case, the address of the symbol will
+    be stored in *val.  The special format "*<address>" can be supplied; in this case, the byte at
+    the supplied address (specified as a decimal or hexadecimal number) will be stored in *val.
 */
-s32 parse_numeric_arg(const char *arg, unsigned int *val)
+s32 monitor_parse_arg(const char *arg, unsigned int *val, unsigned int flags)
 {
-    if(arg[0] == '&')
+    unsigned int val_;
+    char *endptr = NULL;
+
+    val_ = strtoul(arg, &endptr, 0);
+
+    if(*endptr)
     {
-        symentry_t *ent;
-        s32 ret;
+        if(arg[0] == '*')
+        {
+            /* Read value as a byte from memory */
+            u32 addr;
 
-        ret = ksym_find_by_name(++arg, &ent);
-        if(ret != SUCCESS)
-            return ret;
+            addr = strtoul(++arg, &endptr, 0);
+            if(*endptr)
+                return EINVAL;
 
-        *val = (unsigned int) ent->addr;
+            val_ = *((u8 *) addr);
+        }
+        else
+        {
+            /* Try symbol lookup */
+            symentry_t *ent;
+            s32 ret;
+
+            ret = ksym_find_by_name(arg, &ent);
+            if(ret != SUCCESS)
+                return ret;
+
+            val_ = (unsigned int) ent->addr;
+        }
     }
-    else
-    {
-        char *endptr;
-        unsigned int val_;
 
-        val_ = strtoul(arg, &endptr, 0);
-        if(*endptr)
-            return EINVAL;
+    /* Apply checks specified by the flags arg */
+    if(((flags & MPA_BYTE) && (val_ > 0xff)) ||
+       ((flags & MPA_HWORD) && (val_ > 0xffff)) ||
+       ((flags & MPA_ALIGN_HWORD) && (val_ & 0x1)) ||
+       ((flags & MPA_ALIGN_WORD) && (val_ & 0x3)) ||
+       ((flags & MPA_NOT_ZERO) && !val_) ||
+       ((flags & MPA_AT_LEAST_2) && (val_ < 2)))
+        return EINVAL;
 
-        *val = val_;
-    }
+    *val = val_;
 
     return SUCCESS;
 }

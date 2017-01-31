@@ -126,19 +126,20 @@ MONITOR_CMD_HANDLER(date)
 */
 MONITOR_CMD_HANDLER(dfu)
 {
-	u32 len, buffer_len, cksum_sent, cksum_calculated, i, ret;
-	s8 *data, *endptr;
+	u32 len, buffer_len, cksum_sent, cksum_calculated, i;
+	s32 ret;
+	s8 *data;
 
 	if(num_args != 2)
 		return EINVAL;
 
-	len = strtoul(args[0], &endptr, 0);
-	if(*endptr || !len)
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &len, MPA_NOT_ZERO);
+    if(ret != SUCCESS)
+        return ret;
 
-    cksum_sent = strtoul(args[1], &endptr, 0);
-    if(*endptr || !len)
-        return EINVAL;
+    ret = monitor_parse_arg(args[1], &cksum_sent, MPA_NONE);
+    if(ret != SUCCESS)
+        return ret;
 
     /*
         The dfu() function requires an even number of bytes, so - if the new firmware image is an
@@ -185,21 +186,15 @@ MONITOR_CMD_HANDLER(disassemble)
 	if(!num_args || (num_args > 2))
 		return EINVAL;
 
-    ret = parse_numeric_arg(args[0], &start);
+    ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
         return ret;
 
-    if(start & 1)           /* TODO - add flags to parse_numeric_arg to detect this */
-        return EINVAL;
-
     if(num_args == 2)
     {
-	    ret = parse_numeric_arg(args[1], &num_bytes);
+	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_HWORD | MPA_AT_LEAST_2);
 	    if(ret != SUCCESS)
             return ret;
-
-		if((num_bytes < 2) || (num_bytes & 1))
-			return EINVAL;
 	}
 	else num_bytes = 256;
 
@@ -252,20 +247,20 @@ s32 dump_mem(ks32 start, ks32 num_bytes, ks8 word_size)
 MONITOR_CMD_HANDLER(dump)
 {
 	u32 start, num_bytes;
-	s8 *endptr;
+	s32 ret;
 
 	if(!num_args || (num_args > 2))
 		return EINVAL;
 
-	start = strtoul(args[0], &endptr, 0);
-	if(*endptr)
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &start, MPA_NONE);
+    if(ret != SUCCESS)
+        return ret;
 
-	if(num_args == 2)
-	{
-		num_bytes = strtoul(args[1], &endptr, 0);
-		if(*endptr || (num_bytes < 1))
-			return EINVAL;
+    if(num_args == 2)
+    {
+	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_NONE);
+	    if(ret != SUCCESS)
+            return ret;
 	}
 	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
@@ -281,23 +276,20 @@ MONITOR_CMD_HANDLER(dump)
 MONITOR_CMD_HANDLER(dumph)
 {
 	u32 start, num_bytes;
-	s8 *endptr;
+	s32 ret;
 
 	if(!num_args || (num_args > 2))
 		return EINVAL;
 
-	start = strtoul(args[0], &endptr, 0);
-	if(*endptr)
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_HWORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	if(start & 1)
-		return EINVAL;
-
-	if(num_args == 2)
+    if(num_args == 2)
 	{
-		num_bytes = strtoul(args[1], &endptr, 0);
-		if(*endptr || !num_bytes || (num_bytes & 1))
-			return EINVAL;
+	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_HWORD);
+	    if(ret != SUCCESS)
+            return ret;
 	}
 	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
@@ -314,23 +306,20 @@ MONITOR_CMD_HANDLER(dumph)
 MONITOR_CMD_HANDLER(dumpw)
 {
 	u32 start, num_bytes;
-	s8 *endptr;
+	s32 ret;
 
 	if(!num_args || (num_args > 2))
 		return EINVAL;
 
-	start = strtoul(args[0], &endptr, 0);
-	if(*endptr)
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_WORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	if(start & 3)
-		return EINVAL;
-
-	if(num_args == 2)
+    if(num_args == 2)
 	{
-		num_bytes = strtoul(args[1], &endptr, 0);
-		if(*endptr || !num_bytes || (num_bytes & 3))
-			return EINVAL;
+	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_WORD);
+	    if(ret != SUCCESS)
+            return ret;
 	}
 	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
@@ -370,24 +359,24 @@ MONITOR_CMD_HANDLER(fill)
 {
 	u32 count, data;
 	u8 *start;
-	s8 *endptr;
+	s32 ret;
 
 	if(num_args != 3)
 		return EINVAL;
 
-	start = (u8 *) strtoul(args[0], &endptr, 0);
-	if(*endptr)
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_NONE);
+    if(ret != SUCCESS)
+        return ret;
 
-	count = strtoul(args[1], &endptr, 0);
-	if(*endptr | !count)
-		return EINVAL;
+    ret = monitor_parse_arg(args[1], &count, MPA_NOT_ZERO);
+    if(ret != SUCCESS)
+        return ret;
 
-	data = strtoul(args[2], &endptr, 0);
-	if((*endptr) || (data > 0xff))
-		return EINVAL;
+    ret = monitor_parse_arg(args[2], &data, MPA_BYTE);
+    if(ret != SUCCESS)
+        return ret;
 
-	while(count--)
+    while(count--)
 		*((u8 *) start++) = (u8) data;
 
 	return SUCCESS;
@@ -404,27 +393,27 @@ MONITOR_CMD_HANDLER(fillh)
 {
 	u32 count, data;
 	u16 *start;
-	s8 *endptr;
+	s32 ret;
 
 	if(num_args != 3)
 		return EINVAL;
 
-	start = (u16 *) strtoul(args[0], &endptr, 0);
-	if(*endptr || ((u32) start & 0x1))
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_ALIGN_HWORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	count = strtoul(args[1], &endptr, 0);
-	if(*endptr || !count)
-		return EINVAL;
+    ret = monitor_parse_arg(args[1], &count, MPA_NOT_ZERO);
+    if(ret != SUCCESS)
+        return ret;
 
-	data = strtoul(args[2], &endptr, 0);
-	if((*endptr) || (data > 0xffff))
-		return EINVAL;
+    ret = monitor_parse_arg(args[2], &data, MPA_HWORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	while(count--)
-		*start++ = (u16) data;
+    while(count--)
+        *start++ = (u16) data;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -436,27 +425,27 @@ MONITOR_CMD_HANDLER(fillh)
 MONITOR_CMD_HANDLER(fillw)
 {
 	u32 *start, count, data;
-	s8 *endptr;
+	s32 ret;
 
 	if(num_args != 3)
 		return EINVAL;
 
-	start = (u32 *) strtoul(args[0], &endptr, 0);
-	if(*endptr || ((u32) start & 0x3))
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_ALIGN_WORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	count = strtoul(args[1], &endptr, 0);
-	if(*endptr | !count)
-		return EINVAL;
+    ret = monitor_parse_arg(args[1], &count, MPA_NOT_ZERO);
+    if(ret != SUCCESS)
+        return ret;
 
-	data = strtoul(args[2], &endptr, 0);
-	if(*endptr)
-		return EINVAL;
+    ret = monitor_parse_arg(args[2], &data, MPA_NONE);
+    if(ret != SUCCESS)
+        return ret;
 
-	while(count--)
-		*start++ = data;
+    while(count--)
+        *start++ = data;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -478,17 +467,17 @@ MONITOR_CMD_HANDLER(free)
 */
 MONITOR_CMD_HANDLER(go)
 {
-	s8 *endptr;
-	void (*addr)();
+    s32 ret;
+	void (*addr)() = NULL;
 
 	if(num_args != 1)
 		return EINVAL;
 
-	addr = (void (*)()) strtoul(args[0], &endptr, 0);
-	if(*endptr || ((u32) addr & 1))
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], (unsigned int *) addr, MPA_ALIGN_HWORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	addr();
+    addr();
 
 	return SUCCESS;
 }
@@ -995,10 +984,10 @@ MONITOR_CMD_HANDLER(route)
 
         if((num_args == 6) && !strcmp(args[0], "add"))
         {
-            metric_ = strtoul(args[4], NULL, 0);
+            ks32 ret2 = monitor_parse_arg(args[4], (unsigned int *) &metric_, MPA_NONE);
             r.iface = net_interface_get_by_dev(args[5]);
 
-            if(ret || (metric_ < IPV4_ROUTE_METRIC_MIN) || (metric_ > IPV4_ROUTE_METRIC_MAX)
+            if(ret || ret2 || (metric_ < IPV4_ROUTE_METRIC_MIN) || (metric_ > IPV4_ROUTE_METRIC_MAX)
                || !r.iface)
                 return EINVAL;
 
@@ -1176,10 +1165,15 @@ MONITOR_CMD_HANDLER(symbol)
 
 MONITOR_CMD_HANDLER(test)
 {
+    u32 testnum;
+    s32 ret;
+
     if(num_args < 1)
         return EINVAL;
 
-    ku32 testnum = strtoul(args[0], NULL, 0);
+    ret = monitor_parse_arg(args[0], &testnum, MPA_NONE);
+    if(ret != SUCCESS)
+        return ret;
 
     if(testnum == 1)
     {
@@ -1286,16 +1280,17 @@ MONITOR_CMD_HANDLER(test)
 MONITOR_CMD_HANDLER(upload)
 {
 	u32 len;
-	s8 *data, *data_, *endptr;
+	s32 ret;
+	s8 *data, *data_;
 
 	if(num_args != 1)
 		return EINVAL;
 
-	len = strtoul(args[0], &endptr, 0);
-	if(*endptr || !len)
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &len, MPA_NOT_ZERO);
+    if(ret)
+        return ret;
 
-	if((data = umalloc(len)) == NULL)
+    if((data = umalloc(len)) == NULL)
 		return ENOMEM;
 
 	for(data_ = data; len--;)
@@ -1315,20 +1310,20 @@ MONITOR_CMD_HANDLER(upload)
 MONITOR_CMD_HANDLER(write)
 {
 	u32 addr, data;
-	s8 *endptr;
+	s32 ret;
 
 	if(num_args != 2)
 		return EINVAL;
 
-	addr = strtoul(args[0], &endptr, 0);
-	if(*endptr)
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &addr, MPA_NONE);
+    if(ret != SUCCESS)
+        return ret;
 
-	data = strtoul(args[1], &endptr, 0);
-	if((*endptr) || (data > 0xff))
-		return EINVAL;
+    ret = monitor_parse_arg(args[1], &data, MPA_BYTE);
+    if(ret != SUCCESS)
+        return ret;
 
-	*((u8 *) addr) = (u8) data;
+    *((u8 *) addr) = (u8) data;
 
 	return SUCCESS;
 }
@@ -1342,20 +1337,20 @@ MONITOR_CMD_HANDLER(write)
 MONITOR_CMD_HANDLER(writeh)
 {
 	u32 addr, data;
-	s8 *endptr;
+	s32 ret;
 
 	if(num_args != 2)
 		return EINVAL;
 
-	addr = strtoul(args[0], &endptr, 0);
-	if((*endptr) || (addr & 0x1))
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &addr, MPA_ALIGN_HWORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	data = strtoul(args[1], &endptr, 0);
-	if((*endptr) || (data > 0xffff))
-		return EINVAL;
+    ret = monitor_parse_arg(args[1], &data, MPA_HWORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	*((u16 *) addr) = (u16) data;
+    *((u16 *) addr) = (u16) data;
 
 	return SUCCESS;
 }
@@ -1369,20 +1364,20 @@ MONITOR_CMD_HANDLER(writeh)
 MONITOR_CMD_HANDLER(writew)
 {
 	u32 addr, data;
-	s8 *endptr;
+	s32 ret;
 
 	if(num_args != 2)
 		return EINVAL;
 
-	addr = strtoul(args[0], &endptr, 0);
-	if((*endptr) || (addr & 0x3))
-		return EINVAL;
+    ret = monitor_parse_arg(args[0], &addr, MPA_ALIGN_WORD);
+    if(ret != SUCCESS)
+        return ret;
 
-	data = strtoul(args[1], &endptr, 0);
-	if(*endptr)
-		return EINVAL;
+    ret = monitor_parse_arg(args[1], &data, MPA_NONE);
+    if(ret != SUCCESS)
+        return ret;
 
-	*((u32 *) addr) = data;
+    *((u32 *) addr) = data;
 
 	return SUCCESS;
 }
