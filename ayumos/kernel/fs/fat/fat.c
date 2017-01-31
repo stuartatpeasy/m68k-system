@@ -218,15 +218,17 @@ s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
     /* Zero out the dirent struct - that way we only have to set nonzero fields */
     bzero(dirent, sizeof(vfs_dirent_t));
 
-    /* TODO - set correct values for ctime, mtime and atime */
+    /*
+        Note: FAT does not store ctime/mtime/atime for the whole fs, so they are left as zeroes in
+        the root dirent.  UID and GID are also not stored (or applicable), so these fields are also
+        left as zero.
+    */
     dirent->vfs = vfs;
     dirent->name[0] = DIR_SEPARATOR;
     dirent->type = FSNODE_TYPE_DIR;
     dirent->permissions = VFS_PERM_UGORWX;
-    dirent->size = fs->root_dir_clusters * fs->bytes_per_cluster;   /* FIXME - 32-bit limit!! */
+    dirent->size = fs->root_dir_clusters * fs->bytes_per_cluster;
     dirent->first_node = FAT_ROOT_NODE;
-
-    /* TODO: fill in ctime, mtime, atime? */
 
     return SUCCESS;
 }
