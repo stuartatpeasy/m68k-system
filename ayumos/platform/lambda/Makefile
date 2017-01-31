@@ -1,3 +1,12 @@
+# Makefile for the lambda platform port of ayumos
+#
+# Lambda is a single-board computer with a MC68010 CPU, dual RS232 ports (via a MC68681), an
+# ATA interface, a DS17485 RTC and a buzzer.  It has four expansion slots, and supports up to 8MB
+# of static RAM.  The bottom 256KB of installed RAM is restricted to supervisor-mode accesses, as
+# are the expansion slots.
+#
+# Stuart Wallace <stuartw@atom.net>, 2011-2017.
+#
 SRC_ROOT=../..
 
 include $(SRC_ROOT)/global.mk
@@ -10,25 +19,31 @@ CSOURCES := device.c dfu.c lambda.c
 
 ASMSOURCES := startup.S
 
-OBJECTS := $(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
-
 DEPDIR := .deps
-$(shell mkdir -p $(DEPDIR) >/dev/null)
+OBJDIR := .obj
+
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
-COMPILE.S = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+#OBJECTS := $(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
+OBJECTS := $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(CSOURCES)) $(patsubst %.S,%.o,$(ASMSOURCES)))
 
-%.o : %.c $(DEPDIR)/%.d
-	$(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o$@ $<
+#COMPILE.S = $(CC) $(DEPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c
 
-%.o : %.S $(DEPDIR)/%.d
-	$(CC) -o$@ $<
-#	$(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -o$@ $<
+$(OBJDIR)/%.o : %.c $(DEPDIR)/%.d
+	@mkdir -p $(dir $@)
+	@echo "(TARGETCC) $<"
+	@$(CC) $(DEPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c -o$@ $<
+
+$(OBJDIR)/%.o : %.S $(DEPDIR)/%.d
+	@mkdir -p $(dir $@)
+	@echo "(TARGETAS) $<"
+	@$(CC) $(DEPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c -o$@ $<
 
 $(DEPDIR)/%.d:
 	@mkdir -p $(dir $@)
 
 .PRECIOUS: $(DEPDIR)/%.d
+.PRECIOUS: $(OBJDIR)/%.o
 
 all: $(LIBNAME)
 
@@ -39,4 +54,4 @@ $(LIBNAME): $(OBJECTS)
 
 clean:
 	rm -f $(LIBNAME) $(OBJECTS)
-	rm -rf $(DEPDIR)
+	rm -rf $(DEPDIR) $(OBJDIR)

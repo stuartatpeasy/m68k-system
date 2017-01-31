@@ -47,11 +47,13 @@ OBJECTS := $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(CSOURCES)) $(patsubst %.S
 
 $(OBJDIR)/%.o : %.c $(DEPDIR)/%.d
 	@mkdir -p $(dir $@)
-	$(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o$@ $<
+	@echo "(TARGETCC) $<"
+	@$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
 
 $(OBJDIR)/%.o : %.S $(DEPDIR)/%.d
 	@mkdir -p $(dir $@)
-	$(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o$@ $<
+	@echo "(TARGETAS) $<"
+	@$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
 
 $(DEPDIR)/%.d:
 	@mkdir -p $(dir $@)

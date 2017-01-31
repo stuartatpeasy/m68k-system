@@ -54,5 +54,5 @@ SECTIONS
 
 ENTRY(_main)
 
-STARTUP(platform/lambda/startup.o)
+STARTUP(platform/lambda/.obj/startup.o)
 
