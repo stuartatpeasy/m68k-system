@@ -21,16 +21,16 @@
 s32 fat_init();
 s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
-s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
+s32 fat_get_root_node(vfs_t *vfs, vfs_node_t *node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8* const name);
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8* const name);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 
-s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer);
-s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent);
-s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node);
-s32 fat_find_free_node(vfs_t *vfs, u32 *node);
+s32 fat_read_block(vfs_t *vfs, u32 block, void *buffer);
+s32 fat_create_node(vfs_t *vfs, u32 parent_block, vfs_node_t *node);
+s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node);
+s32 fat_find_free_block(vfs_t *vfs, u32 *node);
 s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
 u8 fat_lfn_checksum(u8 *short_name);
 
@@ -47,7 +47,7 @@ vfs_driver_t g_fat_ops =
     .init = fat_init,
     .mount = fat_mount,
     .umount = fat_umount,
-    .get_root_dirent = fat_get_root_dirent,
+    .get_root_node = fat_get_root_node,
     .open_dir = fat_open_dir,
     .read_dir = fat_read_dir,
     .close_dir = fat_close_dir,
@@ -104,7 +104,7 @@ s32 fat_mount(vfs_t *vfs)
     }
 
     /* Precalculate some useful figures.  TODO: maybe some validation on these numbers? */
-    root_dir_sectors = ((LE2N16(bpb.root_entry_count) * sizeof(struct fat_dirent))
+    root_dir_sectors = ((LE2N16(bpb.root_entry_count) * sizeof(fat_node_t))
                         + (BLOCK_SIZE - 1)) >> LOG_BLOCK_SIZE;
 
     fs->sectors_per_cluster   = bpb.sectors_per_cluster;
@@ -131,7 +131,7 @@ s32 fat_mount(vfs_t *vfs)
     fs->root_dir_clusters     = root_dir_sectors / fs->sectors_per_cluster;
 
     vfs->data = fs;
-    vfs->root_node = FAT_ROOT_NODE;
+    vfs->root_block = FAT_ROOT_BLOCK;
 
     return SUCCESS;
 }
@@ -151,14 +151,14 @@ s32 fat_umount(vfs_t *vfs)
 
 
 /*
-    fat_read_node() - read cluster "node" into "buffer"
+    fat_read_node() - read cluster <block> into "buffer"
 */
-s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer)
+s32 fat_read_block(vfs_t *vfs, u32 block, void *buffer)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
 
     return block_read_multi(vfs->dev,
-                            ((node - 2) * fs->sectors_per_cluster) + fs->first_data_sector,
+                            ((block - 2) * fs->sectors_per_cluster) + fs->first_data_sector,
                             fs->sectors_per_cluster, buffer);
 }
 
@@ -166,18 +166,18 @@ s32 fat_read_node(vfs_t *vfs, u32 node, void *buffer)
 /*
     fat_get_next_node() - given a node, find the next node in the chain
 */
-s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
+s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)];
 
-    if((node - FAT_ROOT_NODE) < fs->root_dir_clusters)
+    if((node - FAT_ROOT_BLOCK) < fs->root_dir_clusters)
     {
         /*
             This node is within the root directory area.  The next node is node+1, unless we have
             reached the end of the root dir nodes.
         */
-        if(++*next_node == (fs->root_dir_clusters - FAT_ROOT_NODE))
+        if(++*next_node == (fs->root_dir_clusters - FAT_ROOT_BLOCK))
             *next_node = FAT_CHAIN_TERMINATOR;
     }
     else if(FAT_CHAIN_END(node))
@@ -209,35 +209,35 @@ s32 fat_get_next_node(vfs_t *vfs, u32 node, u32 *next_node)
 
 
 /*
-    fat_get_root_dirent() - populate a vfs_dirent_t with details of the root directory
+    fat_get_root_node() - populate a vfs_node_t with details of the root directory
 */
-s32 fat_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
+s32 fat_get_root_node(vfs_t *vfs, vfs_node_t *node)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
 
-    /* Zero out the dirent struct - that way we only have to set nonzero fields */
-    bzero(dirent, sizeof(vfs_dirent_t));
+    /* Zero out the node struct - that way we only have to set nonzero fields */
+    bzero(node, sizeof(vfs_node_t));
 
     /*
         Note: FAT does not store ctime/mtime/atime for the whole fs, so they are left as zeroes in
-        the root dirent.  UID and GID are also not stored (or applicable), so these fields are also
+        the root node.  UID and GID are also not stored (or applicable), so these fields are also
         left as zero.
     */
-    dirent->vfs = vfs;
-    dirent->name[0] = DIR_SEPARATOR;
-    dirent->type = FSNODE_TYPE_DIR;
-    dirent->permissions = VFS_PERM_UGORWX;
-    dirent->size = fs->root_dir_clusters * fs->bytes_per_cluster;
-    dirent->first_node = FAT_ROOT_NODE;
+    node->vfs = vfs;
+    node->name[0] = DIR_SEPARATOR;
+    node->type = FSNODE_TYPE_DIR;
+    node->permissions = VFS_PERM_UGORWX;
+    node->size = fs->root_dir_clusters * fs->bytes_per_cluster;
+    node->first_block = FAT_ROOT_BLOCK;
 
     return SUCCESS;
 }
 
 
 /*
-    fat_open_dir() - prepare to iterate over the directory at node
+    fat_open_dir() - prepare to iterate over the directory at <block>
 */
-s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
+s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
 {
     fat_dir_ctx_t *dir_ctx;
     u32 bytes_per_cluster;
@@ -248,9 +248,9 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     if(!dir_ctx)
         return ENOMEM;
 
-    /* Allocate space within the directory context to hold a node */
+    /* Allocate space within the directory context to hold a block */
     bytes_per_cluster = ((fat_fs_t *) vfs->data)->bytes_per_cluster;
-    dir_ctx->buffer = (fat_dirent_t *) kmalloc(bytes_per_cluster);
+    dir_ctx->buffer = (fat_node_t *) kmalloc(bytes_per_cluster);
     if(!dir_ctx->buffer)
     {
         kfree(dir_ctx);
@@ -258,7 +258,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     }
 
     /* Read the cluster into dir_ctx->buffer */
-    ret = fat_read_node(vfs, node, dir_ctx->buffer);
+    ret = fat_read_block(vfs, block, dir_ctx->buffer);
     if(ret != SUCCESS)
     {
         kfree(dir_ctx->buffer);
@@ -267,9 +267,9 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
     }
 
     dir_ctx->buffer_end = ((void *) dir_ctx->buffer) + bytes_per_cluster;
-    dir_ctx->node = node;
-    dir_ctx->de = dir_ctx->buffer;   /* Point de (addr of current dirent) at start of node buffer */
-    dir_ctx->is_root_dir = (node == FAT_ROOT_NODE);
+    dir_ctx->block = block;
+    dir_ctx->de = dir_ctx->buffer;   /* Point de (addr of current node) at start of node buffer */          /////////////////////////////////////////////////////
+    dir_ctx->is_root_dir = (block== FAT_ROOT_BLOCK);
 
     *ctx = dir_ctx;
 
@@ -278,16 +278,16 @@ s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx)
 
 
 /*
-    fat_read_dir() - if name is NULL, read the next entry from a directory and populate dirent with
-    its details.  If name is non-NULL, search for an entry matching name and populate the dirent.
+    fat_read_dir() - if name is NULL, read the next entry from a directory and populate node with
+    its details.  If name is non-NULL, search for an entry matching name and populate the node.
 */
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
+s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8 * const name)
 {
     fat_dir_ctx_t *dir_ctx = (fat_dir_ctx_t *) ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];
     s32 lfn_len, ret;
 
-    while(!FAT_CHAIN_END(dir_ctx->node))
+    while(!FAT_CHAIN_END(dir_ctx->block))
     {
         /* Read the next entry from the node */
         for(lfn_len = 0; dir_ctx->de < dir_ctx->buffer_end; ++dir_ctx->de)
@@ -299,7 +299,7 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
             else if(dir_ctx->de->attribs == FAT_FILEATTRIB_LFN)
             {
                 /* This is a long filename component */
-                const fat_lfn_dirent_t * const lde = (const fat_lfn_dirent_t *) dir_ctx->de;
+                const fat_lfn_node_t * const lde = (const fat_lfn_node_t *) dir_ctx->de;
                 u16 chars[FAT_LFN_PART_TOTAL_LEN];
                 s32 i, j, offset;
 
@@ -366,34 +366,34 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
 
                 /*
                     At this point we have a complete directory entry, with a filename in lfn.  If
-                    the "name" arg is NULL, populate a dirent and return it; otherwise, compare the
-                    entry's name with "name" (case-insensitive, because FAT) and return a dirent if
+                    the "name" arg is NULL, populate a node and return it; otherwise, compare the
+                    entry's name with "name" (case-insensitive, because FAT) and return a node if
                     there is a match.  If there is no match, continue searching the directory.
                 */
                 if((name == NULL) || !strcasecmp(name, lfn))
                 {
                     /*
-                        Populate the supplied dirent structure.  If dirent is NULL, the caller was
-                        checking whether or not the dirent exists, and doesn't care about any
-                        details beyond that.
+                        Populate the supplied node structure.  If node is NULL, the caller was
+                        checking whether or not the node exists, and doesn't care about any details
+                        beyond that.
                     */
-                    if(dirent != NULL)
+                    if(node != NULL)
                     {
                         ku16 attribs = dir_ctx->de->attribs;
                         u16 flags = 0;
 
-                        dirent->vfs = vfs;
+                        node->vfs = vfs;
 
-                        dirent->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
-                        dirent->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
+                        node->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
+                        node->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
                                                                     LE2N16(dir_ctx->de->ctime));
-                        dirent->mtime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->mdate),
+                        node->mtime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->mdate),
                                                                     LE2N16(dir_ctx->de->mtime));
 
-                        dirent->first_node = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
+                        node->first_block = (LE2N16(dir_ctx->de->first_cluster_high) << 16)
                                                 | LE2N16(dir_ctx->de->first_cluster_low);
 
-                        dirent->type = (attribs & FAT_FILEATTRIB_DIRECTORY) ?
+                        node->type = (attribs & FAT_FILEATTRIB_DIRECTORY) ?
                                             FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
 
                         if(attribs & FAT_FILEATTRIB_HIDDEN)
@@ -403,22 +403,22 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
                         if(attribs & FAT_FILEATTRIB_ARCHIVE)
                             flags |= VFS_FLAG_ARCHIVE;
 
-                        dirent->flags = flags;
+                        node->flags = flags;
 
-                        strcpy(dirent->name, lfn);
-                        dirent->size = LE2N32(dir_ctx->de->size);
+                        strcpy(node->name, lfn);
+                        node->size = LE2N32(dir_ctx->de->size);
 
                         /*
                             The FAT fs does not conform to the Unix file-permissions system, so we
                             set some defaults here: rwxrwxrwx for writeable files, and r-xr-xr-x
                             for read-only files.
                         */
-                        dirent->permissions = (attribs & FAT_FILEATTRIB_READ_ONLY) ?
+                        node->permissions = (attribs & FAT_FILEATTRIB_READ_ONLY) ?
                                                 VFS_PERM_UGORX : VFS_PERM_UGORWX;
 
                         /* The FAT fs has no concept of file ownership */
-                        dirent->gid = 0;
-                        dirent->uid = 0;
+                        node->gid = 0;
+                        node->uid = 0;
                     }
 
                     ++dir_ctx->de;
@@ -431,14 +431,14 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
 
         /* Reached the end of the node without finding a complete entry. */
         /* Find the next node in the chain */
-        ret = fat_get_next_node(vfs, dir_ctx->node, &dir_ctx->node);
+        ret = fat_get_next_block(vfs, dir_ctx->block, &dir_ctx->block);
         if(ret != SUCCESS)
             return ret;
 
-        if(!FAT_CHAIN_END(dir_ctx->node))
+        if(!FAT_CHAIN_END(dir_ctx->block))
         {
             /* Read the next cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
-            ret = fat_read_node(vfs, dir_ctx->node, dir_ctx->buffer);
+            ret = fat_read_block(vfs, dir_ctx->block, dir_ctx->buffer);
             if(ret != SUCCESS)
                 return ret;
         }
@@ -466,24 +466,24 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx)
 
     FIXME: we mustn't allow this fn to extend the root directory, for some reason
 */
-s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
+s32 fat_create_node(vfs_t *vfs, u32 parent_block, vfs_node_t *node)
 {
     fat_dir_ctx_t *dir_ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];
     s32 lfn_len, ret;
 
-    /* Open parent node */      /* TODO - remove ref to parent_node */
-    if((ret = fat_open_dir(vfs, parent_node, (void **) &dir_ctx)) != SUCCESS)
+    /* Open parent node */      /* TODO - remove ref to parent_block */
+    if((ret = fat_open_dir(vfs, parent_block, (void **) &dir_ctx)) != SUCCESS)
         return ret;
 
     /*
         Scan the directory, looking for either an entry with a matching name (and fail if one is
         found) or the end of the directory entries.
     */
-    while(!FAT_CHAIN_END(dir_ctx->node))
+    while(!FAT_CHAIN_END(dir_ctx->block))
     {
         /* Read the cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
-        ret = fat_read_node(vfs, dir_ctx->node, dir_ctx->buffer);
+        ret = fat_read_block(vfs, dir_ctx->block, dir_ctx->buffer);
         if(ret != SUCCESS)
             return ret;
 
@@ -495,10 +495,10 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
                 /* Found the end of the entries in this directory */
                 /* Calculate the amount of space needed for the new entry */
                 ku32 bytes_needed =
-                    (sizeof(fat_lfn_dirent_t) *
-                        ((strlen(dirent->name) + (FAT_LFN_PART_TOTAL_LEN - 1)) /
+                    (sizeof(fat_lfn_node_t) *
+                        ((strlen(node->name) + (FAT_LFN_PART_TOTAL_LEN - 1)) /
                             FAT_LFN_PART_TOTAL_LEN)) +
-                    sizeof(fat_dirent_t);
+                    sizeof(fat_node_t);
 
                 /* Is there enough space in this cluster? */
                 if(bytes_needed > (u32) (dir_ctx->buffer_end - dir_ctx->de))
@@ -514,13 +514,13 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
                 /*
                     TODO
                         append LFN entries for new node
-                        append short-filename entry, including other dirent data
-                        type(new_dirent)==dir?
+                        append short-filename entry, including other node data
+                        type(new_node)==dir?
                             create new empty dir structure (allocate one cluster, zero it)
                             set size=0
                             create "." and ".." entries
                             ...more here
-                        type(new_dirent)==file?
+                        type(new_node)==file?
                             set size=0
                 */
             }
@@ -529,7 +529,7 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
             else if(dir_ctx->de->attribs == FAT_FILEATTRIB_LFN)
             {
                 /* This is a long filename component */
-                const fat_lfn_dirent_t * const lde = (const fat_lfn_dirent_t *) dir_ctx->de;
+                const fat_lfn_node_t * const lde = (const fat_lfn_node_t *) dir_ctx->de;
                 u16 chars[FAT_LFN_PART_TOTAL_LEN];
                 s32 i, j, offset;
 
@@ -597,9 +597,9 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
 
                 /*
                     At this point we have a complete directory entry, with a filename in lfn.  If
-                    its name matches dirent->name (i.e. the name requested for the new node), fail.
+                    its name matches node->name (i.e. the name requested for the new node), fail.
                 */
-                if(!strcasecmp(dirent->name, lfn))
+                if(!strcasecmp(node->name, lfn))
                 {
                     fat_close_dir(vfs, dir_ctx);
                     return EEXIST;
@@ -607,9 +607,9 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_node, vfs_dirent_t *dirent)
             }
         }
 
-        /* Reached the end of the node without finding a complete entry. */
-        /* Find the next node in the chain */
-        ret = fat_get_next_node(vfs, dir_ctx->node, &dir_ctx->node);
+        /* Reached the end of the block without finding a complete entry. */
+        /* Find the next block in the chain */
+        ret = fat_get_next_block(vfs, dir_ctx->block, &dir_ctx->block);
         if(ret != SUCCESS)
         {
             fat_close_dir(vfs, dir_ctx);
@@ -637,7 +637,7 @@ s32 fat_stat(vfs_t *vfs, fs_stat_t *st)
 /*
     fat_find_free_node() - find the first free node in the FAT.
 */
-s32 fat_find_free_node(vfs_t *vfs, u32 *node)
+s32 fat_find_free_block(vfs_t *vfs, u32 *node)
 {
     u32 u;
     u16 sector[BLOCK_SIZE >> 1];

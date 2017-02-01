@@ -72,7 +72,8 @@ all: $(APPNAME)
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SOURCES)))
 
 $(APPNAME): $(OBJECTS) $(TOOLS)
-	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
+	@echo "=== building platform $(PLATFORM) ==="
+	@$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
 	truncate --size %4 $(APPNAME).rom

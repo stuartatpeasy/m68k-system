@@ -53,7 +53,7 @@ struct fat_bpb_block
 #define FAT_FILENAME_LEN        (8)     /* Note: long filenames are dealt with separately */
 #define FAT_FILEEXT_LEN         (3)     /* Note: long filenames are dealt with separately */
 
-struct fat_dirent
+struct fat_node
 {
     s8  file_name[11];
     u8  attribs;
@@ -69,7 +69,7 @@ struct fat_dirent
     u32 size;
 } __attribute__((packed));  /* 32 bytes */
 
-typedef struct fat_dirent fat_dirent_t;
+typedef struct fat_node fat_node_t;
 
 
 /*
@@ -80,7 +80,7 @@ typedef struct fat_dirent fat_dirent_t;
 #define FAT_LFN_PART3_LEN       (2)
 #define FAT_LFN_PART_TOTAL_LEN  (FAT_LFN_PART1_LEN + FAT_LFN_PART2_LEN + FAT_LFN_PART3_LEN)
 
-struct fat_lfn_dirent
+struct fat_lfn_node
 {
     u8 order;
     u16 name_part1[FAT_LFN_PART1_LEN];      /* UTF-16 */
@@ -92,7 +92,7 @@ struct fat_lfn_dirent
     u16 name_part3[FAT_LFN_PART3_LEN];      /* UTF-16 */
 } __attribute__((packed));
 
-typedef struct fat_lfn_dirent fat_lfn_dirent_t;
+typedef struct fat_lfn_node fat_lfn_node_t;
 
 
 /*
@@ -119,10 +119,10 @@ typedef struct fat_fs fat_fs_t;
 
 struct fat_dir_ctx
 {
-    fat_dirent_t *buffer;
-    fat_dirent_t *buffer_end;
-    u32 node;
-    fat_dirent_t *de;
+    fat_node_t *buffer;
+    fat_node_t *buffer_end;
+    u32 block;
+    fat_node_t *de;
     s8 is_root_dir;
 };
 
@@ -131,7 +131,7 @@ typedef struct fat_dir_ctx fat_dir_ctx_t;
 
 typedef u16 fat16_cluster_id;
 
-#define FAT_ROOT_NODE               (0)             /* Only valid in FAT12/FAT16 */
+#define FAT_ROOT_BLOCK              (0)             /* Only valid in FAT12/FAT16 */
 
 /* Constants used during superblock validation */
 #define FAT_PARTITION_SIG           (0xaa55)

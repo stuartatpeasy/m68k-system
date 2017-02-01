@@ -14,9 +14,9 @@
 s32 romfs_init();
 s32 romfs_mount(vfs_t *vfs);
 s32 romfs_umount(vfs_t *vfs);
-s32 romfs_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
+s32 romfs_get_root_node(vfs_t *vfs, vfs_node_t *node);
 s32 romfs_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 romfs_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8* const name);
+s32 romfs_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8* const name);
 s32 romfs_close_dir(vfs_t *vfs, void *ctx);
 s32 romfs_stat(vfs_t *vfs, fs_stat_t *st);
 
@@ -26,7 +26,7 @@ vfs_driver_t g_romfs_ops =
     .init = romfs_init,
     .mount = romfs_mount,
     .umount = romfs_umount,
-    .get_root_dirent = romfs_get_root_dirent,
+    .get_root_node = romfs_get_root_node,
     .open_dir = romfs_open_dir,
     .read_dir = romfs_read_dir,
     .close_dir = romfs_close_dir,
@@ -55,10 +55,10 @@ s32 romfs_umount(vfs_t *vfs)
 }
 
 
-s32 romfs_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
+s32 romfs_get_root_node(vfs_t *vfs, vfs_node_t *node)
 {
     UNUSED(vfs);
-    UNUSED(dirent);
+    UNUSED(node);
     return ENOSYS;
 }
 
@@ -72,11 +72,11 @@ s32 romfs_open_dir(vfs_t *vfs, u32 node, void **ctx)
 }
 
 
-s32 romfs_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name)
+s32 romfs_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8 * const name)
 {
     UNUSED(vfs);
     UNUSED(ctx);
-    UNUSED(dirent);
+    UNUSED(node);
     UNUSED(name);
     return ENOSYS;
 }

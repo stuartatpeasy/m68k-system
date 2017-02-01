@@ -33,7 +33,7 @@ typedef enum fsnode_type
     FSNODE_TYPE_FILE
 } fsnode_type_t;
 
-typedef struct vfs_dirent
+typedef struct vfs_node
 {
     vfs_t           *vfs;
     fsnode_type_t   type;           /* dir, file, etc. */
@@ -46,9 +46,9 @@ typedef struct vfs_dirent
     time_t          ctime;
     time_t          mtime;
     time_t          atime;
-    time_t          first_node;
+    u32             first_block;
     /* how to link to clusters? */
-} vfs_dirent_t;
+} vfs_node_t;
 
 typedef struct vfs_driver
 {
@@ -56,9 +56,9 @@ typedef struct vfs_driver
     s32 (*init)();
     s32 (*mount)(vfs_t *vfs);
     s32 (*umount)(vfs_t *vfs);
-    s32 (*get_root_dirent)(vfs_t *vfs, vfs_dirent_t *dirent);
-    s32 (*open_dir)(vfs_t *vfs, u32 node, void **ctx);
-    s32 (*read_dir)(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name);
+    s32 (*get_root_node)(vfs_t *vfs, vfs_node_t *node);
+    s32 (*open_dir)(vfs_t *vfs, u32 block, void **ctx);
+    s32 (*read_dir)(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8 * const name);
     s32 (*close_dir)(vfs_t *vfs, void *ctx);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
@@ -75,7 +75,7 @@ struct vfs
 {
     vfs_driver_t *driver;
     dev_t *dev;
-    u32 root_node;
+    u32 root_block;
     void *data;         /* fs-specific stuff */
 };
 
@@ -124,19 +124,9 @@ struct vfs
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
 s32 vfs_open_dir(ks8 *path, vfs_dir_ctx_t *ctx);
-s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_dirent_t *dirent, ks8 *const name);
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_node_t *node, ks8 *const name);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
-s32 vfs_lookup(ks8 *path, vfs_dirent_t *ent);
-s8 *vfs_dirent_perm_str(const vfs_dirent_t * const dirent, s8 *str);
-
-/* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
-s32 vfs_default_mount(vfs_t *vfs);
-s32 vfs_default_umount(vfs_t *vfs);
-s32 vfs_default_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
-s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, ks8 * const name);
-s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
-s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
+s32 vfs_lookup(ks8 *path, vfs_node_t *ent);
+s8 *vfs_node_perm_str(const vfs_node_t * const node, s8 *str);
 
 #endif
-

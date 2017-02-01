@@ -196,15 +196,6 @@ typedef u32 inum_t;
 
 vfs_driver_t g_ext2_ops;
 
-s32 ext2_init();
-s32 ext2_mount(vfs_t *vfs);
-s32 ext2_umount(vfs_t *vfs);
-s32 ext2_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent);
-s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8* const name);
-s32 ext2_close_dir(vfs_t *vfs, void *ctx);
-s32 ext2_stat(vfs_t *vfs, fs_stat_t *st);
-
 u32 block_group_contains_superblock(const ext2_fs_t *fs, ku32 block_group);
 u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf);
 u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode);

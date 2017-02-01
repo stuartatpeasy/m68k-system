@@ -627,7 +627,7 @@ MONITOR_CMD_HANDLER(id)
 #ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(ls)
 {
-    vfs_dirent_t dirent;
+    vfs_node_t node;
     char perms[11];
 
     perms[10] = '\0';
@@ -637,14 +637,14 @@ MONITOR_CMD_HANDLER(ls)
     {
         s32 ret;
 
-        ret = vfs_lookup(args[0], &dirent);
+        ret = vfs_lookup(args[0], &node);
         if(ret != SUCCESS)
         {
             puts(kstrerror(ret));
             return SUCCESS;
         }
 
-        if(dirent.type == FSNODE_TYPE_DIR)
+        if(node.type == FSNODE_TYPE_DIR)
         {
             /* Iterate directory */
             vfs_dir_ctx_t ctx;
@@ -656,10 +656,10 @@ MONITOR_CMD_HANDLER(ls)
                 return SUCCESS;
             }
 
-            while((ret = vfs_read_dir(&ctx, &dirent, NULL)) != ENOENT)
+            while((ret = vfs_read_dir(&ctx, &node, NULL)) != ENOENT)
             {
-                printf("%9d %s %9d %s\n", dirent.first_node, vfs_dirent_perm_str(&dirent, perms),
-                       dirent.size, dirent.name);
+                printf("%9d %s %9d %s\n", node.first_block, vfs_node_perm_str(&node, perms),
+                       node.size, node.name);
             }
 
             if(ret != ENOENT)
@@ -670,8 +670,8 @@ MONITOR_CMD_HANDLER(ls)
         else
         {
             /* Print single file */
-            printf("%9d %s %9d %s\n", dirent.first_node, vfs_dirent_perm_str(&dirent, perms),
-                   dirent.size, dirent.name);
+            printf("%9d %s %9d %s\n", node.first_block, vfs_node_perm_str(&node, perms),
+                   node.size, node.name);
         }
     }
     else

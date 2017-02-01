@@ -42,13 +42,23 @@
 #include <klibc/include/strings.h>
 
 
+s32 ext2_init();
+s32 ext2_mount(vfs_t *vfs);
+s32 ext2_umount(vfs_t *vfs);
+s32 ext2_get_root_node(vfs_t *vfs, vfs_node_t *node);
+s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx);
+s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, const s8* const name);
+s32 ext2_close_dir(vfs_t *vfs, void *ctx);
+s32 ext2_stat(vfs_t *vfs, fs_stat_t *st);
+
+
 vfs_driver_t g_ext2_ops =
 {
     .name = "ext2",
     .init = ext2_init,
     .mount = ext2_mount,
     .umount = ext2_umount,
-    .get_root_dirent = ext2_get_root_dirent,
+    .get_root_node = ext2_get_root_node,
     .open_dir = ext2_open_dir,
     .read_dir = ext2_read_dir,
     .close_dir = ext2_close_dir,
@@ -187,12 +197,12 @@ s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx)
 }
 
 
-s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_dirent_t *dirent, const s8* const name)
+s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, const s8* const name)
 {
     /* TODO */
     UNUSED(vfs);
     UNUSED(ctx);
-    UNUSED(dirent);
+    UNUSED(node);
     UNUSED(name);
 
     return SUCCESS;
@@ -603,24 +613,21 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 }
 
 
-s32 ext2_get_root_dirent(vfs_t *vfs, vfs_dirent_t *dirent)
+s32 ext2_get_root_node(vfs_t *vfs, vfs_node_t *node)
 {
-    UNUSED(vfs);
-    UNUSED(dirent);
-
     const ext2_fs_t * const fs = (const ext2_fs_t *) vfs->data;
 
-    /* Zero out the dirent struct - that way we only have to set nonzero fields */
-    bzero(dirent, sizeof(vfs_dirent_t));
+    /* Zero out the node struct - that way we only have to set nonzero fields */
+    bzero(node, sizeof(vfs_node_t));
 
-    dirent->vfs = vfs;
-    dirent->name[0] = DIR_SEPARATOR;
-    dirent->type = FSNODE_TYPE_DIR;
-    dirent->permissions = VFS_PERM_UGORWX;      /* FIXME - read this */
+    node->vfs = vfs;
+    node->name[0] = DIR_SEPARATOR;
+    node->type = FSNODE_TYPE_DIR;
+    node->permissions = VFS_PERM_UGORWX;      /* FIXME - read this */
 
     /* FIXME - 32 bit overflow */
-    dirent->size = LE2N32(fs->sblk->s_blocks_count) << (LE2N32(fs->sblk->s_log_block_size) + 9);
-    dirent->first_node = EXT2_ROOT_INO;
+    node->size = LE2N32(fs->sblk->s_blocks_count) << (LE2N32(fs->sblk->s_log_block_size) + 9);
+    node->first_block = EXT2_ROOT_INO;
 
     return SUCCESS;
 }
