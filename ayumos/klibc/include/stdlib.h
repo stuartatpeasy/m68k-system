@@ -24,6 +24,7 @@
 void *calloc(ku32 nmemb, ku32 size);
 void free(void *ptr);
 void *malloc(u32 size);
+char *path_canonicalise(char *path);
 s32 rand();
 s32 rand32();
 void *realloc(void *ptr, u32 size);
