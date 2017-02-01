@@ -17,14 +17,15 @@
 */
 #define PRINTF_INITIAL_BUFFER_SIZE  (128)
 
-#define PF_HALF                 (0x01)
-#define PF_LONG                 (0x02)
-#define PF_LONG_LONG            (0x04)
-#define PF_LEADING_ZERO         (0x08)
-#define PF_HAVE_FIELD_WIDTH     (0x10)
-#define PF_FIELD_DOT_SEEN       (0x20)
-#define PF_NUM_OUTPUT_STARTED   (0x40)
-#define PF_NEG_FIELD_WIDTH      (0x80)
+#define PF_HALF                  (0x01)
+#define PF_HALF_HALF             (0x02)
+#define PF_LONG                  (0x04)
+#define PF_LONG_LONG             (0x08)
+#define PF_LEADING_ZERO          (0x10)
+#define PF_HAVE_FIELD_WIDTH      (0x20)
+#define PF_FIELD_DOT_SEEN        (0x40)
+#define PF_NUM_OUTPUT_STARTED    (0x80)
+#define PF_NEG_FIELD_WIDTH      (0x100)
 
 static ku32 powers_of_ten[] =
 {
@@ -64,7 +65,8 @@ static ku64 powers_of_ten_ll[] =
     10000000000000000000ULL
 };
 
-static ku16 npowers = sizeof(powers_of_ten) / sizeof(powers_of_ten[0]);
+static ku16 npowers = sizeof(powers_of_ten) / sizeof(powers_of_ten[0]),
+            npowers_ll = sizeof(powers_of_ten_ll) / sizeof(powers_of_ten_ll[0]);
 
 
 /*
@@ -218,18 +220,25 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                 ch = *++format;
             }
 
-            if(ch == 'l')
+            /* process length field */
+            for(; (ch == 'l') || (ch == 'h'); ch = *++format)
             {
-                if(flags & PF_LONG)
-                    flags |= PF_LONG_LONG;
-                else
-                    flags |= PF_LONG;
-                ch = *++format;
-            }
-            else if(ch == 'h')
-            {
-                flags |= PF_HALF;
-                ch = *++format;
+                switch(ch)
+                {
+                    case 'l':
+                        if(flags & PF_LONG)
+                            flags |= PF_LONG_LONG;
+                        else
+                            flags |= PF_LONG;
+                        break;
+
+                    case 'h':
+                        if(flags & PF_HALF)
+                            flags |= PF_HALF_HALF;
+                        else
+                            flags |= PF_HALF;
+                        break;
+                }
             }
 
             if(ch == 's')
@@ -356,7 +365,7 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                     /* Treat the arg as a long-long (64-bit) quantity */
                     u64 lu = va_arg(ap, u64);
 
-                    if((flags & PF_HAVE_FIELD_WIDTH) && !field_width && !u)
+                    if((flags & PF_HAVE_FIELD_WIDTH) && !field_width && !lu)
                     {
                         /* Explicit zero-size field and zero-value arg; silently skip. */
                     }
@@ -376,7 +385,7 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                             the width specifier if it does not allow sufficient digits.
                         */
                         for(req_digits = 0;
-                            (req_digits < npowers) && (powers_of_ten_ll[req_digits] <= lu);
+                            (req_digits < npowers_ll) && (powers_of_ten_ll[req_digits] <= lu);
                             ++req_digits)
                             ;
 
