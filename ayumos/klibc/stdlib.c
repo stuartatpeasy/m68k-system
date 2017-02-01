@@ -42,6 +42,76 @@ void *malloc(u32 size)
 
 
 /*
+    path_canonicalise() - canonicalise <path> by removing duplicate dir-separator ('/') characters,
+    and resolving references to './' and '../'.  The result is stored in <path>, and a pointer to
+    this argument is returned.  Note that <path> should contain an absolute path, to avoid
+    unusual behaviour.
+
+    Note: this is not a standard libc function.
+*/
+char *path_canonicalise(char *path)
+{
+    /* Iterate over components in path */
+    ks8 *read_start, *read_end;
+    s8 *write;
+
+    read_start = read_end = write = path;
+
+    while(*read_start)
+    {
+        /* Walk over directory-separator ('/') chars */
+        if(*read_end == '/')
+        {
+            *write++ = '/';
+            while(*++read_end == '/')
+                ;
+
+            read_start = read_end;
+        }
+
+        /* Extract path component */
+        while(*read_end && (*read_end != '/'))
+            ++read_end;
+
+        if(read_start != read_end)
+        {
+            ku32 len = read_end - read_start;
+
+            if((len == 1) && (read_start[0] == DIR_SEPARATOR))
+            {
+                /* This component is a "." - ignore it. */
+                if(write > path)
+                    --write;
+
+                read_start = read_end;
+            }
+            else if((len == 2) && (read_start[0] == DIR_SEPARATOR)
+                    && (read_start[1] == DIR_SEPARATOR))
+            {
+                /* Rewind the write pointer past the previous path component, if any */
+                write = ((write - 2) >= path) ? write - 2 : path;
+
+                while((write > path) && (*--write != '/'))
+                    ;
+
+                read_start = read_end;
+            }
+            else
+            {
+                /* Copy the component to the output string */
+                while(read_start < read_end)
+                    *write++ = *read_start++;
+            }
+        }
+    }
+
+    *write = '\0';
+
+    return path;
+}
+
+
+/*
     rand()
 */
 s32 rand()
