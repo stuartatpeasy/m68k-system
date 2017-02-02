@@ -45,52 +45,64 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
 OBJECTS := $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(CSOURCES)) $(patsubst %.S,%.o,$(ASMSOURCES)))
 
-$(OBJDIR)/%.o : %.c $(DEPDIR)/%.d
-	@mkdir -p $(dir $@)
-	@echo "(TARGETCC) $<"
-	@$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
-
-$(OBJDIR)/%.o : %.S $(DEPDIR)/%.d
-	@mkdir -p $(dir $@)
-	@echo "(TARGETAS) $<"
-	@$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
-
-$(DEPDIR)/%.d:
-	@mkdir -p $(dir $@)
-
-.PRECIOUS: $(DEPDIR)/%.d
-.PRECIOUS: $(OBJDIR)/%.o
-
 TOOLS := tools/bin/makemap
 
 LDFLAGS := -g -T $(LDSCRIPT) -nostdlib -static -L$(LIBGCCDIR) -L.
 
 LIBS := -lgcc -lplatform
 
+ROM := $(APPNAME).rom
+ROM_EVEN := $(APPNAME).E.rom
+ROM_ODD := $(APPNAME).O.rom
+
+$(OBJDIR)/%.o : %.c $(DEPDIR)/%.d
+	mkdir -p $(dir $@)
+	echo "(TARGETCC) $<"
+	$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
+
+$(OBJDIR)/%.o : %.S $(DEPDIR)/%.d
+	mkdir -p $(dir $@)
+	echo "(TARGETAS) $<"
+	$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
+
+$(DEPDIR)/%.d:
+	mkdir -p $(dir $@)
+
+.PRECIOUS: $(DEPDIR)/%.d
+.PRECIOUS: $(OBJDIR)/%.o
+
+.PHONY: all
+.PHONY: clean
+.PHONY: dfu
+
 all: $(APPNAME)
 
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SOURCES)))
 
 $(APPNAME): $(OBJECTS) $(TOOLS)
-	@echo "=== building platform $(PLATFORM) ==="
-	@$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
+	echo "=== building platform '$(PLATFORM)' ==="
+	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
+	echo "(TARGETLD) $(APPNAME)"
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
-	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(APPNAME).rom
-	truncate --size %4 $(APPNAME).rom
-	$(NM) $(APPNAME) | tools/bin/makemap >>$(APPNAME).rom
-	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(APPNAME).rom $(APPNAME).E.rom
-	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(APPNAME).rom $(APPNAME).O.rom
-	chmod -f -x $(APPNAME).E.rom $(APPNAME).O.rom $(APPNAME).rom || true
+	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(ROM)
+	truncate --size %4 $(ROM)
+	echo "(TARGETNM) $(ROM)"
+	$(NM) $(APPNAME) | tools/bin/makemap >> $(ROM)
+	echo "(TARGETOBJCOPY) $(ROM_EVEN)"
+	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(ROM) $(ROM_EVEN)
+	echo "(TARGETOBJCOPY) $(ROM_ODD)"
+	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(ROM) $(ROM_ODD)
+	chmod -f -x $(ROM_EVEN) $(ROM_ODD) $(ROM) || true
 
 $(TOOLS):
-	mkdir -p tools/bin
+	echo "=== building tools ==="
 	$(MAKE) $(MFLAGS) -Ctools
 
 dfu:
-	$(DFU) --program --baud 115200 --infile $(APPNAME).rom
+	$(DFU) --program --baud 115200 --infile $(ROM)
 
 clean:
-	rm -f $(APPNAME) $(OBJECTS) $(APPNAME).?.rom $(APPNAME).rom
+	rm -f $(APPNAME) $(OBJECTS) $(ROM) $(ROM_EVEN) $(ROM_ODD)
 	rm -rf $(DEPDIR) $(OBJDIR)
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM) clean
 	$(MAKE) $(MFLAGS) -Ctools clean

@@ -20,13 +20,17 @@ OBJECTS=$(CSOURCES:.c=.o)
 all: $(TARGET)
 
 .c.o:
+	echo "(HOSTCC) $<"
 	$(HOSTCC) $(CFLAGS) -o$@ $<
 
 $(TARGET): $(OBJECTS)
+	mkdir -p $(BINDIR)
+	echo "(LINK) $(TARGET)"
 	$(HOSTCC) -o$(TARGET) $(OBJECTS)
 
 clean:
 	rm -f $(TARGET) $(OBJECTS)
+	rmdir $(BINDIR)
 
 #
 # Dependencies below this point

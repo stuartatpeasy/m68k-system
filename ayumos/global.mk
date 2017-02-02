@@ -32,3 +32,6 @@ CFLAGS=-I. -Iklibc -Wall -Wextra -O2 -$(ARCH) -g -include buildcfg.h -ffreestand
 
 AFLAGS=-$(ARCH)
 
+ifndef VERBOSE
+.SILENT:
+endif

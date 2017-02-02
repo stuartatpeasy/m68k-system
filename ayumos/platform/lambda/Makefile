@@ -53,5 +53,5 @@ $(LIBNAME): $(OBJECTS)
 	$(AR) rcs $(LIBNAME) $(OBJECTS)
 
 clean:
-	rm -f $(LIBNAME) $(OBJECTS)
-	rm -rf $(DEPDIR) $(OBJDIR)
+	@rm -f $(LIBNAME) $(OBJECTS)
+	@rm -rf $(DEPDIR) $(OBJDIR)
