@@ -1,7 +1,7 @@
 /*
 	File-handling functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+	Part of ayumos
 
 
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015.
@@ -66,7 +66,7 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
 
 /*
     file_check_perms() - check that a user can perform the requested operation (read, write,
-    execute) on the supplied dirent.
+    execute) on the supplied node.
 */
 s32 file_check_perms(uid_t uid, const file_perm_t op, const vfs_node_t * const node)
 {

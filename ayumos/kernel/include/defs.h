@@ -27,6 +27,9 @@
 /* Directory separator character used in file paths */
 #define DIR_SEPARATOR   ('/')
 
+/* The name of the file system root directory */
+#define ROOT_DIR        ("/")
+
 /* Block device block size */
 #define BLOCK_SIZE      (512)
 #define LOG_BLOCK_SIZE  (9)

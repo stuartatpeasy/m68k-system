@@ -16,8 +16,10 @@
 #include <kernel/include/user.h>
 
 
-#define PROC_KSTACK_LEN     (2048)      /* Per-process kernel stack size        */
-#define PROC_USTACK_LEN     (2048)      /* Per-process default user stack size  */
+#define PROC_KSTACK_LEN     (2048)      /* Per-process kernel stack size                        */
+#define PROC_USTACK_LEN     (2048)      /* Per-process default user stack size                  */
+
+#define PROC_DEFAULT_WD     (NULL)      /* Default process working dir -> inherit from parent   */
 
 /*
     Process type flags
@@ -59,6 +61,7 @@ struct proc_struct
     void *ustack;   /* ptr to mem alloc'ed for user stack, i.e. bottom of stack     */
 
     void *arg;
+    s8 *cwd;        /* Current working directory */
 
 	const proc_t *parent;
 	list_t queue;
@@ -66,11 +69,13 @@ struct proc_struct
 
 
 s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img,
-                proc_entry_fn_t entry, void *arg, ku32 stack_len, ku16 flags,
+                proc_entry_fn_t entry, void *arg, ku32 stack_len, ku16 flags, ks8 *wd,
                 const proc_t * const parent, pid_t *newpid);
 
 pid_t proc_get_pid();
 proc_t *proc_current();
+ks8 *proc_getcwd(const proc_t *proc);
+s32 proc_setcwd(proc_t *proc, ks8 *dir);
 void proc_destroy(s32 exit_code);
 void proc_sleep();
 void proc_sleep_until(s32 when);

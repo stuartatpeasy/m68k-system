@@ -3,7 +3,7 @@
 /*
 	File-handling functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+	Part of ayumos
 
 
 	(c) Stuart Wallace <stuartw@atom.net>, August 2015.

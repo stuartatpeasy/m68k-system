@@ -8,10 +8,12 @@
 */
 
 #include <kernel/include/process.h>
+#include <kernel/include/fs/path.h>
 #include <kernel/include/limits.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/preempt.h>
 #include <kernel/include/sched.h>
+#include <klibc/include/stdlib.h>
 #include <klibc/include/string.h>
 
 
@@ -28,12 +30,16 @@ extern time_t g_current_timestamp;
     proc_create() - create a new process and add it to the run queue.
 */
 s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img,
-                proc_entry_fn_t entry, void *arg, ku32 stack_len, ku16 flags,
+                proc_entry_fn_t entry, void *arg, ku32 stack_len, ku16 flags, ks8 *wd,
                 const proc_t * const parent, pid_t *newpid)
 {
     proc_t *p;
     u32 *ustack_top, *kstack_top;
     s32 ret;
+
+    /* Validate supplied working directory, if any */
+    if((wd != PROC_DEFAULT_WD) && !path_is_absolute(wd))
+        return EINVAL;
 
     p = CHECKED_KCALLOC(1, sizeof(proc_t));
 
@@ -68,6 +74,37 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
         return ENOMEM;
     }
 
+    /* Set up the initial working directory for the new process */
+    if(wd == PROC_DEFAULT_WD)
+    {
+        /*
+            By default, a process inherits its working directory from its parent.  If the process
+            has no parent, the default working directory is the root directory.
+        */
+        p->cwd = strdup((parent == NULL) ? ROOT_DIR : proc_getcwd(parent));
+
+    }
+    else
+    {
+        s8 *wd_canon = strdup(wd);
+
+        if(wd_canon)
+        {
+            path_canonicalise(wd_canon);
+            p->cwd = strdup(wd_canon);
+            kfree(wd_canon);
+        }
+    }
+
+    /* If p->cwd is not set at this point, we ran out of memory doing a strdup() above */
+    if(!p->cwd)
+    {
+        ufree(p->ustack);
+        kfree(p->kstack);
+        kfree(p);
+        return ENOMEM;
+    }
+
     ustack_top = (u32 *) ((u8 *) p->ustack + stack_len);
     kstack_top = (u32 *) ((u8 *) p->kstack + PROC_KSTACK_LEN);
 
@@ -89,6 +126,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     ret = cpu_proc_init(&p->regs, entry, arg, ustack_top, kstack_top, flags);
     if(ret != SUCCESS)
     {
+        kfree(p->cwd);
         kfree(p->kstack);
         ufree(p->ustack);
         kfree(p);
@@ -126,6 +164,36 @@ pid_t proc_get_pid()
 proc_t *proc_current()
 {
     return g_current_proc;
+}
+
+
+/*
+    proc_getcwd() - get the current working directory of a process.  If <proc> is NULL, return the
+    cwd of the currently-executing process.  Otherwise, return the cwd of the specified process.
+*/
+ks8 *proc_getcwd(const proc_t *proc)
+{
+    return (proc == NULL) ? g_current_proc->cwd : proc->cwd;
+}
+
+
+/*
+    proc_setcwd() - set the current working directory of a process.  If <proc> is NULL, set the cwd
+    for the currently-executing process.
+*/
+s32 proc_setcwd(proc_t *proc, ks8 *dir)
+{
+    s8 *new_cwd = strdup((dir == PROC_DEFAULT_WD) ? ROOT_DIR : dir);
+    if(!new_cwd)
+        return ENOMEM;
+
+    if(proc == NULL)
+        proc = proc_current();
+
+    kfree(proc->cwd);
+    proc->cwd = new_cwd;
+
+    return SUCCESS;
 }
 
 

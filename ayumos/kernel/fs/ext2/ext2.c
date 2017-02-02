@@ -557,7 +557,7 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 			u8 found = 0;
 			for(block_index = 0; !found;)
 			{
-				const ext2_dirent_t *d_ent;
+				const ext2_node_t *d_ent;
 
 				ret = ext2_inode_get_block(vfs, &inode, block_index++, &data_block);
 				if(ret)
@@ -579,9 +579,9 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 				}
 
 				/* search the directory for the path component */
-				for(d_ent = (ext2_dirent_t *) buf;
+				for(d_ent = (ext2_node_t *) buf;
 						(u8 *) d_ent < (buf + (1024 << fs->sblk->s_log_block_size));
-						d_ent = (ext2_dirent_t *) ((u8 *) d_ent + d_ent->rec_len))
+						d_ent = (ext2_node_t *) ((u8 *) d_ent + d_ent->rec_len))
 				{
 					if(!memcmp(d_ent->name, name, len) && !d_ent->name[len])
 					{

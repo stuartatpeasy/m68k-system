@@ -208,19 +208,19 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 */
 s32 vfs_open_dir(ks8 *path, vfs_dir_ctx_t *ctx)
 {
-    vfs_node_t dirent;
+    vfs_node_t node;
     vfs_t *vfs;
     s32 ret;
 
-    ret = vfs_lookup(path, &dirent);
+    ret = vfs_lookup(path, &node);
     if(ret != SUCCESS)
         return ret;
 
-    if(dirent.type != FSNODE_TYPE_DIR)
+    if(node.type != FSNODE_TYPE_DIR)
         return ENOTDIR;
 
-    vfs = dirent.vfs;
-    ret = vfs->driver->open_dir(vfs, dirent.first_block, &(ctx->ctx));
+    vfs = node.vfs;
+    ret = vfs->driver->open_dir(vfs, node.first_block, &(ctx->ctx));
     if(ret != SUCCESS)
         return ret;
 
@@ -233,9 +233,9 @@ s32 vfs_open_dir(ks8 *path, vfs_dir_ctx_t *ctx)
 /*
     vfs_read_dir() - read the next item from a directory "opened" by vfs_open_dir().
 */
-s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_node_t *dirent, ks8 * const name)
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_node_t *node, ks8 * const name)
 {
-    return ctx->vfs->driver->read_dir(ctx->vfs, ctx->ctx, dirent, name);
+    return ctx->vfs->driver->read_dir(ctx->vfs, ctx->ctx, node, name);
 }
 
 
@@ -259,6 +259,11 @@ s32 vfs_lookup(ks8 * path, vfs_node_t *node)
     void *ctx;
     u32 i, block;
     s32 ret;
+
+    /*
+        validate the path: length must be [1, PATH_MAX_LEN]
+
+    */
 
     if(strlen(path) > NAME_MAX_LEN)
         return ENAMETOOLONG;

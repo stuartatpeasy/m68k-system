@@ -12,13 +12,13 @@ DRIVER_SOURCES := ds17485.c encx24j600.c mc68681.c ps2controller.c
 
 KERNEL_SOURCES := \
 	device/ata.c device/auto.c device/block.c device/device.c device/memconsole.c device/nvram.c \
-	device/partition.c fs/file.c fs/mount.c fs/vfs.c fs/ext2/ext2.c fs/fat/fat.c fs/romfs.c \
-	boot.c console.c cpu.c elf.c entry.c error.c housekeeper.c keyboard.c ksym.c preempt.c \
-	process.c sched.c semaphore.c syscall.c tick.c user.c net/address.c net/arp.c net/dhcp.c \
-	net/ethernet.c net/icmp.c net/interface.c net/ipv4.c net/net.c net/packet.c net/protocol.c \
-	net/raw.c net/route.c net/socket.c net/tcp.c net/tftp.c net/udp.c memory/buddy.c \
-	memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c util/bvec.c util/buffer.c \
-	util/checksum.c util/dump.c util/hash.c util/ktime.c util/numeric.c util/string.c
+	device/partition.c fs/file.c fs/mount.c fs/path.c fs/vfs.c fs/ext2/ext2.c \
+    fs/fat/fat.c fs/romfs.c boot.c console.c cpu.c elf.c entry.c error.c housekeeper.c keyboard.c \
+    ksym.c preempt.c process.c sched.c semaphore.c syscall.c tick.c user.c net/address.c net/arp.c \
+    net/dhcp.c net/ethernet.c net/icmp.c net/interface.c net/ipv4.c net/net.c net/packet.c \
+    net/protocol.c net/raw.c net/route.c net/socket.c net/tcp.c net/tftp.c net/udp.c \
+    memory/buddy.c memory/extents.c memory/heap.c memory/kmalloc.c memory/slab.c util/bvec.c \
+    util/buffer.c util/checksum.c util/dump.c util/hash.c util/ktime.c util/numeric.c util/string.c
 
 KLIBC_SOURCES := \
 	assert.c ctype.c errno.c printf.c stdio.c stdlib.c string.c strings.c

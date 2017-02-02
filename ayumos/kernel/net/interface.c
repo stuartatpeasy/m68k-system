@@ -97,8 +97,8 @@ s32 net_interface_add(dev_t *dev)
     net_address_print(&iface->hw_addr, buf, sizeof(buf));
     printf("net: added %s: %s\n", dev->name, buf);
 
-    return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL, NULL,
-                       NULL);
+    return proc_create(0, 0, "[net_rx]", NULL, net_receive, iface, 0, PROC_TYPE_KERNEL,
+                       PROC_DEFAULT_WD, NULL, NULL);
 }
 
 

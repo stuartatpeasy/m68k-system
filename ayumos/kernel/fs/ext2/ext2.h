@@ -169,7 +169,7 @@ struct ext2_inode
 #define EXT2_LOG_INODE_SIZE	(7)
 
 
-struct ext2_dirent
+struct ext2_node
 {
 	u32 inode;
 	u16 rec_len;
@@ -189,7 +189,7 @@ struct ext2_fs
 typedef struct ext2_superblock ext2_superblock_t;
 typedef struct ext2_bgd ext2_bgd_t;
 typedef struct ext2_inode ext2_inode_t;
-typedef struct ext2_dirent ext2_dirent_t;
+typedef struct ext2_node ext2_node_t;
 typedef struct ext2_fs ext2_fs_t;
 
 typedef u32 inum_t;
