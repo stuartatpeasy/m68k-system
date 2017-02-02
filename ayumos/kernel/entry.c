@@ -4,7 +4,7 @@
     Part of ayumos
 
 
-    (c) Stuart Wallace <stuartw@atom.net>, 2011-2015.
+    (c) Stuart Wallace <stuartw@atom.net>, 2011-2017.
 
 
     TODO - BOOT PROCESS
@@ -56,10 +56,10 @@ void _main()
 
     /* Begin platform initialisation */
     if(plat_init() != SUCCESS)
-        boot_early_fail(1);
+        boot_early_fail(BOOT_FAIL_PLATFORM_INIT);
 
     if(plat_mem_detect() != SUCCESS)    /* Detect installed RAM, initialise memory extents  */
-        boot_early_fail(2);
+        boot_early_fail(BOOT_FAIL_MEMORY_DETECT);
 
     /* Initialise kernel slabs */
     slab_init(&_ebss);                  /* Slabs sit after the .bss section */
@@ -76,7 +76,7 @@ void _main()
 
     /* Initialise device tree */
 	if(dev_init() != SUCCESS)
-        boot_early_fail(3);
+        boot_early_fail(BOOT_FAIL_DEVICE_INIT);
 
 	/*
         It's not yet possible to initialise the real (platform) console because devices haven't
@@ -85,7 +85,7 @@ void _main()
     */
 
     if(early_boot_console_init() != SUCCESS)
-        boot_early_fail(4);
+        boot_early_fail(BOOT_FAIL_EARLY_CONSOLE_INIT);
 
     printf("%s\nplatform: %s\n", g_warmup_message, plat_get_name());
 
@@ -94,11 +94,11 @@ void _main()
 
     /* === Initialise peripherals - phase 2 === */
     if(dev_enumerate() != SUCCESS)
-        boot_early_fail(5);
+        boot_early_fail(BOOT_FAIL_DEVICE_ENUMERATE);
 
-    /* Initialise the console */
+    /* Initialise the (real) console */
     if(plat_console_init() != SUCCESS)
-        boot_early_fail(6);
+        boot_early_fail(BOOT_FAIL_CONSOLE_INIT);
 
     ret = sched_init("[sys]");      /* Init scheduler and create system process */
 
@@ -107,7 +107,10 @@ void _main()
     */
     preempt_enable();
 
-    /* Copy the contents of the temporary console to the real console; close the temp console. */
+    /*
+        Close the early-boot in-memory console: this has the effect of dumping its contents to the
+        real console.
+    */
     early_boot_console_close();
 
     /* Activate red LED while the boot process continues */
@@ -119,7 +122,10 @@ void _main()
         Booting continues...
     */
 
-    /* Zero any user RAM extents.  This happens after init'ing the DUART, because beeper. */
+    /*
+        Zero user RAM extents.
+        Disabled for now because it slows the boot process and makes debugging harder.
+    */
 /*
     put("Clearing user RAM: ");
     mem_zero_extents(MEM_EXTENT_USER | MEM_EXTENT_RAM);
@@ -128,12 +134,18 @@ void _main()
 
     /* Initialise the block cache, then scan mass-storage devices for partitions */
     block_cache_init(2039);
+
 #ifdef WITH_DRV_MST_PARTITION
     partition_init();
 #endif /* WITH_DRV_MST_PARTITION */
 
+#ifdef WITH_MASS_STORAGE
     boot_list_mass_storage();
+#endif /* WITH_MASS_STORAGE */
+
+#ifdef WITH_DRV_MST_PARTITION
     boot_list_partitions();
+#endif /* WITH_DRV_MST_PARTITION */
 
     /* ret is set by the call to sched_init(), above */
     if(ret != SUCCESS)
