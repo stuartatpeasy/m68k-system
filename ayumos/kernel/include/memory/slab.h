@@ -44,19 +44,21 @@
     })
 
 
+typedef struct slab slab_t;
+
 struct slab
 {
+    slab_t *next;
     void *p;
+    u16 free_objs;
     u8 alloc_unit;
 };
-
-typedef struct slab slab_t;
 
 slab_t g_slabs[NSLABS];
 void *g_slab_base;
 void *g_slab_end;
 
-void *slab_alloc_pow2(ku32 radix);
+void *slab_alloc(ku32 size);
 void *slab_alloc_obj(slab_t * const s);
 s32 slab_create(void *p, u8 const alloc_unit, slab_t *s);
 void slab_free(void *obj);

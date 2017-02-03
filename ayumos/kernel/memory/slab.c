@@ -39,12 +39,14 @@ void slab_init(void *slab_base)
 /*
     slab_alloc_pow2() - allocate an object of size 2^radix bytes in an appropriate slab.
 */
-void *slab_alloc_pow2(ku32 radix)
+void *slab_alloc(u32 size)
 {
-    if(!radix)
+    if(!size)
         return NULL;    /* Requested allocation is 0 */
 
-    return slab_alloc_obj(&(g_slabs[radix - 1]));
+    size = ROUND_UP_PWR2(size);
+
+    return slab_alloc_obj(&(g_slabs[size - 1]));
 }
 
 
@@ -53,8 +55,9 @@ void *slab_alloc_pow2(ku32 radix)
 */
 void slab_free(void *obj)
 {
-    const slab_t *s = &(g_slabs[(obj - g_slab_base) >> SLAB_SIZE_LOG2]);
+    slab_t * const s = &(g_slabs[(obj - g_slab_base) >> SLAB_SIZE_LOG2]);
     SLAB_BITMAP_SET_FREE(s->p, (obj - s->p) >> s->alloc_unit);
+    ++s->free_objs;
 }
 
 
@@ -64,6 +67,7 @@ void slab_free(void *obj)
 void slab_free_obj(slab_t * const s, void *object)
 {
     SLAB_BITMAP_SET_FREE(s->p, (object - s->p) >> s->alloc_unit);
+    ++s->free_objs;
 }
 
 
@@ -100,6 +104,8 @@ s32 slab_create(void *p, const u8 alloc_unit, slab_t *s)
 
     s->p = p;
     s->alloc_unit = alloc_unit;
+    s->free_objs = nobjs;
+    s->next = NULL;
 
     return SUCCESS;
 }
@@ -152,6 +158,7 @@ void *slab_alloc_obj(slab_t * const s)
 
             objnum = (u << 5) + (31 - i);
             SLAB_BITMAP_SET_USED(s->p, objnum);
+            --s->free_objs;
 
             return s->p + (objnum << s->alloc_unit);
         }

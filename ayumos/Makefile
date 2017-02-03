@@ -82,6 +82,7 @@ all: $(APPNAME)
 $(APPNAME): $(OBJECTS) $(TOOLS)
 	echo "=== building platform '$(PLATFORM)' ==="
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
+	echo "=== creating images for '$(APPNAME)' ==="
 	echo "(TARGETLD) $(APPNAME)"
 	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
 	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(ROM)
