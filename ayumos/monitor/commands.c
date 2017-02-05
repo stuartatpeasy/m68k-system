@@ -1063,18 +1063,19 @@ MONITOR_CMD_HANDLER(serial)
 */
 MONITOR_CMD_HANDLER(slabs)
 {
-    u16 u;
+    u16 radix;
     UNUSED(num_args);
     UNUSED(args);
 
     puts("------------- Slab dump -------------");
-    for(u = 0; u < NSLABS; ++u)
+    for(radix = SLAB_MIN_RADIX; radix <= SLAB_MAX_RADIX; ++radix)
     {
-        ku8 au = g_slabs[u].alloc_unit;
-        const void * const p = g_slabs[u].p;
+        u32 total, free;
 
-        printf("%02u: %08x - %08x au=%u (%ux%ub)\n",
-                u, (u32) p, (u32) p + SLAB_SIZE - 1, au, SLAB_SIZE >> au, 1 << au);
+        if(slab_get_stats(radix, &total, &free) == SUCCESS)
+        {
+            printf("%2u: %u/%u\n", 1 << radix, total, free);
+        }
     }
     puts("-------------------------------------");
 

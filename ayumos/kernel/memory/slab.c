@@ -1,13 +1,20 @@
 /*
     Slab allocator
 
-    Part of the as-yet-unnamed MC68010 operating system
+    Part of ayumos
 
 
     (c) Stuart Wallace, July 2015.
 */
 
 #include <kernel/include/memory/slab.h>
+#include <kernel/include/preempt.h>
+#include <klibc/include/stdlib.h>
+
+#ifdef DEBUG_KMALLOC
+#include <klibc/include/stdio.h>
+#endif
+
 
 /*
     g_slabs is an array of linked lists of slab_t objects, indexed by slab radix (i.e. allocation
@@ -15,154 +22,242 @@
     is searched for a free block.  If no free block exists, a new slab will be initialised and
     added to the list.
 */
-slab_t g_slabs[NSLABS];
-void *g_slab_base;
-void *g_slab_end;
+slab_header_t *g_slabs[(SLAB_MAX_RADIX - SLAB_MIN_RADIX) + 1];
 
 
 /*
-    slab_init() - initialise the slab allocator and create some initial slabs.
+    slab_init() - initialise the slab allocator by setting the list head pointers in g_slabs[] to
+    NULL.
 */
-void slab_init(void *slab_base)
+void slab_init()
 {
     u8 u;
 
-    g_slab_base = slab_base;
-
-    for(u = 0; u < NSLABS; ++u, slab_base += SLAB_SIZE)
-        slab_create(slab_base, u + 1, &(g_slabs[u]));
-
-    g_slab_end = slab_base;
+    for(u = 0; u < ARRAY_COUNT(g_slabs); ++u)
+        g_slabs[u] = NULL;
 }
 
 
 /*
-    slab_alloc_pow2() - allocate an object of size 2^radix bytes in an appropriate slab.
+    slab_create() - allocate and initialise a new slab to hold objects of size 2^<radix>.  Append it
+    to the slab pointed to by <prev>; return a pointer to the new slab through <slab>.
 */
-void *slab_alloc(u32 size)
+s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
 {
-    if(!size)
-        return NULL;    /* Requested allocation is 0 */
+    slab_header_t *hdr;
+    u16 nobjs, reserved_objs, bitmap_len_bytes, free;
+    u8 *bitmap;
 
-    size = ROUND_UP_PWR2(size);
+    if((radix < SLAB_MIN_RADIX) || (radix > SLAB_MAX_RADIX))
+        return EINVAL;
 
-    return slab_alloc_obj(&(g_slabs[size - 1]));
-}
+    /* Allocate the entire slab, and obtain a pointer to the header */
+    hdr = (slab_header_t *) kmalloc(SLAB_SIZE);
+    if(hdr == NULL)
+        return ENOMEM;
 
-
-/*
-    slab_free() - free an object
-*/
-void slab_free(void *obj)
-{
-    slab_t * const s = &(g_slabs[(obj - g_slab_base) >> SLAB_SIZE_LOG2]);
-    SLAB_BITMAP_SET_FREE(s->p, (obj - s->p) >> s->alloc_unit);
-    ++s->free_objs;
-}
-
-
-/*
-    slab_free_obj() - free an object in the specified slab.
-*/
-void slab_free_obj(slab_t * const s, void *object)
-{
-    SLAB_BITMAP_SET_FREE(s->p, (object - s->p) >> s->alloc_unit);
-    ++s->free_objs;
-}
-
-
-/*
-    slab_create() - create a slab of size in the memory pointed to by p, which should be a region
-    SLAB_SIZE bytes in length, and initialise it to hold objects of size 2^alloc_unit.  The slab
-    object data is written to s.
-*/
-s32 slab_create(void *p, const u8 alloc_unit, slab_t *s)
-{
     /*
-        "alloc_unit" contains ceil(log2(object_size))
-
-        Slab allocation bitmap consists of one bit per object, located at the start of the slab.
-        The length of the bitmap is rounded up to the nearest 32 bits.
+        The allocation bitmap will contain one bit for each (1 << radix) bytes in the slab, rounded
+        up to the nearest multiple of 32 bits.  There are fewer usable objects than this in the
+        slab, because the slab_header and the allocation bitmap itself consume space at the start of
+        the slab, and the rounding-up of the allocation bitmap length may result in the bitmap
+        representing objects past the end of the slab.  The "objects" occupied by the slab header
+        and the bitmap, and those past the end of the slab, are therefore marked as "in use" when
+        the slab is created.
     */
-    const u16 obj_len = 1 << alloc_unit;
-    const u16 obj_len_bits = obj_len << 3;
-    const u16 nobjs = (SLAB_SIZE >> alloc_unit);
+    nobjs = 1 << (SLAB_SIZE_LOG2 - radix);
+    bitmap_len_bytes = (nobjs + 7) >> 3;
 
-    const u16 bitmap_bits_needed = (nobjs + 31) & ~31;
-    const u16 bitmap_objs_needed = ((bitmap_bits_needed + (obj_len_bits - 1))
-                                        & ~(obj_len_bits - 1)) >> (3 + alloc_unit);
+    /* Obtain a pointer to the start of the allocation bitmap */
+    bitmap = (u8 *) (hdr + 1);
 
-    u16 u;
-    for(u = 0; u < bitmap_objs_needed; ++u)
-        SLAB_BITMAP_SET_USED(p, u);
+    /*
+        Calculate the number of "reserved" objects at the start of the slab, rounding up as
+        necessary, and mark the objects as "in use" (1).
+    */
+    reserved_objs = ((sizeof(slab_header_t) + bitmap_len_bytes) + ((1 << radix) - 1)) >> radix;
 
-    for(; u < nobjs; ++u)
-        SLAB_BITMAP_SET_FREE(p, u);
+    free = nobjs - reserved_objs;
 
-    for(; u < bitmap_bits_needed; ++u)
-        SLAB_BITMAP_SET_USED(p, u);
+    for(; reserved_objs >= 8; reserved_objs -= 8)
+        *bitmap++ = 0xff;
 
-    s->p = p;
-    s->alloc_unit = alloc_unit;
-    s->free_objs = nobjs;
-    s->next = NULL;
+    for(; reserved_objs; --reserved_objs)
+        *bitmap = (*bitmap << 1) | 1;
+
+    /* Calculate the number of "reserved" objects at the end of the slab */
+    reserved_objs = (bitmap_len_bytes * 8) - nobjs;
+    free -= reserved_objs;
+
+    /* Obtain a pointer to the last byte of the allocation bitmap */
+    bitmap = ((u8 *) (hdr + 1)) + (bitmap_len_bytes - 1);
+
+    /* Mark the "reserved" objects at the end of the slab as "in use" */
+    for(; reserved_objs >= 8; reserved_objs -= 8)
+        *bitmap-- = 0xff;
+
+    for(; reserved_objs; --reserved_objs)
+        *bitmap = (*bitmap >> 1) | 0x80;
+
+    /* Set up the header object */
+    hdr->prev = prev;
+    hdr->next = NULL;
+    hdr->free = free;
+    hdr->radix = radix;
+
+    if(prev != NULL)
+        prev->next = hdr;
+
+    *slab = hdr;
 
     return SUCCESS;
 }
 
 
 /*
-    slab_alloc_obj() - allocate an object within slab s, and return a pointer to it.  Return NULL if
-    the slab is full.
+    slab_alloc() - choose a slab containing objects of the correct radix to store <size> bytes (i.e.
+    round <size> up to the nearest power of two, and find a slab with that radix) and allocate an
+    object.  This may result in the creation of a new slab.  Fail if the calculated radix is outside
+    [SLAB_MIN_RADIX, SLAB_MAX_RADIX], or if the creation of a new slab fails.  Returns a pointer to
+    the new object.
 */
-void *slab_alloc_obj(slab_t * const s)
+s32 slab_alloc(u8 size, void **p)
 {
-    /* Compute length of the allocation bitmap in halfwords */
-    const u16 nwords = SLAB_SIZE >> (s->alloc_unit + 5);
+    s32 ret;
+    u8 radix, *bitmap, bit;
+    u16 obj;
+    slab_header_t *slab;
 
-    u16 u;
-    for(u = 0; u < nwords; ++u)
+    /* Zero-byte allocations are allowed in malloc(), so they're allowed here too. */
+    if(!size)
     {
-        u32 bits = ((u32 *) (s->p))[u];
-        if(bits != 0xffffffff)
+        *p = NULL;
+        return SUCCESS;
+    }
+
+    if(size > (1 << SLAB_MAX_RADIX))
+        return EINVAL;
+
+    if(size < (1 << SLAB_MIN_RADIX))
+        size = 1 << SLAB_MIN_RADIX;
+    else
+        size = ROUND_UP_PWR2(size);
+
+    /* Calculate log2(size) */
+    for(size >>= 1, radix = 0; size; size >>= 1, ++radix)
+        ;
+
+    preempt_disable();      /* BEGIN locked section */
+
+    slab = g_slabs[radix - SLAB_MIN_RADIX];
+
+    if(slab == NULL)
+    {
+        /* No slab of the required size exists yet.  Create one. */
+        ret = slab_create(radix, NULL, &g_slabs[radix - SLAB_MIN_RADIX]);
+        if(ret != SUCCESS)
         {
-            /* Find first cleared bit in bits - this will yield the first available block */
-            u16 objnum, i = 0;
+            preempt_enable();
+            return ret;
+        }
 
-            if((bits & 0xffff0000) != 0xffff0000)
+        slab = g_slabs[radix - SLAB_MIN_RADIX];
+    }
+    else
+    {
+        /* Walk the list of slabs of the appropriate size, looking for one that isn't full */
+        while(!slab->free)
+        {
+            if(slab->next == NULL)
             {
-                bits >>= 16;    /* Free block is in bits 31-16 */
-                i += 16;
+                /* Create a new slab and append it to the list */
+                ret = slab_create(radix, slab, &slab->next);
+                if(ret != SUCCESS)
+                {
+                    preempt_enable();
+                    return ret;
+                }
             }
 
-            if((bits & 0x0000ff00) != 0x0000ff00)
-            {
-                bits >>= 8;     /* Free block is in bits 15-8 */
-                i += 8;
-            }
-
-            if((bits & 0x000000f0) != 0x000000f0)
-            {
-                bits >>= 4;     /* Free block is in bits 7-4 */
-                i += 4;
-            }
-
-            if((bits & 0x0000000c) != 0x0000000c)
-            {
-                bits >>= 2;     /* Free block is in bits 3-2 */
-                i += 2;
-            }
-
-            if((bits & 0x00000002) != 0x00000002)
-                i += 1;         /* Free block is in bit 1 */
-
-            objnum = (u << 5) + (31 - i);
-            SLAB_BITMAP_SET_USED(s->p, objnum);
-            --s->free_objs;
-
-            return s->p + (objnum << s->alloc_unit);
+            slab = slab->next;
         }
     }
 
-    return NULL;
+    /* At this point <slab> points to a non-full slab.  Find a free entry. */
+    bitmap = (u8 *) (slab + 1);
+
+    for(obj = 0, bitmap = (u8 *) (slab + 1); *bitmap == 0xff; ++bitmap)
+        obj += 8;
+
+    for(bit = 1; *bitmap & bit; bit <<= 1)
+        ++obj;
+
+    /* <obj> now contains an "object number", i.e. the offset into a slab of a free object */
+    *bitmap |= bit;                                     /* Mark the object as allocated    */
+    --slab->free;
+
+    preempt_enable();       /* END locked section */
+
+    *p = (void *) (((u8 *) slab) + (obj << radix));     /* Obtain a pointer to the object  */
+
+    return SUCCESS;
+}
+
+
+/*
+    slab_free() - free an object.
+*/
+void slab_free(void *obj)
+{
+    u16 offset;
+    u8 *bitmap, bit;
+
+    /* Find the slab corresponding to this object */
+    slab_header_t *slab = (slab_header_t *) ((u32) obj & ~(SLAB_SIZE - 1));
+
+    offset = ((u32) obj & (SLAB_SIZE - 1)) >> slab->radix;
+
+    bitmap = ((u8 *) (slab + 1)) + (offset >> 3);
+    bit = 1 << offset & 0x7;
+
+    if(*bitmap & bit)
+    {
+        *bitmap &= ~bit;        /* Mark the object as free */
+        ++slab->free;
+    }
+#ifdef DEBUG_KMALLOC
+    else
+        printf("slab_free(%p): double-free\n", obj);
+#endif
+}
+
+
+/*
+    slab_get_stats() - get statistics relating to all slabs of the specified radix.  <total> is set
+    to the total number of objects (allocated or free) of the specified radix; <free> is set to the
+    number of free objects of the specified radix.
+*/
+s32 slab_get_stats(ku8 radix, u32 *total, u32 *free)
+{
+    slab_header_t *slab;
+
+    if((radix < SLAB_MIN_RADIX) || (radix > SLAB_MAX_RADIX))
+        return EINVAL;
+
+    *total = 0;
+    *free = 0;
+
+    for(slab = g_slabs[radix - SLAB_MIN_RADIX]; slab != NULL; slab = slab->next)
+    {
+        ku16 nobjs = 1 << (SLAB_SIZE_LOG2 - radix);
+        ku16 bitmap_len_bytes = (nobjs + 7) >> 3;
+        ku16 reserved_objs = (((sizeof(slab_header_t) + bitmap_len_bytes)
+                                    + ((1 << radix) - 1)) >> radix)
+                                + ((bitmap_len_bytes * 8) - nobjs);
+
+        *total += nobjs - reserved_objs;
+        *free += slab->free;
+    }
+
+    return SUCCESS;
 }

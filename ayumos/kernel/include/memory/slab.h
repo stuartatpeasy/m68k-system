@@ -13,27 +13,15 @@
 #include <kernel/include/types.h>
 
 
-#define NSLABS          (8)
-#define SLAB_SIZE       (1024)
+#define SLAB_MIN_RADIX  (1)     /* Smallest object size = 2^SLAB_MIN_RADIX      */
+#define SLAB_MAX_RADIX  (6)     /* Largest object size = 2^SLAB_MAX_RADIX       */
+
+
 #define SLAB_SIZE_LOG2  (10)
+#define SLAB_SIZE       (1 << SLAB_SIZE_LOG2)
 
-#if DATA_BUS_WIDTH == 8
-#define SLAB_BITMAP_SET_USED(p, u) \
-    (*(((u8 *) (p)) + ((u) >> 3)) |= (0x80 >> ((u) & 7)))
-#define SLAB_BITMAP_SET_FREE(p, u) \
-    (*(((u8 *) (p)) + ((u) >> 3)) &= ~(0x80 >> ((u) & 7)))
-#elif DATA_BUS_WIDTH == 16
-#define SLAB_BITMAP_SET_USED(p, u) \
-    (*(((u16 *) (p)) + ((u) >> 4)) |= (0x8000 >> ((u) & 15)))
-#define SLAB_BITMAP_SET_FREE(p, u) \
-    (*(((u16 *) (p)) + ((u) >> 4)) &= ~(0x8000 >> ((u) & 15)))
-#else
-#define SLAB_BITMAP_SET_USED(p, u) \
-    (*(((u32 *) (p)) + ((u) >> 5)) |= (0x80000000 >> ((u) & 31)))
-#define SLAB_BITMAP_SET_FREE(p, u) \
-    (*(((u32 *) (p)) + ((u) >> 5)) &= ~(0x80000000 >> ((u) & 31)))
-#endif
 
+/* Round a u8 val in the range [1, 127] up to the next power of 2. */
 #define ROUND_UP_PWR2(x)        \
     ({                          \
         u8 x_ = (x) - 1;        \
@@ -44,24 +32,21 @@
     })
 
 
-typedef struct slab slab_t;
+typedef struct slab_header slab_header_t;
 
-struct slab
+struct slab_header
 {
-    slab_t *next;
-    void *p;
-    u16 free_objs;
-    u8 alloc_unit;
+    slab_header_t *prev;
+    slab_header_t *next;
+    u16 free;
+    u8 radix;
 };
 
-slab_t g_slabs[NSLABS];
-void *g_slab_base;
-void *g_slab_end;
 
-void *slab_alloc(ku32 size);
-void *slab_alloc_obj(slab_t * const s);
-s32 slab_create(void *p, u8 const alloc_unit, slab_t *s);
+void slab_init();
+s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab);
+s32 slab_alloc(u8 size, void **p);
 void slab_free(void *obj);
-void slab_init(void *slab_base);
+s32 slab_get_stats(ku8 radix, u32 *total, u32 *free);
 
 #endif

@@ -30,7 +30,7 @@ $(TARGET): $(OBJECTS)
 
 clean:
 	rm -f $(TARGET) $(OBJECTS)
-	rmdir $(BINDIR)
+	$(shell if [ -d "$(BINDIR)" ]; then rmdir -p "$(BINDIR)"; fi)
 
 #
 # Dependencies below this point
