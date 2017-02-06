@@ -23,7 +23,7 @@
 
 /* Round a u8 val in the range [1, 127] up to the next power of 2. */
 #define ROUND_UP_PWR2(x)        \
-    ({                          \
+    __extension__ ({            \
         u8 x_ = (x) - 1;        \
         x_ |= x_ >> 1;          \
         x_ |= x_ >> 2;          \
@@ -36,7 +36,6 @@ typedef struct slab_header slab_header_t;
 
 struct slab_header
 {
-    slab_header_t *prev;
     slab_header_t *next;
     u16 free;
     u8 radix;

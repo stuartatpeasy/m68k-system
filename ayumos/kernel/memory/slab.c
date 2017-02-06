@@ -22,7 +22,7 @@
     is searched for a free block.  If no free block exists, a new slab will be initialised and
     added to the list.
 */
-slab_header_t *g_slabs[(SLAB_MAX_RADIX - SLAB_MIN_RADIX) + 1];
+slab_header_t *g_slabs[(SLAB_MAX_RADIX - SLAB_MIN_RADIX) + 1] = {0};
 
 
 /*
@@ -100,7 +100,6 @@ s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
         *bitmap = (*bitmap >> 1) | 0x80;
 
     /* Set up the header object */
-    hdr->prev = prev;
     hdr->next = NULL;
     hdr->free = free;
     hdr->radix = radix;
@@ -147,9 +146,9 @@ s32 slab_alloc(u8 size, void **p)
     for(size >>= 1, radix = 0; size; size >>= 1, ++radix)
         ;
 
-    preempt_disable();      /* BEGIN locked section */
-
     slab = g_slabs[radix - SLAB_MIN_RADIX];
+
+    preempt_disable();      /* BEGIN locked section */
 
     if(slab == NULL)
     {

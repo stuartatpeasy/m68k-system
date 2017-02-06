@@ -1067,17 +1067,15 @@ MONITOR_CMD_HANDLER(slabs)
     UNUSED(num_args);
     UNUSED(args);
 
-    puts("------------- Slab dump -------------");
     for(radix = SLAB_MIN_RADIX; radix <= SLAB_MAX_RADIX; ++radix)
     {
         u32 total, free;
 
         if(slab_get_stats(radix, &total, &free) == SUCCESS)
         {
-            printf("%2u: %u/%u\n", 1 << radix, total, free);
+            printf("%2u: %u/%u\n", 1 << radix, total - free, total);
         }
     }
-    puts("-------------------------------------");
 
     return SUCCESS;
 }
@@ -1268,6 +1266,23 @@ MONITOR_CMD_HANDLER(test)
         return tftp_read_request(&server, "test.txt");
     }
 #endif /* WITH_NETWORKING */
+    else if(testnum == 4)
+    {
+        void *p;
+        u32 size;
+
+        if(num_args != 2)
+            return EINVAL;
+
+        size = strtoul(args[1], NULL, 0);
+
+        /* Allocate slab stuff */
+        ret = slab_alloc(size, &p);
+        if(ret != SUCCESS)
+            printf("slab_alloc(%u): %s\n", size, kstrerror(ret));
+        else
+            printf("slab_alloc(%u): success; p=%p\n", size, p);
+    }
 
     return SUCCESS;
 }
