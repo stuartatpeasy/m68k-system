@@ -3,6 +3,19 @@
 
     Part of ayumos
 
+    A slab is a fixed-length block of memory.  It consists of a header, an allocation bitmap, and
+    an array of equal-sized "objects".  The intent of slabs is to provide a means to allocate small
+    units of memory with minimal overhead.
+
+    The size of the objects in a slab is always a power of two. An object can be allocated by
+    calling slab_alloc(), which will locate (or create) a slab containing objects of an appropriate
+    size, mark an object as "in use" in the slab's allocation bitmap, and return a pointer to the
+    object.
+
+    Slabs are organised into linked lists according to their "radix", i.e. log2(object_size).  The
+    constants SLAB_MIN_RADIX and SLAB_MAX_RADIX define the limits of object size.  The current
+    implementation limits the maximum object size to 64 bytes (i.e. SLAB_MAX_RADIX<=6).
+
 
     (c) Stuart Wallace, July 2015.
 */
