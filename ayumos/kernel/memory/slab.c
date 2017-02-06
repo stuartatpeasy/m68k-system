@@ -178,7 +178,7 @@ s32 slab_alloc(u8 size, void **p)
     else
     {
         /* Walk the list of slabs of the appropriate size, looking for one that isn't full */
-        while(!slab->free)
+        for(; !slab->free; slab = slab->next)
         {
             if(slab->next == NULL)
             {
@@ -190,19 +190,19 @@ s32 slab_alloc(u8 size, void **p)
                     return ret;
                 }
             }
-
-            slab = slab->next;
         }
     }
 
     /* At this point <slab> points to a non-full slab.  Find a free entry. */
     bitmap = (u8 *) (slab + 1);
 
-    for(obj = 0, bitmap = (u8 *) (slab + 1); *bitmap == 0xff; ++bitmap)
-        obj += 8;
+    /* Fast-walk past groups of 8 allocated objects */
+    for(obj = 0, bitmap = (u8 *) (slab + 1); *bitmap == 0xff; ++bitmap, obj += 8)
+        ;
 
-    for(bit = 1; *bitmap & bit; bit <<= 1)
-        ++obj;
+    /* The current byte of the bitmap contains an unallocated object; find it */
+    for(bit = 1; *bitmap & bit; bit <<= 1, ++obj)
+        ;
 
     /* <obj> now contains an "object number", i.e. the offset into a slab of a free object */
     *bitmap |= bit;                                     /* Mark the object as allocated    */
