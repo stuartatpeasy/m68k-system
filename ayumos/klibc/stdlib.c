@@ -43,9 +43,9 @@ void *malloc(u32 size)
 
 /*
     path_canonicalise() - canonicalise <path> by removing duplicate dir-separator ('/') characters,
-    and resolving references to './' and '../'.  The result is stored in <path>, and a pointer to
-    this argument is returned.  Note that <path> should contain an absolute path, to avoid
-    unusual behaviour.
+    resolving references to './' and '../', and trimming trailing '/' characters.  The result is
+    stored in <path>, and a pointer to this argument is returned.  Note that <path> should contain
+    an absolute path, to avoid unusual behaviour.
 
     Note: this is not a standard libc function.
 */
@@ -104,6 +104,10 @@ char *path_canonicalise(char *path)
             }
         }
     }
+
+    /* Trim trailing '/', if present. */
+    if((write > path) && (*(write - 1) == DIR_SEPARATOR))
+        --write;
 
     *write = '\0';
 
