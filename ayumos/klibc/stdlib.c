@@ -60,24 +60,24 @@ char *path_canonicalise(char *path)
     while(*read_start)
     {
         /* Walk over directory-separator ('/') chars */
-        if(*read_end == '/')
+        if(*read_end == DIR_SEPARATOR)
         {
             *write++ = '/';
-            while(*++read_end == '/')
+            while(*++read_end == DIR_SEPARATOR)
                 ;
 
             read_start = read_end;
         }
 
         /* Extract path component */
-        while(*read_end && (*read_end != '/'))
+        while(*read_end && (*read_end != DIR_SEPARATOR))
             ++read_end;
 
         if(read_start != read_end)
         {
             ku32 len = read_end - read_start;
 
-            if((len == 1) && (read_start[0] == DIR_SEPARATOR))
+            if((len == 1) && (read_start[0] == '.'))
             {
                 /* This component is a "." - ignore it. */
                 if(write > path)
@@ -85,13 +85,13 @@ char *path_canonicalise(char *path)
 
                 read_start = read_end;
             }
-            else if((len == 2) && (read_start[0] == DIR_SEPARATOR)
-                    && (read_start[1] == DIR_SEPARATOR))
+            else if((len == 2) && (read_start[0] == '.')
+                    && (read_start[1] == '.'))
             {
                 /* Rewind the write pointer past the previous path component, if any */
                 write = ((write - 2) >= path) ? write - 2 : path;
 
-                while((write > path) && (*--write != '/'))
+                while((write > path) && (*--write != DIR_SEPARATOR))
                     ;
 
                 read_start = read_end;
