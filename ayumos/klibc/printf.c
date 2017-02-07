@@ -246,6 +246,8 @@ s32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
                 /* put string */
                 s32 pad_len = 0;
                 pc = va_arg(ap, const char *);
+                if(!pc)
+                    pc = "(null)";
 
                 if(field_width)
                 {
