@@ -92,11 +92,10 @@ s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
 
     free = nobjs - reserved_objs;
 
-    for(; reserved_objs >= 8; reserved_objs -= 8)
+    for(; reserved_objs > 8; reserved_objs -= 8)
         *bitmap++ = 0xff;
 
-    for(; reserved_objs; --reserved_objs)
-        *bitmap = (*bitmap << 1) | 1;
+    *bitmap = (1 << reserved_objs) - 1;
 
     /* Calculate the number of "reserved" objects at the end of the slab */
     reserved_objs = (bitmap_len_bytes * 8) - nobjs;
@@ -106,11 +105,10 @@ s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
     bitmap = ((u8 *) (hdr + 1)) + (bitmap_len_bytes - 1);
 
     /* Mark the "reserved" objects at the end of the slab as "in use" */
-    for(; reserved_objs >= 8; reserved_objs -= 8)
+    for(; reserved_objs > 8; reserved_objs -= 8)
         *bitmap-- = 0xff;
 
-    for(; reserved_objs; --reserved_objs)
-        *bitmap = (*bitmap >> 1) | 0x80;
+    *bitmap = ~(((u8) 0xff) >> reserved_objs);
 
     /* Set up the header object */
     hdr->next = NULL;
@@ -223,6 +221,11 @@ void slab_free(void *obj)
 {
     u16 offset;
     u8 *bitmap, bit;
+
+    /* free(NULL) is allowed, so slab_free(NULL) is allowed too. */
+    if(obj == NULL)
+        return;
+
 
     /* Find the slab corresponding to this object */
     slab_header_t *slab = (slab_header_t *) ((u32) obj & ~(SLAB_SIZE - 1));
