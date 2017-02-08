@@ -53,6 +53,11 @@ typedef T_S64				s64;
 typedef const T_S64			ks64;
 typedef volatile T_S64		vs64;
 
+/* Size type */
+#ifndef HAVE_SIZE_T
+typedef u32 size_t;
+#endif
+
 /* Memory address type */
 typedef u32 addr_t;
 
