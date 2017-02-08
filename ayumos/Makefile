@@ -12,7 +12,7 @@ DRIVER_SOURCES := ds17485.c encx24j600.c mc68681.c ps2controller.c
 
 KERNEL_SOURCES := \
 	device/ata.c device/auto.c device/block.c device/device.c device/memconsole.c device/nvram.c \
-	device/partition.c fs/file.c fs/mount.c fs/path.c fs/vfs.c fs/ext2/ext2.c \
+	device/partition.c fs/file.c fs/mount.c fs/node.c fs/path.c fs/vfs.c fs/ext2/ext2.c \
     fs/fat/fat.c fs/romfs.c boot.c console.c cpu.c elf.c entry.c error.c housekeeper.c keyboard.c \
     ksym.c preempt.c process.c sched.c semaphore.c syscall.c tick.c user.c net/address.c net/arp.c \
     net/dhcp.c net/ethernet.c net/icmp.c net/interface.c net/ipv4.c net/net.c net/packet.c \

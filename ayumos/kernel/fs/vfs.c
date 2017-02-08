@@ -35,9 +35,9 @@ vfs_driver_t * g_fs_drivers[] =
 /* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
 s32 vfs_default_mount(vfs_t *vfs);
 s32 vfs_default_umount(vfs_t *vfs);
-s32 vfs_default_get_root_node(vfs_t *vfs, vfs_node_t *node);
+s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t *node);
 s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node);
+s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
 s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
 
@@ -135,7 +135,7 @@ s32 vfs_default_umount(vfs_t *vfs)
 }
 
 
-s32 vfs_default_get_root_node(vfs_t *vfs, vfs_node_t *node)
+s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t *node)
 {
     UNUSED(vfs);
     UNUSED(node);
@@ -154,7 +154,7 @@ s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
 }
 
 
-s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node)
+s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
 {
     UNUSED(vfs);
     UNUSED(ctx);
@@ -207,7 +207,7 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
     vfs_open_dir() - "open" the directory at <node>, i.e. ensure that <node> represents a directory,
     and prepare to iterate over directory entries.
 */
-s32 vfs_open_dir(vfs_node_t * const node, vfs_dir_ctx_t **ctx)
+s32 vfs_open_dir(fs_node_t * const node, vfs_dir_ctx_t **ctx)
 {
     vfs_t *vfs;
     vfs_dir_ctx_t *context;
@@ -240,7 +240,7 @@ s32 vfs_open_dir(vfs_node_t * const node, vfs_dir_ctx_t **ctx)
     vfs_get_root_node() - get the "root node" (i.e. the root directory) of the supplied VFS; return
     it through <*node>.
 */
-s32 vfs_get_root_node(vfs_t *vfs, vfs_node_t *node)
+s32 vfs_get_root_node(vfs_t *vfs, fs_node_t *node)
 {
     return vfs->driver->get_root_node(vfs, node);
 }
@@ -249,7 +249,7 @@ s32 vfs_get_root_node(vfs_t *vfs, vfs_node_t *node)
 /*
     vfs_read_dir() - read the next item from a directory "opened" by vfs_open_dir().
 */
-s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, vfs_node_t *node)
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, fs_node_t *node)
 {
     return ctx->vfs->driver->read_dir(ctx->vfs, ctx->ctx, name, node);
 }
@@ -270,9 +270,9 @@ s32 vfs_close_dir(vfs_dir_ctx_t *ctx)
 
 
 /*
-    vfs_lookup() - look up a path and populate a vfs_node_t with the contents.
+    vfs_lookup() - look up a path and populate a fs_node_t with the contents.
 */
-s32 vfs_lookup(ks8 * path, vfs_node_t *node)
+s32 vfs_lookup(ks8 * path, fs_node_t *node)
 {
     vfs_t *vfs;
     const char *rel;
@@ -367,11 +367,11 @@ s32 vfs_lookup(ks8 * path, vfs_node_t *node)
     <*node> will be populated with data relating to the root directory itself.  If <parent> is non-
     NULL, <child> must also be non-NULL.
 */
-s32 vfs_get_child_node(const char *child, vfs_node_t *parent, vfs_node_t **node)
+s32 vfs_get_child_node(const char *child, fs_node_t *parent, fs_node_t **node)
 {
     s32 ret;
     vfs_dir_ctx_t *ctx;
-    vfs_node_t *parent_;
+    fs_node_t *parent_;
 
     if(parent == NULL)
     {
@@ -380,7 +380,7 @@ s32 vfs_get_child_node(const char *child, vfs_node_t *parent, vfs_node_t **node)
         if(vfs == NULL)
             return ENOENT;
 
-        ret = slab_alloc(sizeof(vfs_node_t), (void **) &parent_);
+        ret = slab_alloc(sizeof(fs_node_t), (void **) &parent_);
         if(ret != SUCCESS)
             return ret;
 
@@ -394,7 +394,7 @@ s32 vfs_get_child_node(const char *child, vfs_node_t *parent, vfs_node_t **node)
         if(child == NULL)
         {
             /* Retrieve information about the root directory itself */
-            memcpy(*node, parent_, sizeof(vfs_node_t));
+            memcpy(*node, parent_, sizeof(fs_node_t));
             slab_free(parent_);
 
             return SUCCESS;
@@ -424,34 +424,3 @@ putchar('7');
     return ret;
 }
 
-
-/*
-    vfs_node_perm_str() build in str a ten-character "permission string", e.g. "drwxr-x---" from
-    the supplied node.  str must point to a buffer of at least 10 characters.
-
-    TODO: this probably shouldn't be here; put it somewhere else.
-*/
-s8 *vfs_node_perm_str(const vfs_node_t * const node, s8 *str)
-{
-    const file_perm_t perm = node->permissions;
-    const fsnode_type_t type = node->type;
-
-    str[0] = (type == FSNODE_TYPE_DIR) ? 'd' : '-';
-    str[1] = (perm & VFS_PERM_UR) ? 'r' : '-';
-    str[2] = (perm & VFS_PERM_UW) ? 'w' : '-';
-    str[3] = (perm & VFS_PERM_UX) ?
-                ((perm & VFS_PERM_UT) ? 's' : 'x') :
-                ((perm & VFS_PERM_UT) ? 'S' : '-');
-    str[4] = (perm & VFS_PERM_GR) ? 'r' : '-';
-    str[5] = (perm & VFS_PERM_GW) ? 'w' : '-';
-    str[6] = (perm & VFS_PERM_GW) ?
-                ((perm & VFS_PERM_GT) ? 's' : 'x') :
-                ((perm & VFS_PERM_GT) ? 'S' : '-');
-    str[7] = (perm & VFS_PERM_OR) ? 'r' : '-';
-    str[8] = (perm & VFS_PERM_OW) ? 'w' : '-';
-    str[9] = (perm & VFS_PERM_OX) ?
-                ((perm & VFS_PERM_OT) ? 's' : 'x') :
-                ((perm & VFS_PERM_OT) ? 'S' : '-');
-
-    return str;
-}

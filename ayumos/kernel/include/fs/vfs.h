@@ -15,9 +15,6 @@
 #include <klibc/include/stdio.h>
 
 
-typedef u16 file_perm_t;
-
-struct vfs;
 typedef struct vfs vfs_t;
 
 typedef struct fs_stat
@@ -27,38 +24,15 @@ typedef struct fs_stat
     ks8 *label;
 } fs_stat_t;
 
-typedef enum fsnode_type
-{
-    FSNODE_TYPE_DIR,
-    FSNODE_TYPE_FILE
-} fsnode_type_t;
-
-typedef struct vfs_node
-{
-    vfs_t           *vfs;
-    fsnode_type_t   type;           /* dir, file, etc. */
-    char            name[NAME_MAX_LEN + 1];
-    u16             uid;
-    u16             gid;
-    file_perm_t     permissions;    /* e.g. rwxsrwxsrwx */
-    u16             flags;          /* read-only, hidden, system, ... */
-    u32             size;
-    time_t          ctime;
-    time_t          mtime;
-    time_t          atime;
-    u32             first_block;
-    /* how to link to clusters? */
-} vfs_node_t;
-
 typedef struct vfs_driver
 {
     ks8 *name;
     s32 (*init)();
     s32 (*mount)(vfs_t *vfs);
     s32 (*umount)(vfs_t *vfs);
-    s32 (*get_root_node)(vfs_t *vfs, vfs_node_t *node);
+    s32 (*get_root_node)(vfs_t *vfs, fs_node_t *node);
     s32 (*open_dir)(vfs_t *vfs, u32 block, void **ctx);
-    s32 (*read_dir)(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node);
+    s32 (*read_dir)(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
     s32 (*close_dir)(vfs_t *vfs, void *ctx);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
@@ -79,55 +53,13 @@ struct vfs
 };
 
 
-
-/* Permissions bits */
-#define VFS_PERM_UR         (0x0800)        /* User (owner) read        */
-#define VFS_PERM_UW         (0x0400)        /* User (owner) write       */
-#define VFS_PERM_UX         (0x0200)        /* User (owner) execute     */
-#define VFS_PERM_UT         (0x0100)        /* User (owner) sticky      */
-#define VFS_PERM_GR         (0x0080)        /* Group read               */
-#define VFS_PERM_GW         (0x0040)        /* Group write              */
-#define VFS_PERM_GX         (0x0020)        /* Group execute            */
-#define VFS_PERM_GT         (0x0010)        /* Group sticky             */
-#define VFS_PERM_OR         (0x0008)        /* Other (world) read       */
-#define VFS_PERM_OW         (0x0004)        /* Other (world) write      */
-#define VFS_PERM_OX         (0x0002)        /* Other (world) execute    */
-#define VFS_PERM_OT         (0x0001)        /* Other (world) sticky     */
-
-/* Definitions used when testing permissions */
-#define VFS_PERM_R          (0x0008)        /* Generic read permission      */
-#define VFS_PERM_W          (0x0004)        /* Generic write permission     */
-#define VFS_PERM_X          (0x0002)        /* Generic execute permission   */
-
-#define VFS_PERM_MASK       (VFS_PERM_R | VFS_PERM_W | VFS_PERM_X)
-#define VFS_PERM_SHIFT_U    (8)
-#define VFS_PERM_SHIFT_G    (4)
-#define VFS_PERM_SHIFT_O    (0)
-
-/* Common combinations of perms */
-#define VFS_PERM_URWX       (VFS_PERM_UR | VFS_PERM_UW | VFS_PERM_UX)       /* rwx------ */
-#define VFS_PERM_GRWX       (VFS_PERM_GR | VFS_PERM_GW | VFS_PERM_GX)       /* ---rwx--- */
-#define VFS_PERM_ORWX       (VFS_PERM_OR | VFS_PERM_OW | VFS_PERM_OX)       /* ------rwx */
-#define VFS_PERM_URX        (VFS_PERM_UR | VFS_PERM_UX)                     /* r-x------ */
-#define VFS_PERM_GRX        (VFS_PERM_GR | VFS_PERM_GX)                     /* ---r-x--- */
-#define VFS_PERM_ORX        (VFS_PERM_OR | VFS_PERM_OX)                     /* ------r-x */
-
-#define VFS_PERM_UGORWX     (VFS_PERM_URWX | VFS_PERM_GRWX | VFS_PERM_ORWX) /* rwxrwxrwx */
-#define VFS_PERM_UGORX      (VFS_PERM_URX | VFS_PERM_GRX | VFS_PERM_ORX)    /* r-xr-xr-x */
-
-/* Flags */
-#define VFS_FLAG_HIDDEN     (0x0001)        /* Not sure this will be respected  */
-#define VFS_FLAG_SYSTEM     (0x0002)        /* Not sure this will be respected  */
-#define VFS_FLAG_ARCHIVE    (0x0004)        /* I have no idea what this means   */
-
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
-s32 vfs_get_root_node(vfs_t *vfs, vfs_node_t *node);
-s32 vfs_open_dir(vfs_node_t * const node, vfs_dir_ctx_t **ctx);
-s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, vfs_node_t *node);
+s32 vfs_get_root_node(vfs_t *vfs, fs_node_t *node);
+s32 vfs_open_dir(fs_node_t * const node, vfs_dir_ctx_t **ctx);
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
-s32 vfs_lookup(ks8 *path, vfs_node_t *ent);
-s32 vfs_get_child_node(const char *child, vfs_node_t *parent, vfs_node_t **node);
-s8 *vfs_node_perm_str(const vfs_node_t * const node, s8 *str);
+s32 vfs_lookup(ks8 *path, fs_node_t *ent);
+s32 vfs_get_child_node(const char *child, fs_node_t *parent, fs_node_t **node);
 
 #endif
