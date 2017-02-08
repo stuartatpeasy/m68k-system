@@ -627,7 +627,11 @@ MONITOR_CMD_HANDLER(id)
 #ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(ls)
 {
-    vfs_node_t node;
+    UNUSED(num_args);   // FIXME
+    UNUSED(args);       // FIXME
+#if 0
+    /********** FIXME *************/
+    fs_node_t node;
     char perms[11];
 
     perms[10] = '\0';
@@ -678,6 +682,8 @@ MONITOR_CMD_HANDLER(ls)
         return EINVAL;
 
     return SUCCESS;
+#endif
+    return EOPNOSUPPORT;
 }
 #endif /* WITH_MASS_STORAGE */
 

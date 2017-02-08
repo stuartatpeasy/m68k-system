@@ -35,7 +35,8 @@ s32 path_is_absolute(ks8 *path)
 s32 path_open(const char *path)
 {
     char *path_canon, *p, *component, sep;
-    vfs_node_t *parent, *child;
+    vfs_t *vfs;
+    fs_node_t *parent, *child;
     s32 ret;
 
     if(!path_is_absolute(path))
@@ -48,6 +49,12 @@ s32 path_open(const char *path)
     p = path_canonicalise(path_canon);
     parent = NULL;
 
+    /* Get the file system root node */
+    vfs = NULL;
+    ret = vfs_get_child_node(NULL, NULL, &vfs, &parent);
+    if(ret != SUCCESS)
+        return ret;
+
     do
     {
         /* Extract the next path component */
@@ -58,7 +65,7 @@ s32 path_open(const char *path)
         *p = '\0';
 
         /* Look up component */
-        ret = vfs_get_child_node(component, parent, &child);
+        ret = vfs_get_child_node(parent, component, &vfs, &child);
         if(ret != SUCCESS)
             return ret;
 

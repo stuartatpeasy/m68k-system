@@ -21,14 +21,14 @@
 s32 fat_init();
 s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
-s32 fat_get_root_node(vfs_t *vfs, vfs_node_t *node);
+s32 fat_get_root_node(vfs_t *vfs, fs_node_t *node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, vfs_node_t *node);
+s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 
 s32 fat_read_block(vfs_t *vfs, u32 block, void *buffer);
-s32 fat_create_node(vfs_t *vfs, u32 parent_block, vfs_node_t *node);
+s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node);
 s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_find_free_block(vfs_t *vfs, u32 *node);
 s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
@@ -209,24 +209,23 @@ s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node)
 
 
 /*
-    fat_get_root_node() - populate a vfs_node_t with details of the root directory
+    fat_get_root_node() - populate a fs_node_t with details of the root directory
 */
-s32 fat_get_root_node(vfs_t *vfs, vfs_node_t *node)
+s32 fat_get_root_node(vfs_t *vfs, fs_node_t *node)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
 
     /* Zero out the node struct - that way we only have to set nonzero fields */
-    bzero(node, sizeof(vfs_node_t));
+    bzero(node, sizeof(fs_node_t));
 
     /*
         Note: FAT does not store ctime/mtime/atime for the whole fs, so they are left as zeroes in
         the root node.  UID and GID are also not stored (or applicable), so these fields are also
         left as zero.
     */
-    node->vfs = vfs;
     node->name[0] = DIR_SEPARATOR;
     node->type = FSNODE_TYPE_DIR;
-    node->permissions = VFS_PERM_UGORWX;
+    node->permissions = FS_PERM_UGORWX;
     node->size = fs->root_dir_clusters * fs->bytes_per_cluster;
     node->first_block = FAT_ROOT_BLOCK;
 
@@ -281,7 +280,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     fat_read_dir() - if name is NULL, read the next entry from a directory and populate node with
     its details.  If name is non-NULL, search for an entry matching name and populate the node.
 */
-s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node)
+s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
 {
     fat_dir_ctx_t *dir_ctx = (fat_dir_ctx_t *) ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];
@@ -382,8 +381,6 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node)
                         ku16 attribs = dir_ctx->de->attribs;
                         u16 flags = 0;
 
-                        node->vfs = vfs;
-
                         node->atime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->adate), 0);
                         node->ctime = FAT_DATETIME_TO_TIMESTAMP(LE2N16(dir_ctx->de->cdate),
                                                                     LE2N16(dir_ctx->de->ctime));
@@ -397,11 +394,11 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node)
                                             FSNODE_TYPE_DIR : FSNODE_TYPE_FILE;
 
                         if(attribs & FAT_FILEATTRIB_HIDDEN)
-                            flags |= VFS_FLAG_HIDDEN;
+                            flags |= FS_FLAG_HIDDEN;
                         if(attribs & FAT_FILEATTRIB_SYSTEM)
-                            flags |= VFS_FLAG_SYSTEM;
+                            flags |= FS_FLAG_SYSTEM;
                         if(attribs & FAT_FILEATTRIB_ARCHIVE)
-                            flags |= VFS_FLAG_ARCHIVE;
+                            flags |= FS_FLAG_ARCHIVE;
 
                         node->flags = flags;
 
@@ -414,7 +411,7 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node)
                             for read-only files.
                         */
                         node->permissions = (attribs & FAT_FILEATTRIB_READ_ONLY) ?
-                                                VFS_PERM_UGORX : VFS_PERM_UGORWX;
+                                                FS_PERM_UGORX : FS_PERM_UGORWX;
 
                         /* The FAT fs has no concept of file ownership */
                         node->gid = 0;
@@ -466,7 +463,7 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx)
 
     FIXME: we mustn't allow this fn to extend the root directory, for some reason
 */
-s32 fat_create_node(vfs_t *vfs, u32 parent_block, vfs_node_t *node)
+s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node)
 {
     fat_dir_ctx_t *dir_ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];

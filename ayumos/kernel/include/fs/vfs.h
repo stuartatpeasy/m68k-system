@@ -10,6 +10,7 @@
 */
 
 #include <kernel/include/device/device.h>
+#include <kernel/include/fs/node.h>
 #include <kernel/include/types.h>
 #include <kernel/include/defs.h>
 #include <klibc/include/stdio.h>
@@ -56,10 +57,10 @@ struct vfs
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
 s32 vfs_get_root_node(vfs_t *vfs, fs_node_t *node);
-s32 vfs_open_dir(fs_node_t * const node, vfs_dir_ctx_t **ctx);
+s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx);
 s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
 s32 vfs_lookup(ks8 *path, fs_node_t *ent);
-s32 vfs_get_child_node(const char *child, fs_node_t *parent, fs_node_t **node);
+s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs, fs_node_t **node);
 
 #endif

@@ -15,10 +15,10 @@
 */
 s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
 {
-    vfs_node_t *node;
+    fs_node_t *node;
     s32 ret;
 
-    node = (vfs_node_t *) kmalloc(sizeof(vfs_node_t));
+    node = (fs_node_t *) kmalloc(sizeof(fs_node_t));
     if(!node)
         return ENOMEM;
 
@@ -68,7 +68,7 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
     file_check_perms() - check that a user can perform the requested operation (read, write,
     execute) on the supplied node.
 */
-s32 file_check_perms(uid_t uid, const file_perm_t op, const vfs_node_t * const node)
+s32 file_check_perms(uid_t uid, const file_perm_t op, const fs_node_t * const node)
 {
     file_perm_t perm;
 
@@ -78,18 +78,18 @@ s32 file_check_perms(uid_t uid, const file_perm_t op, const vfs_node_t * const n
             Root user can read and write anything, but can only execute files with at least one
             execute permission bit set.
         */
-        perm = VFS_PERM_R | VFS_PERM_W;
-        if(node->permissions & (VFS_PERM_UX | VFS_PERM_GX | VFS_PERM_OX))
-            perm |= VFS_PERM_X;
+        perm = FS_PERM_R | FS_PERM_W;
+        if(node->permissions & (FS_PERM_UX | FS_PERM_GX | FS_PERM_OX))
+            perm |= FS_PERM_X;
     }
     else if(uid == node->uid)                /* If UID matches, use user perms */
-        perm = node->permissions >> VFS_PERM_SHIFT_U;
+        perm = node->permissions >> FS_PERM_SHIFT_U;
     else if(group_member(uid, node->gid))    /* User is in file's group; use group perms */
-        perm = node->permissions >> VFS_PERM_SHIFT_G;
+        perm = node->permissions >> FS_PERM_SHIFT_G;
     else                                    /* Use "other" perms */
-        perm = node->permissions >> VFS_PERM_SHIFT_O;
+        perm = node->permissions >> FS_PERM_SHIFT_O;
 
-    perm &= VFS_PERM_MASK;
+    perm &= FS_PERM_MASK;
 
     return ((perm & op) == op) ? SUCCESS : EPERM;
 }

@@ -45,9 +45,9 @@
 s32 ext2_init();
 s32 ext2_mount(vfs_t *vfs);
 s32 ext2_umount(vfs_t *vfs);
-s32 ext2_get_root_node(vfs_t *vfs, vfs_node_t *node);
+s32 ext2_get_root_node(vfs_t *vfs, fs_node_t *node);
 s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 ext2_read_dir(vfs_t *vfs, void *ctx, ks8* const name, vfs_node_t *node);
+s32 ext2_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
 s32 ext2_close_dir(vfs_t *vfs, void *ctx);
 s32 ext2_stat(vfs_t *vfs, fs_stat_t *st);
 
@@ -197,7 +197,7 @@ s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx)
 }
 
 
-s32 ext2_read_dir(vfs_t *vfs, void *ctx, ks8* const name, vfs_node_t *node)
+s32 ext2_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node)
 {
     /* TODO */
     UNUSED(vfs);
@@ -613,17 +613,16 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
 }
 
 
-s32 ext2_get_root_node(vfs_t *vfs, vfs_node_t *node)
+s32 ext2_get_root_node(vfs_t *vfs, fs_node_t *node)
 {
     const ext2_fs_t * const fs = (const ext2_fs_t *) vfs->data;
 
     /* Zero out the node struct - that way we only have to set nonzero fields */
-    bzero(node, sizeof(vfs_node_t));
+    bzero(node, sizeof(fs_node_t));
 
-    node->vfs = vfs;
     node->name[0] = DIR_SEPARATOR;
     node->type = FSNODE_TYPE_DIR;
-    node->permissions = VFS_PERM_UGORWX;      /* FIXME - read this */
+    node->permissions = FS_PERM_UGORWX;       /* FIXME - read this */
 
     /* FIXME - 32 bit overflow */
     node->size = LE2N32(fs->sblk->s_blocks_count) << (LE2N32(fs->sblk->s_log_block_size) + 9);

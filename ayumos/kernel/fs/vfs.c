@@ -207,9 +207,8 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
     vfs_open_dir() - "open" the directory at <node>, i.e. ensure that <node> represents a directory,
     and prepare to iterate over directory entries.
 */
-s32 vfs_open_dir(fs_node_t * const node, vfs_dir_ctx_t **ctx)
+s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx)
 {
-    vfs_t *vfs;
     vfs_dir_ctx_t *context;
     s32 ret;
 
@@ -220,7 +219,6 @@ s32 vfs_open_dir(fs_node_t * const node, vfs_dir_ctx_t **ctx)
     if(ret != SUCCESS)
         return ret;
 
-    vfs = node->vfs;
     context->vfs = vfs;
 
     ret = vfs->driver->open_dir(vfs, node->first_block, &(context->ctx));
@@ -362,65 +360,85 @@ s32 vfs_lookup(ks8 * path, fs_node_t *node)
 
 
 /*
-    vfs_get_child_node() - populate <*node> with data relating to <child>, a sub-node of <parent>.
-    If <parent> is NULL, the fs root directory is implied.  If both <parent> and <child> are NULL,
-    <*node> will be populated with data relating to the root directory itself.  If <parent> is non-
-    NULL, <child> must also be non-NULL.
+    vfs_get_child_node() - populate <*node> with data relating to <child>, a sub-node of <parent> on
+    VFS <*vfs>.  If <parent> is NULL, the VFS root directory is implied; if both <*vfs> and <parent>
+    are NULL, the file system root directory is implied.  If <*vfs>, <parent> and <child> are NULL,
+    <*node> and <*vfs> will be populated with data relating to the root directory itself.  If
+    <parent> is non-NULL, <child> must also be non-NULL.
+
+    Behaviour of this function, according to its inputs:
+
+    +==========================+============+======================================+
+    |          Inputs          |   In/Out   |                Outputs               |
+    +--------------------------+------------+--------------------------------------+
+    |  vfs     parent   child  |    vfs     |  node                         error  |
+    +==========================+============+======================================+
+    | NULL     NULL     NULL   |  <rootfs>  |  <rootfs>/                    -      |
+    | NULL     NULL     valid  |  -         |  -                            EINVAL |
+    | NULL     valid    NULL   |  -         |  -                            EINVAL |
+    | NULL     valid    valid  |  -         |  -                            EINVAL |
+    | valid    NULL     NULL   |  <vfs>     |  <vfs>/                       -      |
+    | valid    NULL     valid  |  <vfs>     |  <vfs>/<child>                -      |
+    | valid    valid    NULL   |  <vfs>     |  -                            EINVAL |
+    | valid    valid    valid  |  <vfs>     |  <vfs>.../<parent>/<child>    -      |
+    +==========================+============+======================================+
+
+    [*] if <child> is on a different VFS than <parent>, <child>'s VFS will be returned through
+        <*vfs>.
 */
-s32 vfs_get_child_node(const char *child, fs_node_t *parent, fs_node_t **node)
+s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs, fs_node_t **node)
 {
     s32 ret;
     vfs_dir_ctx_t *ctx;
     fs_node_t *parent_;
 
-    if(parent == NULL)
+    if(*vfs == NULL)
     {
-        /* Look for <child> inside the root directory. */
-        vfs_t *vfs = mount_find("/", NULL);
-        if(vfs == NULL)
-            return ENOENT;
-
-        ret = slab_alloc(sizeof(fs_node_t), (void **) &parent_);
-        if(ret != SUCCESS)
-            return ret;
-
-        ret = vfs_get_root_node(vfs, parent_);
-        if(ret != SUCCESS)
+        /* The only valid operation with <*vfs> == NULL is to retrieve the root fs node. */
+        if((parent == NULL) && (child == NULL))
         {
-            slab_free(parent_);
+            vfs_t *root_fs;
+            fs_node_t *root_node;
+
+            root_fs = mount_find("/", NULL);
+            if(root_fs == NULL)
+                return ENOENT;      /* No root directory - a strange situation */
+
+            ret = vfs_get_root_node(root_fs, root_node);
+            if(ret == SUCCESS)
+            {
+                *vfs = root_fs;
+                *node = root_node;
+            }
+
             return ret;
-        }
-
-        if(child == NULL)
-        {
-            /* Retrieve information about the root directory itself */
-            memcpy(*node, parent_, sizeof(fs_node_t));
-            slab_free(parent_);
-
-            return SUCCESS;
         }
         else
-            printf("root component: %s\n", child);
+            return EINVAL;
+    }
+
+    if(parent == NULL)
+    {
+        /* Null <parent> implies the root dir of <*vfs> */
+        ret = vfs_get_root_node(*vfs, parent_);
+        if(ret != SUCCESS)
+            return ret;
     }
     else
+    {
+        /* Non-null <parent> implies a specific dir within <*vfs>.  <child> must be non-null. */
+        if(child == NULL)
+            return EINVAL;
+
         parent_ = parent;
+    }
 
-    /* It's not valid to supply a NULL child name unless <parent> is also NULL */
-putchar('6');
-    if(child == NULL)
-        return EINVAL;
-
-putchar('7');
-    printf("component: %s\n", child);
-
-    ret = vfs_open_dir(parent_, &ctx);
+    ret = vfs_open_dir(*vfs, parent_, &ctx);
     if(ret != SUCCESS)
         return ret;
 
     ret = vfs_read_dir(ctx, child, *node);
-
     vfs_close_dir(ctx);
 
     return ret;
 }
-

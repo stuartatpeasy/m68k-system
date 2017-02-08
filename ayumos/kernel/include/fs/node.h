@@ -9,6 +9,9 @@
 	(c) Stuart Wallace <stuartw@atom.net>, February 2017.
 */
 
+#include <kernel/include/defs.h>
+#include <kernel/include/types.h>
+
 
 typedef u16 file_perm_t;
 

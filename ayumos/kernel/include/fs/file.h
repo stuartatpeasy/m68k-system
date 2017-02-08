@@ -10,6 +10,7 @@
 */
 
 #include <kernel/include/defs.h>
+#include <kernel/include/fs/node.h>
 #include <kernel/include/fs/vfs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/user.h>
@@ -27,7 +28,7 @@
 
 struct file_info
 {
-    vfs_node_t *node;
+    fs_node_t *node;
     u32 flags;
     u32 offset;
 };
@@ -36,7 +37,7 @@ typedef struct file_info file_info_t;
 
 
 s32 file_open(ks8 * const path, u32 flags, file_info_t *fp);
-s32 file_check_perms(uid_t uid, const file_perm_t op, const vfs_node_t * const node);
+s32 file_check_perms(uid_t uid, const file_perm_t op, const fs_node_t * const node);
 
 
 #endif

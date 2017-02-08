@@ -153,6 +153,9 @@
 		<Unit filename="kernel/fs/mount.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="kernel/fs/node.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="kernel/fs/path.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -185,6 +188,7 @@
 		<Unit filename="kernel/include/error.h" />
 		<Unit filename="kernel/include/fs/file.h" />
 		<Unit filename="kernel/include/fs/mount.h" />
+		<Unit filename="kernel/include/fs/node.h" />
 		<Unit filename="kernel/include/fs/path.h" />
 		<Unit filename="kernel/include/fs/romfs.h" />
 		<Unit filename="kernel/include/fs/vfs.h" />
