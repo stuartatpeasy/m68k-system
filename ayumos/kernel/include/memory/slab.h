@@ -44,7 +44,7 @@ struct slab_header
 
 void slab_init();
 s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab);
-s32 slab_alloc(u8 size, void **p);
+s32 slab_alloc(size_t size, void **p);
 void slab_free(void *obj);
 s32 slab_get_stats(ku8 radix, u32 *total, u32 *free);
 

@@ -131,7 +131,7 @@ s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
     [SLAB_MIN_RADIX, SLAB_MAX_RADIX], or if the creation of a new slab fails.  Returns a pointer to
     the new object.
 */
-s32 slab_alloc(u8 size, void **p)
+s32 slab_alloc(size_t size, void **p)
 {
     s32 ret;
     u8 radix, *bitmap, bit;
