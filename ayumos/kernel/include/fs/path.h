@@ -14,5 +14,6 @@
 
 
 s32 path_is_absolute(ks8 *path);
+s32 path_open(const char *path);
 
 #endif

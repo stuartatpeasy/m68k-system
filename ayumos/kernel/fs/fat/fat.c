@@ -23,7 +23,7 @@ s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
 s32 fat_get_root_node(vfs_t *vfs, vfs_node_t *node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8* const name);
+s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, vfs_node_t *node);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 
@@ -281,7 +281,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     fat_read_dir() - if name is NULL, read the next entry from a directory and populate node with
     its details.  If name is non-NULL, search for an entry matching name and populate the node.
 */
-s32 fat_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8 * const name)
+s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node)
 {
     fat_dir_ctx_t *dir_ctx = (fat_dir_ctx_t *) ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];

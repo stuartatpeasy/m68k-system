@@ -8,6 +8,9 @@
 */
 
 #include <kernel/include/fs/path.h>
+#include <kernel/include/fs/vfs.h>
+#include <klibc/include/string.h>
+#include <klibc/include/stdio.h>        // FIXME
 
 
 void path_get_absolute(ks8 *path)
@@ -22,5 +25,49 @@ void path_get_absolute(ks8 *path)
 */
 s32 path_is_absolute(ks8 *path)
 {
-    return path[0] == DIR_SEPARATOR ? 1 : 0;
+    return ((path != NULL) && (path[0] == DIR_SEPARATOR)) ? 1 : 0;
+}
+
+
+/*
+    path_open() - walk the specified path
+*/
+s32 path_open(const char *path)
+{
+    char *path_canon, *p, *component, sep;
+    vfs_node_t *parent, *child;
+    s32 ret;
+
+    if(!path_is_absolute(path))
+        return EINVAL;
+
+    path_canon = strdup(path);
+    if(path_canon == NULL)
+        return ENOMEM;
+
+    p = path_canonicalise(path_canon);
+    parent = NULL;
+
+    do
+    {
+        /* Extract the next path component */
+        for(component = ++p; *p && (*p != DIR_SEPARATOR); ++p)
+            ;
+
+        sep = *p;
+        *p = '\0';
+
+        /* Look up component */
+        ret = vfs_get_child_node(component, parent, &child);
+        if(ret != SUCCESS)
+            return ret;
+
+        /* FIXME - check permissions */
+
+        parent = child;
+    } while(sep);
+
+    kfree(path_canon);
+
+    return SUCCESS;
 }

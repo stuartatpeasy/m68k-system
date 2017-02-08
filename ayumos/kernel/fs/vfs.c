@@ -12,6 +12,7 @@
 #include <kernel/include/device/nvram.h>
 #include <kernel/include/fs/vfs.h>
 #include <kernel/include/fs/mount.h>
+#include <kernel/include/memory/slab.h>
 
 
 /*
@@ -36,7 +37,7 @@ s32 vfs_default_mount(vfs_t *vfs);
 s32 vfs_default_umount(vfs_t *vfs);
 s32 vfs_default_get_root_node(vfs_t *vfs, vfs_node_t *node);
 s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8 * const name);
+s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node);
 s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
 s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
 
@@ -153,7 +154,7 @@ s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
 }
 
 
-s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8 * const name)
+s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node)
 {
     UNUSED(vfs);
     UNUSED(ctx);
@@ -203,39 +204,54 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 
 
 /*
-    vfs_open_dir() - "open" a directory, i.e. find the device containing the path, verify the path,
-    ensure that the path represents a directory, and prepare to iterate over directory entries.
+    vfs_open_dir() - "open" the directory at <node>, i.e. ensure that <node> represents a directory,
+    and prepare to iterate over directory entries.
 */
-s32 vfs_open_dir(ks8 *path, vfs_dir_ctx_t *ctx)
+s32 vfs_open_dir(vfs_node_t * const node, vfs_dir_ctx_t **ctx)
 {
-    vfs_node_t node;
     vfs_t *vfs;
+    vfs_dir_ctx_t *context;
     s32 ret;
 
-    ret = vfs_lookup(path, &node);
-    if(ret != SUCCESS)
-        return ret;
-
-    if(node.type != FSNODE_TYPE_DIR)
+    if(node->type != FSNODE_TYPE_DIR)
         return ENOTDIR;
 
-    vfs = node.vfs;
-    ret = vfs->driver->open_dir(vfs, node.first_block, &(ctx->ctx));
+    ret = slab_alloc(sizeof(vfs_dir_ctx_t), (void **) &context);
     if(ret != SUCCESS)
         return ret;
 
-    ctx->vfs = vfs;
+    vfs = node->vfs;
+    context->vfs = vfs;
+
+    ret = vfs->driver->open_dir(vfs, node->first_block, &(context->ctx));
+    if(ret != SUCCESS)
+    {
+        slab_free(context);
+        return ret;
+    }
+
+    *ctx = context;
 
     return SUCCESS;
 }
 
 
 /*
+    vfs_get_root_node() - get the "root node" (i.e. the root directory) of the supplied VFS; return
+    it through <*node>.
+*/
+s32 vfs_get_root_node(vfs_t *vfs, vfs_node_t *node)
+{
+    return vfs->driver->get_root_node(vfs, node);
+}
+
+
+/*
     vfs_read_dir() - read the next item from a directory "opened" by vfs_open_dir().
 */
-s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_node_t *node, ks8 * const name)
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, vfs_node_t *node)
 {
-    return ctx->vfs->driver->read_dir(ctx->vfs, ctx->ctx, node, name);
+    return ctx->vfs->driver->read_dir(ctx->vfs, ctx->ctx, name, node);
 }
 
 
@@ -244,7 +260,12 @@ s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_node_t *node, ks8 * const name)
 */
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx)
 {
-    return ctx->vfs->driver->close_dir(ctx->vfs, ctx->ctx);
+    s32 ret;
+
+    ret = ctx->vfs->driver->close_dir(ctx->vfs, ctx->ctx);
+    slab_free(ctx);
+
+    return ret;
 }
 
 
@@ -309,7 +330,7 @@ s32 vfs_lookup(ks8 * path, vfs_node_t *node)
             return ret;
         }
 
-        ret = vfs->driver->read_dir(vfs, ctx, node, path_component);
+        ret = vfs->driver->read_dir(vfs, ctx, path_component, node);
 
         vfs->driver->close_dir(vfs, ctx);
         if(ret != SUCCESS)
@@ -337,6 +358,70 @@ s32 vfs_lookup(ks8 * path, vfs_node_t *node)
     kfree(path_component);
 
     return SUCCESS;
+}
+
+
+/*
+    vfs_get_child_node() - populate <*node> with data relating to <child>, a sub-node of <parent>.
+    If <parent> is NULL, the fs root directory is implied.  If both <parent> and <child> are NULL,
+    <*node> will be populated with data relating to the root directory itself.  If <parent> is non-
+    NULL, <child> must also be non-NULL.
+*/
+s32 vfs_get_child_node(const char *child, vfs_node_t *parent, vfs_node_t **node)
+{
+    s32 ret;
+    vfs_dir_ctx_t *ctx;
+    vfs_node_t *parent_;
+
+    if(parent == NULL)
+    {
+        /* Look for <child> inside the root directory. */
+        vfs_t *vfs = mount_find("/", NULL);
+        if(vfs == NULL)
+            return ENOENT;
+
+        ret = slab_alloc(sizeof(vfs_node_t), (void **) &parent_);
+        if(ret != SUCCESS)
+            return ret;
+
+        ret = vfs_get_root_node(vfs, parent_);
+        if(ret != SUCCESS)
+        {
+            slab_free(parent_);
+            return ret;
+        }
+
+        if(child == NULL)
+        {
+            /* Retrieve information about the root directory itself */
+            memcpy(*node, parent_, sizeof(vfs_node_t));
+            slab_free(parent_);
+
+            return SUCCESS;
+        }
+        else
+            printf("root component: %s\n", child);
+    }
+    else
+        parent_ = parent;
+
+    /* It's not valid to supply a NULL child name unless <parent> is also NULL */
+putchar('6');
+    if(child == NULL)
+        return EINVAL;
+
+putchar('7');
+    printf("component: %s\n", child);
+
+    ret = vfs_open_dir(parent_, &ctx);
+    if(ret != SUCCESS)
+        return ret;
+
+    ret = vfs_read_dir(ctx, child, *node);
+
+    vfs_close_dir(ctx);
+
+    return ret;
 }
 
 

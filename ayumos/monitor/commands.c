@@ -1157,6 +1157,7 @@ MONITOR_CMD_HANDLER(symbol)
     Used to trigger a test of some sort
 */
 #include <kernel/include/elf.h>
+#include <kernel/include/fs/path.h>
 #include <kernel/include/process.h>
 #include <kernel/include/tick.h>
 #include <kernel/include/net/dhcp.h>
@@ -1282,6 +1283,10 @@ MONITOR_CMD_HANDLER(test)
             printf("slab_alloc(%u): %s\n", size, kstrerror(ret));
         else
             printf("slab_alloc(%u): success; p=%p\n", size, p);
+    }
+    else if(testnum == 5)
+    {
+        return path_open(args[1]);
     }
 
     return SUCCESS;

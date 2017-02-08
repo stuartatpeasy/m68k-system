@@ -58,7 +58,7 @@ typedef struct vfs_driver
     s32 (*umount)(vfs_t *vfs);
     s32 (*get_root_node)(vfs_t *vfs, vfs_node_t *node);
     s32 (*open_dir)(vfs_t *vfs, u32 block, void **ctx);
-    s32 (*read_dir)(vfs_t *vfs, void *ctx, vfs_node_t *node, ks8 * const name);
+    s32 (*read_dir)(vfs_t *vfs, void *ctx, ks8 * const name, vfs_node_t *node);
     s32 (*close_dir)(vfs_t *vfs, void *ctx);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
@@ -66,8 +66,7 @@ typedef struct vfs_driver
 typedef struct vfs_dir_ctx
 {
     vfs_t *vfs;
-    void *ctx;
-
+    void *ctx;      /* FIXME rename this to "data" */
 } vfs_dir_ctx_t;
 
 
@@ -123,10 +122,12 @@ struct vfs
 
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
-s32 vfs_open_dir(ks8 *path, vfs_dir_ctx_t *ctx);
-s32 vfs_read_dir(vfs_dir_ctx_t *ctx, vfs_node_t *node, ks8 *const name);
+s32 vfs_get_root_node(vfs_t *vfs, vfs_node_t *node);
+s32 vfs_open_dir(vfs_node_t * const node, vfs_dir_ctx_t **ctx);
+s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, vfs_node_t *node);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
 s32 vfs_lookup(ks8 *path, vfs_node_t *ent);
+s32 vfs_get_child_node(const char *child, vfs_node_t *parent, vfs_node_t **node);
 s8 *vfs_node_perm_str(const vfs_node_t * const node, s8 *str);
 
 #endif

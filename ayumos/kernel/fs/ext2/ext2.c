@@ -47,7 +47,7 @@ s32 ext2_mount(vfs_t *vfs);
 s32 ext2_umount(vfs_t *vfs);
 s32 ext2_get_root_node(vfs_t *vfs, vfs_node_t *node);
 s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, const s8* const name);
+s32 ext2_read_dir(vfs_t *vfs, void *ctx, ks8* const name, vfs_node_t *node);
 s32 ext2_close_dir(vfs_t *vfs, void *ctx);
 s32 ext2_stat(vfs_t *vfs, fs_stat_t *st);
 
@@ -197,7 +197,7 @@ s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx)
 }
 
 
-s32 ext2_read_dir(vfs_t *vfs, void *ctx, vfs_node_t *node, const s8* const name)
+s32 ext2_read_dir(vfs_t *vfs, void *ctx, ks8* const name, vfs_node_t *node)
 {
     /* TODO */
     UNUSED(vfs);
