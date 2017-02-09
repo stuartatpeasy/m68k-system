@@ -35,7 +35,7 @@ vfs_driver_t * g_fs_drivers[] =
 /* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
 s32 vfs_default_mount(vfs_t *vfs);
 s32 vfs_default_umount(vfs_t *vfs);
-s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t *node);
+s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
@@ -114,7 +114,7 @@ s32 vfs_init()
     /* Found fs driver */
     printf("vfs: rootfs: %s (%s)\n", bpb.rootfs, bpb.fstype);
 
-    return mount_add("/", driver, dev);
+    return mount_add(ROOT_DIR, driver, dev);
 }
 
 
@@ -135,7 +135,7 @@ s32 vfs_default_umount(vfs_t *vfs)
 }
 
 
-s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t *node)
+s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node)
 {
     UNUSED(vfs);
     UNUSED(node);
@@ -238,7 +238,7 @@ s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx)
     vfs_get_root_node() - get the "root node" (i.e. the root directory) of the supplied VFS; return
     it through <*node>.
 */
-s32 vfs_get_root_node(vfs_t *vfs, fs_node_t *node)
+s32 vfs_get_root_node(vfs_t *vfs, fs_node_t **node)
 {
     return vfs->driver->get_root_node(vfs, node);
 }
@@ -297,7 +297,7 @@ s32 vfs_lookup(ks8 * path, fs_node_t *node)
         ;                           /* Skip over empty path components */
 
     if(rel[0] == '\0')
-        return vfs->driver->get_root_node(vfs, node);  /* Special case: root directory */
+        return vfs->driver->get_root_node(vfs, &node); /* Special case: root directory */
 
     path_component = (s8 *) kmalloc(NAME_MAX_LEN + 1);
     if(!path_component)
@@ -360,11 +360,11 @@ s32 vfs_lookup(ks8 * path, fs_node_t *node)
 
 
 /*
-    vfs_get_child_node() - populate <*node> with data relating to <child>, a sub-node of <parent> on
-    VFS <*vfs>.  If <parent> is NULL, the VFS root directory is implied; if both <*vfs> and <parent>
-    are NULL, the file system root directory is implied.  If <*vfs>, <parent> and <child> are NULL,
-    <*node> and <*vfs> will be populated with data relating to the root directory itself.  If
-    <parent> is non-NULL, <child> must also be non-NULL.
+    vfs_get_child_node() - populate <*node> with data relating to <child>, a string containing the
+    name of a sub-node of <parent>, on VFS <*vfs>.  If <parent> is NULL, the VFS root directory is
+    implied; if both <*vfs> and <parent> are NULL, the file system root directory is implied.  If
+    <*vfs>, <parent> and <child> are NULL, <*node> and <*vfs> will be populated with data relating
+    to the root directory itself.  If <parent> is non-NULL, <child> must also be non-NULL.
 
     Behaviour of this function, according to its inputs:
 
@@ -385,12 +385,15 @@ s32 vfs_lookup(ks8 * path, fs_node_t *node)
 
     [*] if <child> is on a different VFS than <parent>, <child>'s VFS will be returned through
         <*vfs>.
+
+    TODO: after finding a node, determine whether it is a mount point.
 */
 s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs, fs_node_t **node)
 {
     s32 ret;
     vfs_dir_ctx_t *ctx;
     fs_node_t *parent_;
+    u8 parent_allocated;
 
     if(*vfs == NULL)
     {
@@ -400,11 +403,11 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
             vfs_t *root_fs;
             fs_node_t *root_node;
 
-            root_fs = mount_find("/", NULL);
+            root_fs = mount_find(ROOT_DIR, NULL);
             if(root_fs == NULL)
                 return ENOENT;      /* No root directory - a strange situation */
 
-            ret = vfs_get_root_node(root_fs, root_node);
+            ret = vfs_get_root_node(root_fs, &root_node);
             if(ret == SUCCESS)
             {
                 *vfs = root_fs;
@@ -420,9 +423,11 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
     if(parent == NULL)
     {
         /* Null <parent> implies the root dir of <*vfs> */
-        ret = vfs_get_root_node(*vfs, parent_);
+        ret = vfs_get_root_node(*vfs, &parent_);
         if(ret != SUCCESS)
             return ret;
+
+        parent_allocated = 1;
     }
     else
     {
@@ -431,14 +436,23 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
             return EINVAL;
 
         parent_ = parent;
+        parent_allocated = 0;
     }
 
     ret = vfs_open_dir(*vfs, parent_, &ctx);
     if(ret != SUCCESS)
+    {
+        if(parent_allocated)
+            fs_node_free(parent_);
+
         return ret;
+    }
 
     ret = vfs_read_dir(ctx, child, *node);
     vfs_close_dir(ctx);
+
+    if(parent_allocated)
+        fs_node_free(parent_);
 
     return ret;
 }

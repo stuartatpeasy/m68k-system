@@ -31,7 +31,7 @@ typedef struct vfs_driver
     s32 (*init)();
     s32 (*mount)(vfs_t *vfs);
     s32 (*umount)(vfs_t *vfs);
-    s32 (*get_root_node)(vfs_t *vfs, fs_node_t *node);
+    s32 (*get_root_node)(vfs_t *vfs, fs_node_t **node);
     s32 (*open_dir)(vfs_t *vfs, u32 block, void **ctx);
     s32 (*read_dir)(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
     s32 (*close_dir)(vfs_t *vfs, void *ctx);
@@ -56,7 +56,7 @@ struct vfs
 
 s32 vfs_init();
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
-s32 vfs_get_root_node(vfs_t *vfs, fs_node_t *node);
+s32 vfs_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx);
 s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);

@@ -21,7 +21,7 @@
 s32 fat_init();
 s32 fat_mount(vfs_t *vfs);
 s32 fat_umount(vfs_t *vfs);
-s32 fat_get_root_node(vfs_t *vfs, fs_node_t *node);
+s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
@@ -211,23 +211,38 @@ s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node)
 /*
     fat_get_root_node() - populate a fs_node_t with details of the root directory
 */
-s32 fat_get_root_node(vfs_t *vfs, fs_node_t *node)
+s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    fs_node_t *root_node;
+    s32 ret;
+
+    ret = fs_node_alloc(&root_node);
+    if(ret != SUCCESS)
+        return ret;
 
     /* Zero out the node struct - that way we only have to set nonzero fields */
-    bzero(node, sizeof(fs_node_t));
+    bzero(root_node, sizeof(fs_node_t));
 
     /*
         Note: FAT does not store ctime/mtime/atime for the whole fs, so they are left as zeroes in
         the root node.  UID and GID are also not stored (or applicable), so these fields are also
         left as zero.
     */
-    node->name[0] = DIR_SEPARATOR;
-    node->type = FSNODE_TYPE_DIR;
-    node->permissions = FS_PERM_UGORWX;
-    node->size = fs->root_dir_clusters * fs->bytes_per_cluster;
-    node->first_block = FAT_ROOT_BLOCK;
+
+    ret = fs_node_set_name(root_node, ROOT_DIR);
+    if(ret != SUCCESS)
+    {
+        fs_node_free(root_node);
+        return ret;
+    }
+
+    root_node->type = FSNODE_TYPE_DIR;
+    root_node->permissions = FS_PERM_UGORWX;
+    root_node->size = fs->root_dir_clusters * fs->bytes_per_cluster;
+    root_node->first_block = FAT_ROOT_BLOCK;
+
+    *node = root_node;
 
     return SUCCESS;
 }

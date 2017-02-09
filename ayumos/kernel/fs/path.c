@@ -53,7 +53,10 @@ s32 path_open(const char *path)
     vfs = NULL;
     ret = vfs_get_child_node(NULL, NULL, &vfs, &parent);
     if(ret != SUCCESS)
+    {
+        kfree(path_canon);
         return ret;
+    }
 
     do
     {
@@ -67,13 +70,19 @@ s32 path_open(const char *path)
         /* Look up component */
         ret = vfs_get_child_node(parent, component, &vfs, &child);
         if(ret != SUCCESS)
+        {
+            fs_node_free(parent);
+            kfree(path_canon);
             return ret;
+        }
 
         /* FIXME - check permissions */
 
+        fs_node_free(parent);
         parent = child;
     } while(sep);
 
+    fs_node_free(parent);
     kfree(path_canon);
 
     return SUCCESS;

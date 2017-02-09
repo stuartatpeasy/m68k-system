@@ -14,7 +14,7 @@
 s32 romfs_init();
 s32 romfs_mount(vfs_t *vfs);
 s32 romfs_umount(vfs_t *vfs);
-s32 romfs_get_root_node(vfs_t *vfs, fs_node_t *node);
+s32 romfs_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 romfs_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 romfs_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
 s32 romfs_close_dir(vfs_t *vfs, void *ctx);
@@ -55,7 +55,7 @@ s32 romfs_umount(vfs_t *vfs)
 }
 
 
-s32 romfs_get_root_node(vfs_t *vfs, fs_node_t *node)
+s32 romfs_get_root_node(vfs_t *vfs, fs_node_t **node)
 {
     UNUSED(vfs);
     UNUSED(node);

@@ -25,7 +25,7 @@ typedef enum fsnode_type
 typedef struct fs_node
 {
     fsnode_type_t   type;           /* dir, file, etc. */
-    char            name[NAME_MAX_LEN + 1];
+    char           *name;
     u16             uid;
     u16             gid;
     file_perm_t     permissions;    /* e.g. rwxsrwxsrwx */
@@ -80,6 +80,9 @@ typedef struct fs_node
 #define FS_FLAG_ARCHIVE     (0x0004)        /* I have no idea what this means   */
 
 s8 *fs_node_perm_str(const fs_node_t * const node, s8 *str);
+s32 fs_node_alloc(fs_node_t **node);
+s32 fs_node_set_name(fs_node_t *node, const char * const name);
+void fs_node_free(fs_node_t *node);
 
 #endif
 

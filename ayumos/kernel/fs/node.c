@@ -8,6 +8,58 @@
 */
 
 #include <kernel/include/fs/node.h>
+#include <kernel/include/memory/slab.h>
+#include <kernel/include/error.h>
+#include <klibc/include/string.h>
+
+
+/*
+    fs_node_alloc() - allocate memory at <*node> to hold a fs_node_t struct.  This function does not
+    allocate space for the node's <name> field.
+*/
+s32 fs_node_alloc(fs_node_t **node)
+{
+    fs_node_t *node_;
+    s32 ret;
+
+    ret = slab_alloc(sizeof(fs_node_t), (void **) &node_);
+    if(ret != SUCCESS)
+        return ret;
+
+    node_->name = NULL;
+    *node = node_;
+
+    return SUCCESS;
+}
+
+
+/*
+    fs_node_set_name() - duplicate the string <name> and store it inside <node>, first freeing any
+    existing name buffer in <node>.
+*/
+s32 fs_node_set_name(fs_node_t *node, const char * const name)
+{
+    char *name_ = strdup(name);
+
+    if(name_ == NULL)
+        return ENOMEM;
+
+    if(node->name != NULL)
+        kfree(node->name);
+
+    node->name = name_;
+    return SUCCESS;
+}
+
+
+/*
+    fs_node_free() - release the storage associated with <node>.
+*/
+void fs_node_free(fs_node_t *node)
+{
+    kfree(node->name);                  /* FIXME - use a slab to hold the name */
+    slab_free(node);
+}
 
 
 /*
