@@ -85,8 +85,7 @@ char *path_canonicalise(char *path)
 
                 read_start = read_end;
             }
-            else if((len == 2) && (read_start[0] == '.')
-                    && (read_start[1] == '.'))
+            else if((len == 2) && (read_start[0] == '.') && (read_start[1] == '.'))
             {
                 /* Rewind the write pointer past the previous path component, if any */
                 write = ((write - 2) >= path) ? write - 2 : path;
