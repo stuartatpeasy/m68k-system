@@ -61,15 +61,16 @@ void _main()
     if(plat_mem_detect() != SUCCESS)    /* Detect installed RAM, initialise memory extents  */
         boot_early_fail(BOOT_FAIL_MEMORY_DETECT);
 
+    /* Initialise kernel slabs */
+    slab_init(ALIGN_NEXT(&_ebss, SLAB_SIZE_LOG2), SLAB_RESERVED_MEM);
+
     /* Initialise kernel heap */
-    kmeminit(&_ebss, mem_get_highest_addr(MEM_EXTENT_KERN | MEM_EXTENT_RAM) - KERNEL_STACK_LEN);
+    kmeminit((u8 *) ALIGN_NEXT(&_ebss, SLAB_SIZE_LOG2) + SLAB_RESERVED_MEM,
+             mem_get_highest_addr(MEM_EXTENT_KERN | MEM_EXTENT_RAM) - KERNEL_STACK_LEN);
 
     /* Initialise user heap.  Place it in the largest user RAM extent. */
     ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     umeminit(ramext->base, ramext->base + ramext->len);
-
-    /* Initialise kernel slabs */
-    slab_init();
 
 	/* By default, all exceptions cause a context-dump followed by a halt. */
 	cpu_irq_init_table();

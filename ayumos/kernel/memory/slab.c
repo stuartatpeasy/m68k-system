@@ -29,6 +29,10 @@
 #endif
 
 
+void *g_slab_start;     /* Pointer to the memory reserved for slabs                         */
+void *g_slab_next;      /* Pointer to the next memory location available for slab creation  */
+void *g_slab_end;       /* Pointer to the first byte after the end of the slab region       */
+
 /*
     g_slabs is an array of linked lists of slab_t objects, indexed by slab radix (i.e. allocation
     unit size).  When an allocation is requested, the list corresponding to the allocation unit size
@@ -40,11 +44,15 @@ slab_header_t *g_slabs[(SLAB_MAX_RADIX - SLAB_MIN_RADIX) + 1] = {0};
 
 /*
     slab_init() - initialise the slab allocator by setting the list head pointers in g_slabs[] to
-    NULL.
+    NULL.  Note that the kernel heap allocator may not be available when this function is called.
 */
-void slab_init()
+void slab_init(void *start, u32 len)
 {
     u8 u;
+
+    g_slab_start = start;
+    g_slab_next = start;
+    g_slab_end = (void *) ((u8 *) start + len);
 
     for(u = 0; u < ARRAY_COUNT(g_slabs); ++u)
         g_slabs[u] = NULL;
@@ -65,9 +73,11 @@ s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
         return EINVAL;
 
     /* Allocate the entire slab, and obtain a pointer to the header */
-    hdr = (slab_header_t *) kmalloc(SLAB_SIZE);
-    if(hdr == NULL)
+    if(g_slab_next >= g_slab_end)
         return ENOMEM;
+
+    hdr = (slab_header_t *) g_slab_next;
+    g_slab_next = (u8 *) g_slab_next + SLAB_SIZE;
 
     /*
         The allocation bitmap will contain one bit for each (1 << radix) bytes in the slab, rounded
@@ -226,14 +236,13 @@ void slab_free(void *obj)
     if(obj == NULL)
         return;
 
-
     /* Find the slab corresponding to this object */
     slab_header_t *slab = (slab_header_t *) ((u32) obj & ~(SLAB_SIZE - 1));
 
     offset = ((u32) obj & (SLAB_SIZE - 1)) >> slab->radix;
 
     bitmap = ((u8 *) (slab + 1)) + (offset >> 3);
-    bit = 1 << offset & 0x7;
+    bit = 1 << (offset & 0x7);
 
     if(*bitmap & bit)
     {
