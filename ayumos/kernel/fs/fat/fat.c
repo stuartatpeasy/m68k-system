@@ -417,7 +417,10 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
 
                         node->flags = flags;
 
-                        strcpy(node->name, lfn);
+                        ret = fs_node_set_name(node, lfn);
+                        if(ret != SUCCESS)
+                            return ret;
+
                         node->size = LE2N32(dir_ctx->de->size);
 
                         /*
@@ -469,6 +472,7 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx)
 
     kfree(((fat_dir_ctx_t *) ctx)->buffer);
     kfree(ctx);
+
     return SUCCESS;
 }
 

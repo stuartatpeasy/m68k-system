@@ -20,9 +20,13 @@
 */
 #include <kernel/fs/fat/fat.h>
 #include <kernel/fs/ext2/ext2.h>
+#include <kernel/include/fs/romfs.h>
 
 vfs_driver_t * g_fs_drivers[] =
 {
+#ifdef WITH_FS_ROMFS
+    &g_romfs_ops,
+#endif
 #ifdef WITH_FS_FAT
     &g_fat_ops,
 #endif
@@ -413,7 +417,17 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
         return ret;
     }
 
+    /* BUG: nothing allocates *node before calling vfs_read_dir() */
+    ret = fs_node_alloc(node);
+    if(ret != SUCCESS)
+    {
+        if(parent_allocated)
+            fs_node_free(parent_);
+        return ret;
+    }
+
     ret = vfs_read_dir(ctx, child, *node);
+
     vfs_close_dir(ctx);
 
     if(parent_allocated)

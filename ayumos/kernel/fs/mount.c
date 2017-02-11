@@ -38,7 +38,6 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
     vfs_t *inner_vfs;
 
     /* TODO: auto-detect driver, if driver == NULL */
-    /* TODO: locking */
 
     if(driver == NULL)
         return EINVAL;      /* No driver auto-detection yet */
@@ -50,6 +49,8 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
     if(((host_vfs != NULL) && (host_node == NULL)) || ((host_vfs != NULL) && (host_node == NULL)))
         return EINVAL;
 
+    preempt_disable();                              /* BEGIN locked section */
+
     /*
         Ensure that there is not already a filesystem mounted at host_vfs:host_node, and that dev is
         not already mounted anywhere.
@@ -57,16 +58,23 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
     for(ent = g_mount_table; ent != NULL; ent = ent->next)
         if(((ent->host_vfs == host_vfs) && (ent->host_node == host_node))
             ||(ent->host_vfs->dev == dev) || (ent->inner_vfs->dev == dev))
+        {
+            preempt_enable();
             return EBUSY;
+        }
 
     ret = vfs_attach(driver, dev, &inner_vfs);      /* Create a new VFS for the mount */
     if(ret != SUCCESS)
+    {
+        preempt_enable();
         return ret;
+    }
 
     ret = slab_alloc(sizeof(mount_ent_t), (void **) &new_ent);
     if(ret != SUCCESS)
     {
         vfs_detach(inner_vfs);
+        preempt_enable();
         return ret;
     }
 
@@ -79,6 +87,8 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
         g_mount_table = new_ent;
     else
         ent->next = new_ent;
+
+    preempt_enable();                               /* END locked section */
 
     return SUCCESS;
 

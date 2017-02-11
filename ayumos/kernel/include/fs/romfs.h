@@ -11,6 +11,7 @@
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
+#include <kernel/include/fs/vfs.h>
 
 
 #define ROMFS_SUPERBLOCK
@@ -23,5 +24,7 @@ typedef struct romfs_superblock
     time_t  cdate;
     char    label[16];
 } romfs_superblock_t;
+
+vfs_driver_t g_romfs_ops;
 
 #endif

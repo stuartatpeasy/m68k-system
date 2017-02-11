@@ -1300,6 +1300,21 @@ MONITOR_CMD_HANDLER(test)
     {
         return path_open(args[1]);
     }
+    else if(testnum == 6)
+    {
+        void *p;
+        u32 size;
+
+        size = strtoul(args[1], NULL, 0);
+        ret = slab_alloc(size, &p);
+
+        if(ret != SUCCESS)
+            printf("slab_alloc(%u): %s\n", size, kstrerror(ret));
+        else
+            printf("slab_alloc(%u): success; p=%p\n", size, p);
+
+        slab_free(p);
+    }
 
     return SUCCESS;
 }
