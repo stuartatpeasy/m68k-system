@@ -18,6 +18,7 @@
 /* Main build options */
 #define WITH_FS_EXT2
 #define WITH_FS_FAT
+#define WITH_FS_ROMFS
 #define WITH_KEYBOARD
 #define WITH_MASS_STORAGE
 #define WITH_NETWORKING
@@ -31,9 +32,12 @@
 #define WITH_DRV_RTC_DS17485
 #define WITH_DRV_SER_MC68681
 
+/* Networking options */
 #define IPV4_VERIFY_CHECKSUM 1      /* Verify checksum on incoming IPv4 packets                 */
 #define ICMP_VERIFY_CHECKSUM 1      /* Verify checksum on incoming ICMP packets                 */
 
+/* Memory layout options */
+#define SLAB_RESERVED_MEM   65536   /* Memory reserved for slabs                                */
 
 /* FIXME - target arch should be defined in platform/platform_specific.h, not here */
 #define TARGET_MC68010
