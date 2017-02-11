@@ -95,6 +95,13 @@
 /* Return a val with bit x set (i.e. compute 2^x). */
 #define BIT(x)          (1 << (x))
 
+/* Return a ptr-to-void, with its address rounded down to the nearest 2^radix value */
+#define ALIGN(p, radix)         ((void *) (((u32) (p)) & ~((1 << radix) - 1)))
+
+/* Return a ptr-to-void, with its address aligned to the next 2^radix value */
+#define ALIGN_NEXT(p, radix)    ((void *) \
+                                    (((u32) (p) + ((1 << (radix)) - 1)) & ~((1 << (radix)) - 1)))
+
 /* Explicitly (and portably) "declare" an argument unused, silencing an "unused arg" warning. */
 #define UNUSED(x)       (void) (x)
 
