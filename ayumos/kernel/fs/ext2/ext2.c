@@ -44,7 +44,7 @@
 
 s32 ext2_init();
 s32 ext2_mount(vfs_t *vfs);
-s32 ext2_umount(vfs_t *vfs);
+s32 ext2_unmount(vfs_t *vfs);
 s32 ext2_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 ext2_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 ext2_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
@@ -57,7 +57,7 @@ vfs_driver_t g_ext2_ops =
     .name = "ext2",
     .init = ext2_init,
     .mount = ext2_mount,
-    .umount = ext2_umount,
+    .unmount = ext2_unmount,
     .get_root_node = ext2_get_root_node,
     .open_dir = ext2_open_dir,
     .read_dir = ext2_read_dir,
@@ -174,10 +174,10 @@ s32 ext2_mount(vfs_t *vfs)
 
 
 /**
- * ext2_umount - attempt to unmount an ext2 file system
+ * ext2_unmount - attempt to unmount an ext2 file system
  * @vfs: vfs_t data structure specifying the file system
  */
-s32 ext2_umount(vfs_t *vfs)
+s32 ext2_unmount(vfs_t *vfs)
 {
     /* TODO */
     UNUSED(vfs);

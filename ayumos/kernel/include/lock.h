@@ -9,7 +9,7 @@
     (c) Stuart Wallace, November 2016.
 */
 
-#include <kernel/cpu.h>
+#include <kernel/include/cpu.h>
 #include <kernel/include/preempt.h>
 
 

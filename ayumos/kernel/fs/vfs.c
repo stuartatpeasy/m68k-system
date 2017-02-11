@@ -34,7 +34,7 @@ vfs_driver_t * g_fs_drivers[] =
 
 /* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
 s32 vfs_default_mount(vfs_t *vfs);
-s32 vfs_default_umount(vfs_t *vfs);
+s32 vfs_default_unmount(vfs_t *vfs);
 s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
@@ -62,7 +62,7 @@ s32 vfs_init()
                 of that function.  The default version simply returns ENOSYS.
             */
             if(NULL == pdrv->mount)         pdrv->mount         = vfs_default_mount;
-            if(NULL == pdrv->umount)        pdrv->umount        = vfs_default_umount;
+            if(NULL == pdrv->unmount)       pdrv->unmount       = vfs_default_unmount;
             if(NULL == pdrv->get_root_node) pdrv->get_root_node = vfs_default_get_root_node;
             if(NULL == pdrv->open_dir)      pdrv->open_dir      = vfs_default_open_dir;
             if(NULL == pdrv->read_dir)      pdrv->read_dir      = vfs_default_read_dir;
@@ -114,7 +114,55 @@ s32 vfs_init()
     /* Found fs driver */
     printf("vfs: rootfs: %s (%s)\n", bpb.rootfs, bpb.fstype);
 
-    return mount_add(ROOT_DIR, driver, dev);
+    /* Mount the root filesystem */
+    return mount_add(NULL, NULL, driver, dev);
+}
+
+
+/*
+    vfs_attach() - attach a new VFS object to the filesystem represented by <driver> and <dev>, then
+    return it through <*vfs>.
+*/
+s32 vfs_attach(vfs_driver_t * const driver, dev_t * const dev, vfs_t **vfs)
+{
+    vfs_t *new_vfs;
+    s32 ret;
+
+    ret = slab_alloc(sizeof(vfs_t), (void **) &new_vfs);
+    if(ret != SUCCESS)
+        return ret;
+
+    new_vfs->driver = driver;
+    new_vfs->dev = dev;
+    new_vfs->data = NULL;
+
+    ret = driver->mount(new_vfs);
+    if(ret != SUCCESS)
+    {
+        slab_free(new_vfs);
+        return ret;
+    }
+
+    *vfs = new_vfs;
+
+    return SUCCESS;
+}
+
+
+/*
+    vfs_detach() - detach <vfs> from its device by unmounting it and then freeing its memory.
+*/
+s32 vfs_detach(vfs_t *vfs)
+{
+    s32 ret;
+
+    ret = vfs->driver->unmount(vfs);
+    if(ret != SUCCESS)
+        return ret;
+
+    slab_free(vfs);
+
+    return SUCCESS;
 }
 
 
@@ -127,7 +175,7 @@ s32 vfs_default_mount(vfs_t *vfs)
 }
 
 
-s32 vfs_default_umount(vfs_t *vfs)
+s32 vfs_default_unmount(vfs_t *vfs)
 {
     UNUSED(vfs);
 
@@ -204,6 +252,15 @@ vfs_driver_t *vfs_get_driver_by_name(ks8 * const name)
 
 
 /*
+    vfs_unmount() - unmount the device associated with the VFS at <vfs>.
+*/
+s32 vfs_unmount(vfs_t *vfs)
+{
+    return vfs->driver->unmount(vfs);
+}
+
+
+/*
     vfs_open_dir() - "open" the directory at <node>, i.e. ensure that <node> represents a directory,
     and prepare to iterate over directory entries.
 */
@@ -268,98 +325,6 @@ s32 vfs_close_dir(vfs_dir_ctx_t *ctx)
 
 
 /*
-    vfs_lookup() - look up a path and populate a fs_node_t with the contents.
-*/
-s32 vfs_lookup(ks8 * path, fs_node_t *node)
-{
-    vfs_t *vfs;
-    const char *rel;
-    s8 * path_component;
-    void *ctx;
-    u32 i, block;
-    s32 ret;
-
-    /*
-        validate the path: length must be [1, PATH_MAX_LEN]
-
-    */
-
-    if(strlen(path) > NAME_MAX_LEN)
-        return ENAMETOOLONG;
-
-    vfs = mount_find(path, &rel);
-    if(vfs == NULL)
-        return ENOENT;      /* Should only happen if no root fs is mounted */
-
-    block = vfs->root_block;
-
-    for(; *rel == DIR_SEPARATOR; ++rel)
-        ;                           /* Skip over empty path components */
-
-    if(rel[0] == '\0')
-        return vfs->driver->get_root_node(vfs, &node); /* Special case: root directory */
-
-    path_component = (s8 *) kmalloc(NAME_MAX_LEN + 1);
-    if(!path_component)
-        return ENOMEM;
-
-    do
-    {
-        for(; *rel == DIR_SEPARATOR; ++rel)
-            ;                       /* Skip over empty path components */
-
-        for(i = 0; (*rel != DIR_SEPARATOR) && (*rel != '\0'); ++i)
-            path_component[i] = *rel++;
-
-        if(!i)
-            continue;
-        else if(i == NAME_MAX_LEN)
-        {
-            kfree(path_component);
-            return ENAMETOOLONG;
-        }
-
-        path_component[i] = '\0';
-
-        ret = vfs->driver->open_dir(vfs, block, &ctx);
-        if(ret != SUCCESS)
-        {
-            kfree(path_component);
-            return ret;
-        }
-
-        ret = vfs->driver->read_dir(vfs, ctx, path_component, node);
-
-        vfs->driver->close_dir(vfs, ctx);
-        if(ret != SUCCESS)
-        {
-            kfree(path_component);
-            return ret;
-        }
-
-        block = node->first_block;
-
-        /* Check that the located component is a directory or a file, as appropriate */
-        if((*rel == DIR_SEPARATOR) && (node->type == FSNODE_TYPE_FILE))
-        {
-            kfree(path_component);
-            return ENOTDIR;         /* Looking for a directory but found a file */
-        }
-
-        if((*rel == '\0') && (node->type == FSNODE_TYPE_DIR))
-        {
-            kfree(path_component);
-            return EISDIR;          /* Looking for a file but found a directory */
-        }
-    } while(*rel++ != '\0');
-
-    kfree(path_component);
-
-    return SUCCESS;
-}
-
-
-/*
     vfs_get_child_node() - populate <*node> with data relating to <child>, a string containing the
     name of a sub-node of <parent>, on VFS <*vfs>.  If <parent> is NULL, the VFS root directory is
     implied; if both <*vfs> and <parent> are NULL, the file system root directory is implied.  If
@@ -403,9 +368,9 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
             vfs_t *root_fs;
             fs_node_t *root_node;
 
-            root_fs = mount_find(ROOT_DIR, NULL);
-            if(root_fs == NULL)
-                return ENOENT;      /* No root directory - a strange situation */
+            ret = mount_find(NULL, NULL, &root_fs, &root_node);
+            if(ret != SUCCESS)
+                return ret;         /* No root fs - an unusual situation */
 
             ret = vfs_get_root_node(root_fs, &root_node);
             if(ret == SUCCESS)

@@ -13,7 +13,7 @@
 
 s32 romfs_init();
 s32 romfs_mount(vfs_t *vfs);
-s32 romfs_umount(vfs_t *vfs);
+s32 romfs_unmount(vfs_t *vfs);
 s32 romfs_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 romfs_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 romfs_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
@@ -25,7 +25,7 @@ vfs_driver_t g_romfs_ops =
     .name = "romfs",
     .init = romfs_init,
     .mount = romfs_mount,
-    .umount = romfs_umount,
+    .unmount = romfs_unmount,
     .get_root_node = romfs_get_root_node,
     .open_dir = romfs_open_dir,
     .read_dir = romfs_read_dir,
@@ -48,7 +48,7 @@ s32 romfs_mount(vfs_t *vfs)
 }
 
 
-s32 romfs_umount(vfs_t *vfs)
+s32 romfs_unmount(vfs_t *vfs)
 {
     UNUSED(vfs);
     return ENOSYS;

@@ -7,11 +7,13 @@
 	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
-#include <klibc/include/errno.h>
-#include <kernel/include/fs/mount.h>
 #include <kernel/include/defs.h>
-#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/fs/mount.h>
+#include <kernel/include/fs/vfs.h>
+#include <kernel/include/lock.h>
+#include <kernel/include/memory/slab.h>
 #include <kernel/util/kutil.h>
+#include <klibc/include/errno.h>
 
 
 mount_ent_t *g_mount_table = NULL;
@@ -24,111 +26,159 @@ s32 mount_init()
 }
 
 
-s32 mount_add(const char * const mount_point, vfs_driver_t *driver, dev_t *dev)
+/*
+    mount_add() - mount the file system specified by <driver> and <dev> at the location specified by
+    <host_vfs>:<host_node>.
+*/
+s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t * const driver,
+              dev_t * const dev)
 {
-	s32 ret;
-	mount_ent_t *new_ent;
+    s32 ret;
+    mount_ent_t *ent, *new_ent;
+    vfs_t *inner_vfs;
 
-    /* TODO: look up driver, if none is supplied */
-    if((mount_point == NULL) || (driver == NULL) || (dev == NULL))
+    /* TODO: auto-detect driver, if driver == NULL */
+    /* TODO: locking */
+
+    if(driver == NULL)
+        return EINVAL;      /* No driver auto-detection yet */
+
+    /*
+        Validate args: either host_vfs and host_node must be NULL (implying that we are mounting the
+        root filesystem) or they must both be non-NULL (implying that we are mounting a child fs).
+    */
+    if(((host_vfs != NULL) && (host_node == NULL)) || ((host_vfs != NULL) && (host_node == NULL)))
         return EINVAL;
 
-    new_ent = CHECKED_KMALLOC(sizeof(mount_ent_t));
+    /*
+        Ensure that there is not already a filesystem mounted at host_vfs:host_node, and that dev is
+        not already mounted anywhere.
+    */
+    for(ent = g_mount_table; ent != NULL; ent = ent->next)
+        if(((ent->host_vfs == host_vfs) && (ent->host_node == host_node))
+            ||(ent->host_vfs->dev == dev) || (ent->inner_vfs->dev == dev))
+            return EBUSY;
 
-	new_ent->mount_point = strdup(mount_point);
-	if(!new_ent->mount_point)
-    {
-        kfree(new_ent);
-		return ENOMEM;		/* strdup() failed - OOM */
-    }
+    ret = vfs_attach(driver, dev, &inner_vfs);      /* Create a new VFS for the mount */
+    if(ret != SUCCESS)
+        return ret;
 
-    new_ent->vfs = kmalloc(sizeof(vfs_t));
-    if(!new_ent->vfs)
-    {
-        kfree(new_ent->mount_point);
-        kfree(new_ent);
-        return ENOMEM;
-    }
-
-    new_ent->next = NULL;
-	new_ent->mount_point_len = strlen(mount_point);         /*  FIXME - why on earth is this needed? */
-
-    new_ent->vfs->dev = dev;
-    new_ent->vfs->driver = driver;
-
-    /* Attempt to mount the filesystem */
-    ret = new_ent->vfs->driver->mount(new_ent->vfs);
+    ret = slab_alloc(sizeof(mount_ent_t), (void **) &new_ent);
     if(ret != SUCCESS)
     {
-        kfree(new_ent->mount_point);
-        kfree(new_ent->vfs);
-        kfree(new_ent);
-
+        vfs_detach(inner_vfs);
         return ret;
     }
 
-    if(g_mount_table)
-    {
-        mount_ent_t *e;
-        for(e = g_mount_table; e->next != NULL; e = e->next)
-            ;
+    new_ent->host_vfs  = host_vfs;
+    new_ent->host_node = host_node;
+    new_ent->inner_vfs = inner_vfs;
+    new_ent->next      = NULL;
 
-        e->next = new_ent;
-    }
+    if(g_mount_table == NULL)
+        g_mount_table = new_ent;
     else
-        g_mount_table = new_ent;    /* This is the first entry in the mount table */
+        ent->next = new_ent;
 
     return SUCCESS;
+
 }
 
 
-s32 mount_remove(const char * const mount_point)
+/*
+    mount_remove() - remove (unmount) a mount.  The mount is specified by the location in
+    <host_vfs>:<host_node> and optionally the device <dev>.  If <host_vfs>:<host_node> are both
+    NULL, the root filesystem mount is implied.  In this case, <dev> must be NULL or must match the
+    device mounted at the filesystem root.
+*/
+s32 mount_remove(const vfs_t * const host_vfs, const fs_node_t * const host_node,
+                 const dev_t * const dev)
 {
     mount_ent_t *ent, *ent_prev;
 
-    for(ent = g_mount_table, ent_prev = NULL; ent; ent_prev = ent, ent = ent->next)
+    /*
+        If a location is specified by <host_vfs>:<host_node>, both must be non-NULL.  Otherwise,
+        both must be NULL.
+    */
+    if(((host_vfs != NULL) && (host_node == NULL)) || ((host_vfs != NULL) && (host_node == NULL)))
+        return EINVAL;
+
+    preempt_disable();
+    for(ent = g_mount_table, ent_prev = NULL; ent != NULL; ent_prev = ent, ent = ent->next)
     {
-        if(!strcmp(mount_point, ent->mount_point))
+        if((ent->host_vfs == host_vfs) && (ent->host_node == host_node))
         {
-			/* TODO: signal the device that it is being unmounted; flush changed pages, etc */
-            ent_prev->next = ent->next;
-            kfree(ent->mount_point);
-            kfree(ent->vfs);
-            kfree(ent);
+            s32 ret;
+
+            if((dev != NULL) && (dev != ent->inner_vfs->dev))
+            {
+                preempt_enable();
+                return ENOENT;      /* Incorrect device specified */
+            }
+
+            /* Unmount the filesystem */
+            ret = vfs_unmount(ent->inner_vfs);
+            if(ret != SUCCESS)
+            {
+                preempt_enable();
+                return ret;
+            }
+
+            ret = vfs_detach(ent->inner_vfs);
+            if(ret != SUCCESS)
+            {
+                preempt_enable();
+                return ret;
+            }
+
+            if(ent_prev != NULL)
+                ent_prev->next = ent->next;
+            else
+                g_mount_table = ent->next;
+
+            slab_free(ent);
+            preempt_enable();
 
             return SUCCESS;
         }
     }
 
-	return ENOENT;		/* no such mount point */
+    preempt_enable();
+
+    return ENOENT;      /* Mount not found */
 }
 
 
 /*
-    mount_find() - given an absolute (but not necessarily complete) path, find and return the VFS
-    under which the path is mounted.  If rel is non-NULL, point it at the first character past the
-    mountpoint.
+    mount_find() - determine whether the specified VFS (<vfs_outer>) and node (<node_outer>)
+    corresponds to a mount point; if so, return the mounted VFS and root node through <*vfs_inner>
+    and <*node_inner> if these parameters are non-NULL.  Return ENOENT if the supplied arguments do
+    not refer to a mount point.
 */
-vfs_t *mount_find(const char * const path, const char **rel)
+s32 mount_find(const vfs_t * const host_vfs, const fs_node_t * const host_node, vfs_t **inner_vfs,
+               fs_node_t **inner_node)
 {
-	u32 best_match_len = 0;
-	vfs_t *fs = NULL;
-	mount_ent_t *ent;
+    mount_ent_t *mnt;
+    s32 ret;
 
-	for(ent = g_mount_table; ent; ent = ent->next)
+    for(mnt = g_mount_table; mnt != NULL; mnt = mnt->next)
     {
-        ku32 len = ent->mount_point_len;
-
-        if(!strncmp(path, ent->mount_point, len) && (len > best_match_len))
+        if((mnt->host_vfs == host_vfs) && (mnt->host_node == host_node))
         {
-            fs = ent->vfs;
-            best_match_len = len;
+            if(inner_node != NULL)
+            {
+                ret = mnt->inner_vfs->driver->get_root_node(mnt->inner_vfs, inner_node);
+                if(ret != SUCCESS)
+                    return ret;
+            }
+
+            if(inner_vfs != NULL)
+                *inner_vfs = mnt->inner_vfs;
+
+            return SUCCESS;
         }
     }
 
-    if(rel)
-        *rel = path + best_match_len;
-
-    return fs;  /* returns NULL if no root fs is mounted */
+    return ENOENT;
 }
 

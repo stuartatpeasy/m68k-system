@@ -20,7 +20,7 @@
 
 s32 fat_init();
 s32 fat_mount(vfs_t *vfs);
-s32 fat_umount(vfs_t *vfs);
+s32 fat_unmount(vfs_t *vfs);
 s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
@@ -46,7 +46,7 @@ vfs_driver_t g_fat_ops =
     .name = "fat",
     .init = fat_init,
     .mount = fat_mount,
-    .umount = fat_umount,
+    .unmount = fat_unmount,
     .get_root_node = fat_get_root_node,
     .open_dir = fat_open_dir,
     .read_dir = fat_read_dir,
@@ -137,7 +137,7 @@ s32 fat_mount(vfs_t *vfs)
 }
 
 
-s32 fat_umount(vfs_t *vfs)
+s32 fat_unmount(vfs_t *vfs)
 {
     /* TODO: (both of these tasks may not be this module's responsibility):
         - flush all dirty sectors

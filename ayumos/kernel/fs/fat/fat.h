@@ -98,7 +98,7 @@ typedef struct fat_lfn_node fat_lfn_node_t;
 /*
     This struct contains various useful numbers, computed at mount time.  A struct fat_fs will be
     allocated and filled in fat_mount(), and stored in vfs->data.  It is then deallocated in
-    fat_umount().
+    fat_unmount().
 */
 struct fat_fs
 {

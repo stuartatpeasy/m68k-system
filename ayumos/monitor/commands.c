@@ -768,6 +768,11 @@ MONITOR_CMD_HANDLER(map)
 #ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(mount)
 {
+    UNUSED(num_args);
+    UNUSED(args);
+
+    return ENOSYS;
+#if 0
     if(num_args == 0)
     {
         /* Display mount table */
@@ -790,6 +795,7 @@ MONITOR_CMD_HANDLER(mount)
         return EINVAL;
 
     return SUCCESS;
+#endif
 }
 #endif /* WITH_MASS_STORAGE */
 

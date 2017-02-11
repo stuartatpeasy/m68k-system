@@ -15,6 +15,12 @@
 */
 s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
 {
+    UNUSED(path);
+    UNUSED(flags);
+    UNUSED(fp);
+
+    return ENOSYS;
+#if 0
     fs_node_t *node;
     s32 ret;
 
@@ -61,6 +67,7 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
         kfree(node);
         return ret;     /* Something went wrong in vfs_lookup() */
     }
+#endif
 }
 
 

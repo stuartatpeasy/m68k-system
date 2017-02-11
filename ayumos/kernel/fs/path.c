@@ -30,7 +30,11 @@ s32 path_is_absolute(ks8 *path)
 
 
 /*
-    path_open() - walk the specified path
+    path_open() - walk the absolute path specified in <path>.  Fail with EINVAL if <path> is not
+    absolute, and ENOMEM if any memory allocation fails.  Fail with EPERM if a permissions error
+    occurs while traversing the path.
+
+    TODO - handle symlinks
 */
 s32 path_open(const char *path)
 {
