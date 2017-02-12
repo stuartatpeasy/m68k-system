@@ -11,6 +11,8 @@
 
 #include <platform/lambda/include/dfu.h>
 #include <kernel/include/fs/mount.h>
+#include <kernel/include/fs/path.h>
+#include <kernel/include/fs/vfs.h>
 #include <kernel/include/console.h>
 #include <kernel/include/defs.h>
 #include <kernel/include/device/nvram.h>

@@ -36,10 +36,10 @@ s32 path_is_absolute(ks8 *path)
 
     TODO - handle symlinks
 */
-s32 path_open(const char *path)
+s32 path_open(const char *path, vfs_t **vfs, fs_node_t **node)
 {
     char *path_canon, *p, *component, sep;
-    vfs_t *vfs;
+    vfs_t *vfs_;
     fs_node_t *parent, *child;
     s32 ret;
 
@@ -54,8 +54,8 @@ s32 path_open(const char *path)
     parent = NULL;
 
     /* Get the file system root node */
-    vfs = NULL;
-    ret = vfs_get_child_node(NULL, NULL, &vfs, &parent);
+    vfs_ = NULL;
+    ret = vfs_get_child_node(NULL, NULL, &vfs_, &parent);
     if(ret != SUCCESS)
     {
         kfree(path_canon);
@@ -72,7 +72,7 @@ s32 path_open(const char *path)
         *p = '\0';
 
         /* Look up component */
-        ret = vfs_get_child_node(parent, component, &vfs, &child);
+        ret = vfs_get_child_node(parent, component, &vfs_, &child);
         if(ret != SUCCESS)
         {
             fs_node_free(parent);
@@ -86,8 +86,13 @@ s32 path_open(const char *path)
         parent = child;
     } while(sep);
 
-    fs_node_free(parent);
     kfree(path_canon);
+
+    if(vfs != NULL)
+        *vfs = vfs_;
+
+    if(node != NULL)
+        *node = parent;
 
     return SUCCESS;
 }

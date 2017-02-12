@@ -627,63 +627,62 @@ MONITOR_CMD_HANDLER(id)
 #ifdef WITH_MASS_STORAGE
 MONITOR_CMD_HANDLER(ls)
 {
-    UNUSED(num_args);   // FIXME
-    UNUSED(args);       // FIXME
-#if 0
-    /********** FIXME *************/
-    fs_node_t node;
-    char perms[11];
-
-    perms[10] = '\0';
 
     /* For now we require a path arg */
     if(num_args == 1)
     {
+        char perms[11];
+        vfs_t *vfs;
+        fs_node_t *node;
         s32 ret;
 
-        ret = vfs_lookup(args[0], &node);
+        perms[10] = '\0';
+
+        ret = path_open(args[0], &vfs, &node);
+
         if(ret != SUCCESS)
         {
             puts(kstrerror(ret));
             return SUCCESS;
         }
 
-        if(node.type == FSNODE_TYPE_DIR)
+        if(node->type == FSNODE_TYPE_DIR)
         {
             /* Iterate directory */
-            vfs_dir_ctx_t ctx;
+            vfs_dir_ctx_t *ctx;
 
-            ret = vfs_open_dir(args[0], &ctx);
+            ret = vfs_open_dir(vfs, node, &ctx);
             if(ret != SUCCESS)
             {
                 puts(kstrerror(ret));
+                fs_node_free(node);
                 return SUCCESS;
             }
 
-            while((ret = vfs_read_dir(&ctx, &node, NULL)) != ENOENT)
+            while((ret = vfs_read_dir(ctx, NULL, node)) != ENOENT)
             {
-                printf("%9d %s %9d %s\n", node.first_block, vfs_node_perm_str(&node, perms),
-                       node.size, node.name);
+                printf("%9d %s %9d %s\n", node->first_block, fs_node_perm_str(node, perms),
+                       node->size, node->name);
             }
 
             if(ret != ENOENT)
                 puts(kstrerror(ret));
 
-            vfs_close_dir(&ctx);
+            vfs_close_dir(ctx);
         }
         else
         {
             /* Print single file */
-            printf("%9d %s %9d %s\n", node.first_block, vfs_node_perm_str(&node, perms),
-                   node.size, node.name);
+            printf("%9d %s %9d %s\n", node->first_block, fs_node_perm_str(node, perms),
+                   node->size, node->name);
         }
+
+        fs_node_free(node);
     }
     else
         return EINVAL;
 
     return SUCCESS;
-#endif
-    return EOPNOSUPPORT;
 }
 #endif /* WITH_MASS_STORAGE */
 
@@ -1169,7 +1168,6 @@ MONITOR_CMD_HANDLER(symbol)
     Used to trigger a test of some sort
 */
 #include <kernel/include/elf.h>
-#include <kernel/include/fs/path.h>
 #include <kernel/include/process.h>
 #include <kernel/include/tick.h>
 #include <kernel/include/net/dhcp.h>
@@ -1279,42 +1277,6 @@ MONITOR_CMD_HANDLER(test)
         return tftp_read_request(&server, "test.txt");
     }
 #endif /* WITH_NETWORKING */
-    else if(testnum == 4)
-    {
-        void *p;
-        u32 size;
-
-        if(num_args != 2)
-            return EINVAL;
-
-        size = strtoul(args[1], NULL, 0);
-
-        /* Allocate slab stuff */
-        ret = slab_alloc(size, &p);
-        if(ret != SUCCESS)
-            printf("slab_alloc(%u): %s\n", size, kstrerror(ret));
-        else
-            printf("slab_alloc(%u): success; p=%p\n", size, p);
-    }
-    else if(testnum == 5)
-    {
-        return path_open(args[1]);
-    }
-    else if(testnum == 6)
-    {
-        void *p;
-        u32 size;
-
-        size = strtoul(args[1], NULL, 0);
-        ret = slab_alloc(size, &p);
-
-        if(ret != SUCCESS)
-            printf("slab_alloc(%u): %s\n", size, kstrerror(ret));
-        else
-            printf("slab_alloc(%u): success; p=%p\n", size, p);
-
-        slab_free(p);
-    }
 
     return SUCCESS;
 }
