@@ -8,6 +8,8 @@
 */
 
 #include <kernel/include/fs/file.h>
+#include <kernel/include/fs/path.h>
+#include <kernel/include/memory/slab.h>
 
 
 /*
@@ -15,32 +17,26 @@
 */
 s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
 {
-    UNUSED(path);
-    UNUSED(flags);
-    UNUSED(fp);
-
-    return ENOSYS;
-#if 0
+    vfs_t *vfs;
     fs_node_t *node;
     s32 ret;
 
-    node = (fs_node_t *) kmalloc(sizeof(fs_node_t));
-    if(!node)
-        return ENOMEM;
+    /* BUG? fp is not allocated by this function */
 
     /* Check that the file exists */
-    ret = vfs_lookup(path, node);
+    ret = path_open(path, &vfs, &node);
     if(ret == SUCCESS)
     {
         /* File exists.  Was exclusive creation requested? */
         if(flags & O_EXCL)
         {
-            kfree(node);
+            slab_free(node);
             return EEXIST;
         }
 
         /* Check perms */
 
+        fp->vfs = vfs;
         fp->node = node;
         fp->flags = flags;
         fp->offset = (flags & O_APPEND) ? node->size : 0;
@@ -54,20 +50,20 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
         {
             /* Check perms; create file; set offset = 0 */
             /* TODO */
+            slab_free(node);
             return ENOSYS;
         }
         else
         {
-            kfree(node);
+            slab_free(node);
             return ENOENT;      /* File does not exist */
         }
     }
     else
     {
-        kfree(node);
+        slab_free(node);
         return ret;     /* Something went wrong in vfs_lookup() */
     }
-#endif
 }
 
 

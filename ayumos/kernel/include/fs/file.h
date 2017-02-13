@@ -28,6 +28,7 @@
 
 struct file_info
 {
+    vfs_t *vfs;
     fs_node_t *node;
     u32 flags;
     u32 offset;
