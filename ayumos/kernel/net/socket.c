@@ -13,11 +13,11 @@
 
 
 /*
-	socket_init() - allocate memory to hold socket array.
+    socket_init() - allocate memory to hold socket array.
 */
 s32 socket_init()
 {
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -27,8 +27,8 @@ s32 socket_init()
 s32 socket_create(s32 domain, s32 type, s32 protocol)
 {
     UNUSED(domain);
-	UNUSED(type);
-	UNUSED(protocol);
+    UNUSED(type);
+    UNUSED(protocol);
 
 
     return SUCCESS;

@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_SCHED_H_INC
 #define KERNEL_INCLUDE_SCHED_H_INC
 /*
-	Scheduler
+    Scheduler
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, January 2012.
+    (c) Stuart Wallace <stuartw@atom.net>, January 2012.
 */
 
 #include <kernel/include/cpu.h>

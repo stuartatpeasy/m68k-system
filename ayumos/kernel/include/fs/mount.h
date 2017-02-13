@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_FS_MOUNT_H_INC
 #define KERNEL_INCLUDE_FS_MOUNT_H_INC
 /*
-	Mount point functions
+    Mount point functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, March 2012.
+    (c) Stuart Wallace, March 2012.
 */
 
 #include <kernel/include/device/device.h>

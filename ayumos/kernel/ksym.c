@@ -1,10 +1,10 @@
 /*
-	Kernel symbol table lookup functions
+    Kernel symbol table lookup functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, September 2015.
+    (c) Stuart Wallace <stuartw@atom.net>, September 2015.
 */
 
 #include <kernel/include/ksym.h>
@@ -107,12 +107,12 @@ const char *ksym_get_description(const symtype_t type)
     {
         case EXT_BSS:       return "bss ext";
         case INT_BSS:       return "bss int";
-    	case EXT_DATA:      return "data int";
-    	case INT_DATA:      return "data ext";
-    	case EXT_RO:        return "ro ext";
-    	case INT_RO:        return "ro int";
-    	case EXT_TEXT:      return "text ext";
-    	case INT_TEXT:      return "text int";
+        case EXT_DATA:      return "data int";
+        case INT_DATA:      return "data ext";
+        case EXT_RO:        return "ro ext";
+        case INT_RO:        return "ro int";
+        case EXT_TEXT:      return "text ext";
+        case INT_TEXT:      return "text int";
     }
 
     return "unknown";

@@ -1,16 +1,16 @@
 /*
-	block.c: functions relating to the block device abstraction
+    block.c: functions relating to the block device abstraction
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace, November 2016.
+    (c) Stuart Wallace, November 2016.
 
-	NOTE: this abstraction assumes a 512-byte block size.  This is likely to become a problem.
-	NOTE: the block cache statistics object is not protected by locking.  The values stored in this
+    NOTE: this abstraction assumes a 512-byte block size.  This is likely to become a problem.
+    NOTE: the block cache statistics object is not protected by locking.  The values stored in this
           object should therefore be regarded as approximate.
 
-	TODO: support for writes
+    TODO: support for writes
 */
 
 #include <kernel/include/device/block.h>

@@ -1,7 +1,7 @@
 /*
-	In-memory "console" device driver
+    In-memory "console" device driver
 
-	Part of ayumos
+    Part of ayumos
 
 
     This device is used as a temporary console early in the system boot process.  It implements a
@@ -10,7 +10,7 @@
     sent to the console to be read back.  Note that getc() doesn't read user input - it just returns
     the data previously written using putc().
 
-	(c) Stuart Wallace, January 2016.
+    (c) Stuart Wallace, January 2016.
 */
 
 #include <kernel/include/device/memconsole.h>

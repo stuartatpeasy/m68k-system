@@ -1,10 +1,10 @@
 /*
-	device.c: device and device driver management
+    device.c: device and device driver management
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 9th Febrary 2012.
+    (c) Stuart Wallace, 9th Febrary 2012.
 */
 
 #include <klibc/include/errno.h>
@@ -82,18 +82,18 @@ s32 dev_add_child(dev_t *parent, dev_t *child)
 
     child->parent = parent;
 
-	if(parent->first_child == NULL)
-		parent->first_child = child;
-	else
-	{
-    	dev_t *p;
+    if(parent->first_child == NULL)
+        parent->first_child = child;
+    else
+    {
+        dev_t *p;
 
-    	for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
-        	;
+        for(p = parent->first_child; p->next_sibling != NULL; p = p->next_sibling)
+            ;
 
-	    p->next_sibling = child;
-    	child->prev_sibling = p;
-	}
+        p->next_sibling = child;
+        child->prev_sibling = p;
+    }
 
     return SUCCESS;
 }
@@ -201,22 +201,22 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
     s32 ret;
     dev_t *d = (dev_t *) CHECKED_KCALLOC(1, sizeof(dev_t));
 
-	d->type		    = type;
-	d->subtype		= subtype;
-	d->state        = DEV_STATE_UNKNOWN;
-	d->irql		    = irql;
-	d->base_addr    = base_addr;
-	d->human_name   = human_name;
-	d->data         = NULL;
+    d->type         = type;
+    d->subtype      = subtype;
+    d->state        = DEV_STATE_UNKNOWN;
+    d->irql         = irql;
+    d->base_addr    = base_addr;
+    d->human_name   = human_name;
+    d->data         = NULL;
 
-	d->control      = dev_control_unimplemented;
-	d->read         = dev_read_unimplemented;
-	d->write        = dev_write_unimplemented;
-	d->getc         = dev_getc_unimplemented;
-	d->putc         = dev_putc_unimplemented;
-	d->shut_down    = dev_shut_down_unimplemented;
+    d->control      = dev_control_unimplemented;
+    d->read         = dev_read_unimplemented;
+    d->write        = dev_write_unimplemented;
+    d->getc         = dev_getc_unimplemented;
+    d->putc         = dev_putc_unimplemented;
+    d->shut_down    = dev_shut_down_unimplemented;
 
-	strcpy(d->name, dev_name);
+    strcpy(d->name, dev_name);
 
     ret = dev_add_suffix(d->name);
     if(ret != SUCCESS)

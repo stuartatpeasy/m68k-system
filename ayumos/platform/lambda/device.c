@@ -8,13 +8,13 @@
 
 #include <klibc/include/stdio.h>
 #include <klibc/include/string.h>
-#include <kernel/include/device/ata.h>      /* ATA interface    						*/
-#include <kernel/include/device/auto.h>		/* Automatic peripheral driver selection	*/
+#include <kernel/include/device/ata.h>      /* ATA interface                            */
+#include <kernel/include/device/auto.h>     /* Automatic peripheral driver selection    */
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/util/kutil.h>
 #include <platform/lambda/include/device.h>
-#include <driver/mc68681.h>                 /* DUART            						*/
-#include <driver/ds17485.h>                 /* RTC              						*/
+#include <driver/mc68681.h>                 /* DUART                                    */
+#include <driver/ds17485.h>                 /* RTC                                      */
 
 /*
     Interrupt assignments
@@ -41,7 +41,7 @@ dev_t *g_lambda_console;    /* Console device - stored separately for early init
 */
 s32 plat_dev_enumerate()
 {
-	dev_t *dev;
+    dev_t *dev;
 
     /*
         MC68681 DUART
@@ -78,9 +78,9 @@ s32 plat_dev_enumerate()
             subsequent revisions it's active-low.
         */
 #if (PLATFORM_REV == 0)
-		mc68681_reset_op_bits(g_lambda_duart, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+        mc68681_reset_op_bits(g_lambda_duart, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
 #else
-		mc68681_set_op_bits(g_lambda_duart, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
+        mc68681_set_op_bits(g_lambda_duart, BIT(LAMBDA_DUART_BEEPER_OUTPUT));
 #endif
     }
 
@@ -146,7 +146,7 @@ void expansion_init()
     u16 i;
     u8 *base_addr;
 
-	for(base_addr = LAMBDA_EXP_BASE_ADDR, i = 0; i < LAMBDA_EXP_NUM_SLOTS;
+    for(base_addr = LAMBDA_EXP_BASE_ADDR, i = 0; i < LAMBDA_EXP_NUM_SLOTS;
         ++i, base_addr += LAMBDA_EXP_ADDR_LEN)
     {
         if(!(mc68681_read_ip(g_lambda_console) & LAMBDA_EXP_PD_MASK(i)))

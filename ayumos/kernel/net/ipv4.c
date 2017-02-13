@@ -385,8 +385,8 @@ s32 ipv4_route_delete(const ipv4_route_t * const r)
 
             if(*prev)
                 (*prev)->next = p->next;
-			else
-				*prev = p->next;
+            else
+                *prev = p->next;
 
             kfree(p);
 

@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_CONSOLE_H_INC
 #define KERNEL_INCLUDE_CONSOLE_H_INC
 /*
-	Console-related declarations
+    Console-related declarations
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace, January 2016.
+    (c) Stuart Wallace, January 2016.
 */
 
 #include <kernel/include/device/device.h>

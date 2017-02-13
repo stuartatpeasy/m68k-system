@@ -1,12 +1,12 @@
 #ifndef DRIVER_MC68681_H_INC
 #define DRIVER_MC68681_H_INC
 /*
-	MC68681 MC68681 driver function and macro declarations
+    MC68681 MC68681 driver function and macro declarations
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, December 2011.
+    (c) Stuart Wallace, December 2011.
 */
 
 #ifdef WITH_DRV_SER_MC68681
@@ -19,7 +19,7 @@
 
 
 /*
-	Base address of MC68681 DUART
+    Base address of MC68681 DUART
 */
 
 #define MC68681_REG_BASE        (1)         /* Regs are 8-bit, located at odd addresses         */
@@ -38,74 +38,74 @@
 
 
 /*
-	MC68681 registers
+    MC68681 registers
 
-	offset			read								write
-	--------------------------------------------------------------------------------------------
-	0				Mode Register A (MR1A, MR2A)		Mode Register A (MR1A, MR2A)			 */
-#define MC68681_MRA		    (0)
+    offset          read                                write
+    --------------------------------------------------------------------------------------------
+    0               Mode Register A (MR1A, MR2A)        Mode Register A (MR1A, MR2A)             */
+#define MC68681_MRA         (0)
 
-/*	1				Status Register A (SRA)				Clock Select Register A (CSRA)			 */
-#define MC68681_SRA		    (1)
-#define MC68681_CSRA		(1)
+/*  1               Status Register A (SRA)             Clock Select Register A (CSRA)           */
+#define MC68681_SRA         (1)
+#define MC68681_CSRA        (1)
 
-/*	2				BRG test							Command register A (CRA))				 */
-#define MC68681_BRG_TEST	(2)
-#define MC68681_CRA		    (2)
+/*  2               BRG test                            Command register A (CRA))                */
+#define MC68681_BRG_TEST    (2)
+#define MC68681_CRA         (2)
 
-/*	3				Rx Holding Register A (RHRA)		Tx Holding Register A (THRA))			 */
-#define MC68681_RHRA		(3)
-#define MC68681_THRA		(3)
+/*  3               Rx Holding Register A (RHRA)        Tx Holding Register A (THRA))            */
+#define MC68681_RHRA        (3)
+#define MC68681_THRA        (3)
 
-/*	4				Input Port Change Register (IPCR)	Aux Control Register (ACR))				 */
-#define MC68681_IPCR		(4)
-#define MC68681_ACR		    (4)
+/*  4               Input Port Change Register (IPCR)   Aux Control Register (ACR))              */
+#define MC68681_IPCR        (4)
+#define MC68681_ACR         (4)
 
-/*	5				Interrupt Status Register (ISR)		Interrupt Mask Register (IMR))			 */
-#define MC68681_ISR		    (5)
-#define MC68681_IMR		    (5)
+/*  5               Interrupt Status Register (ISR)     Interrupt Mask Register (IMR))           */
+#define MC68681_ISR         (5)
+#define MC68681_IMR         (5)
 
-/*	6				Counter/Timer Upper Value (CTU)		Counter/Timer Upper Preset Value (CTUR)) */
-#define MC68681_CTU		    (6)
-#define MC68681_CTUR		(6)
+/*  6               Counter/Timer Upper Value (CTU)     Counter/Timer Upper Preset Value (CTUR)) */
+#define MC68681_CTU         (6)
+#define MC68681_CTUR        (6)
 
-/*	7				Counter/Timer Lower Value (CTL)		Counter/Timer Lower Preset Value (CTLR)) */
-#define MC68681_CTL		    (7)
-#define MC68681_CTLR		(7)
+/*  7               Counter/Timer Lower Value (CTL)     Counter/Timer Lower Preset Value (CTLR)) */
+#define MC68681_CTL         (7)
+#define MC68681_CTLR        (7)
 
-/*	8				Mode Register B (MR1B, MR2B)		Mode Register B (MR1B, MR2B))			 */
-#define MC68681_MRB		    (8)
+/*  8               Mode Register B (MR1B, MR2B)        Mode Register B (MR1B, MR2B))            */
+#define MC68681_MRB         (8)
 
-/*	9				Status Register B (SRB)				Clock Select Register B (CSRB))			 */
-#define MC68681_SRB		    (9)
-#define MC68681_CSRB		(9)
+/*  9               Status Register B (SRB)             Clock Select Register B (CSRB))          */
+#define MC68681_SRB         (9)
+#define MC68681_CSRB        (9)
 
-/*	10				1x/16x Test							Command Register B (CRB))				 */
-#define MC68681_1_16_TEST	(10)
-#define MC68681_CRB		    (10)
+/*  10              1x/16x Test                         Command Register B (CRB))                */
+#define MC68681_1_16_TEST   (10)
+#define MC68681_CRB         (10)
 
-/*	11				Rx Holding Register B (RHRB)		Tx Holding Register B (THRB))			 */
-#define MC68681_RHRB		(11)
-#define MC68681_THRB		(11)
+/*  11              Rx Holding Register B (RHRB)        Tx Holding Register B (THRB))            */
+#define MC68681_RHRB        (11)
+#define MC68681_THRB        (11)
 
-/*	12				Interrupt Vector Register (IVR)		Interrupt Vector Register (IVR))		 */
-#define MC68681_IVR		    (12)
+/*  12              Interrupt Vector Register (IVR)     Interrupt Vector Register (IVR))         */
+#define MC68681_IVR         (12)
 
-/*	13				Input Ports IP0-IP6					Output Port Conf Register (OPCR))		 */
-#define MC68681_IP		    (13)
-#define MC68681_OPCR		(13)
+/*  13              Input Ports IP0-IP6                 Output Port Conf Register (OPCR))        */
+#define MC68681_IP          (13)
+#define MC68681_OPCR        (13)
 
-/*	14				Start Counter Command (START_CC)	Set Output Port Bits Command (SOPR))	 */
-#define MC68681_START_CC	(14)
-#define MC68681_SOPR		(14)
+/*  14              Start Counter Command (START_CC)    Set Output Port Bits Command (SOPR))     */
+#define MC68681_START_CC    (14)
+#define MC68681_SOPR        (14)
 
-/*	15				Stop Counter Command (STOP_CC)		Reset Output Port Bits Command (ROPR))	 */
-#define MC68681_STOP_CC	    (15)
-#define MC68681_ROPR		(15)
+/*  15              Stop Counter Command (STOP_CC)      Reset Output Port Bits Command (ROPR))   */
+#define MC68681_STOP_CC     (15)
+#define MC68681_ROPR        (15)
 
 
 /*
-	MC68681 register bits
+    MC68681 register bits
 */
 
 /* MC68681_ACR - auxiliary control register */
@@ -170,14 +170,14 @@
 #define MC68681_MR2_STOP_BIT_LEN_SHIFT  (0)
 
 /* MC68681_SR[AB] - status register */
-#define MC68681_SR_RECEIVED_BREAK		(7)
-#define MC68681_SR_FRAMING_ERROR		(6)
-#define MC68681_SR_PARITY_ERROR		    (5)
-#define MC68681_SR_OVERRUN_ERROR		(4)
-#define MC68681_SR_TXEMT				(3)
-#define MC68681_SR_TXRDY				(2)
-#define MC68681_SR_FFULL				(1)
-#define MC68681_SR_RXRDY				(0)
+#define MC68681_SR_RECEIVED_BREAK       (7)
+#define MC68681_SR_FRAMING_ERROR        (6)
+#define MC68681_SR_PARITY_ERROR         (5)
+#define MC68681_SR_OVERRUN_ERROR        (4)
+#define MC68681_SR_TXEMT                (3)
+#define MC68681_SR_TXRDY                (2)
+#define MC68681_SR_FFULL                (1)
+#define MC68681_SR_RXRDY                (0)
 
 
 /* Parity modes (see MC68681_MR1_*) */

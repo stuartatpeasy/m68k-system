@@ -49,7 +49,7 @@
 
 syscall_dispatcher:
         movem.l     d1/a0-a2, sp@-
-		move.l      usp, a0
+        move.l      usp, a0
 
         /* Retrieve the requested syscall number from the stack, and check that it is valid */
         move.l      a0@(4), d0

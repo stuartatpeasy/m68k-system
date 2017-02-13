@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_FS_VFS_H_INC
 #define KERNEL_INCLUDE_FS_VFS_H_INC
 /*
-	Virtual file system abstraction
+    Virtual file system abstraction
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
+    (c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
 #include <kernel/include/device/device.h>

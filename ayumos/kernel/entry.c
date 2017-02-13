@@ -72,14 +72,14 @@ void _main()
     ramext = mem_get_largest_extent(MEM_EXTENT_USER | MEM_EXTENT_RAM);
     umeminit(ramext->base, ramext->base + ramext->len);
 
-	/* By default, all exceptions cause a context-dump followed by a halt. */
-	cpu_irq_init_table();
+    /* By default, all exceptions cause a context-dump followed by a halt. */
+    cpu_irq_init_table();
 
     /* Initialise device tree */
-	if(dev_init() != SUCCESS)
+    if(dev_init() != SUCCESS)
         boot_early_fail(BOOT_FAIL_DEVICE_INIT);
 
-	/*
+    /*
         It's not yet possible to initialise the real (platform) console because devices haven't
         been enumerated and interrupts are disabled.  In the meantime, create a temporary in-memory
         kernel console device to capture output from the boot process.
@@ -115,8 +115,8 @@ void _main()
     early_boot_console_close();
 
     /* Activate red LED while the boot process continues */
-	plat_led_off(LED_ALL);
-	plat_led_on(LED_RED);
+    plat_led_off(LED_ALL);
+    plat_led_on(LED_RED);
 
     /*
         Device enumeration is done; interrupts are enabled, and the console should be functional.
@@ -153,8 +153,8 @@ void _main()
         printf("sched: init failed: %s\n", kstrerror(ret));
 
     ret = vfs_init();
-	if(ret != SUCCESS)
-		printf("vfs: init failed: %s\n", kstrerror(ret));
+    if(ret != SUCCESS)
+        printf("vfs: init failed: %s\n", kstrerror(ret));
 
     /* Display approximate CPU clock speed */
     if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)
@@ -164,7 +164,7 @@ void _main()
     tick_init();
 
     /* Display memory information */
-	printf("%u bytes of kernel heap memory available\n"
+    printf("%u bytes of kernel heap memory available\n"
            "%u bytes of user memory available\n", kfreemem(), ufreemem());
 
     /* Display platform serial number */
@@ -199,10 +199,10 @@ void _main()
 #endif /* WITH_NETWORKING */
 
     /* Startup complete - activate green LED */
-	plat_led_off(LED_RED);
-	plat_led_on(LED_GREEN);
+    plat_led_off(LED_RED);
+    plat_led_on(LED_GREEN);
 
-	monitor();      /* start interactive "shell" thing */
+    monitor();      /* start interactive "shell" thing */
 
-	cpu_halt();		/* should never be reached */
+    cpu_halt();     /* should never be reached */
 }

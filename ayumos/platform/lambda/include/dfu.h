@@ -1,12 +1,12 @@
 #ifndef PLATFORM_LAMBDA_REV0_DFU_H_INC
 #define PLATFORM_LAMBDA_REV0_DFU_H_INC
 /*
-	Device firmware update functions
+    Device firmware update functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, January 2012.
+    (c) Stuart Wallace, January 2012.
 */
 
 #include <klibc/include/string.h>
@@ -19,9 +19,9 @@
 #include <platform/lambda/include/lambda.h>
 
 
-#define FLASH_OFFSET(x)		*((vu16 *) (LAMBDA_ROM_START + (x << 1)))
-#define FLASH_REG1			*((vu16 *) (LAMBDA_ROM_START + (0x555 << 1)))
-#define FLASH_REG2			*((vu16 *) (LAMBDA_ROM_START + (0x2aa << 1)))
+#define FLASH_OFFSET(x)     *((vu16 *) (LAMBDA_ROM_START + (x << 1)))
+#define FLASH_REG1          *((vu16 *) (LAMBDA_ROM_START + (0x555 << 1)))
+#define FLASH_REG2          *((vu16 *) (LAMBDA_ROM_START + (0x2aa << 1)))
 
 
 s32 dfu(ku16 *data, ku32 len);

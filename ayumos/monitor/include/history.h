@@ -1,12 +1,12 @@
 #ifndef MONITOR_HISTORY_H_INC
 #define MONITOR_HISTORY_H_INC
 /*
-	Command-history support for monitor system
+    Command-history support for monitor system
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 2015.
+    (c) Stuart Wallace, 2015.
 */
 
 

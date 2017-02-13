@@ -1,10 +1,10 @@
 /*
-	File system node and node-cache management
+    File system node and node-cache management
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, February 2017.
+    (c) Stuart Wallace <stuartw@atom.net>, February 2017.
 */
 
 #include <kernel/include/fs/node.h>

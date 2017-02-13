@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_DEVICE_POWER_H_INC
 #define KERNEL_INCLUDE_DEVICE_POWER_H_INC
 /*
-	power.h: declarations related to power management.
+    power.h: declarations related to power management.
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, September 2016.
+    (c) Stuart Wallace <stuartw@atom.net>, September 2016.
 */
 
 

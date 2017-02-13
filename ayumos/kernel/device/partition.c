@@ -1,10 +1,10 @@
 /*
-	partition.c: declarations of functions and types relating to the hard disc partition model
+    partition.c: declarations of functions and types relating to the hard disc partition model
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 9th February 2012.
+    (c) Stuart Wallace, 9th February 2012.
 */
 
 #ifdef WITH_DRV_MST_PARTITION
@@ -48,10 +48,10 @@ s32 partition_init()
         u16 part;
 
         if(block_read(dev, 0, &m) != SUCCESS)
-            continue;		/* Failed to read sector TODO: report error */
+            continue;       /* Failed to read sector TODO: report error */
 
         if(LE2N16(m.mbr_signature) != MBR_SIGNATURE)
-            continue;		/* Sector is not a MBR */
+            continue;       /* Sector is not a MBR */
 
         for(part = 0; part < MBR_NUM_PARTITIONS; ++part)
         {
@@ -67,7 +67,7 @@ s32 partition_init()
                 continue;       /* Skip zero-length partitions */
 
             if(dev->control(dev, dc_get_block_size, NULL, &bytes_per_sector) != SUCCESS)
-                continue;		/* TODO: report error */
+                continue;       /* TODO: report error */
 
             data = CHECKED_KCALLOC(1, sizeof(partition_data_t));
 
@@ -85,17 +85,17 @@ s32 partition_init()
             part_dev->block_size    = dev->block_size;
             part_dev->len           = LE2N32(p->num_sectors);
 
-            data->device		= dev;
-            data->block_size	= bytes_per_sector;
-            data->offset 		= LE2N32(p->first_sector_lba);
-            data->type			= p->type;
-            data->status		= p->status;
+            data->device        = dev;
+            data->block_size    = bytes_per_sector;
+            data->offset        = LE2N32(p->first_sector_lba);
+            data->type          = p->type;
+            data->status        = p->status;
 
             part_dev->data = data;
         }
     }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -150,7 +150,7 @@ s32 partition_shut_down(dev_t *dev)
 {
     kfree(dev->data);
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -162,8 +162,8 @@ s32 partition_read(dev_t *dev, ku32 offset, u32 *len, void* buf)
     partition_data_t * const part_data = (partition_data_t *) dev->data;
     dev_t * const block_dev = part_data->device;
 
-	if((offset + *len) > dev->len)
-		return EINVAL;
+    if((offset + *len) > dev->len)
+        return EINVAL;
 
     return block_dev->read(block_dev, part_data->offset + offset, len, buf);
 }
@@ -177,8 +177,8 @@ s32 partition_write(dev_t *dev, ku32 offset, u32 *len, const void* buf)
     partition_data_t * const part_data = (partition_data_t *) dev->data;
     dev_t * const block_dev = part_data->device;
 
-	if((offset + *len) > dev->len)
-		return EINVAL;
+    if((offset + *len) > dev->len)
+        return EINVAL;
 
     return block_dev->write(block_dev, part_data->offset + offset, len, buf);
 }
@@ -189,22 +189,22 @@ s32 partition_write(dev_t *dev, ku32 offset, u32 *len, const void* buf)
 */
 s32 partition_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *out)
 {
-	const struct partition_data * const pdata = (const struct partition_data * const) dev->data;
+    const struct partition_data * const pdata = (const struct partition_data * const) dev->data;
     UNUSED(in);
 
-	switch(fn)
-	{
-		case dc_get_extent:
-			*((u32 *) out) = dev->len;
-			break;
+    switch(fn)
+    {
+        case dc_get_extent:
+            *((u32 *) out) = dev->len;
+            break;
 
-		case dc_get_block_size:
-			*((u32 *) out) = dev->block_size;
-			break;
+        case dc_get_block_size:
+            *((u32 *) out) = dev->block_size;
+            break;
 
-		case dc_get_bootable:
-			*((u32 *) out) = (pdata->status == PARTITION_STATUS_BOOTABLE);
-			break;
+        case dc_get_bootable:
+            *((u32 *) out) = (pdata->status == PARTITION_STATUS_BOOTABLE);
+            break;
 
         case dc_get_model:
             *((s8 **) out) = "partition";
@@ -222,11 +222,11 @@ s32 partition_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *ou
             *((u32 *) out) = (pdata->status >= 0x80);
             break;
 
-		default:
-			return ENOSYS;
-	}
+        default:
+            return ENOSYS;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 #endif /* WITH_MASS_STORAGE */

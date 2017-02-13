@@ -1,10 +1,10 @@
 /*
-	MC68000/68010 disassembler
+    MC68000/68010 disassembler
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, 2011.
+    (c) Stuart Wallace <stuartw@atom.net>, 2011.
 */
 
 #include <monitor/include/disasm.h>
@@ -73,29 +73,29 @@ const ea_size_t g_move_sizemap[] =
 
 int disassemble(unsigned short **p, char *str)
 {
-	char a1[32], a2[32];
-	const char *pf = NULL;
+    char a1[32], a2[32];
+    const char *pf = NULL;
 
-	const unsigned short instr = HTOP_SHORT(*(*p)++);
-	const unsigned char bit7_6 = (instr >> 6) & 3,
-						src_mode = (instr >> 3) & 0x7,
-						src_reg = (instr & 0x7),
-						dest_mode = (instr >> 6) & 0x7,
-						dest_reg = (instr >> 9) & 0x7;
+    const unsigned short instr = HTOP_SHORT(*(*p)++);
+    const unsigned char bit7_6 = (instr >> 6) & 3,
+                        src_mode = (instr >> 3) & 0x7,
+                        src_reg = (instr & 0x7),
+                        dest_mode = (instr >> 6) & 0x7,
+                        dest_reg = (instr >> 9) & 0x7;
 
-	ea_size_t size = ea_unsized;
+    ea_size_t size = ea_unsized;
 
-	*str = '\0';
+    *str = '\0';
 
-	int x;
-	for(x = 0; x < 32; a1[x] = a2[x] = 0, ++x) ;
+    int x;
+    for(x = 0; x < 32; a1[x] = a2[x] = 0, ++x) ;
 
-	switch(instr >> 12)
-	{
+    switch(instr >> 12)
+    {
         case 0x0:
-            if(TEST(instr, 8) || (((instr >> 8) & 0xf) == 8))		/* static/dynamic bit / movep */
+            if(TEST(instr, 8) || (((instr >> 8) & 0xf) == 8))       /* static/dynamic bit / movep */
             {
-                if(src_mode == 1)	/* movep */
+                if(src_mode == 1)   /* movep */
                 {
                     const unsigned char dir = TEST(instr, 7),
                                         sz = TEST(instr, 6);
@@ -103,14 +103,14 @@ int disassemble(unsigned short **p, char *str)
                     pf = "movep";
                     size = sz ? ea_long : ea_word;
 
-                    if(dir)		/* reg -> mem */
+                    if(dir)     /* reg -> mem */
                     {
                         a1[0] = 'd';
                         a1[1] = '0' + dest_reg;
 
                         sprintf(a2, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
                     }
-                    else		/* mem -> reg */
+                    else        /* mem -> reg */
                     {
                         sprintf(a1, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
 
@@ -118,18 +118,18 @@ int disassemble(unsigned short **p, char *str)
                         a2[1] = '0' + dest_reg;
                     }
                 }
-                else				/* static/dynamic bit */
+                else                /* static/dynamic bit */
                 {
                     pf = g_disasm_bits[bit7_6];
 
-                    if(TEST(instr, 8))	/* dynamic bit */
+                    if(TEST(instr, 8))  /* dynamic bit */
                     {
                         size = src_mode ? ea_byte : ea_long;
 
                         a1[0] = 'd';
                         a1[1] = '0' + dest_reg;
                     }
-                    else				/* static bit */
+                    else                /* static bit */
                     {
                         sprintf(a1, "#%d", HTOP_SHORT(*(*p)++) & 0xff);
                     }
@@ -141,7 +141,7 @@ int disassemble(unsigned short **p, char *str)
                 /* ori / andi / subi / addi / <static bit, handled above> / eori / cmpi / moves */
                 pf = g_disasm_misc2[(instr >> 9) & 0x7];
 
-                if((src_mode == 7) && (src_reg == 4))		/* -> ccr/sr */
+                if((src_mode == 7) && (src_reg == 4))       /* -> ccr/sr */
                 {
                     /* TODO: only andi/eori/ori are permitted here - validate this */
                     if(TEST(instr, 6))
@@ -176,10 +176,10 @@ int disassemble(unsigned short **p, char *str)
         case 0x3:
             size = g_move_sizemap[instr >> 12];
 
-            if(dest_mode == 1)		/* movea */
+            if(dest_mode == 1)      /* movea */
             {
                 if(size == ea_byte)
-                    break;		/* movea.b is not allowed */
+                    break;      /* movea.b is not allowed */
 
                 pf = "movea";
             }
@@ -193,13 +193,13 @@ int disassemble(unsigned short **p, char *str)
         case 0x4:
             if(TEST(instr, 8))
             {
-                if(bit7_6 == 2)		/* chk */
+                if(bit7_6 == 2)     /* chk */
                 {
                     pf = "chk";
                     size = ea_word;
                     a2[0] = 'd';
                 }
-                else				/* lea */
+                else                /* lea */
                 {
                     pf = "lea";
                     size = ea_long;
@@ -210,16 +210,16 @@ int disassemble(unsigned short **p, char *str)
             }
             else
             {
-                if(src_mode && (bit7_6 & 2) && ((dest_reg & 5) == 4))		/* movem */
+                if(src_mode && (bit7_6 & 2) && ((dest_reg & 5) == 4))       /* movem */
                 {
                     pf = "movem";
                     size = TEST(instr, 6) ? ea_long : ea_word;
-                    if(dest_reg == 4)		/* movem regs -> <ea> */
+                    if(dest_reg == 4)       /* movem regs -> <ea> */
                     {
                         movem_regs(a1, HTOP_SHORT(*(*p)++), src_mode == 4);
                         ea(a2, src_mode, src_reg, p, ea_long);
                     }
-                    else					/* movem <ea> -> regs */
+                    else                    /* movem <ea> -> regs */
                     {
                         movem_regs(a2, HTOP_SHORT(*(*p)++), src_mode == 4);
                         ea(a1, src_mode, src_reg, p, ea_long);
@@ -231,7 +231,7 @@ int disassemble(unsigned short **p, char *str)
                 {
                     switch(dest_reg)
                     {
-                        case 0:		/* move from sr */
+                        case 0:     /* move from sr */
                             pf = "move";
                             size = ea_word;
                             a1[0] = 's';
@@ -239,7 +239,7 @@ int disassemble(unsigned short **p, char *str)
                             ea(a2, src_mode, src_reg, p, ea_long);
                             break;
 
-                        case 1:		/* move from ccr */
+                        case 1:     /* move from ccr */
                             pf = "move";
                             size = ea_word;
                             a1[0] = 'c';
@@ -248,7 +248,7 @@ int disassemble(unsigned short **p, char *str)
                             ea(a2, src_mode, src_reg, p, ea_long);
                             break;
 
-                        case 2:		/* move to ccr */
+                        case 2:     /* move to ccr */
                             pf = "move";
                             size = ea_word;
                             ea(a1, src_mode, src_reg, p, ea_long);
@@ -257,7 +257,7 @@ int disassemble(unsigned short **p, char *str)
                             a2[2] = 'r';
                             break;
 
-                        case 3:		/* move to sr */
+                        case 3:     /* move to sr */
                             pf = "move";
                             size = ea_word;
                             ea(a1, src_mode, src_reg, p, ea_long);
@@ -265,14 +265,14 @@ int disassemble(unsigned short **p, char *str)
                             a2[1] = 'r';
                             break;
 
-                        case 4:		/* ext.l */
+                        case 4:     /* ext.l */
                             pf = "ext";
                             size = ea_long;
                             a1[0] = 'd';
                             a1[1] = '0' + src_reg;
                             break;
 
-                        case 5:		/* tas / illegal */
+                        case 5:     /* tas / illegal */
                             if((src_mode == 7) && (src_reg == 4))
                                 pf = "illegal";
                             else
@@ -283,7 +283,7 @@ int disassemble(unsigned short **p, char *str)
                             }
                             break;
 
-                        case 7:		/* jmp */
+                        case 7:     /* jmp */
                             pf = "jmp";
                             ea(a1, src_mode, src_reg, p, ea_long);
                             break;
@@ -295,28 +295,28 @@ int disassemble(unsigned short **p, char *str)
 
                     switch(dest_reg)
                     {
-                        case 0:		/* negx */
+                        case 0:     /* negx */
                             pf = "negx";
                             ea(a1, src_mode, src_reg, p, ea_long);
                             break;
 
-                        case 1:		/* clr */
+                        case 1:     /* clr */
                             pf = "clr";
                             ea(a1, src_mode, src_reg, p, ea_long);
                             break;
 
-                        case 2:		/* neg */
+                        case 2:     /* neg */
                             pf = "neg";
                             ea(a1, src_mode, src_reg, p, ea_long);
                             break;
 
-                        case 3:		/* not */
+                        case 3:     /* not */
                             pf = "not";
                             ea(a1, src_mode, src_reg, p, ea_long);
                             break;
 
-                        case 4:		/* nbcd / swap / pea / ext.w */
-                            if(size == ea_byte)			/* nbcd */
+                        case 4:     /* nbcd / swap / pea / ext.w */
+                            if(size == ea_byte)         /* nbcd */
                             {
                                 pf = "nbcd";
                                 break;
@@ -324,13 +324,13 @@ int disassemble(unsigned short **p, char *str)
 
                             if(!src_mode)
                             {
-                                if(size == ea_word)		/* swap */
+                                if(size == ea_word)     /* swap */
                                 {
                                     pf = "swap";
                                     a1[0] = 'd';
                                     a1[1] = '0' + src_reg;
                                 }
-                                else					/* ext.w */
+                                else                    /* ext.w */
                                 {
                                     pf = "ext";
                                     size = ea_word;
@@ -338,7 +338,7 @@ int disassemble(unsigned short **p, char *str)
                                     a1[1] = '0' + src_reg;
                                 }
                             }
-                            else if(bit7_6 == 1)			/* pea */
+                            else if(bit7_6 == 1)            /* pea */
                             {
                                 pf = "pea";
                                 size = ea_long;
@@ -346,24 +346,24 @@ int disassemble(unsigned short **p, char *str)
                             }
                             break;
 
-                        case 5:		/* tst */
+                        case 5:     /* tst */
                             pf = "tst";
                             ea(a1, src_mode, src_reg, p, ea_long);
                             break;
 
-                        case 7:		            /* trap / link / unlk / move -> usp /             */
+                        case 7:                 /* trap / link / unlk / move -> usp /             */
                             if(bit7_6 == 1)     /* move <- usp /reset / nop / stop / rte / rtd /  */
                             {                   /* rts / trapv / rtr / movec / jsr                */
                                 switch(src_mode)
                                 {
-                                    case 0:						/* trap */
+                                    case 0:                     /* trap */
                                     case 1:
                                         pf = "trap";
                                         size = ea_unsized;
                                         sprintf(a1, "#%d", instr & 0xf);
                                         break;
 
-                                    case 2:						/* link */
+                                    case 2:                     /* link */
                                         pf = "link";
                                         size = ea_unsized;
                                         a1[0] = 'a';
@@ -371,14 +371,14 @@ int disassemble(unsigned short **p, char *str)
                                         sprintf(a2, "#%d", (short) HTOP_SHORT(*(*p)++));
                                         break;
 
-                                    case 3:						/* unlk */
+                                    case 3:                     /* unlk */
                                         pf = "unlk";
                                         size = ea_unsized;
                                         a1[0] = 'a';
                                         a1[1] = '0' + src_reg;
                                         break;
 
-                                    case 4:						/* move -> usp */
+                                    case 4:                     /* move -> usp */
                                         pf = "move";
                                         size = ea_long;
                                         a1[0] = 'a';
@@ -388,7 +388,7 @@ int disassemble(unsigned short **p, char *str)
                                         a2[2] = 'p';
                                         break;
 
-                                    case 5:						/* move <- usp */
+                                    case 5:                     /* move <- usp */
                                         pf = "move";
                                         size = ea_long;
                                         a1[0] = 'u';
@@ -398,7 +398,7 @@ int disassemble(unsigned short **p, char *str)
                                         a2[1] = '0' + src_reg;
                                         break;
 
-                                    case 6:						/* reset / nop / stop / rte /   */
+                                    case 6:                     /* reset / nop / stop / rte /   */
                                         switch(src_reg)         /* rtd / rts / trapv / rtr      */
                                         {
                                             case 2:
@@ -411,41 +411,41 @@ int disassemble(unsigned short **p, char *str)
                                         }
                                         break;
 
-                                    case 7:						/* movec */
+                                    case 7:                     /* movec */
                                         pf = "movec";
                                         size = ea_long;
-                                        if(TEST(instr, 0))			/* general reg -> control reg */
+                                        if(TEST(instr, 0))          /* general reg -> control reg */
                                         {
                                             a1[0] = TEST(**p, 15) ? 'a' : 'd';
                                             a1[1] = '0' + (((**p) >> 12) & 0x7);
                                             switch(**p & 0xfff)
                                             {
                                                 case 0x000:
-                                                    a2[0] = 's'; a2[1] = 'f'; a2[2] = 'c';	break;
+                                                    a2[0] = 's'; a2[1] = 'f'; a2[2] = 'c';  break;
                                                 case 0x001:
-                                                    a2[0] = 'd'; a2[1] = 'f'; a2[2] = 'c';	break;
+                                                    a2[0] = 'd'; a2[1] = 'f'; a2[2] = 'c';  break;
                                                 case 0x800:
-                                                    a2[0] = 'u'; a2[1] = 's'; a2[2] = 'p';	break;
+                                                    a2[0] = 'u'; a2[1] = 's'; a2[2] = 'p';  break;
                                                 case 0x801:
-                                                    a2[0] = 'v'; a2[1] = 'b'; a2[2] = 'r';	break;
-                                                default:			/* invalid register */
+                                                    a2[0] = 'v'; a2[1] = 'b'; a2[2] = 'r';  break;
+                                                default:            /* invalid register */
                                                     pf = NULL;
                                                     break;
                                             }
                                         }
-                                        else						/* control reg -> general reg */
+                                        else                        /* control reg -> general reg */
                                         {
                                             switch(**p & 0xfff)
                                             {
                                                 case 0x000:
-                                                    a1[0] = 's'; a1[1] = 'f'; a1[2] = 'c';	break;
+                                                    a1[0] = 's'; a1[1] = 'f'; a1[2] = 'c';  break;
                                                 case 0x001:
-                                                    a1[0] = 'd'; a1[1] = 'f'; a1[2] = 'c';	break;
+                                                    a1[0] = 'd'; a1[1] = 'f'; a1[2] = 'c';  break;
                                                 case 0x800:
-                                                    a1[0] = 'u'; a1[1] = 's'; a1[2] = 'p';	break;
+                                                    a1[0] = 'u'; a1[1] = 's'; a1[2] = 'p';  break;
                                                 case 0x801:
-                                                    a1[0] = 'v'; a1[1] = 'b'; a1[2] = 'r';	break;
-                                                default:			/* invalid register */
+                                                    a1[0] = 'v'; a1[1] = 'b'; a1[2] = 'r';  break;
+                                                default:            /* invalid register */
                                                     pf = NULL;
                                                     break;
                                             }
@@ -456,7 +456,7 @@ int disassemble(unsigned short **p, char *str)
                                         break;
                                 }
                             }
-                            else if(bit7_6 == 2)			/* jsr */
+                            else if(bit7_6 == 2)            /* jsr */
                             {
                                 pf = "jsr";
                                 size = ea_unsized;
@@ -469,9 +469,9 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0x5:
-            if(bit7_6 == 3)			/* scc / dbcc */
+            if(bit7_6 == 3)         /* scc / dbcc */
             {
-                if(src_mode == 1)		/* dbcc */
+                if(src_mode == 1)       /* dbcc */
                 {
                     pf = g_disasm_dbranches[(instr >> 8) & 0xf];
 
@@ -480,7 +480,7 @@ int disassemble(unsigned short **p, char *str)
                     a1[1] = '0' + src_reg;
                     sprintf(a2, "%d", (short) HTOP_SHORT(*(*p)++));
                 }
-                else					/* scc */
+                else                    /* scc */
                 {
                     pf = g_disasm_sets[(instr >> 8) & 0xf];
 
@@ -488,7 +488,7 @@ int disassemble(unsigned short **p, char *str)
                     ea(a1, src_mode, src_reg, p, ea_long);
                 }
             }
-            else					/* addq / subq */
+            else                    /* addq / subq */
             {
                 pf = TEST(instr, 8) ? "subq" : "addq";
                 size = g_disasm_sizemap[bit7_6];
@@ -499,7 +499,7 @@ int disassemble(unsigned short **p, char *str)
             }
             break;
 
-        case 0x6:					/* bcc / bra / bsr */
+        case 0x6:                   /* bcc / bra / bsr */
             pf = g_disasm_branches[(instr >> 8) & 0xf];
 
             if(!(instr & 0xff))
@@ -527,10 +527,10 @@ int disassemble(unsigned short **p, char *str)
             }
             break;
 
-        case 0xc:					/* and / mulu / abcd / exg / muls */
+        case 0xc:                   /* and / mulu / abcd / exg / muls */
             if(dest_mode == 5)
             {
-                if(src_mode == 0)			/* exg dx, dy */
+                if(src_mode == 0)           /* exg dx, dy */
                 {
                     pf = "exg";
                     size = ea_long;
@@ -539,7 +539,7 @@ int disassemble(unsigned short **p, char *str)
                     a2[1] = '0' + src_reg;
                     break;
                 }
-                else if(src_mode == 1)		/* exg ax, ay */
+                else if(src_mode == 1)      /* exg ax, ay */
                 {
                     pf = "exg";
                     size = ea_long;
@@ -559,7 +559,7 @@ int disassemble(unsigned short **p, char *str)
                 a2[1] = '0' + src_reg;
             }
 
-        case 0x8:					/* or / divu / sbcd / divs */
+        case 0x8:                   /* or / divu / sbcd / divs */
             if((dest_mode == 3) || (dest_mode == 7))
             {
                 pf = ((instr >> 12) == 0x8) ? ((dest_mode == 3) ? "divu" : "divs")
@@ -572,7 +572,7 @@ int disassemble(unsigned short **p, char *str)
             }
             else
             {
-                if((dest_mode == 4) && !(src_mode & 6))	/* abcd / sbcd */
+                if((dest_mode == 4) && !(src_mode & 6)) /* abcd / sbcd */
                 {
                     pf = ((instr >> 12) == 0x8) ? "sbcd" : "abcd";
                     size = ea_byte;
@@ -593,18 +593,18 @@ int disassemble(unsigned short **p, char *str)
                         a2[1] = '0' + dest_reg;
                     }
                 }
-                else									/* and / or */
+                else                                    /* and / or */
                 {
                     pf = ((instr >> 12) == 0x8) ? "or" : "and";
                     size = g_disasm_sizemap[bit7_6];
 
-                    if(TEST(instr, 8))		/* <ea>, Dn */
+                    if(TEST(instr, 8))      /* <ea>, Dn */
                     {
                         ea(a1, src_mode, src_reg, p, size);
                         a2[0] = 'd';
                         a2[1] = '0' + dest_reg;
                     }
-                    else					/* Dn, <ea> */
+                    else                    /* Dn, <ea> */
                     {
                         a1[0] = 'd';
                         a1[1] = '0' + dest_reg;
@@ -614,9 +614,9 @@ int disassemble(unsigned short **p, char *str)
             }
             break;
 
-        case 0x9:		/* sub / suba / subx */
-        case 0xd:		/* add / adda / addx */
-            if((instr & 0x00c0) == 0x00c0)	/* adda / suba */
+        case 0x9:       /* sub / suba / subx */
+        case 0xd:       /* add / adda / addx */
+            if((instr & 0x00c0) == 0x00c0)  /* adda / suba */
             {
                 pf = ((instr >> 12) == 0x9) ? "suba" : "adda";
                 size = TEST(instr, 8) ? ea_long : ea_word;
@@ -628,7 +628,7 @@ int disassemble(unsigned short **p, char *str)
             {
                 size = g_disasm_sizemap[bit7_6];
 
-                if((instr & 0x0130) == 0x0100)	/* addx / subx */
+                if((instr & 0x0130) == 0x0100)  /* addx / subx */
                 {
                     pf = ((instr >> 12) == 0x9) ? "subx" : "addx";
                     if(src_mode & 0x1)
@@ -649,7 +649,7 @@ int disassemble(unsigned short **p, char *str)
                         a2[1] = '0' + dest_reg;
                     }
                 }
-                else							/* add / sub */
+                else                            /* add / sub */
                 {
                     pf = ((instr >> 12) == 0x9) ? "sub" : "add";
                     if(TEST(instr, 8))
@@ -668,8 +668,8 @@ int disassemble(unsigned short **p, char *str)
             }
             break;
 
-        case 0xb:		/* cmp / cmpa / cmpm / eor */
-            if((instr & 0x00c0) == 0x00c0)		/* cmpa */
+        case 0xb:       /* cmp / cmpa / cmpm / eor */
+            if((instr & 0x00c0) == 0x00c0)      /* cmpa */
             {
                 pf = "cmpa";
                 size = TEST(instr, 8) ? ea_long : ea_word;
@@ -683,7 +683,7 @@ int disassemble(unsigned short **p, char *str)
 
                 if(TEST(instr, 8))
                 {
-                    if(src_mode == 1)			/* cmpm */
+                    if(src_mode == 1)           /* cmpm */
                     {
                         pf = "cmpm";
                         a1[0] = a2[0] = '(';
@@ -694,7 +694,7 @@ int disassemble(unsigned short **p, char *str)
                         a1[2] = '0' + src_reg;
                         a2[2] = '0' + dest_reg;
                     }
-                    else						/* eor */
+                    else                        /* eor */
                     {
                         pf = "eor";
                         a1[0] = 'd';
@@ -702,7 +702,7 @@ int disassemble(unsigned short **p, char *str)
                         ea(a2, src_mode, src_reg, p, size);
                     }
                 }
-                else							/* cmp */
+                else                            /* cmp */
                 {
                     pf = "cmp";
                     ea(a1, src_mode, src_reg, p, size);
@@ -712,15 +712,15 @@ int disassemble(unsigned short **p, char *str)
             }
             break;
 
-        case 0xe:		/* shift/rotate register/memory */
+        case 0xe:       /* shift/rotate register/memory */
             pf = (TEST(instr, 8)) ? g_disasm_lshifts[src_mode & 3] : g_disasm_rshifts[src_mode & 3];
 
-            if(bit7_6 == 3)		/* memory */
+            if(bit7_6 == 3)     /* memory */
             {
                 size = ea_word;
                 ea(a1, src_mode, src_reg, p, ea_long);
             }
-            else				/* register */
+            else                /* register */
             {
                 size = g_disasm_sizemap[bit7_6];
 
@@ -741,33 +741,33 @@ int disassemble(unsigned short **p, char *str)
                     break;
             }
             break;
-	}
+    }
 
 
-	/* formulate instruction string */
-	if(pf)
-	{
-		if(size)
-			sprintf(str, "%s.%c", pf, size);
-		else
-			strcat(str, pf);
+    /* formulate instruction string */
+    if(pf)
+    {
+        if(size)
+            sprintf(str, "%s.%c", pf, size);
+        else
+            strcat(str, pf);
 
 
-		if(*a1)
-		{
-			strcat(str, " ");
-			strcat(str, a1);
-			if(*a2)
-			{
-				strcat(str, ", ");
-				strcat(str, a2);
-			}
-		}
-		return 0;
-	}
+        if(*a1)
+        {
+            strcat(str, " ");
+            strcat(str, a1);
+            if(*a2)
+            {
+                strcat(str, ", ");
+                strcat(str, a2);
+            }
+        }
+        return 0;
+    }
 
-	strcat(str, "???");
-	return 1;
+    strcat(str, "???");
+    return 1;
 }
 
 
@@ -849,103 +849,103 @@ void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned ch
 */
 char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz)
 {
-	mode &= 0x7;
-	reg &= 0x7;
+    mode &= 0x7;
+    reg &= 0x7;
 
-	switch(mode)
-	{
-		case 0:		/* data register direct */
-			str[0] = 'd';
-			str[1] = '0' + reg;
-			break;
+    switch(mode)
+    {
+        case 0:     /* data register direct */
+            str[0] = 'd';
+            str[1] = '0' + reg;
+            break;
 
-		case 1:		/* address register direct */
-			str[0] = 'a';
-			str[1] = '0' + reg;
-			break;
+        case 1:     /* address register direct */
+            str[0] = 'a';
+            str[1] = '0' + reg;
+            break;
 
-        case 3:		/* address register indirect with postincrement */
-			str[4] = '+';
-		case 2:		/* address register indirect */
-			str[0] = '(';
-			str[1] = 'a';
-			str[2] = '0' + reg;
-			str[3] = ')';
-			break;
+        case 3:     /* address register indirect with postincrement */
+            str[4] = '+';
+        case 2:     /* address register indirect */
+            str[0] = '(';
+            str[1] = 'a';
+            str[2] = '0' + reg;
+            str[3] = ')';
+            break;
 
-		case 4:		/* address register indirect with predecrement */
-			str[0] = '-';
-			str[1] = '(';
-			str[2] = 'a';
-			str[3] = '0' + reg;
-			str[4] = ')';
-			break;
+        case 4:     /* address register indirect with predecrement */
+            str[0] = '-';
+            str[1] = '(';
+            str[2] = 'a';
+            str[3] = '0' + reg;
+            str[4] = ')';
+            break;
 
-		case 5:		/* address register indirect with displacement */
-			sprintf(str, "%d(a%d)", (short) HTOP_SHORT(*((*p)++)), reg);
-			break;
+        case 5:     /* address register indirect with displacement */
+            sprintf(str, "%d(a%d)", (short) HTOP_SHORT(*((*p)++)), reg);
+            break;
 
-		case 6:		/* address register indirect with index */
-			sprintf(str, "%d(a%d, %c%d)", BEW_DISPLACEMENT(**p),
+        case 6:     /* address register indirect with index */
+            sprintf(str, "%d(a%d, %c%d)", BEW_DISPLACEMENT(**p),
                         reg, BEW_DA(**p), BEW_REGISTER(**p));
-			(*p)++;
-			break;
+            (*p)++;
+            break;
 
-		case 7:		/* absolute / program counter + displacement / immediate or status register */
-			switch(reg)
-			{
-				case 0:		/* absolute short */
-					sprintf(str, "%x", HTOP_SHORT(**p));
-					(*p)++;
-					break;
+        case 7:     /* absolute / program counter + displacement / immediate or status register */
+            switch(reg)
+            {
+                case 0:     /* absolute short */
+                    sprintf(str, "%x", HTOP_SHORT(**p));
+                    (*p)++;
+                    break;
 
-				case 1:		/* absolute long */
-					sprintf(str, "%x", HTOP_INT(*((unsigned int *) *p)));
-					*p += 2;
-					break;
+                case 1:     /* absolute long */
+                    sprintf(str, "%x", HTOP_INT(*((unsigned int *) *p)));
+                    *p += 2;
+                    break;
 
-				case 2:		/* program counter with displacement */
-					sprintf(str, "%d(pc)", (short) HTOP_SHORT(**p));
-					(*p)++;
-					break;
+                case 2:     /* program counter with displacement */
+                    sprintf(str, "%d(pc)", (short) HTOP_SHORT(**p));
+                    (*p)++;
+                    break;
 
-				case 3:		/* program counter with index */
-					sprintf(str, "%d(pc, %c%d)", BEW_DISPLACEMENT(**p),
+                case 3:     /* program counter with index */
+                    sprintf(str, "%d(pc, %c%d)", BEW_DISPLACEMENT(**p),
                                 BEW_DA(**p), BEW_REGISTER(**p));
-					(*p)++;
-					break;
+                    (*p)++;
+                    break;
 
-				default:		/* immediate or status register */
-					switch(sz)
-					{
-						case ea_byte:
-							sprintf(str, "#%d", (char) (HTOP_SHORT(*((*p)++)) & 0xff));
-							break;
+                default:        /* immediate or status register */
+                    switch(sz)
+                    {
+                        case ea_byte:
+                            sprintf(str, "#%d", (char) (HTOP_SHORT(*((*p)++)) & 0xff));
+                            break;
 
-						case ea_word:
-							sprintf(str, "#%d", (short) HTOP_SHORT(*((*p)++)));
-							break;
+                        case ea_word:
+                            sprintf(str, "#%d", (short) HTOP_SHORT(*((*p)++)));
+                            break;
 
-						case ea_long:
-							sprintf(str, "#%d", (int) HTOP_INT(*((int *) *p)));
-							*p += 2;
-							break;
+                        case ea_long:
+                            sprintf(str, "#%d", (int) HTOP_INT(*((int *) *p)));
+                            *p += 2;
+                            break;
 
-						case ea_sr:
-							str[0] = 's';
-							str[1] = 'r';
-							break;
+                        case ea_sr:
+                            str[0] = 's';
+                            str[1] = 'r';
+                            break;
 
-						default:
-							strcat(str, "???");
-							break;
-					}
-					break;
-			}
-			break;
-	}
+                        default:
+                            strcat(str, "???");
+                            break;
+                    }
+                    break;
+            }
+            break;
+    }
 
-	return str;
+    return str;
 }
 
 
@@ -954,60 +954,60 @@ char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, c
 */
 void movem_regs(char *str, unsigned short regs, char mode)
 {
-	char c, type, any = 0;
-	char current_bit, prev_bit;
+    char c, type, any = 0;
+    char current_bit, prev_bit;
 
-	if(mode)
-	{
-		unsigned short r2 = 0;
-		for(c = 16; c; --c, regs >>= 1)
-			r2 = (r2 << 1) | (regs & 1);
-		regs = r2;
-	}
+    if(mode)
+    {
+        unsigned short r2 = 0;
+        for(c = 16; c; --c, regs >>= 1)
+            r2 = (r2 << 1) | (regs & 1);
+        regs = r2;
+    }
 
-	for(type = 'd'; type >= 'a'; type -= 'd' - 'a')
-	{
-		char hyphen = 0;
-		if(regs & 0xff)
-		{
-			if(any)
-				*str++ = '/';
+    for(type = 'd'; type >= 'a'; type -= 'd' - 'a')
+    {
+        char hyphen = 0;
+        if(regs & 0xff)
+        {
+            if(any)
+                *str++ = '/';
 
-			for(c = prev_bit = any = 0; c < 8; regs >>= 1, ++c)
-			{
-				current_bit = regs & 1;
-				if(current_bit && !prev_bit)
-				{
-					if(any)
-						*str++ = ',';
-					*str++ = type;
-					*str++ = '0' + c;
-					any = 1;
-				}
-				else if(!current_bit && prev_bit)
-				{
-					if(hyphen)
-					{
-						*str++ = type;
-						*str++ = '0' + c - 1;
-					}
-					any = 1;
-				}
-				else if(current_bit && prev_bit)
-				{
-					if(!hyphen)
-						*str++ = '-';
-					hyphen = 1;
-				}
-				prev_bit = current_bit;
-			}
+            for(c = prev_bit = any = 0; c < 8; regs >>= 1, ++c)
+            {
+                current_bit = regs & 1;
+                if(current_bit && !prev_bit)
+                {
+                    if(any)
+                        *str++ = ',';
+                    *str++ = type;
+                    *str++ = '0' + c;
+                    any = 1;
+                }
+                else if(!current_bit && prev_bit)
+                {
+                    if(hyphen)
+                    {
+                        *str++ = type;
+                        *str++ = '0' + c - 1;
+                    }
+                    any = 1;
+                }
+                else if(current_bit && prev_bit)
+                {
+                    if(!hyphen)
+                        *str++ = '-';
+                    hyphen = 1;
+                }
+                prev_bit = current_bit;
+            }
 
-			if(current_bit && hyphen)
-			{
-				*str++ = type;
-				*str++ = '7';
-			}
-		}
-		else regs >>= 8;
-	}
+            if(current_bit && hyphen)
+            {
+                *str++ = type;
+                *str++ = '7';
+            }
+        }
+        else regs >>= 8;
+    }
 }

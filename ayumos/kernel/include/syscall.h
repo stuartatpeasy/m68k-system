@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_SYSCALL_H_INC
 #define KERNEL_INCLUDE_SYSCALL_H_INC
 /*
-	System call handler declarations
+    System call handler declarations
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, August 2015
+    (c) Stuart Wallace <stuartw@atom.net>, August 2015
 */
 
 #include <kernel/include/defs.h>

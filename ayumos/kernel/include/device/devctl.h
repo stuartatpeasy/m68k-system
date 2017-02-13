@@ -1,24 +1,24 @@
 #ifndef KERNEL_INCLUDE_DEVICE_DEVCTL_H_INC
 #define KERNEL_INCLUDE_DEVICE_DEVCTL_H_INC
 /*
-	devctl.h: device-manipulation functions, constants, etc.
+    devctl.h: device-manipulation functions, constants, etc.
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
+    (c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
 /*
-	Generic devctl codes.  All codes below 0x00010000 are considered generic.
-	They may be implemented by any driver.
+    Generic devctl codes.  All codes below 0x00010000 are considered generic.
+    They may be implemented by any driver.
 */
 typedef enum devctl_fn
 {
     /* Block devices */
-    dc_get_extent               = 0x0001,	/* # addressable blocks in device: *out = = u32, n	*/
-    dc_get_block_size	        = 0x0002,	/* Bytes per block: *out = = u32, n					*/
-    dc_get_bootable		        = 0x0003,	/* Is device bootable?	*out = = u32, 1:0			*/
+    dc_get_extent               = 0x0001,   /* # addressable blocks in device: *out = = u32, n  */
+    dc_get_block_size           = 0x0002,   /* Bytes per block: *out = = u32, n                 */
+    dc_get_bootable             = 0x0003,   /* Is device bootable?  *out = = u32, 1:0           */
     dc_get_model                = 0x0004,   /* Get device model name                            */
     dc_get_serial               = 0x0005,   /* Get device serial number                         */
     dc_get_firmware_ver         = 0x0006,   /* Get device firmware version                      */

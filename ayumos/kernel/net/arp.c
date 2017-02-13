@@ -239,32 +239,32 @@ arp_cache_item_t *arp_cache_lookup(const net_iface_t * const iface, const net_ad
 
 /*
     arp_cache_add() - add a MAC address / IPv4 address pair to the ARP cache
-	Note: returns SUCCESS if the ARP cache is disabled.
+    Note: returns SUCCESS if the ARP cache is disabled.
 */
 s32 arp_cache_add(const net_iface_t * const iface, const net_address_t *hw_addr,
                   const net_address_t *proto_addr)
 {
     /* TODO - obtain lock on ARP cache during cache-add operation */
-	arp_cache_item_t *p = arp_cache_lookup(iface, proto_addr);
+    arp_cache_item_t *p = arp_cache_lookup(iface, proto_addr);
 
-	if(!p)
-	{
-		/* Cache miss - add entry */
-	    p = arp_cache_get_entry_for_insert();
+    if(!p)
+    {
+        /* Cache miss - add entry */
+        p = arp_cache_get_entry_for_insert();
 
-		if(p)
+        if(p)
         {
-		    p->iface        = iface;
-		    p->etime        = g_current_timestamp + ARP_CACHE_ITEM_LIFETIME;
-		    p->hw_addr      = *hw_addr;
-		    p->proto_addr   = *proto_addr;
-		}
-	}
-	else
-	{
-		/* Cache hit - update expiry time of entry */
-		p->etime = g_current_timestamp + ARP_CACHE_ITEM_LIFETIME;
-	}
+            p->iface        = iface;
+            p->etime        = g_current_timestamp + ARP_CACHE_ITEM_LIFETIME;
+            p->hw_addr      = *hw_addr;
+            p->proto_addr   = *proto_addr;
+        }
+    }
+    else
+    {
+        /* Cache hit - update expiry time of entry */
+        p->etime = g_current_timestamp + ARP_CACHE_ITEM_LIFETIME;
+    }
 
     return SUCCESS;
 }

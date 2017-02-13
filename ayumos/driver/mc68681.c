@@ -1,7 +1,7 @@
 /*
-	MC68681 DUART "driver"
+    MC68681 DUART "driver"
 
-	(c) Stuart Wallace, December 2011.
+    (c) Stuart Wallace, December 2011.
 
 
     NOTE: these two functions are defined inline in mc68681.h:
@@ -69,19 +69,19 @@ s32 mc68681_init(dev_t *dev)
     state->imr = 0x00;
     MC68681_REG(base_addr, MC68681_IMR) = state->imr;    /* Disable all interrupts */
 
-	/* Set mode register 1A */
-	MC68681_REG(base_addr, MC68681_MRA) = /* 0x93 */
+    /* Set mode register 1A */
+    MC68681_REG(base_addr, MC68681_MRA) = /* 0x93 */
         BIT(MC68681_MR1_RXRTS) |                                        /* Enable RX RTS        */
         (MC68681_PARITY_MODE_NONE << MC68681_MR1_PARITY_MODE_SHIFT) |   /* No parity            */
         (MC68681_BPC_8 << MC68681_MR1_BPC_SHIFT);                       /* 8 bits per character */
 
-	/*
+    /*
         Set mode register 2A
 
         Note: the MC68681 uses  the same address for MR1A and MR2A.  Having written to MR1A (above),
         an internal pointer in the IC switches such that the next access will address MR2A.
     */
-	MC68681_REG(base_addr, MC68681_MRA) = /* 0x17 */
+    MC68681_REG(base_addr, MC68681_MRA) = /* 0x17 */
         (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
         BIT(MC68681_MR2_CTS) |
         (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
@@ -93,7 +93,7 @@ s32 mc68681_init(dev_t *dev)
         (MC68681_BPC_8 << MC68681_MR1_BPC_SHIFT);                       /* 8 bits per character */
 
     /* Set mode register 2B (see notes for mode register 2A, above) */
-	MC68681_REG(base_addr, MC68681_MRB) = /* 0x17 */
+    MC68681_REG(base_addr, MC68681_MRB) = /* 0x17 */
         (MC68681_CHAN_MODE_NORMAL << MC68681_MR2_CHAN_MODE_SHIFT) |
         BIT(MC68681_MR2_CTS) |
         (MC68681_STOP_BIT_1_000 << MC68681_MR2_STOP_BIT_LEN_SHIFT);
@@ -101,28 +101,28 @@ s32 mc68681_init(dev_t *dev)
     /* Set baud rate generator clock source to the external crystal clock divided by 16 */
     mc68681_set_ct_mode(dev, MC68681_CT_MODE_C_XTAL16);             /* BRG source = xtal/16 */
 
-	/* Enable the channel A transmitter and receiver */
-	MC68681_REG(base_addr, MC68681_CRA) = /* 0x05 */
+    /* Enable the channel A transmitter and receiver */
+    MC68681_REG(base_addr, MC68681_CRA) = /* 0x05 */
         (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
         (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
-	/* Enable the channel B transmitter and receiver */
-	MC68681_REG(base_addr, MC68681_CRB) = /* 0x05 */
+    /* Enable the channel B transmitter and receiver */
+    MC68681_REG(base_addr, MC68681_CRB) = /* 0x05 */
         (MC68681_CMD_TX_ENABLE << MC68681_CR_TX_CMD_SHIFT) |
         (MC68681_CMD_RX_ENABLE << MC68681_CR_RX_CMD_SHIFT);
 
     /* Set output control register to defaults (all pins = general-purpose outputs) */
-	MC68681_REG(base_addr, MC68681_OPCR) = 0;
+    MC68681_REG(base_addr, MC68681_OPCR) = 0;
 
-	/*
-		Set OPR - output port bits
-		Each bit in the OPR must be set to the complement of the required output pin level.
-	*/
-	MC68681_REG(base_addr, MC68681_SOPR) = 0xff;
-	MC68681_REG(base_addr, MC68681_ROPR) = 0x00;
+    /*
+        Set OPR - output port bits
+        Each bit in the OPR must be set to the complement of the required output pin level.
+    */
+    MC68681_REG(base_addr, MC68681_SOPR) = 0xff;
+    MC68681_REG(base_addr, MC68681_ROPR) = 0x00;
 
-	/* Set channel A baud rate to 115200 */
-	s32 ret = mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, 115200);
+    /* Set channel A baud rate to 115200 */
+    s32 ret = mc68681_set_baud_rate(dev, MC68681_CHANNEL_A, 115200);
 
     cpu_irq_add_handler(dev->irql, dev, mc68681_irq_handler);
 
@@ -137,22 +137,22 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
 {
     u8 *opcr = &(((mc68681_state_t *) dev->data)->opcr);
 
-	/*
-		Set OPCR - output port function select
-			bit		val		desc
-		----------------------------------------------------------------------
-			7		0		OP7 - 0: complement of OPR7; 1: TxRDYB interrupt
-			6		0		OP6 - 0: complement of OPR6; 1: TxRDYA interrupt
-			5		0		OP5 - 0: complement of OPR5; 1: TxB interrupt
-			4		0		OP4 - 0: complement of OPR4; 1: TxA interrupt
-			3		0		} OP3 - 00: complement of OPR3; 01: C/T output
-			2		1		}       10: ch B Tx clk; 11: ch B Rx clk
-			1		0		} OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
-			0		0		}       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
+    /*
+        Set OPCR - output port function select
+            bit     val     desc
+        ----------------------------------------------------------------------
+            7       0       OP7 - 0: complement of OPR7; 1: TxRDYB interrupt
+            6       0       OP6 - 0: complement of OPR6; 1: TxRDYA interrupt
+            5       0       OP5 - 0: complement of OPR5; 1: TxB interrupt
+            4       0       OP4 - 0: complement of OPR4; 1: TxA interrupt
+            3       0       } OP3 - 00: complement of OPR3; 01: C/T output
+            2       1       }       10: ch B Tx clk; 11: ch B Rx clk
+            1       0       } OP2 - 00: complement of OPR2; 01: ch A Tx 16x clk
+            0       0       }       10: ch A Tx 1x clk; 11: ch A Rx 1x clk
 
         OP1 and OP0 are always GPIOs.
-	*/
-	if(fn == mc68681_pin_fn_gpio)
+    */
+    if(fn == mc68681_pin_fn_gpio)
     {
         if(pin >= mc68681_pin_op4)
             *opcr &= ~BIT(pin);
@@ -586,7 +586,7 @@ u32 mc68681_channel_b_get_baud_rate(dev_t *dev)
 s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 {
     while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT)))
-		;
+        ;
 
     MC68681_REG(dev->base_addr, MC68681_THRA) = c;
 
@@ -600,9 +600,9 @@ s32 mc68681_channel_a_putc(dev_t *dev, const char c)
 s32 mc68681_channel_b_putc(dev_t *dev, const char c)
 {
     while(!(MC68681_REG(dev->base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT)))
-		;
+        ;
 
-	MC68681_REG(dev->base_addr, MC68681_THRB) = c;
+    MC68681_REG(dev->base_addr, MC68681_THRB) = c;
 
     return SUCCESS;
 }
@@ -616,21 +616,21 @@ s32 mc68681_putc(void * const base_addr, ku16 channel, const char c)
     if(channel == 0)
     {
         while(!(MC68681_REG(base_addr, MC68681_SRA) & (1 << MC68681_SR_TXEMT)))
-			;
+            ;
 
         MC68681_REG(base_addr, MC68681_THRA) = c;
     }
     else if(channel == 1)
     {
         while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_TXEMT)))
-			;
+            ;
 
-		MC68681_REG(base_addr, MC68681_THRB) = c;
+        MC68681_REG(base_addr, MC68681_THRB) = c;
     }
     else
-		return -EINVAL;
+        return -EINVAL;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -640,7 +640,7 @@ s32 mc68681_putc(void * const base_addr, ku16 channel, const char c)
 s16 mc68681_channel_a_getc(dev_t *dev)
 {
     while(!(MC68681_REG(dev->base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
-		;
+        ;
 
     return MC68681_REG(dev->base_addr, MC68681_RHRA);
 }
@@ -654,7 +654,7 @@ s16 mc68681_channel_b_getc(dev_t *dev)
     void * const base_addr = dev->base_addr;
 
     while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
-		;
+        ;
 
     return MC68681_REG(base_addr, MC68681_RHRB);
 }
@@ -668,19 +668,19 @@ s32 mc68681_getc(void * const base_addr, ku16 channel, char *c)
    if(channel == 0)
     {
         while(!(MC68681_REG(base_addr, MC68681_SRA) & (1 << MC68681_SR_RXRDY)))
-			;
+            ;
 
         *c = MC68681_REG(base_addr, MC68681_RHRA);
     }
     else if(channel == 1)
     {
         while(!(MC68681_REG(base_addr, MC68681_SRB) & (1 << MC68681_SR_RXRDY)))
-			;
+            ;
 
         *c = MC68681_REG(base_addr, MC68681_RHRB);
     }
     else
-		return -EINVAL;
+        return -EINVAL;
 
     return SUCCESS;
 }

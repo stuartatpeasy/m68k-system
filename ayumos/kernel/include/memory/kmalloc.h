@@ -1,11 +1,11 @@
 #ifndef KERNEL_INCLUDE_MEMORY_KMALLOC_H_INC
 #define KERNEL_INCLUDE_MEMORY_KMALLOC_H_INC
 /*
-	kmalloc.h - kernel memory allocation/deallocation functions
+    kmalloc.h - kernel memory allocation/deallocation functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
-	(c) Stuart Wallace <stuartw@atom.net>, July 2012
+    (c) Stuart Wallace <stuartw@atom.net>, July 2012
 */
 
 #include <kernel/include/types.h>
@@ -19,7 +19,7 @@
 
 #if defined(KMALLOC_HEAP)
 /*
-	Use heap allocator
+    Use heap allocator
 */
 
 #include <kernel/include/memory/heap.h>
@@ -29,11 +29,11 @@ typedef heap_ctx mem_ctx;
 
 #elif defined(KMALLOC_BUDDY)
 /*
-	Use buddy allocator
+    Use buddy allocator
 */
 
 #ifndef BUDDY_MIN_ALLOC_UNIT
-#define BUDDY_MIN_ALLOC_UNIT	(512)		/* bytes */
+#define BUDDY_MIN_ALLOC_UNIT    (512)       /* bytes */
 #endif
 
 #include <kernel/memory/buddy.h>

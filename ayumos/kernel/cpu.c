@@ -63,7 +63,7 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
     irq_handler_table_entry_t *ent;
 
     if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
-		return EINVAL;
+        return EINVAL;
 
     ent = &g_irq_handlers[irql];
 
@@ -86,7 +86,7 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
     ent->flags = 0;
     ent->next = NULL;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 

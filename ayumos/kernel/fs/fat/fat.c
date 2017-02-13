@@ -99,7 +99,7 @@ s32 fat_mount(vfs_t *vfs)
     {
         printf("%s: bad FAT sector size %d; can only handle %d-byte sectors\n",
                vfs->dev->name, LE2N16(bpb.bytes_per_sector), BLOCK_SIZE);
-		kfree(fs);
+        kfree(fs);
         return EBADSBLK;
     }
 
@@ -731,7 +731,7 @@ s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name)
             *p++ = toupper(*lfn);
 
     /*
-        5.	While(not at end of the long name) and(char is not a period) and(chars copied < 8)
+        5.  While(not at end of the long name) and(char is not a period) and(chars copied < 8)
             {
                 Copy characters into primary portion of the basis name
             }
@@ -745,9 +745,9 @@ s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name)
         basis_name[u] = ' ';
 
     /*
-        6.	Insert a dot at the end of the primary components of the basis-name iff the basis name
+        6.  Insert a dot at the end of the primary components of the basis-name iff the basis name
             has an extension after the last period in the name.
-        7.	Scan for the last embedded period in the long name.
+        7.  Scan for the last embedded period in the long name.
                 If(the last embedded period was found)
                 {
                     While(not at end of the long name) and (chars copied < 3)

@@ -81,35 +81,35 @@ typedef struct regs regs_t;
     (((sr) >> MC68K_SR_TRACE_SHIFT) & MC68K_SR_TRACE_MASK)
 
 /*
-	MC68010 group 1/2 exception stack frame
+    MC68010 group 1/2 exception stack frame
 */
 typedef struct mc68010_short_exc_frame
 {
-	u16 sr;
-	u32 pc;
-	u16 format_offset;
+    u16 sr;
+    u32 pc;
+    u16 format_offset;
 } mc68010_short_exc_frame_t;
 
 
 /*
-	MC68010 address/bus-error exception stack frame.  NOTE: this struct does not include the SR
-	and PC - they are extracted separately.
+    MC68010 address/bus-error exception stack frame.  NOTE: this struct does not include the SR
+    and PC - they are extracted separately.
 */
 typedef struct mc68010_address_exc_frame
 {
     u16 sr;
     u32 pc;
     u16 format_offset;
-	u16 special_status_word;
-	u32 fault_addr;
-	u16 unused_reserved_1;
-	u16 data_output_buffer;
-	u16 unused_reserved_2;
-	u16 data_input_buffer;
-	u16 unused_reserved_3;
-	u16 instr_output_buffer;
-	u16 version_number;
-	u16 internal_information[15];
+    u16 special_status_word;
+    u32 fault_addr;
+    u16 unused_reserved_1;
+    u16 data_output_buffer;
+    u16 unused_reserved_2;
+    u16 data_input_buffer;
+    u16 unused_reserved_3;
+    u16 instr_output_buffer;
+    u16 version_number;
+    u16 internal_information[15];
 } mc68010_address_exc_frame_t;
 
 
@@ -154,8 +154,8 @@ inline void cpu_disable_interrupts(void)
 /*
     Byte-/word-swapping "intrinsics"
 
-	FIXME - these don't work when used on memory operands, e.g. *p = bswap_16(*p).
-	For some reason the compiler optimises away the writeback, or something.
+    FIXME - these don't work when used on memory operands, e.g. *p = bswap_16(*p).
+    For some reason the compiler optimises away the writeback, or something.
 */
 
 inline u16 bswap_16(u16 x)

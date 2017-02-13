@@ -13,17 +13,17 @@
 
 
 /*
-	str_sum() - return the sum of all the bytes in a string
+    str_sum() - return the sum of all the bytes in a string
 */
 u32 str_sum(ks8 *s)
 {
-	u32 ret;
-	ku8 *s_ = (ku8 *) s;
+    u32 ret;
+    ku8 *s_ = (ku8 *) s;
 
-	for(ret = 0; *s_; ret += *s_++)
-		;
+    for(ret = 0; *s_; ret += *s_++)
+        ;
 
-	return ret;
+    return ret;
 }
 
 
@@ -94,7 +94,7 @@ ks8 *kstrerror(ks32 errnum)
         case ECKSUM:            return "Checksum error";
         case EBADSBLK:          return "Bad superblock";
         case EDEVINITFAILED:    return "Device initialisation failed";
-		case EDEVOPFAILED:		return "Command sent to hardware device failed";
+        case EDEVOPFAILED:      return "Command sent to hardware device failed";
         case ENOTEXE:           return "Not an executable file";
         case EEXEBADHDR:        return "Bad header in executable file";
         case EEXEENDIAN:        return "Unsupported endianness in executable file";

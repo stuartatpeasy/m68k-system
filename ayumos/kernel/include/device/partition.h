@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_DEVICE_PARTITION_H_INC
 #define KERNEL_INCLUDE_DEVICE_PARTITION_H_INC
 /*
-	partition.h: declarations of functions and types relating to the hard disc partition model
+    partition.h: declarations of functions and types relating to the hard disc partition model
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 9th Febrary 2012.
+    (c) Stuart Wallace, 9th Febrary 2012.
 */
 
 #ifdef WITH_DRV_MST_PARTITION
@@ -24,23 +24,23 @@
 
 typedef enum
 {
-	PARTITION_TYPE_LINUX = 0x83
+    PARTITION_TYPE_LINUX = 0x83
 } partition_type_t;
 
 typedef enum
 {
-	PARTITION_STATUS_ACTIVE = 0x00,
-	PARTITION_STATUS_BOOTABLE = 0x80
+    PARTITION_STATUS_ACTIVE = 0x00,
+    PARTITION_STATUS_BOOTABLE = 0x80
 } partition_status_t;
 
 
 typedef struct partition_data
 {
-	dev_t *device;			    /* the block device hosting this partition						*/
-	u32 block_size;				/* number of bytes per sector									*/
-	u32 offset;					/* offset, in sectors, of partition from the start of device	*/
-	partition_type_t type;
-	partition_status_t status;	/* status field from partition table							*/
+    dev_t *device;              /* the block device hosting this partition                      */
+    u32 block_size;             /* number of bytes per sector                                   */
+    u32 offset;                 /* offset, in sectors, of partition from the start of device    */
+    partition_type_t type;
+    partition_status_t status;  /* status field from partition table                            */
 } partition_data_t;
 
 

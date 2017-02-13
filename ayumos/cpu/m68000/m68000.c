@@ -35,22 +35,22 @@ char g_errsym[128];
 */
 void cpu_irq_init_arch_specific(void)
 {
-	u16 u;
+    u16 u;
 
-	/* Set magic numbers in the bottom two vectors - these help (a bit) with debugging */
-	CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
-	CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
+    /* Set magic numbers in the bottom two vectors - these help (a bit) with debugging */
+    CPU_EXC_VPTR_SET(V_ssp,             0xca5caded);                /* nonsense number */
+    CPU_EXC_VPTR_SET(V_reset,           0xbed51de5);                /* nonsense number */
 
-	/* Bus and address errors have their own handler */
-	CPU_EXC_VPTR_SET(V_bus_error,       mc68000_bus_error_handler);
-	CPU_EXC_VPTR_SET(V_address_error,   mc68000_address_error_handler);
+    /* Bus and address errors have their own handler */
+    CPU_EXC_VPTR_SET(V_bus_error,       mc68000_bus_error_handler);
+    CPU_EXC_VPTR_SET(V_address_error,   mc68000_address_error_handler);
 
-	/* Point all other exception vectors at the generic IRQ handler code initially */
-	for(u = V_illegal_instruction; u <= CPU_MAX_IRQL; ++u)
+    /* Point all other exception vectors at the generic IRQ handler code initially */
+    for(u = V_illegal_instruction; u <= CPU_MAX_IRQL; ++u)
         CPU_EXC_VPTR_SET(u, irq_router_fast);
 
     /* System calls use TRAP #0 */
-	CPU_EXC_VPTR_SET(V_trap_0, syscall_dispatcher);
+    CPU_EXC_VPTR_SET(V_trap_0, syscall_dispatcher);
 }
 
 
@@ -110,46 +110,46 @@ void cpu_default_irq_handler(ku32 irql, void *data)
 
     cpu_disable_interrupts();
 
-	printf("\n\nUnhandled exception in process %d: ", proc_get_pid());
-	if((irql >= 25) && (irql <= 31))
-		printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
-	else if((irql >= 32) && (irql <= 47))
-		printf("Trap #%d (vector %d)\n", irql - 32, irql);
-	else if(irql >= 64)
-		printf("User-defined interrupt %d (vector %d)\n", irql - 64, irql);
-	else
-	{
-		const char *msg = NULL;
-		switch(irql)
-		{
-			case 4:  msg = "Illegal instruction";					break;
-			case 5:  msg = "Integer divide by zero";				break;
-			case 6:  msg = "CHK/CHK2 instruction";					break;
-			case 7:  msg = "FTRAPcc/TRAPcc/TRAPV instruction";		break;
-			case 8:  msg = "Privilege violation";					break;
-			case 9:  msg = "Trace";									break;
-			case 10: msg = "Line 1010 emulator";					break;
-			case 11: msg = "Line 1111 emulator";					break;
-			case 13: msg = "Coprocessor protocol violation";		break;
-			case 14: msg = "Format error";							break;
-			case 15: msg = "Unitialised interrupt";					break;
-			case 24: msg = "Spurious interrupt";					break;
-			case 48: msg = "FP branch/set on unordered condition";	break;
-			case 49: msg = "FP inexact result";						break;
-			case 50: msg = "FP divide by zero";						break;
-			case 51: msg = "FP underflow";							break;
-			case 52: msg = "FP operand error";						break;
-			case 53: msg = "FP overflow";							break;
-			case 54: msg = "FP signalling NaN";						break;
-			case 55: msg = "FP unimplemented data type";			break;
-			case 56: msg = "MMU configuration error";				break;
-			case 57: msg = "MMU illegal operation";					break;
-			case 58: msg = "MMU access level violation";			break;
-			default: msg = "Unknown interrupt";                     break;
-		}
+    printf("\n\nUnhandled exception in process %d: ", proc_get_pid());
+    if((irql >= 25) && (irql <= 31))
+        printf("Level %d interrupt autovector (vector %d)\n", irql - 24, irql);
+    else if((irql >= 32) && (irql <= 47))
+        printf("Trap #%d (vector %d)\n", irql - 32, irql);
+    else if(irql >= 64)
+        printf("User-defined interrupt %d (vector %d)\n", irql - 64, irql);
+    else
+    {
+        const char *msg = NULL;
+        switch(irql)
+        {
+            case 4:  msg = "Illegal instruction";                   break;
+            case 5:  msg = "Integer divide by zero";                break;
+            case 6:  msg = "CHK/CHK2 instruction";                  break;
+            case 7:  msg = "FTRAPcc/TRAPcc/TRAPV instruction";      break;
+            case 8:  msg = "Privilege violation";                   break;
+            case 9:  msg = "Trace";                                 break;
+            case 10: msg = "Line 1010 emulator";                    break;
+            case 11: msg = "Line 1111 emulator";                    break;
+            case 13: msg = "Coprocessor protocol violation";        break;
+            case 14: msg = "Format error";                          break;
+            case 15: msg = "Unitialised interrupt";                 break;
+            case 24: msg = "Spurious interrupt";                    break;
+            case 48: msg = "FP branch/set on unordered condition";  break;
+            case 49: msg = "FP inexact result";                     break;
+            case 50: msg = "FP divide by zero";                     break;
+            case 51: msg = "FP underflow";                          break;
+            case 52: msg = "FP operand error";                      break;
+            case 53: msg = "FP overflow";                           break;
+            case 54: msg = "FP signalling NaN";                     break;
+            case 55: msg = "FP unimplemented data type";            break;
+            case 56: msg = "MMU configuration error";               break;
+            case 57: msg = "MMU illegal operation";                 break;
+            case 58: msg = "MMU access level violation";            break;
+            default: msg = "Unknown interrupt";                     break;
+        }
 
         printf("%s (vector %d)\n", msg, irql);
-	}
+    }
 
     putchar('\n');
     mc68000_dump_regs(regs);
@@ -160,7 +160,7 @@ void cpu_default_irq_handler(ku32 irql, void *data)
     printf("\n-- User stack (base: %p) --\n", proc->ustack);
     mc68000_try_stack_dump(regs->usp, 16);
 
-	cpu_halt();
+    cpu_halt();
 }
 
 
@@ -169,7 +169,7 @@ void cpu_default_irq_handler(ku32 irql, void *data)
 */
 void cpu_halt(void)
 {
-	puts("\nSystem halted.");
+    puts("\nSystem halted.");
 
     /* the arg to "stop" causes the CPU to stay in supervisor mode and sets the IRQ mask to 7 */
     asm volatile
@@ -257,28 +257,28 @@ s32 cpu_proc_init(regs_t *r, void *entry_point, void *arg, void *ustack_top, voi
 
 
 /*
-	mc68000_dump_status_register() - write a string describing the contents of the status register
+    mc68000_dump_status_register() - write a string describing the contents of the status register
 */
 const char * mc68000_dump_status_register(ku16 sr)
 {
-	static char buf[16];
+    static char buf[16];
 
-	/* dump format:  "Tx S M Ix XNZVC" */
-	buf[0] = 'T';
-	buf[1] = '0' + MC68K_SR_TRACE_LEVEL(sr);
-	buf[2] = buf[4] = buf[6] = buf[9] = ' ';
-	buf[3] = (sr & MC68K_SR_SUPERVISOR) ? 'S' : 'U';
-	buf[5] = (sr & MC68K_SR_STACK) ? 'M' : 'I';
-	buf[7] = 'I';
-	buf[8] = '0' + MC68K_SR_IPL(sr);
-	buf[10] = (sr & MC68K_SR_X) ? 'X' : 'x';
-	buf[11] = (sr & MC68K_SR_N) ? 'N' : 'n';
-	buf[12] = (sr & MC68K_SR_Z) ? 'Z' : 'z';
-	buf[13] = (sr & MC68K_SR_V) ? 'V' : 'v';
-	buf[14] = (sr & MC68K_SR_C) ? 'C' : 'c';
-	buf[15] = '\0';
+    /* dump format:  "Tx S M Ix XNZVC" */
+    buf[0] = 'T';
+    buf[1] = '0' + MC68K_SR_TRACE_LEVEL(sr);
+    buf[2] = buf[4] = buf[6] = buf[9] = ' ';
+    buf[3] = (sr & MC68K_SR_SUPERVISOR) ? 'S' : 'U';
+    buf[5] = (sr & MC68K_SR_STACK) ? 'M' : 'I';
+    buf[7] = 'I';
+    buf[8] = '0' + MC68K_SR_IPL(sr);
+    buf[10] = (sr & MC68K_SR_X) ? 'X' : 'x';
+    buf[11] = (sr & MC68K_SR_N) ? 'N' : 'n';
+    buf[12] = (sr & MC68K_SR_Z) ? 'Z' : 'z';
+    buf[13] = (sr & MC68K_SR_V) ? 'V' : 'v';
+    buf[14] = (sr & MC68K_SR_C) ? 'C' : 'c';
+    buf[15] = '\0';
 
-	return buf;
+    return buf;
 }
 
 
@@ -326,20 +326,20 @@ const char * mc68000_dump_ssw(ku16 ssw)
 
 
 /*
-	mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
+    mc68010_dump_address_exc_frame() - dump a MC68010 exception frame (address/bus error version)
 */
 void mc68010_dump_address_exc_frame(const mc68010_address_exc_frame_t * const aef)
 {
 #if !defined(TARGET_MC68010)
 #error "This code requires a MC68010 target"
 #endif
-	printf("Special status word = %04x    [%s]\n"
-		   "Fault address       = 0x%08x\n"
-		   "Data output buffer  = %04x\n"
-		   "Data input buffer   = %04x\n"
-		   "Instr output buffer = %04x\n"
-		   "Version number      = %04x\n",
-			aef->special_status_word, mc68000_dump_ssw(aef->special_status_word), aef->fault_addr,
+    printf("Special status word = %04x    [%s]\n"
+           "Fault address       = 0x%08x\n"
+           "Data output buffer  = %04x\n"
+           "Data input buffer   = %04x\n"
+           "Instr output buffer = %04x\n"
+           "Version number      = %04x\n",
+            aef->special_status_word, mc68000_dump_ssw(aef->special_status_word), aef->fault_addr,
             aef->data_output_buffer, aef->data_input_buffer, aef->instr_output_buffer,
             aef->version_number);
 }

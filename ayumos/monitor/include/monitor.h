@@ -1,12 +1,12 @@
 #ifndef MONITOR_MONITOR_H_INC
 #define MONITOR_MONITOR_H_INC
 /*
-	Monitor application
+    Monitor application
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 2011.
+    (c) Stuart Wallace, 2011.
 */
 
 #include <platform/lambda/include/dfu.h>
@@ -33,13 +33,13 @@
 #include <monitor/include/srec.h>
 
 
-#define MON_VERB_MAX_LENGTH		(16)	/* maximum length of the "verb", i.e. the first word in a
-										   command line */
-#define MON_MAX_ARGS			(8)		/* maximum number of arguments that may be passed to a
-										   command */
-#define MON_MAX_ARG_LENGTH		(255)	/* maximum length of any individual argument */
+#define MON_VERB_MAX_LENGTH     (16)    /* maximum length of the "verb", i.e. the first word in a
+                                           command line */
+#define MON_MAX_ARGS            (8)     /* maximum number of arguments that may be passed to a
+                                           command */
+#define MON_MAX_ARG_LENGTH      (255)   /* maximum length of any individual argument */
 
-#define CMD_DUMP_DEFAULT_NUM_BYTES		(256)
+#define CMD_DUMP_DEFAULT_NUM_BYTES      (256)
 
 #define MONITOR_CMD_HANDLER(name)    \
     s32 cmd_ ## name(ks32 num_args, s8 ** args)
@@ -56,8 +56,8 @@
 
 struct command
 {
-	ks8 * const name;
-	s32 (*handler)(ks32 num_args, s8 **);
+    ks8 * const name;
+    s32 (*handler)(ks32 num_args, s8 **);
 };
 
 u32 g_echo;

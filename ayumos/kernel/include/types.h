@@ -1,57 +1,57 @@
 #ifndef KERNEL_INCLUDE_TYPES_H_INC
 #define KERNEL_INCLUDE_TYPES_H_INC
 /*
-	Type definitions
+    Type definitions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, December 2011.
+    (c) Stuart Wallace <stuartw@atom.net>, December 2011.
 */
 
 
 /*
-	Basic types - these should not be used in code.  They can be overridden for specific
-	host system architectures.
+    Basic types - these should not be used in code.  They can be overridden for specific
+    host system architectures.
 */
-#define T_S8				char
-#define T_U8				unsigned char
-#define T_S16				signed short int
-#define T_U16				unsigned short int
-#define T_S32				signed int
-#define T_U32				unsigned int
-#define T_S64				signed long long int
-#define T_U64				unsigned long long int
+#define T_S8                char
+#define T_U8                unsigned char
+#define T_S16               signed short int
+#define T_U16               unsigned short int
+#define T_S32               signed int
+#define T_U32               unsigned int
+#define T_S64               signed long long int
+#define T_U64               unsigned long long int
 
 
 /* Size-specific typedefs, to be used in kernel code */
-typedef T_U8				u8;
-typedef const T_U8			ku8;
-typedef volatile T_U8		vu8;
-typedef T_S8				s8;
-typedef const T_S8			ks8;
-typedef volatile T_S8		vs8;
+typedef T_U8                u8;
+typedef const T_U8          ku8;
+typedef volatile T_U8       vu8;
+typedef T_S8                s8;
+typedef const T_S8          ks8;
+typedef volatile T_S8       vs8;
 
-typedef T_U16				u16;
-typedef const T_U16			ku16;
-typedef volatile T_U16		vu16;
-typedef T_S16				s16;
-typedef const T_S16			ks16;
-typedef volatile T_S16		vs16;
+typedef T_U16               u16;
+typedef const T_U16         ku16;
+typedef volatile T_U16      vu16;
+typedef T_S16               s16;
+typedef const T_S16         ks16;
+typedef volatile T_S16      vs16;
 
-typedef T_U32				u32;
-typedef const T_U32			ku32;
-typedef volatile T_U32		vu32;
-typedef T_S32				s32;
-typedef const T_S32			ks32;
-typedef volatile T_S32		vs32;
+typedef T_U32               u32;
+typedef const T_U32         ku32;
+typedef volatile T_U32      vu32;
+typedef T_S32               s32;
+typedef const T_S32         ks32;
+typedef volatile T_S32      vs32;
 
-typedef T_U64				u64;
-typedef const T_U64			ku64;
-typedef volatile T_U64		vu64;
-typedef T_S64				s64;
-typedef const T_S64			ks64;
-typedef volatile T_S64		vs64;
+typedef T_U64               u64;
+typedef const T_U64         ku64;
+typedef volatile T_U64      vu64;
+typedef T_S64               s64;
+typedef const T_S64         ks64;
+typedef volatile T_S64      vs64;
 
 /* Size type */
 #ifndef HAVE_SIZE_T

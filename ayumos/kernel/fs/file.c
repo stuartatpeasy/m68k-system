@@ -1,10 +1,10 @@
 /*
-	File-handling functions
+    File-handling functions
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, August 2015.
+    (c) Stuart Wallace <stuartw@atom.net>, August 2015.
 */
 
 #include <kernel/include/fs/file.h>

@@ -1,10 +1,10 @@
 /*
-	Automatic device init and driver selection, based on hardware device ID
+    Automatic device init and driver selection, based on hardware device ID
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, October 2015.
+    (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
 #include <kernel/include/device/auto.h>

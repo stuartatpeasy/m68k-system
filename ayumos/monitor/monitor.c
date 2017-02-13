@@ -1,10 +1,10 @@
 /*
-	Monitor application
+    Monitor application
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 2011.
+    (c) Stuart Wallace, 2011.
 */
 
 #include <kernel/include/memory/kmalloc.h>
@@ -24,44 +24,44 @@ const struct command g_commands[] =
     {"arp",             cmd_arp},
 #endif /* WITH_NETWORKING */
     {"date",            cmd_date},
-	{"dfu",				cmd_dfu},
-	{"disassemble",		cmd_disassemble},
-	{"dump",			cmd_dump},
-	{"dumph",			cmd_dumph},
-	{"dumpw",			cmd_dumpw},
-	{"echo",            cmd_echo},
-	{"fill",			cmd_fill},
-	{"fillh",			cmd_fillh},
-	{"fillw",			cmd_fillw},
-	{"free",			cmd_free},
-	{"go",				cmd_go},
-	{"help",			cmd_help},
-	{"history",         cmd_history},
-	{"id",              cmd_id},
-	{"ls",              cmd_ls},
-	{"lsdev",           cmd_lsdev},
-	{"map",             cmd_map},
-	{"mount",           cmd_mount},
+    {"dfu",             cmd_dfu},
+    {"disassemble",     cmd_disassemble},
+    {"dump",            cmd_dump},
+    {"dumph",           cmd_dumph},
+    {"dumpw",           cmd_dumpw},
+    {"echo",            cmd_echo},
+    {"fill",            cmd_fill},
+    {"fillh",           cmd_fillh},
+    {"fillw",           cmd_fillw},
+    {"free",            cmd_free},
+    {"go",              cmd_go},
+    {"help",            cmd_help},
+    {"history",         cmd_history},
+    {"id",              cmd_id},
+    {"ls",              cmd_ls},
+    {"lsdev",           cmd_lsdev},
+    {"map",             cmd_map},
+    {"mount",           cmd_mount},
 #ifdef WITH_NETWORKING
-	{"netif",           cmd_netif},
+    {"netif",           cmd_netif},
 #endif /* WITH_NETWORKING */
-	{"raw",				cmd_raw},
-	{"rootfs",          cmd_rootfs},
+    {"raw",             cmd_raw},
+    {"rootfs",          cmd_rootfs},
 #ifdef WITH_NETWORKING
-	{"route",           cmd_route},
+    {"route",           cmd_route},
 #endif /* WITH_NETWORKING */
-	{"schedule",        cmd_schedule},
-	{"serial",          cmd_serial},
-	{"slabs",           cmd_slabs},
-	{"srec",			cmd_srec},
-	{"symbol",          cmd_symbol},
-	{"test",            cmd_test},
-	{"upload",			cmd_upload},
-	{"write",			cmd_write},
-	{"writeh",			cmd_writeh},
-	{"writew",			cmd_writew},
+    {"schedule",        cmd_schedule},
+    {"serial",          cmd_serial},
+    {"slabs",           cmd_slabs},
+    {"srec",            cmd_srec},
+    {"symbol",          cmd_symbol},
+    {"test",            cmd_test},
+    {"upload",          cmd_upload},
+    {"write",           cmd_write},
+    {"writeh",          cmd_writeh},
+    {"writew",          cmd_writew},
 
-	{NULL, NULL}
+    {NULL, NULL}
 };
 
 
@@ -84,21 +84,21 @@ void monitor(void)
 */
 void monitor_main(void)
 {
-	char buffer[CMD_MAX_LEN + 1];
+    char buffer[CMD_MAX_LEN + 1];
 
     g_echo = 1;
-	putchar('\n');
+    putchar('\n');
 
-	for(buffer[CMD_MAX_LEN] = '\0'; ;)
-	{
-		put(g_prompt);
-		readline(buffer, CMD_MAX_LEN, g_echo);
+    for(buffer[CMD_MAX_LEN] = '\0'; ;)
+    {
+        put(g_prompt);
+        readline(buffer, CMD_MAX_LEN, g_echo);
 
-		if(strlen(buffer))
-		{
-			dispatch_command(buffer);
-		}
-	}
+        if(strlen(buffer))
+        {
+            dispatch_command(buffer);
+        }
+    }
 }
 
 
@@ -107,15 +107,15 @@ void monitor_main(void)
 */
 void dispatch_command(char *cmdline)
 {
-	const struct command *p, *pcommand = NULL;
-	unsigned char c = 0, num_args = 0;
-	char command[MON_VERB_MAX_LENGTH + 1];
-	s8 *args[MON_MAX_ARGS + 1];
-	s32 ret;
-	u32 u;
+    const struct command *p, *pcommand = NULL;
+    unsigned char c = 0, num_args = 0;
+    char command[MON_VERB_MAX_LENGTH + 1];
+    s8 *args[MON_MAX_ARGS + 1];
+    s32 ret;
+    u32 u;
 
-	/* trim leading space */
-	for(; isspace(*cmdline); ++cmdline)
+    /* trim leading space */
+    for(; isspace(*cmdline); ++cmdline)
         ;
 
     /* trim trailing space */
@@ -132,69 +132,69 @@ void dispatch_command(char *cmdline)
 
     command[u] = '\0';
 
-	for(p = g_commands; p->name; ++p)
+    for(p = g_commands; p->name; ++p)
     {
-		if(strstr(p->name, command) == p->name)
-		{
-			if(pcommand)
-			{
-				puts("Ambiguous command");
-				return;
-			}
-			else
-			{
-				pcommand = p;
-				if(u == strlen(p->name))
-					break;	/* exact match */
-			}
-		}
+        if(strstr(p->name, command) == p->name)
+        {
+            if(pcommand)
+            {
+                puts("Ambiguous command");
+                return;
+            }
+            else
+            {
+                pcommand = p;
+                if(u == strlen(p->name))
+                    break;  /* exact match */
+            }
+        }
     }
 
-	if(!pcommand)
-	{
-		printf("Unrecognised command '%s'\n", command);
-		return;
-	}
+    if(!pcommand)
+    {
+        printf("Unrecognised command '%s'\n", command);
+        return;
+    }
 
-	/* extract arguments */
-	for(; *cmdline;)
-	{
-		const char *argptr;
+    /* extract arguments */
+    for(; *cmdline;)
+    {
+        const char *argptr;
 
-		/* step over whitespace */
-		while((*cmdline == '\n') || (*cmdline == '\r') || (*cmdline == ' ') || (*cmdline == '\t'))
-			++cmdline;
+        /* step over whitespace */
+        while((*cmdline == '\n') || (*cmdline == '\r') || (*cmdline == ' ') || (*cmdline == '\t'))
+            ++cmdline;
 
-		if(*cmdline)
-		{
-			if(num_args >= MON_MAX_ARGS)
-			{
-				puts("Too many arguments");
-				return;
-			}
+        if(*cmdline)
+        {
+            if(num_args >= MON_MAX_ARGS)
+            {
+                puts("Too many arguments");
+                return;
+            }
 
-			/* read argument */
-			argptr = cmdline;
+            /* read argument */
+            argptr = cmdline;
 
-			while(*cmdline && (*cmdline != '\n') && (*cmdline != '\r') && (*cmdline != ' ') && (*cmdline != '\t'))
-				++cmdline;
+            while(*cmdline && (*cmdline != '\n') && (*cmdline != '\r') && (*cmdline != ' ') && (*cmdline != '\t'))
+                ++cmdline;
 
-			if((cmdline - argptr) > MON_MAX_ARG_LENGTH)
-			{
-				printf("Argument %d too long\n", num_args + 1);
-				return;
-			}
+            if((cmdline - argptr) > MON_MAX_ARG_LENGTH)
+            {
+                printf("Argument %d too long\n", num_args + 1);
+                return;
+            }
 
-			if(!(args[num_args] = kmalloc(cmdline - argptr + 1)))
-			{
-				puts("Out of memory");
-				return;
-			}
+            if(!(args[num_args] = kmalloc(cmdline - argptr + 1)))
+            {
+                puts("Out of memory");
+                return;
+            }
 
-			strncpy(args[num_args], argptr, cmdline - argptr);
-			args[num_args++][cmdline - argptr] = '\0';
-		}
-	}
+            strncpy(args[num_args], argptr, cmdline - argptr);
+            args[num_args++][cmdline - argptr] = '\0';
+        }
+    }
 
     ret = pcommand->handler(num_args, args);
     if(ret != SUCCESS)

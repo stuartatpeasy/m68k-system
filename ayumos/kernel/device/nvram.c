@@ -1,10 +1,10 @@
 /*
-	Functions for managing a boot parameter block (BPB), stored in a non-volatile RAM block
+    Functions for managing a boot parameter block (BPB), stored in a non-volatile RAM block
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, August 2015.
+    (c) Stuart Wallace, August 2015.
 */
 
 #include <kernel/include/device/nvram.h>

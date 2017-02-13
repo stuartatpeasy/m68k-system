@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_FS_NODE_H_INC
 #define KERNEL_INCLUDE_FS_NODE_H_INC
 /*
-	File system node and node-cache management
+    File system node and node-cache management
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, February 2017.
+    (c) Stuart Wallace <stuartw@atom.net>, February 2017.
 */
 
 #include <kernel/include/defs.h>

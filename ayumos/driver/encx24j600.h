@@ -25,18 +25,18 @@
 #include <kernel/include/types.h>
 
 
-#define ENCX24_SFR_BASE         (0x7e00)	/* Base address of special-function registers		*/
+#define ENCX24_SFR_BASE         (0x7e00)    /* Base address of special-function registers       */
 #define ENCX24_TX_BUF_START     (0x0000)    /* Start of packet TX buffer                        */
 #define ENCX24_TX_BUF_END       (0x1000)    /* End of packet TX buffer + 1                      */
 #define ENCX24_RX_BUF_START     (0x1000)    /* Start of packet RX buffer                        */
 #define ENCX24_MEM_TOP          (0x6000)    /* End of RAM area + 1                              */
-#define ENCX24_SFR_SHIFT		(1)			/* Regs are 16 bit, so regnum must be <<'ed by 1	*/
+#define ENCX24_SFR_SHIFT        (1)         /* Regs are 16 bit, so regnum must be <<'ed by 1    */
 #define ENCX24_PACKET_LEN_MIN   (7)         /* Minimum length of a transmittable packet         */
 #define ENCX24_PACKET_LEN_MAX   (1500)      /* Maximum length of a transmittable packet         */
 
 
 /* This macro provides the offset of register x from the start of the controller's memory map */
-#define ENCX24_SFR_OFFSET(x)	    (ENCX24_SFR_BASE + (((u32) (x)) << ENCX24_SFR_SHIFT))
+#define ENCX24_SFR_OFFSET(x)        (ENCX24_SFR_BASE + (((u32) (x)) << ENCX24_SFR_SHIFT))
 
 #define ENCX24_SFR_ADDR(base, x)    (((u32) base) + ENCX24_SFR_OFFSET(x))
 

@@ -1,10 +1,10 @@
 /*
-	Virtual file system abstraction
+    Virtual file system abstraction
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
+    (c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
 #include <kernel/include/device/devctl.h>
@@ -48,12 +48,12 @@ s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
 
 s32 vfs_init()
 {
-	nvram_bpb_t bpb;
-	s32 ret;
-	dev_t *dev;
-	vfs_driver_t ** ppdrv;
+    nvram_bpb_t bpb;
+    s32 ret;
+    dev_t *dev;
+    vfs_driver_t ** ppdrv;
 
-	/* Init file system drivers */
+    /* Init file system drivers */
     FOR_EACH(ppdrv, g_fs_drivers)
     {
         vfs_driver_t * const pdrv = *ppdrv;
@@ -86,9 +86,9 @@ s32 vfs_init()
     if(ret != SUCCESS)
         return ret;
 
-	/* Find rootfs device */
+    /* Find rootfs device */
     ret = nvram_bpb_read(&bpb);
-	if(ret != SUCCESS)
+    if(ret != SUCCESS)
     {
         printf("vfs: failed to read rootfs from BPB: %s\n", kstrerror(ret));
         return ret;

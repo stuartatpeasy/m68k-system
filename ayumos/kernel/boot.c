@@ -1,10 +1,10 @@
 /*
-	boot.c: declarations of functions useful during boot
+    boot.c: declarations of functions useful during boot
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 17th October 2015.
+    (c) Stuart Wallace, 17th October 2015.
 */
 
 #include <kernel/include/boot.h>

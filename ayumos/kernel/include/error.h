@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_ERROR_H_INC
 #define KERNEL_INCLUDE_ERROR_H_INC
 /*
-	error.h: kernel internal error codes
+    error.h: kernel internal error codes
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, August 2015.
+    (c) Stuart Wallace, August 2015.
 */
 
 /*
@@ -27,7 +27,7 @@
 #define ECKSUM              (504)   /* Checksum error                                   */
 #define EBADSBLK            (505)   /* Bad superblock                                   */
 #define EDEVINITFAILED      (506)   /* Device initialisation failed                     */
-#define EDEVOPFAILED		(507)	/* Command sent to hardware device failed			*/
+#define EDEVOPFAILED        (507)   /* Command sent to hardware device failed           */
 
 #define ENOTEXE             (600)   /* Not an executable file                           */
 #define EEXEBADHDR          (601)   /* Bad header in executable file                    */

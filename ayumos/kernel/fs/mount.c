@@ -1,10 +1,10 @@
 /*
-	Mount point functions
+    Mount point functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, July 2012.
+    (c) Stuart Wallace <stuartw@atom.net>, July 2012.
 */
 
 #include <kernel/include/defs.h>
@@ -22,7 +22,7 @@ mount_ent_t *g_mount_table = NULL;
 s32 mount_init()
 {
     /* Nothing to do here (yet) */
-	return SUCCESS;
+    return SUCCESS;
 }
 
 

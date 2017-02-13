@@ -104,7 +104,7 @@ const char *plat_get_name()
 
 
 /*
-	plat_install_timer_irq_handler() - bind the timer IRQ to the appropriate handler in the OS.
+    plat_install_timer_irq_handler() - bind the timer IRQ to the appropriate handler in the OS.
 */
 s32 plat_install_timer_irq_handler(irq_handler handler)
 {

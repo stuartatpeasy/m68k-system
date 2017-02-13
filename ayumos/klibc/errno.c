@@ -1,10 +1,10 @@
 /*
-	errno.c - definition of the "errno" global
+    errno.c - definition of the "errno" global
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, June 2015
+    (c) Stuart Wallace, June 2015
 */
 
 #include <klibc/include/errno.h>

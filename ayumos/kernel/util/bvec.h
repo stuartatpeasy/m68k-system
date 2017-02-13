@@ -1,14 +1,14 @@
 #ifndef KERNEL_UTIL_BVEC_H_INC
 #define KERNEL_UTIL_BVEC_H_INC
 /*
-	bvec.h - block-allocating dynamic array (vector) implementation
+    bvec.h - block-allocating dynamic array (vector) implementation
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, 2012-12
+    (c) Stuart Wallace <stuartw@atom.net>, 2012-12
 
-	See comments in bvec.c for a description of this module.
+    See comments in bvec.c for a description of this module.
 */
 
 #include <kernel/include/defs.h>
@@ -20,16 +20,16 @@
 
 
 /* pointers to blocks will be allocated in units of BVEC_BLOCKPTR_BLOCK_SIZE */
-#define BVEC_BLOCKPTR_BLOCK_SIZE	(8)
+#define BVEC_BLOCKPTR_BLOCK_SIZE    (8)
 
 struct bvec
 {
-	u32 block_size;
-	u32 element_size;
-	u32 nelements;
-	u32 free_elements;
+    u32 block_size;
+    u32 element_size;
+    u32 nelements;
+    u32 free_elements;
 
-	void **elements;
+    void **elements;
 };
 
 typedef struct bvec * bvec_t;

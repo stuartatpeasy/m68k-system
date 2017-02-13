@@ -10,46 +10,46 @@ MEMORY
 
 SECTIONS
 {
-	/* .text and .rodata* sections first - these live at the start of ROM. */
-	. = 0x00f00000;
+    /* .text and .rodata* sections first - these live at the start of ROM. */
+    . = 0x00f00000;
 
-	.text :
-	AT(ADDR(.text))
-	{
+    .text :
+    AT(ADDR(.text))
+    {
         _stext = .;
         *(.text)
-	} > rom
+    } > rom
 
-	_srodata = .;
+    _srodata = .;
 
-	.rodata ALIGN(4):
-	{
-		*(.rodata*)
-	} > rom
+    .rodata ALIGN(4):
+    {
+        *(.rodata*)
+    } > rom
 
     _etext = .;
 
-	. = 0x00000400;
+    . = 0x00000400;
 
-	.data ALIGN(4):
+    .data ALIGN(4):
     AT(ADDR(.rodata) + SIZEOF(.rodata))
-	{
+    {
         _sdata = .;
         *(.data)
     }
     _edata = .;
 
-	.bss ALIGN(4):
-	AT(ADDR(.data) + SIZEOF(.data))
-	{
+    .bss ALIGN(4):
+    AT(ADDR(.data) + SIZEOF(.data))
+    {
         _sbss = .;
         *(.bss)
     }
     _ebss = .;
 
-	/* Symbol table */
-	. = _etext + (_edata - _sdata);
-	_ssym = ALIGN(4);
+    /* Symbol table */
+    . = _etext + (_edata - _sdata);
+    _ssym = ALIGN(4);
 }
 
 ENTRY(_main)

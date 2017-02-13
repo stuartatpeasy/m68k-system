@@ -1,10 +1,10 @@
 /*
-	Console-related function definitions
+    Console-related function definitions
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace, January 2016.
+    (c) Stuart Wallace, January 2016.
 */
 
 #include <kernel/include/cpu.h>

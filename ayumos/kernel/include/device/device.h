@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_DEVICE_DEVICE_H_INC
 #define KERNEL_INCLUDE_DEVICE_DEVICE_H_INC
 /*
-	device.h: declarations of functions and types relating to the hardware abstraction layer
+    device.h: declarations of functions and types relating to the hardware abstraction layer
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 9th February 2012.
+    (c) Stuart Wallace, 9th February 2012.
 */
 
 #include <kernel/include/device/devctl.h>
@@ -14,8 +14,8 @@
 #include <klibc/include/errno.h>
 
 
-#define DEVICE_NAME_LEN			(8)		/* Max length of device name, including terminating \0 	*/
-#define DEVICE_MAX_SUBDEVICES	(61)	/* e.g. ataa1, ataa2, ataa3, ...ataaZ                   */
+#define DEVICE_NAME_LEN         (8)     /* Max length of device name, including terminating \0  */
+#define DEVICE_MAX_SUBDEVICES   (61)    /* e.g. ataa1, ataa2, ataa3, ...ataaZ                   */
 
 
 /*
@@ -35,15 +35,15 @@ typedef enum
 typedef enum
 {
     DEV_TYPE_NONE               = 0x00,
-	DEV_TYPE_BLOCK              = 0x01,
-	DEV_TYPE_CHARACTER          = 0x02,
-	DEV_TYPE_NET                = 0x03,
-	DEV_TYPE_SERIAL			    = 0x04,
-	DEV_TYPE_RTC                = 0x05,
-	DEV_TYPE_MEM                = 0x06,
-	DEV_TYPE_NVRAM              = 0x07,
-	DEV_TYPE_TIMER              = 0x08,
-	DEV_TYPE_MULTI              = 0x09
+    DEV_TYPE_BLOCK              = 0x01,
+    DEV_TYPE_CHARACTER          = 0x02,
+    DEV_TYPE_NET                = 0x03,
+    DEV_TYPE_SERIAL             = 0x04,
+    DEV_TYPE_RTC                = 0x05,
+    DEV_TYPE_MEM                = 0x06,
+    DEV_TYPE_NVRAM              = 0x07,
+    DEV_TYPE_TIMER              = 0x08,
+    DEV_TYPE_MULTI              = 0x09
 } dev_type_t;
 
 

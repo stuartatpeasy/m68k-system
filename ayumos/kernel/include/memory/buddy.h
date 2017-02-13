@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_MEMORY_BUDDY_H_INC
 #define KERNEL_INCLUDE_MEMORY_BUDDY_H_INC
 /*
-	buddy.h: declarations for buddy memory allocator
+    buddy.h: declarations for buddy memory allocator
 
-	Part of the as-yet-unnamed MC68010 operating system.
+    Part of the as-yet-unnamed MC68010 operating system.
 
 
-	(c) Stuart Wallace, May 2012.
+    (c) Stuart Wallace, May 2012.
 */
 
 #include <stdio.h>
@@ -16,16 +16,16 @@
 
 #ifdef KMALLOC_BUDDY
 
-#define BUDDY_ABS(x)	({ __typeof__ (x) _x = (x); ((_x >= 0) ? (_x) : -(_x)); })
+#define BUDDY_ABS(x)    ({ __typeof__ (x) _x = (x); ((_x >= 0) ? (_x) : -(_x)); })
 
 
 typedef struct
 {
-	s8 *map;			/* vector containing block sizes and free/allocated status	*/
-	u32 end;			/* current length of map									*/
-	void *mem;			/* pointer to the start of the allocatable region			*/
-	u32 size;			/* size of the block as a power of two						*/
-	u32 min_alloc_unit;	/* minimum allocation unit as a power of two				*/
+    s8 *map;            /* vector containing block sizes and free/allocated status  */
+    u32 end;            /* current length of map                                    */
+    void *mem;          /* pointer to the start of the allocatable region           */
+    u32 size;           /* size of the block as a power of two                      */
+    u32 min_alloc_unit; /* minimum allocation unit as a power of two                */
 } buddy_ctx;
 
 

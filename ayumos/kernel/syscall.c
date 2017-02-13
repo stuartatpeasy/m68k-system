@@ -1,10 +1,10 @@
 /*
-	System call handler functions
+    System call handler functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, August 2015
+    (c) Stuart Wallace <stuartw@atom.net>, August 2015
 */
 
 #include <kernel/include/console.h>

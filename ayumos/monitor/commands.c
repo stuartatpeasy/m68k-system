@@ -1,10 +1,10 @@
 /*
-	Monitor application command handlers
+    Monitor application command handlers
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 2011.
+    (c) Stuart Wallace, 2011.
 */
 
 #include <monitor/include/monitor.h>
@@ -48,19 +48,19 @@ MONITOR_CMD_HANDLER(arp)
 
             return SUCCESS;
         }
-		else if(!strcmp(args[0], "request"))
-		{
-			/* Syntax: arp request <ip> */
-			ipv4_addr_t addr;
-			net_address_t proto_addr;
+        else if(!strcmp(args[0], "request"))
+        {
+            /* Syntax: arp request <ip> */
+            ipv4_addr_t addr;
+            net_address_t proto_addr;
 
-			if((num_args != 2) || (strtoipv4(args[1], &addr) != SUCCESS))
-				return EINVAL;
+            if((num_args != 2) || (strtoipv4(args[1], &addr) != SUCCESS))
+                return EINVAL;
 
             ipv4_make_addr(addr, IPV4_PORT_NONE, &proto_addr);
 
-			return arp_send_request(&proto_addr);
-		}
+            return arp_send_request(&proto_addr);
+        }
     }
 
     return EINVAL;
@@ -126,12 +126,12 @@ MONITOR_CMD_HANDLER(date)
 */
 MONITOR_CMD_HANDLER(dfu)
 {
-	u32 len, buffer_len, cksum_sent, cksum_calculated, i;
-	s32 ret;
-	s8 *data;
+    u32 len, buffer_len, cksum_sent, cksum_calculated, i;
+    s32 ret;
+    s8 *data;
 
-	if(num_args != 2)
-		return EINVAL;
+    if(num_args != 2)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &len, MPA_NOT_ZERO);
     if(ret != SUCCESS)
@@ -148,12 +148,12 @@ MONITOR_CMD_HANDLER(dfu)
     */
     buffer_len = (len & 1) ? len + 1 : len;
 
-	if((data = umalloc(buffer_len)) == NULL)
-		return ENOMEM;
+    if((data = umalloc(buffer_len)) == NULL)
+        return ENOMEM;
 
     printf("Send %u bytes\n", len);
-	for(i = 0; i < len; i++)
-		data[i] = console_getc();
+    for(i = 0; i < len; i++)
+        data[i] = console_getc();
 
     if(len & 1)
         data[i] = 0x00;     /* Add padding byte - see above */
@@ -178,13 +178,13 @@ MONITOR_CMD_HANDLER(dfu)
 */
 MONITOR_CMD_HANDLER(disassemble)
 {
-	u32 num_bytes, start;
-	s32 ret;
-	u16 *addr;
-	s8 line[80], instr_printed;
+    u32 num_bytes, start;
+    s32 ret;
+    u16 *addr;
+    s8 line[80], instr_printed;
 
-	if(!num_args || (num_args > 2))
-		return EINVAL;
+    if(!num_args || (num_args > 2))
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -192,41 +192,41 @@ MONITOR_CMD_HANDLER(disassemble)
 
     if(num_args == 2)
     {
-	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_HWORD | MPA_AT_LEAST_2);
-	    if(ret != SUCCESS)
+        ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_HWORD | MPA_AT_LEAST_2);
+        if(ret != SUCCESS)
             return ret;
-	}
-	else num_bytes = 256;
+    }
+    else num_bytes = 256;
 
-	for(addr = (u16 *) start; addr < (u16 *) (start + num_bytes);)
-	{
-		u16 *addr_ = addr;
+    for(addr = (u16 *) start; addr < (u16 *) (start + num_bytes);)
+    {
+        u16 *addr_ = addr;
 
-		disassemble(&addr_, line);
-		instr_printed = 0;
-		while(addr < addr_)
-		{
-			s8 i;
+        disassemble(&addr_, line);
+        instr_printed = 0;
+        while(addr < addr_)
+        {
+            s8 i;
 
-			if(!instr_printed)
-				printf("%06x: ", (u32) addr);
-			else
-				printf("        ");
+            if(!instr_printed)
+                printf("%06x: ", (u32) addr);
+            else
+                printf("        ");
 
-			for(i = 0; i < 3; ++i)
-				if(addr < addr_)
-					printf("%04x ", *addr++);
-				else
-					printf("     ");
+            for(i = 0; i < 3; ++i)
+                if(addr < addr_)
+                    printf("%04x ", *addr++);
+                else
+                    printf("     ");
 
-			if(!instr_printed++)
-				printf(" %s\n", line);
-			else
-				puts("");
-		}
-	}
+            if(!instr_printed++)
+                printf(" %s\n", line);
+            else
+                puts("");
+        }
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -240,17 +240,17 @@ s32 dump_mem(ks32 start, ks32 num_bytes, ks8 word_size)
 
 
 /*
-	dump <start> [<offset>]
+    dump <start> [<offset>]
 
-	Dump bytes.  Offset (if supplied) must be greater than zero.
+    Dump bytes.  Offset (if supplied) must be greater than zero.
 */
 MONITOR_CMD_HANDLER(dump)
 {
-	u32 start, num_bytes;
-	s32 ret;
+    u32 start, num_bytes;
+    s32 ret;
 
-	if(!num_args || (num_args > 2))
-		return EINVAL;
+    if(!num_args || (num_args > 2))
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_NONE);
     if(ret != SUCCESS)
@@ -258,72 +258,72 @@ MONITOR_CMD_HANDLER(dump)
 
     if(num_args == 2)
     {
-	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_NONE);
-	    if(ret != SUCCESS)
+        ret = monitor_parse_arg(args[1], &num_bytes, MPA_NONE);
+        if(ret != SUCCESS)
             return ret;
-	}
-	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
+    }
+    else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
-	return dump_mem(start, num_bytes, 1);
+    return dump_mem(start, num_bytes, 1);
 }
 
 
 /*
-	dumph <start> [<offset>]
+    dumph <start> [<offset>]
 
-	Dump half-words.  Start must be even; offset (if supplied) must be even and greater than zero.
+    Dump half-words.  Start must be even; offset (if supplied) must be even and greater than zero.
 */
 MONITOR_CMD_HANDLER(dumph)
 {
-	u32 start, num_bytes;
-	s32 ret;
+    u32 start, num_bytes;
+    s32 ret;
 
-	if(!num_args || (num_args > 2))
-		return EINVAL;
+    if(!num_args || (num_args > 2))
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
         return ret;
 
     if(num_args == 2)
-	{
-	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_HWORD);
-	    if(ret != SUCCESS)
+    {
+        ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_HWORD);
+        if(ret != SUCCESS)
             return ret;
-	}
-	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
+    }
+    else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
-	return dump_mem(start, num_bytes, 2);
+    return dump_mem(start, num_bytes, 2);
 }
 
 
 /*
-	dumpw <start> [<offset>]
+    dumpw <start> [<offset>]
 
-	Dump words.  Start must be divisible by 4; offset (if supplied) must divisible by four and
-	greater than zero.
+    Dump words.  Start must be divisible by 4; offset (if supplied) must divisible by four and
+    greater than zero.
 */
 MONITOR_CMD_HANDLER(dumpw)
 {
-	u32 start, num_bytes;
-	s32 ret;
+    u32 start, num_bytes;
+    s32 ret;
 
-	if(!num_args || (num_args > 2))
-		return EINVAL;
+    if(!num_args || (num_args > 2))
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_WORD);
     if(ret != SUCCESS)
         return ret;
 
     if(num_args == 2)
-	{
-	    ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_WORD);
-	    if(ret != SUCCESS)
+    {
+        ret = monitor_parse_arg(args[1], &num_bytes, MPA_ALIGN_WORD);
+        if(ret != SUCCESS)
             return ret;
-	}
-	else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
+    }
+    else num_bytes = CMD_DUMP_DEFAULT_NUM_BYTES;
 
-	return dump_mem(start, num_bytes, 4);
+    return dump_mem(start, num_bytes, 4);
 }
 
 
@@ -357,12 +357,12 @@ MONITOR_CMD_HANDLER(echo)
 */
 MONITOR_CMD_HANDLER(fill)
 {
-	u32 count, data;
-	u8 *start;
-	s32 ret;
+    u32 count, data;
+    u8 *start;
+    s32 ret;
 
-	if(num_args != 3)
-		return EINVAL;
+    if(num_args != 3)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_NONE);
     if(ret != SUCCESS)
@@ -377,9 +377,9 @@ MONITOR_CMD_HANDLER(fill)
         return ret;
 
     while(count--)
-		*((u8 *) start++) = (u8) data;
+        *((u8 *) start++) = (u8) data;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -391,12 +391,12 @@ MONITOR_CMD_HANDLER(fill)
 */
 MONITOR_CMD_HANDLER(fillh)
 {
-	u32 count, data;
-	u16 *start;
-	s32 ret;
+    u32 count, data;
+    u16 *start;
+    s32 ret;
 
-	if(num_args != 3)
-		return EINVAL;
+    if(num_args != 3)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -424,11 +424,11 @@ MONITOR_CMD_HANDLER(fillh)
 */
 MONITOR_CMD_HANDLER(fillw)
 {
-	u32 *start, count, data;
-	s32 ret;
+    u32 *start, count, data;
+    s32 ret;
 
-	if(num_args != 3)
-		return EINVAL;
+    if(num_args != 3)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_ALIGN_WORD);
     if(ret != SUCCESS)
@@ -454,24 +454,24 @@ MONITOR_CMD_HANDLER(free)
     UNUSED(num_args);
     UNUSED(args);
 
-	printf("kernel: %6dKB free\n"
+    printf("kernel: %6dKB free\n"
            "  user: %6dKB free\n", kfreemem() >> 10, ufreemem() >> 10);
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
 /*
-	go <addr>
+    go <addr>
 
-	Jump to the specified address.
+    Jump to the specified address.
 */
 MONITOR_CMD_HANDLER(go)
 {
     s32 ret;
-	void (*addr)() = NULL;
+    void (*addr)() = NULL;
 
-	if(num_args != 1)
-		return EINVAL;
+    if(num_args != 1)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) addr, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -479,103 +479,103 @@ MONITOR_CMD_HANDLER(go)
 
     addr();
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
 /*
-	help
+    help
 
-	Display helpful text.
+    Display helpful text.
 */
 MONITOR_CMD_HANDLER(help)
 {
     UNUSED(num_args);
     UNUSED(args);
 
-	puts("Available commands (all can be abbreviated):\n\n"
+    puts("Available commands (all can be abbreviated):\n\n"
 #ifdef WITH_NETWORKING
-		  "arp list\n"
-		  "arp request <ipv4_addr>\n"
-		  "    Display or manipulate the ARP cache, or send an ARP request.\n\n"
+          "arp list\n"
+          "arp request <ipv4_addr>\n"
+          "    Display or manipulate the ARP cache, or send an ARP request.\n\n"
 #endif
 #ifdef WITH_RTC
           "date [<newdate>]\n"
           "    If no argument is supplied, print the current date and time.  If date is specified\n"
           "    in YYYYMMDDHHMMSS format, set the RTC date and time accordingly.\n\n"
 #endif
-		  "dfu <size> <checksum>\n"
-		  "    Receive <size> bytes and re-flash the firmware ROMs with this data.  <size> must\n"
-		  "    be an even number.  <checksum> is the Fletcher16 checksum of the data.\n\n"
-		  "disassemble <start> [<count>]\n"
-		  "    Disassemble <count> bytes starting at offset <start>.  <count> must be an\n"
-		  "    even number greater than or equal to two.  <start> must be an even number.\n\n"
-		  "dump[h|w] <address> [<count>]\n"
-		  "    Dump <count> bytes (dump), half-words (dumph) or words (dumpw), starting at <address>\n\n"
-		  "echo [<arg> ...]\n"
-		  "    Echo all arguments, each separated by a single space character, to the console\n\n"
-		  "fill[h|w] <start> <count> <value>\n"
-		  "    Fill <count> bytes (fill), half-words (fillh) or words (fillw), starting at <address>\n"
-		  "    with <value>\n\n"
-		  "free\n"
-		  "    Show the number of bytes of available heap memory\n\n"
-		  "go <address>\n"
-		  "    Begin executing code at <address>, which must be an even number\n\n"
-		  "help\n"
-		  "    Display this text\n\n"
-		  "history\n"
-		  "    Display command history\n\n"
-		  "id\n"
-		  "    Display device identity\n\n"
+          "dfu <size> <checksum>\n"
+          "    Receive <size> bytes and re-flash the firmware ROMs with this data.  <size> must\n"
+          "    be an even number.  <checksum> is the Fletcher16 checksum of the data.\n\n"
+          "disassemble <start> [<count>]\n"
+          "    Disassemble <count> bytes starting at offset <start>.  <count> must be an\n"
+          "    even number greater than or equal to two.  <start> must be an even number.\n\n"
+          "dump[h|w] <address> [<count>]\n"
+          "    Dump <count> bytes (dump), half-words (dumph) or words (dumpw), starting at <address>\n\n"
+          "echo [<arg> ...]\n"
+          "    Echo all arguments, each separated by a single space character, to the console\n\n"
+          "fill[h|w] <start> <count> <value>\n"
+          "    Fill <count> bytes (fill), half-words (fillh) or words (fillw), starting at <address>\n"
+          "    with <value>\n\n"
+          "free\n"
+          "    Show the number of bytes of available heap memory\n\n"
+          "go <address>\n"
+          "    Begin executing code at <address>, which must be an even number\n\n"
+          "help\n"
+          "    Display this text\n\n"
+          "history\n"
+          "    Display command history\n\n"
+          "id\n"
+          "    Display device identity\n\n"
 #ifdef WITH_MASS_STORAGE
-		  "ls [<path>]\n"
-		  "    List directory contents\n\n"
+          "ls [<path>]\n"
+          "    List directory contents\n\n"
 #endif
-		  "lsdev\n"
-		  "    List devices\n\n"
-		  "map\n"
-		  "    Display memory map\n\n"
+          "lsdev\n"
+          "    List devices\n\n"
+          "map\n"
+          "    Display memory map\n\n"
 #ifdef WITH_MASS_STORAGE
-		  "mount [<dev> <fstype> <mountpoint>]\n"
-		  "    With no arguments, list current mounts.  With arguments, mount block device <dev>\n"
-		  "    containing a file system of type <fstype> at <mountpoint>\n\n"
+          "mount [<dev> <fstype> <mountpoint>]\n"
+          "    With no arguments, list current mounts.  With arguments, mount block device <dev>\n"
+          "    containing a file system of type <fstype> at <mountpoint>\n\n"
 #endif
 #ifdef WITH_NETWORKING
-		  "netif show <interface>\n"
-		  "netif ipv4 <interface> <address>\n"
-		  "    Display or set the protocol address associated with a network interface\n\n"
+          "netif show <interface>\n"
+          "netif ipv4 <interface> <address>\n"
+          "    Display or set the protocol address associated with a network interface\n\n"
 #endif
-		  "raw\n"
-		  "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
+          "raw\n"
+          "    Dump raw characters in hex format.  Ctrl-A stops.\n\n"
 #ifdef WITH_MASS_STORAGE
-		  "rootfs [<partition> <type>]\n"
-		  "    Set/read root partition in BIOS data area.\n\n"
+          "rootfs [<partition> <type>]\n"
+          "    Set/read root partition in BIOS data area.\n\n"
 #endif
 #ifdef WITH_NETWORKING
-		  "route list\n"
-		  "route add <dest> <mask> <gateway> <metric> <interface>\n"
-		  "route rm <dest> <mask> <gateway> <metric> <interface>\n"
-		  "    Display or manipulate the kernel IPv4 routing table\n\n"
+          "route list\n"
+          "route add <dest> <mask> <gateway> <metric> <interface>\n"
+          "route rm <dest> <mask> <gateway> <metric> <interface>\n"
+          "    Display or manipulate the kernel IPv4 routing table\n\n"
 #endif
-		  "schedule\n"
-		  "    Start task scheduler\n\n"
-		  "serial\n"
-		  "    Configure serial line discipline:\n"
-		  "        serial echo off - disable character echo\n"
-		  "        serial echo on  - enable character echo\n\n"
-		  "slabs\n"
-		  "    Display slab allocation status\n\n"
-		  "srec\n"
-		  "    Start the upload of an S-record file\n\n"
+          "schedule\n"
+          "    Start task scheduler\n\n"
+          "serial\n"
+          "    Configure serial line discipline:\n"
+          "        serial echo off - disable character echo\n"
+          "        serial echo on  - enable character echo\n\n"
+          "slabs\n"
+          "    Display slab allocation status\n\n"
+          "srec\n"
+          "    Start the upload of an S-record file\n\n"
           "symbol [-v] <name>\n"
           "    Display the memory location of symbol <name>, if available.  If the -v (verbose)\n"
           "    option is given, display symbol type information.\n\n"
-		  "upload <count>\n"
-		  "    Receive <count> bytes and place them in memory\n\n"
-		  "write[h|w] <address> <data>\n"
-		  "    Write <data> to to memory at <address>\n\n"
-		);
-	return SUCCESS;
+          "upload <count>\n"
+          "    Receive <count> bytes and place them in memory\n\n"
+          "write[h|w] <address> <data>\n"
+          "    Write <data> to to memory at <address>\n\n"
+        );
+    return SUCCESS;
 }
 
 
@@ -856,27 +856,27 @@ MONITOR_CMD_HANDLER(netif)
 
 
 /*
-	raw
+    raw
 
-	Hex-dump received characters until ctrl-A (0x01) is received.
+    Hex-dump received characters until ctrl-A (0x01) is received.
 */
 MONITOR_CMD_HANDLER(raw)
 {
     UNUSED(num_args);
     UNUSED(args);
 
-	puts("Dumping raw output.  Use ctrl-A to stop.\n");
-	for(;;)
-	{
-		char c = console_getc();
-		printf("0x%02x ", c);
+    puts("Dumping raw output.  Use ctrl-A to stop.\n");
+    for(;;)
+    {
+        char c = console_getc();
+        printf("0x%02x ", c);
 
-		if(c == 0x01 /* ctrl-A */)
-			break;
-	}
+        if(c == 0x01 /* ctrl-A */)
+            break;
+    }
 
-	puts("\n");
-	return SUCCESS;
+    puts("\n");
+    return SUCCESS;
 }
 
 
@@ -1093,30 +1093,30 @@ MONITOR_CMD_HANDLER(slabs)
 
 
 /*
-	srec
+    srec
 
-	Receive data in S-record format and put it in user memory somewhere.  Display the address of the
+    Receive data in S-record format and put it in user memory somewhere.  Display the address of the
     received data.
 */
 MONITOR_CMD_HANDLER(srec)
 {
     UNUSED(args);
 
-	if(num_args)
-		return EINVAL;
+    if(num_args)
+        return EINVAL;
 
-	struct srec_data s;
+    struct srec_data s;
 
-	if(srec(&s))
-	{
-		printf("S-record error at line %u: %s\n", s.line, srec_strerror(s.error));
-		return SUCCESS;
-	}
+    if(srec(&s))
+    {
+        printf("S-record error at line %u: %s\n", s.line, srec_strerror(s.error));
+        return SUCCESS;
+    }
 
-	printf("Uploaded %u bytes at address %p\nStart address %x\n",
-				s.data_len, s.data, s.start_address);
+    printf("Uploaded %u bytes at address %p\nStart address %x\n",
+                s.data_len, s.data, s.start_address);
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -1290,26 +1290,26 @@ MONITOR_CMD_HANDLER(test)
 */
 MONITOR_CMD_HANDLER(upload)
 {
-	u32 len;
-	s32 ret;
-	s8 *data, *data_;
+    u32 len;
+    s32 ret;
+    s8 *data, *data_;
 
-	if(num_args != 1)
-		return EINVAL;
+    if(num_args != 1)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &len, MPA_NOT_ZERO);
     if(ret)
         return ret;
 
     if((data = umalloc(len)) == NULL)
-		return ENOMEM;
+        return ENOMEM;
 
-	for(data_ = data; len--;)
-		*data_++ = console_getc();
+    for(data_ = data; len--;)
+        *data_++ = console_getc();
 
-	printf("Uploaded %li bytes at %p\n", data_ - data, data);
+    printf("Uploaded %li bytes at %p\n", data_ - data, data);
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -1320,11 +1320,11 @@ MONITOR_CMD_HANDLER(upload)
 */
 MONITOR_CMD_HANDLER(write)
 {
-	u32 addr, data;
-	s32 ret;
+    u32 addr, data;
+    s32 ret;
 
-	if(num_args != 2)
-		return EINVAL;
+    if(num_args != 2)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &addr, MPA_NONE);
     if(ret != SUCCESS)
@@ -1336,7 +1336,7 @@ MONITOR_CMD_HANDLER(write)
 
     *((u8 *) addr) = (u8) data;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -1347,11 +1347,11 @@ MONITOR_CMD_HANDLER(write)
 */
 MONITOR_CMD_HANDLER(writeh)
 {
-	u32 addr, data;
-	s32 ret;
+    u32 addr, data;
+    s32 ret;
 
-	if(num_args != 2)
-		return EINVAL;
+    if(num_args != 2)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &addr, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -1363,7 +1363,7 @@ MONITOR_CMD_HANDLER(writeh)
 
     *((u16 *) addr) = (u16) data;
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 
@@ -1374,11 +1374,11 @@ MONITOR_CMD_HANDLER(writeh)
 */
 MONITOR_CMD_HANDLER(writew)
 {
-	u32 addr, data;
-	s32 ret;
+    u32 addr, data;
+    s32 ret;
 
-	if(num_args != 2)
-		return EINVAL;
+    if(num_args != 2)
+        return EINVAL;
 
     ret = monitor_parse_arg(args[0], &addr, MPA_ALIGN_WORD);
     if(ret != SUCCESS)
@@ -1390,5 +1390,5 @@ MONITOR_CMD_HANDLER(writew)
 
     *((u32 *) addr) = data;
 
-	return SUCCESS;
+    return SUCCESS;
 }

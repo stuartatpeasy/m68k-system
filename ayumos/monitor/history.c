@@ -1,10 +1,10 @@
 /*
-	Command-history support for monitor system
+    Command-history support for monitor system
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace, 2015.
+    (c) Stuart Wallace, 2015.
 */
 
 #include <monitor/include/history.h>

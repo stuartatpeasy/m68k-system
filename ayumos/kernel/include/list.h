@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_LIST_H_INC
 #define KERNEL_INCLUDE_LIST_H_INC
 /*
-	Simple linked-list implementation.  Owes everything to <linux/list.h>.
+    Simple linked-list implementation.  Owes everything to <linux/list.h>.
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, December 2011.
+    (c) Stuart Wallace <stuartw@atom.net>, December 2011.
 */
 
 #include <kernel/include/defs.h>

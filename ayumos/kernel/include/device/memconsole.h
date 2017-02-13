@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_DEVICE_MEMCONSOLE_H_INC
 #define KERNEL_INCLUDE_DEVICE_MEMCONSOLE_H_INC
 /*
-	In-memory "console" device driver
+    In-memory "console" device driver
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace, January 2016.
+    (c) Stuart Wallace, January 2016.
 */
 
 #include <kernel/include/device/device.h>

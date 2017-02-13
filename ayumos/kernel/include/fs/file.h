@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_FS_FILE_H_INC
 #define KERNEL_INCLUDE_FS_FILE_H_INC
 /*
-	File-handling functions
+    File-handling functions
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, August 2015.
+    (c) Stuart Wallace <stuartw@atom.net>, August 2015.
 */
 
 #include <kernel/include/defs.h>

@@ -162,8 +162,8 @@ irq_router_full:
 irq_router_fast:
     DISABLE_INTERRUPTS
 
-	/* Save minimal context */
-	movem.l		d0-d1/a0-a1, sp@-
+    /* Save minimal context */
+    movem.l     d0-d1/a0-a1, sp@-
 
     /*
         Retrieve format/offset word, extract offset, convert to IRQ number and extend to word len.
@@ -180,7 +180,7 @@ irq_router_fast:
 
     /* Unwind the stack and resume normal processing */
     addq.l      #4, sp
-	movem.l		sp@+, d0-d1/a0-a1
+    movem.l     sp@+, d0-d1/a0-a1
 
     ENABLE_INTERRUPTS
 

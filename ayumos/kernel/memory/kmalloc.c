@@ -1,10 +1,10 @@
 /*
-	kmalloc.c - kernel memory allocation/deallocation functions
+    kmalloc.c - kernel memory allocation/deallocation functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, 2012-07
+    (c) Stuart Wallace <stuartw@atom.net>, 2012-07
 */
 
 #include <kernel/include/memory/kmalloc.h>
@@ -18,7 +18,7 @@ mem_ctx g_uheap;    /* user heap (shared by all userland processes) */
 
 void kmeminit(void * const start, void * const end)
 {
-	heap_init(&g_kheap, start, (u8 *) end - (u8 *) start);
+    heap_init(&g_kheap, start, (u8 *) end - (u8 *) start);
 }
 
 void umeminit(void * const start, void * const end)
@@ -38,8 +38,8 @@ s8 g_buddy_map[1 << (OS_HEAP_SIZE_LOG2 - BUDDY_MIN_ALLOC_UNIT)];
 
 void kmeminit(void * const start, void * const end)
 {
-	buddy_init(&g_kheap, start, end - start,
-					BUDDY_MIN_ALLOC_UNIT, g_buddy_map);
+    buddy_init(&g_kheap, start, end - start,
+                    BUDDY_MIN_ALLOC_UNIT, g_buddy_map);
 }
 
 void umeminit(void * const start, void * const end)
@@ -56,32 +56,32 @@ void umeminit(void * const start, void * const end)
 
 void *kmalloc(u32 size)
 {
-	return ALLOCATOR_FN(malloc)(&g_kheap, size);
+    return ALLOCATOR_FN(malloc)(&g_kheap, size);
 }
 
 void *kcalloc(ku32 nmemb, ku32 size)
 {
-	return ALLOCATOR_FN(calloc)(&g_kheap, nmemb, size);
+    return ALLOCATOR_FN(calloc)(&g_kheap, nmemb, size);
 }
 
 void *krealloc(void *ptr, u32 size)
 {
-	return ALLOCATOR_FN(realloc)(&g_kheap, ptr, size);
+    return ALLOCATOR_FN(realloc)(&g_kheap, ptr, size);
 }
 
 void kfree(void *ptr)
 {
-	ALLOCATOR_FN(free)(&g_kheap, ptr);
+    ALLOCATOR_FN(free)(&g_kheap, ptr);
 }
 
 u32 kfreemem()
 {
-	return ALLOCATOR_FN(freemem)(&g_kheap);
+    return ALLOCATOR_FN(freemem)(&g_kheap);
 }
 
 u32 kusedmem()
 {
-	return ALLOCATOR_FN(usedmem)(&g_kheap);
+    return ALLOCATOR_FN(usedmem)(&g_kheap);
 }
 
 
@@ -91,30 +91,30 @@ u32 kusedmem()
 
 void *umalloc(u32 size)
 {
-	return ALLOCATOR_FN(malloc)(&g_uheap, size);
+    return ALLOCATOR_FN(malloc)(&g_uheap, size);
 }
 
 void *ucalloc(ku32 nmemb, ku32 size)
 {
-	return ALLOCATOR_FN(calloc)(&g_uheap, nmemb, size);
+    return ALLOCATOR_FN(calloc)(&g_uheap, nmemb, size);
 }
 
 void *urealloc(void *ptr, u32 size)
 {
-	return ALLOCATOR_FN(realloc)(&g_uheap, ptr, size);
+    return ALLOCATOR_FN(realloc)(&g_uheap, ptr, size);
 }
 
 void ufree(void *ptr)
 {
-	ALLOCATOR_FN(free)(&g_uheap, ptr);
+    ALLOCATOR_FN(free)(&g_uheap, ptr);
 }
 
 u32 ufreemem()
 {
-	return ALLOCATOR_FN(freemem)(&g_uheap);
+    return ALLOCATOR_FN(freemem)(&g_uheap);
 }
 
 u32 uusedmem()
 {
-	return ALLOCATOR_FN(usedmem)(&g_uheap);
+    return ALLOCATOR_FN(usedmem)(&g_uheap);
 }

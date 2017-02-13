@@ -1,12 +1,12 @@
 #ifndef BUILDCFG_H_INC
 #define BUILDCFG_H_INC
 /*
-	buildcfg.h: configure a build for a particular platform and target, and set options.
+    buildcfg.h: configure a build for a particular platform and target, and set options.
 
-	Part of ayumos
+    Part of ayumos
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, November 2015.
+    (c) Stuart Wallace <stuartw@atom.net>, November 2015.
 */
 
 

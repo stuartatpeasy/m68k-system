@@ -1,12 +1,12 @@
 #ifndef KERNEL_UTIL_KUTIL_H_INC
 #define KERNEL_UTIL_KUTIL_H_INC
 /*
-	kutil.h - declarations of the k*() utility functions
+    kutil.h - declarations of the k*() utility functions
 
-	Part of the as-yet-unnamed MC68010 operating system
+    Part of the as-yet-unnamed MC68010 operating system
 
 
-	(c) Stuart Wallace <stuartw@atom.net>, 2012-07
+    (c) Stuart Wallace <stuartw@atom.net>, 2012-07
 */
 
 #include <stdarg.h>
@@ -50,7 +50,7 @@ s32     timestamp_to_rtc_time(const time_t timestamp, rtc_time_t *dt);
        && ((d)->day_of_week > 0) && ((d)->day_of_week < 8))
 
 /*
-	Hashing functions
+    Hashing functions
 */
 u32 fnv1a32(const void *buf, u32 len);
 
@@ -67,7 +67,7 @@ u16 log2(u32 n);
 */
 s32     dump_hex(const void *p, ku32 word_size, ku32 offset, ku32 num_bytes);
 ks8 *   kstrerror(ks32 errnum);
-u32		str_sum(ks8 *s);
+u32     str_sum(ks8 *s);
 s8 *    str_trim(s8 *dest, ks8 *src);
 s8 *    strn_trim(s8 *dest, ks8 *src, u32 n);
 s8 *    strn_trim_cpy(s8 *dest, s8 *src, ku32 len);

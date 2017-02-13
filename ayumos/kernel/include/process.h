@@ -63,8 +63,8 @@ struct proc_struct
     void *arg;
     s8 *cwd;        /* Current working directory */
 
-	const proc_t *parent;
-	list_t queue;
+    const proc_t *parent;
+    list_t queue;
 }; /* sizeof(proc_t) = 80 + sizeof(regs_t) */
 
 

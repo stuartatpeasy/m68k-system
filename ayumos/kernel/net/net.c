@@ -71,17 +71,17 @@ s32 net_init()
 s32 net_tx(net_packet_t *packet)
 {
     net_iface_t *iface;
-	dev_t *dev;
+    dev_t *dev;
     u32 len;
 
-	len = net_packet_get_len(packet);
+    len = net_packet_get_len(packet);
 
-	/* Routing must be complete by the time this function is called */
-	iface = net_packet_get_interface(packet);
+    /* Routing must be complete by the time this function is called */
+    iface = net_packet_get_interface(packet);
     if(iface == NULL)
         return EHOSTUNREACH;
 
-	/* The packet protocol must match the interface protocol */
+    /* The packet protocol must match the interface protocol */
     if(net_packet_get_proto(packet) != net_interface_get_proto(iface))
         return EPROTONOSUPPORT;
 

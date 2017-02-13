@@ -1,12 +1,12 @@
 #ifndef KERNEL_INCLUDE_DEVICE_BLOCK_H_INC
 #define KERNEL_INCLUDE_DEVICE_BLOCK_H_INC
 /*
-	Block device generic functions and declarations
+    Block device generic functions and declarations
 
-	Part of ayumos
+    Part of ayumos
 
 
-	Stuart Wallace, August 2015.
+    Stuart Wallace, August 2015.
 */
 
 #include <kernel/include/defs.h>
