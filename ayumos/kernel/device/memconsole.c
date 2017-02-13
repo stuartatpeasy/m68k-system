@@ -15,6 +15,7 @@
 
 #include <kernel/include/device/memconsole.h>
 #include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 
 
 /*
@@ -22,7 +23,7 @@
 */
 s32 memconsole_init(dev_t *dev)
 {
-    memconsole_state_t *state = (memconsole_state_t *) kmalloc(sizeof(memconsole_state_t));
+    memconsole_state_t *state = (memconsole_state_t *) slab_alloc(sizeof(memconsole_state_t));
 
     dev->data = 0;
 
@@ -92,7 +93,7 @@ s32 memconsole_shut_down(dev_t *dev)
             kfree(state->buffer);
 
         state->buffer = 0;
-        kfree(state);
+        slab_free(state);
     }
 
     return SUCCESS;
