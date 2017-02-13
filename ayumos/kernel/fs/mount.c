@@ -160,9 +160,9 @@ s32 mount_remove(const vfs_t * const host_vfs, const fs_node_t * const host_node
 
 
 /*
-    mount_find() - determine whether the specified VFS (<vfs_outer>) and node (<node_outer>)
-    corresponds to a mount point; if so, return the mounted VFS and root node through <*vfs_inner>
-    and <*node_inner> if these parameters are non-NULL.  Return ENOENT if the supplied arguments do
+    mount_find() - determine whether the specified VFS (<host_vfs>) and node (<host_node>)
+    corresponds to a mount point; if so, return the mounted VFS and root node through <*inner_vfs>
+    and <*inner_node> if these parameters are non-NULL.  Return ENOENT if the supplied arguments do
     not refer to a mount point.
 */
 s32 mount_find(const vfs_t * const host_vfs, const fs_node_t * const host_node, vfs_t **inner_vfs,
@@ -170,6 +170,8 @@ s32 mount_find(const vfs_t * const host_vfs, const fs_node_t * const host_node, 
 {
     mount_ent_t *mnt;
     s32 ret;
+
+    preempt_disable();              /* BEGIN locked section */
 
     for(mnt = g_mount_table; mnt != NULL; mnt = mnt->next)
     {
@@ -179,15 +181,22 @@ s32 mount_find(const vfs_t * const host_vfs, const fs_node_t * const host_node, 
             {
                 ret = mnt->inner_vfs->driver->get_root_node(mnt->inner_vfs, inner_node);
                 if(ret != SUCCESS)
+                {
+                    preempt_enable();
                     return ret;
+                }
             }
 
             if(inner_vfs != NULL)
                 *inner_vfs = mnt->inner_vfs;
 
+            preempt_enable();
+
             return SUCCESS;
         }
     }
+
+    preempt_enable();               /* END locked section */
 
     return ENOENT;
 }

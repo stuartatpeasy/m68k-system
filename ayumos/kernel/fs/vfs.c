@@ -355,38 +355,36 @@ s32 vfs_close_dir(vfs_dir_ctx_t *ctx)
     [*] if <child> is on a different VFS than <parent>, <child>'s VFS will be returned through
         <*vfs>.
 
-    TODO: after finding a node, determine whether it is a mount point.
+    TODO: support symlinks
 */
 s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs, fs_node_t **node)
 {
     s32 ret;
+    vfs_t *inner_vfs;
     vfs_dir_ctx_t *ctx;
-    fs_node_t *parent_;
-    u8 parent_allocated;
+    fs_node_t *parent_, *inner_node;
 
     if(*vfs == NULL)
     {
+        vfs_t *root_fs;
+        fs_node_t *root_node;
+
         /* The only valid operation with <*vfs> == NULL is to retrieve the root fs node. */
-        if((parent == NULL) && (child == NULL))
-        {
-            vfs_t *root_fs;
-            fs_node_t *root_node;
-
-            ret = mount_find(NULL, NULL, &root_fs, &root_node);
-            if(ret != SUCCESS)
-                return ret;         /* No root fs - an unusual situation */
-
-            ret = vfs_get_root_node(root_fs, &root_node);
-            if(ret == SUCCESS)
-            {
-                *vfs = root_fs;
-                *node = root_node;
-            }
-
-            return ret;
-        }
-        else
+        if((parent != NULL) || (child != NULL))
             return EINVAL;
+
+        ret = mount_find(NULL, NULL, &root_fs, &root_node);
+        if(ret != SUCCESS)
+            return ret;         /* No root fs - an unusual situation */
+
+        ret = vfs_get_root_node(root_fs, &root_node);
+        if(ret == SUCCESS)
+        {
+            *vfs = root_fs;
+            *node = root_node;
+        }
+
+        return ret;
     }
 
     if(parent == NULL)
@@ -395,8 +393,6 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
         ret = vfs_get_root_node(*vfs, &parent_);
         if(ret != SUCCESS)
             return ret;
-
-        parent_allocated = 1;
     }
     else
     {
@@ -405,33 +401,41 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
             return EINVAL;
 
         parent_ = parent;
-        parent_allocated = 0;
     }
 
     ret = vfs_open_dir(*vfs, parent_, &ctx);
+
+    if(parent == NULL)          /* If parent == NULL, we allocated parent_ above - free it here */
+        fs_node_free(parent_);
+
     if(ret != SUCCESS)
-    {
-        if(parent_allocated)
-            fs_node_free(parent_);
-
         return ret;
-    }
 
-    /* BUG: nothing allocates *node before calling vfs_read_dir() */
     ret = fs_node_alloc(node);
     if(ret != SUCCESS)
-    {
-        if(parent_allocated)
-            fs_node_free(parent_);
         return ret;
-    }
 
     ret = vfs_read_dir(ctx, child, *node);
 
     vfs_close_dir(ctx);
 
-    if(parent_allocated)
-        fs_node_free(parent_);
+    if(ret != SUCCESS)
+        return ret;
 
-    return ret;
+    /* Is this a mount point?  If so, update *vfs and *node to point to the inner fs */
+    ret = mount_find(*vfs, *node, &inner_vfs, &inner_node);
+    if(ret == SUCCESS)
+    {
+        /* <*vfs>:<*node> is a mount point. */
+        fs_node_free(*node);
+
+        *vfs = inner_vfs;
+        *node = inner_node;
+
+        return SUCCESS;
+    }
+    else if(ret == ENOENT)
+        return SUCCESS;     /* <*vfs>:<*node> is not a mount point - this isn't an error */
+    else
+        return ret;
 }
