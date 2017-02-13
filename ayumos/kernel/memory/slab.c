@@ -141,7 +141,7 @@ s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
     [SLAB_MIN_RADIX, SLAB_MAX_RADIX], or if the creation of a new slab fails.  Returns a pointer to
     the new object.
 */
-s32 slab_alloc(size_t size, void **p)
+void *slab_alloc(size_t size)
 {
     s32 ret;
     u8 radix, *bitmap, bit;
@@ -150,13 +150,10 @@ s32 slab_alloc(size_t size, void **p)
 
     /* Zero-byte allocations are allowed in malloc(), so they're allowed here too. */
     if(!size)
-    {
-        *p = NULL;
-        return SUCCESS;
-    }
+        return NULL;
 
     if(size > (1 << SLAB_MAX_RADIX))
-        return EINVAL;
+        return NULL;        /* Can't allocate that much space in a slab */
 
     if(size < (1 << SLAB_MIN_RADIX))
         size = 1 << SLAB_MIN_RADIX;
@@ -178,7 +175,7 @@ s32 slab_alloc(size_t size, void **p)
         if(ret != SUCCESS)
         {
             preempt_enable();
-            return ret;
+            return NULL;
         }
 
         slab = g_slabs[radix - SLAB_MIN_RADIX];
@@ -194,8 +191,12 @@ s32 slab_alloc(size_t size, void **p)
                 ret = slab_create(radix, slab, &slab->next);
                 if(ret != SUCCESS)
                 {
+                    /*
+                        Slab creation failed.  Given that we have already validated radix, this must
+                        be an ENOMEM condition, hence we can safely return NULL.
+                    */
                     preempt_enable();
-                    return ret;
+                    return NULL;
                 }
             }
         }
@@ -218,9 +219,7 @@ s32 slab_alloc(size_t size, void **p)
 
     preempt_enable();       /* END locked section */
 
-    *p = (void *) (((u8 *) slab) + (obj << radix));     /* Obtain a pointer to the object  */
-
-    return SUCCESS;
+    return (void *) (((u8 *) slab) + (obj << radix));   /* Obtain a pointer to the object  */
 }
 
 

@@ -70,12 +70,12 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
         return ret;
     }
 
-    ret = slab_alloc(sizeof(mount_ent_t), (void **) &new_ent);
-    if(ret != SUCCESS)
+    new_ent = (mount_ent_t *) slab_alloc(sizeof(mount_ent_t));
+    if(new_ent == NULL)
     {
         vfs_detach(inner_vfs);
         preempt_enable();
-        return ret;
+        return ENOMEM;
     }
 
     new_ent->host_vfs  = host_vfs;

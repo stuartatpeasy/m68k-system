@@ -132,9 +132,9 @@ s32 vfs_attach(vfs_driver_t * const driver, dev_t * const dev, vfs_t **vfs)
     vfs_t *new_vfs;
     s32 ret;
 
-    ret = slab_alloc(sizeof(vfs_t), (void **) &new_vfs);
-    if(ret != SUCCESS)
-        return ret;
+    new_vfs = (vfs_t *) slab_alloc(sizeof(vfs_t));
+    if(new_vfs == NULL)
+        return ENOMEM;
 
     new_vfs->driver = driver;
     new_vfs->dev = dev;
@@ -276,9 +276,9 @@ s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx)
     if(node->type != FSNODE_TYPE_DIR)
         return ENOTDIR;
 
-    ret = slab_alloc(sizeof(vfs_dir_ctx_t), (void **) &context);
-    if(ret != SUCCESS)
-        return ret;
+    context = (vfs_dir_ctx_t *) slab_alloc(sizeof(vfs_dir_ctx_t));
+    if(context == NULL)
+        return ENOMEM;
 
     context->vfs = vfs;
 
@@ -429,6 +429,7 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
         /* <*vfs>:<*node> is a mount point. */
         fs_node_free(*node);
 
+        /* BUG? should inner_node be copied into *node here? Ownership is unclear otherwise */
         *vfs = inner_vfs;
         *node = inner_node;
 

@@ -20,11 +20,10 @@
 s32 fs_node_alloc(fs_node_t **node)
 {
     fs_node_t *node_;
-    s32 ret;
 
-    ret = slab_alloc(sizeof(fs_node_t), (void **) &node_);
-    if(ret != SUCCESS)
-        return ret;
+    node_ = (fs_node_t *) slab_alloc(sizeof(fs_node_t));
+    if(node_ == NULL)
+        return ENOMEM;
 
     node_->name = NULL;
     *node = node_;
