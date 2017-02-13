@@ -3,11 +3,7 @@ TESTAPP=testapp
 PLATFORM=m68000
 TARGET_ARCH=m68k
 
-# old-style (gcc 3) config
 TARGET_FMT=elf
-
-# new-style (gcc 5) config
-TARGET_FMT=linux-elf
 
 TARGET_PREFIX=$(TARGET_ARCH)-$(TARGET_FMT)
 
