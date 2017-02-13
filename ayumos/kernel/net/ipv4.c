@@ -9,6 +9,7 @@
 
 #ifdef WITH_NETWORKING
 
+#include <kernel/include/memory/slab.h>
 #include <kernel/include/net/ipv4.h>
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/net.h>
@@ -344,7 +345,7 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
             return EEXIST;
     }
 
-    *p = kmalloc(sizeof(ipv4_rt_item_t));
+    *p = slab_alloc(sizeof(ipv4_rt_item_t));
     if(!*p)
         return ENOMEM;
 
@@ -388,7 +389,7 @@ s32 ipv4_route_delete(const ipv4_route_t * const r)
             else
                 *prev = p->next;
 
-            kfree(p);
+            slab_free(p);
 
             return SUCCESS;
         }

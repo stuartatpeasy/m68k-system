@@ -8,7 +8,7 @@
 */
 
 #include <kernel/include/device/device.h>
-#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 #include <kernel/include/preempt.h>
 #include <kernel/include/tick.h>
 #include <kernel/util/kutil.h>
@@ -134,7 +134,7 @@ s32 tick_add_callback(tick_callback_fn_t fn, void *arg, ku32 interval, tick_fn_t
     if(!interval)
         return EINVAL;
 
-    cbnew = (tick_callback_t *) kmalloc(sizeof(tick_callback_t));
+    cbnew = (tick_callback_t *) slab_alloc(sizeof(tick_callback_t));
     if(!cbnew)
         return ENOMEM;
 
@@ -189,7 +189,7 @@ s32 tick_remove_callback(const tick_fn_t id)
                     prev->next = p->next;
 
                 preempt_enable();
-                kfree(p);
+                slab_free(p);
 
                 return SUCCESS;
             }

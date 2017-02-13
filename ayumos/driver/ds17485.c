@@ -14,6 +14,7 @@
 
 #include <driver/ds17485.h>
 #include <kernel/include/cpu.h>
+#include <kernel/include/memory/slab.h>
 #include <kernel/include/tick.h>
 #include <kernel/util/kutil.h>
 
@@ -137,7 +138,7 @@ s32 ds17485_init(dev_t * const dev)
     ds17485_state_t *state;
     void * const base_addr = dev->base_addr;
 
-    state = kmalloc(sizeof(ds17485_state_t));
+    state = slab_alloc(sizeof(ds17485_state_t));
     if(!state)
         return ENOMEM;
 
