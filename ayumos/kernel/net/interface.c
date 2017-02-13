@@ -12,7 +12,7 @@
 #ifdef WITH_NETWORKING
 
 #include <kernel/include/device/device.h>
-#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 #include <kernel/include/process.h>
 #include <kernel/include/net/interface.h>
 #include <kernel/include/net/packet.h>
@@ -73,7 +73,10 @@ s32 net_interface_add(dev_t *dev)
     if(ret != SUCCESS)
         return ret;
 
-    iface = (net_iface_t *) CHECKED_KMALLOC(sizeof(net_iface_t));
+    iface = (net_iface_t *) slab_alloc(sizeof(net_iface_t));
+    if(iface == NULL)
+        return ENOMEM;
+
     iface->next         = NULL;
     iface->dev          = dev;
     iface->hw_addr.type = net_address_type_from_proto(proto);
@@ -84,7 +87,7 @@ s32 net_interface_add(dev_t *dev)
     ret = dev->control(dev, dc_get_hw_addr, NULL, &iface->hw_addr.addr);
     if(ret != SUCCESS)
     {
-        kfree(iface);
+        slab_free(iface);
         return ret;
     }
 

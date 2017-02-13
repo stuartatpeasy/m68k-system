@@ -13,7 +13,7 @@
 
 #include <driver/mc68681.h>
 #include <kernel/include/cpu.h>
-#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 
 
 static void mc68681_set_brg(dev_t *dev, ku8 brg_set, ku8 brg_test);
@@ -55,7 +55,10 @@ const mc68681_baud_rate_entry g_mc68681_baud_rates[22] =
 s32 mc68681_init(dev_t *dev)
 {
     void * const base_addr = dev->base_addr;
-    mc68681_state_t *state = CHECKED_KCALLOC(1, sizeof(mc68681_state_t));
+    mc68681_state_t *state = slab_calloc(sizeof(mc68681_state_t));
+
+    if(state == NULL)
+        return ENOMEM;
 
     CIRCBUF_INIT(state->rxa_buf);
     CIRCBUF_INIT(state->txa_buf);
@@ -352,7 +355,7 @@ void mc68681_irq_handler(ku32 irql, void *arg)
 */
 s32 mc68681_shut_down(dev_t *dev)
 {
-    kfree(dev->data);
+    slab_free(dev->data);
 
     return SUCCESS;
 }

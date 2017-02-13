@@ -8,7 +8,7 @@
 */
 
 #include <kernel/include/cpu.h>
-#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 #include <klibc/include/errors.h>
 
 
@@ -73,11 +73,17 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
     */
     if(!(ent->flags & IRQ_HANDLER_DEFAULT))
     {
+        irq_handler_table_entry_t *next;
+
+        next = slab_alloc(sizeof(irq_handler_table_entry_t));
+        if(next == NULL)
+            return ENOMEM;
+
         /* Append the specified IRQ handler to the chain of handlers */
         while(ent->next != NULL)
             ent = ent->next;
 
-        ent->next = CHECKED_KMALLOC(sizeof(irq_handler_table_entry_t));
+        ent->next = next;
         ent = ent->next;
     }
 
@@ -111,7 +117,7 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
             {
                 /* This is not the first handler in a chain */
                 ent_prev->next = ent->next;
-                kfree(ent);
+                slab_free(ent);
                 return SUCCESS;
             }
             else
@@ -127,7 +133,7 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
 
                     *ent = *next;
 
-                    kfree(next);
+                    slab_free(next);
                     return SUCCESS;
                 }
                 else

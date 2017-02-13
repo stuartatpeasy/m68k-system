@@ -15,7 +15,7 @@
 #else
 
 #include <driver/encx24j600.h>
-#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 #include <kernel/include/net/ethernet.h>
 #include <kernel/include/net/net.h>
 #include <kernel/include/process.h>
@@ -268,7 +268,9 @@ s32 encx24j600_init(dev_t *dev)
     encx24j600_state_t *state;
     s32 ret;
 
-    state = CHECKED_KCALLOC(1, sizeof(encx24j600_state_t));
+    state = slab_calloc(sizeof(encx24j600_state_t));
+    if(state == NULL)
+        return ENOMEM;
 
     /* Reset the controller */
     ret = encx24j600_reset(dev);
@@ -338,7 +340,7 @@ s32 encx24j600_init(dev_t *dev)
 s32 encx24j600_shut_down(dev_t *dev)
 {
     if(dev->data != NULL)
-        kfree(dev->data);
+        slab_free(dev->data);
 
     return SUCCESS;
 }

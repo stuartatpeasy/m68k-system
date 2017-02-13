@@ -16,6 +16,8 @@
 
 #include <driver/ps2controller.h>
 #include <kernel/include/device/power.h>
+#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 #include <kernel/include/cpu.h>
 #include <klibc/include/errors.h>
 #include <klibc/include/stdio.h>                    // FIXME remove
@@ -254,7 +256,9 @@ s32 ps2controller_init(dev_t *dev)
     ps2controller_data_t *data;
     s32 ret;
 
-    data = CHECKED_KCALLOC(1, sizeof(ps2controller_data_t));
+    data = slab_calloc(sizeof(ps2controller_data_t));
+    if(data == NULL)
+        return ENOMEM;
 
     dev->data = data;
 
@@ -270,7 +274,7 @@ s32 ps2controller_init(dev_t *dev)
                         &data->port_a, "PS/2 port A", dev, ps2controller_port_a_init);
     if(ret != SUCCESS)
     {
-        kfree(data);
+        slab_free(data);
         dev->data = NULL;
         return ret;
     }
@@ -280,7 +284,7 @@ s32 ps2controller_init(dev_t *dev)
     if(ret != SUCCESS)
     {
         dev_destroy(data->port_a);
-        kfree(data);
+        slab_free(data);
         dev->data = NULL;
         return ret;
     }

@@ -16,6 +16,8 @@
 #include <kernel/fs/fat/fat.h>
 #include <kernel/include/device/block.h>
 #include <kernel/include/fs/vfs.h>
+#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 
 
 s32 fat_init();
@@ -90,7 +92,7 @@ s32 fat_mount(vfs_t *vfs)
         return EBADSBLK;
     }
 
-    fs = kmalloc(sizeof(struct fat_fs));
+    fs = slab_alloc(sizeof(struct fat_fs));
     if(!fs)
         return ENOMEM;
 
@@ -99,7 +101,7 @@ s32 fat_mount(vfs_t *vfs)
     {
         printf("%s: bad FAT sector size %d; can only handle %d-byte sectors\n",
                vfs->dev->name, LE2N16(bpb.bytes_per_sector), BLOCK_SIZE);
-        kfree(fs);
+        slab_free(fs);
         return EBADSBLK;
     }
 
@@ -144,7 +146,7 @@ s32 fat_unmount(vfs_t *vfs)
         - ensure no open file handles exist on this fs
         - (maybe) duplicate the main FAT into the secondary FAT, if present
     */
-    kfree(vfs->data);
+    slab_free(vfs->data);
 
     return SUCCESS;
 }
@@ -258,7 +260,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     s32 ret;
 
     /* Allocate space to hold a directory context */
-    dir_ctx = (fat_dir_ctx_t *) kmalloc(sizeof(fat_dir_ctx_t));
+    dir_ctx = (fat_dir_ctx_t *) slab_alloc(sizeof(fat_dir_ctx_t));
     if(!dir_ctx)
         return ENOMEM;
 
@@ -267,7 +269,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     dir_ctx->buffer = (fat_node_t *) kmalloc(bytes_per_cluster);
     if(!dir_ctx->buffer)
     {
-        kfree(dir_ctx);
+        slab_free(dir_ctx);
         return ENOMEM;
     }
 
@@ -276,7 +278,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     if(ret != SUCCESS)
     {
         kfree(dir_ctx->buffer);
-        kfree(dir_ctx);
+        slab_free(dir_ctx);
         return ret;
     }
 
@@ -471,7 +473,7 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx)
     UNUSED(vfs);
 
     kfree(((fat_dir_ctx_t *) ctx)->buffer);
-    kfree(ctx);
+    slab_free(ctx);
 
     return SUCCESS;
 }

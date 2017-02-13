@@ -14,7 +14,7 @@
 
 #ifdef WITH_NETWORKING
 
-#include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/slab.h>
 #include <kernel/include/net/protocol.h>
 #include <kernel/include/net/packet.h>
 #include <kernel/include/net/route.h>
@@ -51,8 +51,11 @@ net_proto_driver_t *g_net_proto_drivers;
 s32 net_protocol_register_driver(const net_protocol_t proto, const char * const name,
                                  net_proto_fns_t * const f)
 {
-    net_proto_driver_t *driver = (net_proto_driver_t *) CHECKED_KMALLOC(sizeof(net_proto_driver_t)),
-                        *p;
+    net_proto_driver_t *driver, *p;
+
+    driver = (net_proto_driver_t *) slab_alloc(sizeof(net_proto_driver_t));
+    if(driver == NULL)
+        return ENOMEM;
 
     driver->proto           = proto;
     driver->name            = strdup(name);
@@ -62,7 +65,7 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
 
     if(!driver->name)
     {
-        kfree(driver);
+        slab_free(driver);
         return EINVAL;
     }
 
