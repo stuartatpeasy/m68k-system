@@ -9,6 +9,8 @@
     (c) Stuart Wallace, January 2016
 */
 
+#ifdef WITH_FS_ROMFS
+
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
 #include <kernel/include/fs/vfs.h>
@@ -27,4 +29,5 @@ typedef struct romfs_superblock
 
 vfs_driver_t g_romfs_ops;
 
+#endif /* WITH_FS_ROMFS */
 #endif

@@ -7,6 +7,8 @@
     (c) Stuart Wallace, January 2016
 */
 
+#ifdef WITH_FS_ROMFS
+
 #include <kernel/include/fs/romfs.h>
 
 
@@ -95,3 +97,6 @@ s32 romfs_stat(vfs_t *vfs, fs_stat_t *st)
     UNUSED(st);
     return ENOSYS;
 }
+
+#endif /* WITH_FS_ROMFS */
+
