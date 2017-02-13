@@ -23,6 +23,7 @@
 #include <kernel/include/memory/slab.h>
 #include <kernel/include/preempt.h>
 #include <klibc/include/stdlib.h>
+#include <klibc/include/strings.h>
 
 #ifdef DEBUG_KMALLOC
 #include <klibc/include/stdio.h>
@@ -220,6 +221,21 @@ void *slab_alloc(size_t size)
     preempt_enable();       /* END locked section */
 
     return (void *) (((u8 *) slab) + (obj << radix));   /* Obtain a pointer to the object  */
+}
+
+
+/*
+    slab_calloc() - like slab_alloc(), but zero the memory buffer before returning a pointer to it.
+*/
+void *slab_calloc(size_t size)
+{
+    void *p = slab_alloc(size);
+    if(p == NULL)
+        return NULL;
+
+    bzero(p, size);
+
+    return p;
 }
 
 
