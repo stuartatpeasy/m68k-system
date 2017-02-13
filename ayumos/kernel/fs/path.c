@@ -10,7 +10,6 @@
 #include <kernel/include/fs/path.h>
 #include <kernel/include/fs/vfs.h>
 #include <klibc/include/string.h>
-#include <klibc/include/stdio.h>        // FIXME
 
 
 void path_get_absolute(ks8 *path)
