@@ -63,10 +63,10 @@ void fs_node_free(fs_node_t *node)
 
 
 /*
-    file_check_perms() - check that a user can perform the requested operation (read, write,
-    execute) on the supplied node.
+    fs_node_check_perms() - check that the current user can perform the requested operation (read,
+    write, execute) on the supplied node.
 */
-s32 node_check_perms(const file_perm_t op, const fs_node_t * const node)
+s32 fs_node_check_perms(const file_perm_t op, const fs_node_t * const node)
 {
     file_perm_t perm;
     const uid_t uid = proc_current_uid();

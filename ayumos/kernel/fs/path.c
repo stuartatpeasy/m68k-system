@@ -81,7 +81,7 @@ s32 path_open(const char *path, vfs_t **vfs, fs_node_t **node)
 
         if(sep)
         {
-            ret = node_check_perms(FS_PERM_R | FS_PERM_X, child);
+            ret = fs_node_check_perms(FS_PERM_R | FS_PERM_X, child);
             if(ret != SUCCESS)
             {
                 fs_node_free(parent);
