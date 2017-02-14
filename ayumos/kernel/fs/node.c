@@ -8,8 +8,9 @@
 */
 
 #include <kernel/include/fs/node.h>
-#include <kernel/include/memory/slab.h>
 #include <kernel/include/error.h>
+#include <kernel/include/memory/slab.h>
+#include <kernel/include/process.h>
 #include <klibc/include/string.h>
 
 
@@ -58,6 +59,38 @@ void fs_node_free(fs_node_t *node)
 {
     kfree(node->name);                  /* FIXME - use a slab to hold the name */
     slab_free(node);
+}
+
+
+/*
+    file_check_perms() - check that a user can perform the requested operation (read, write,
+    execute) on the supplied node.
+*/
+s32 node_check_perms(const file_perm_t op, const fs_node_t * const node)
+{
+    file_perm_t perm;
+    const uid_t uid = proc_current_uid();
+
+    if(uid == ROOT_UID)                     /* User is root */
+    {
+        /*
+            Root user can read and write anything, but can only execute files with at least one
+            execute permission bit set.
+        */
+        perm = FS_PERM_R | FS_PERM_W;
+        if(node->permissions & (FS_PERM_UX | FS_PERM_GX | FS_PERM_OX))
+            perm |= FS_PERM_X;
+    }
+    else if(uid == node->uid)                /* If UID matches, use user perms */
+        perm = node->permissions >> FS_PERM_SHIFT_U;
+    else if(group_member(uid, node->gid))    /* User is in file's group; use group perms */
+        perm = node->permissions >> FS_PERM_SHIFT_G;
+    else                                    /* Use "other" perms */
+        perm = node->permissions >> FS_PERM_SHIFT_O;
+
+    perm &= FS_PERM_MASK;
+
+    return ((perm & op) == op) ? SUCCESS : EPERM;
 }
 
 

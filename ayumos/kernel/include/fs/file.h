@@ -38,7 +38,5 @@ typedef struct file_info file_info_t;
 
 
 s32 file_open(ks8 * const path, u32 flags, file_info_t *fp);
-s32 file_check_perms(uid_t uid, const file_perm_t op, const fs_node_t * const node);
-
 
 #endif

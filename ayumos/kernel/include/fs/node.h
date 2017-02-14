@@ -83,6 +83,7 @@ s8 *fs_node_perm_str(const fs_node_t * const node, s8 *str);
 s32 fs_node_alloc(fs_node_t **node);
 s32 fs_node_set_name(fs_node_t *node, const char * const name);
 void fs_node_free(fs_node_t *node);
+s32 node_check_perms(const file_perm_t op, const fs_node_t * const node);
 
 #endif
 
