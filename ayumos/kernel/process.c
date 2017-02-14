@@ -168,6 +168,24 @@ proc_t *proc_current()
 
 
 /*
+    proc_current_uid() - return the user ID of the current process.
+*/
+uid_t proc_current_uid()
+{
+    return g_current_proc->uid;
+}
+
+
+/*
+    proc_current_gid() - return the group ID of the current process.
+*/
+gid_t proc_current_gid()
+{
+    return g_current_proc->gid;
+}
+
+
+/*
     proc_getcwd() - get the current working directory of a process.  If <proc> is NULL, return the
     cwd of the currently-executing process.  Otherwise, return the cwd of the specified process.
 */

@@ -81,5 +81,8 @@ void proc_sleep();
 void proc_sleep_until(s32 when);
 void proc_sleep_for(s32 secs);
 void proc_wake_by_id(const pid_t pid);
+uid_t proc_current_uid();
+gid_t proc_current_gid();
+
 
 #endif
