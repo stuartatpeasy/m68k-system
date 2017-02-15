@@ -9,6 +9,11 @@
     (c) Stuart Wallace <stuartw@atom.net>, October 2015.
 */
 
+/*
+    Don't define any of these constants if we're operating inside a test harness, to avoid conflicts
+    with the host's version of them.
+*/
+#if !defined(HOST_HARNESS)
 
 #define EPERM               (1)     /* Operation not permitted                          */
 #define ENOENT              (2)     /* No such file or directory                        */
@@ -143,5 +148,7 @@
 #define EOWNERDEAD          (130)   /* Owner died                                       */
 #define ENOTRECOVERABLE     (131)   /* State not recoverable                            */
 #define ERFKILL             (132)   /* Operation not possible due to RF-kill            */
+
+#endif /* !defined(HOST_HARNESS) */
 
 #endif

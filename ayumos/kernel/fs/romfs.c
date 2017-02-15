@@ -10,6 +10,7 @@
 #ifdef WITH_FS_ROMFS
 
 #include <kernel/include/fs/romfs.h>
+#include <kernel/include/fs/node.h>
 
 
 s32 romfs_init();

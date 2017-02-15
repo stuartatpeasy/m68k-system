@@ -41,6 +41,7 @@
 
 /* FIXME - target arch should be defined in platform/platform_specific.h, not here */
 #define TARGET_MC68010
+#define TARGET_BIGENDIAN
 
 #define PLATFORM_LAMBDA
 #define PLATFORM_REV    1

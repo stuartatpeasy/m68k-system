@@ -65,6 +65,8 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
     if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
         return EINVAL;
 
+    /* FIXME locking */
+
     ent = &g_irq_handlers[irql];
 
     /*

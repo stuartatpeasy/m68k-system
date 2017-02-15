@@ -13,8 +13,9 @@
 #include <kernel/include/types.h>
 #include <kernel/include/memory/kmalloc.h>
 
-
+#if !defined(HOST_HARNESS)
 #define RAND_MAX (2147483647)
+#endif
 
 /* Parameters for the linear congruential generator used by rand(), srand(), rand32(), etc. */
 #define RAND_LCG_MULTIPLIER     (1103515245)

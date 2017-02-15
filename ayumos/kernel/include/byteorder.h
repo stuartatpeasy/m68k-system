@@ -29,8 +29,6 @@
     items read from an ATA device.
 */
 
-#include <kernel/include/cpu.h>
-
 #if defined(TARGET_BIGENDIAN)
 
 #define LE2N16(x)   __builtin_bswap16(x)
@@ -52,7 +50,7 @@
 #define BEHW2N32(x) wswap_32(x)
 
 #else
-#error Target endianness not defined
+#error "Target endianness not defined"
 #endif
 
 #define N2LE16(x)   LE2N16(x)

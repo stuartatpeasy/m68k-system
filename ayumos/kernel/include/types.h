@@ -54,7 +54,7 @@ typedef const T_S64         ks64;
 typedef volatile T_S64      vs64;
 
 /* Size type */
-#ifndef HAVE_SIZE_T
+#if !defined(HOST_HARNESS)
 typedef u32 size_t;
 #endif
 
@@ -76,7 +76,7 @@ typedef struct rtc_time
 
 /* Process ID */
 /* Test harnesses may already have defined pid_t, so define it conditionally here */
-#ifndef HAVE_PID_T
+#if !defined(HOST_HARNESS)
 typedef s16 pid_t;
 #endif
 
@@ -100,7 +100,9 @@ typedef u32 reg32_t;
 typedef u64 reg64_t;
 
 /* Time-related definitions */
+#if !defined(HOST_HARNESS)
 typedef s32 time_t;
+#endif
 
 /* This probably isn't the right place to define NULL, but I don't think it warrants its
    own header file. */
