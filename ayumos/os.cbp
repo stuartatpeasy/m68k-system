@@ -431,6 +431,13 @@
 		</Unit>
 		<Unit filename="platform/lambda/startup.S" />
 		<Unit filename="platform/platform_specific.h" />
+		<Unit filename="tools/Makefile" />
+		<Unit filename="tools/makemap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tools/mkromfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Extensions>
 			<envvars />
 			<code_completion />
