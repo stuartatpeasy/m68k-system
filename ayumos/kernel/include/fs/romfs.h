@@ -23,11 +23,13 @@
 #define RN_FILE         (0x0001)    /* Node represents a file       */
 #define RN_DIR          (0x0002)    /* Node represents a directory  */
 
+
 typedef struct romfs_superblock
 {
     u32     magic;              /* = ROMFS_SUPERBLOCK_MAGIC                         */
     u32     len;                /* Length of the entire romfs, including superblock */
     time_t  cdate;              /* Timestamp at which the fs image was created      */
+    u16     nnodes;             /* Number of romfs_node_t structures in the fs      */
     char    label[16];          /* Zero-terminated volume label (name) string       */
 } romfs_superblock_t;
 

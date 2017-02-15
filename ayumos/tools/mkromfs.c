@@ -39,7 +39,8 @@ typedef struct romfs_superblock
 {
     u32     magic;              /* = ROMFS_SUPERBLOCK_MAGIC                         */
     u32     len;                /* Length of the entire romfs, including superblock */
-    time_t  cdate;              /* Timestamp at which the fs image was created      */
+    u32     cdate;              /* Timestamp at which the fs image was created      */
+    u16     nnodes;             /* Number of romfs_node_t structures in the fs      */
     char    label[16];          /* Zero-terminated volume label (name) string       */
 } romfs_superblock_t;
 
@@ -51,7 +52,7 @@ typedef struct romfs_node
     u32         size;           /* Size of this node's data block; zero for directory nodes     */
     u32         offset;         /* Offset of the data block, from the start of the superblock   */
     u32         name_offset;    /* Offset of the node name, from the start of the superblock    */
-    time_t      mdate;          /* Node last-modification timestamp                             */
+    u32         mdate;          /* Node last-modification timestamp                             */
     u16         uid;            /* Owner user ID                                                */
     u16         gid;            /* Owner group ID                                               */
     file_perm_t permissions;    /* Node permissions                                             */
@@ -76,8 +77,9 @@ typedef struct romfs_node
 
 int add_node(romfs_node_t *node);
 int add_dir(const char *path, int parent_id);
-int add_name(const char *name);
+unsigned int add_name(const char *name);
 unsigned int add_data(const char *pathname, unsigned int size);
+void checked_fwrite(const void *data, size_t len, FILE *fp);
 
 int next_id = 0;
 
@@ -101,6 +103,7 @@ int main(int argc, char **argv)
     FILE *fp_out;
     DIR *dir;
     romfs_superblock_t sblk;
+    u32 names_offset, data_offset, i;
 
     fp_out = stdout;
 
@@ -152,15 +155,24 @@ int main(int argc, char **argv)
     sblk.len        = N2BE32(sizeof(romfs_superblock_t) + (nodes_pos * sizeof(romfs_node_t))
                                 + names_pos + data_pos);
     sblk.cdate      = N2BE32(time(NULL));
+    sblk.nnodes     = N2BE16(nodes_pos);
     sblk.label[0]   = '\0';         /* FIXME */
 
-    /* FIXME - fix up data and names offsets in nodes */
+    /* Fix up data and names offsets in nodes */
+    data_offset = sizeof(romfs_superblock_t) + (nodes_pos * sizeof(romfs_node_t));
+    names_offset = data_offset + data_pos;
 
-    /* FIXME - error-checking on these writes */
-    fwrite(&sblk, 1, sizeof(sblk), fp_out);
-    fwrite(nodes, 1, sizeof(romfs_node_t) * nodes_pos, fp_out);
-    fwrite(data, 1, data_pos, fp_out);
-    fwrite(names, 1, names_pos, fp_out);
+    for(i = 0; i < nodes_pos; ++i)
+    {
+        nodes[i].offset = N2BE32(BE2N32(nodes[i].offset) + data_offset);
+        nodes[i].name_offset = N2BE32(BE2N32(nodes[i].name_offset) + names_offset);
+    }
+
+    /* Write fs image */
+    checked_fwrite(&sblk, sizeof(sblk), fp_out);
+    checked_fwrite(nodes, sizeof(romfs_node_t) * nodes_pos, fp_out);
+    checked_fwrite(data, data_pos, fp_out);
+    checked_fwrite(names, names_pos, fp_out);
 
     free(nodes);
     free(names);
@@ -205,8 +217,8 @@ int add_dir(const char *path, int parent_id)
 
         node_id = ++next_id;
 
-        node.id             = N2BE32(node_id);
-        node.parent_id      = N2BE32(parent_id);
+        node.id             = N2BE16(node_id);
+        node.parent_id      = N2BE16(parent_id);
         node.name_offset    = N2BE32(add_name(ent->d_name));
         node.mdate          = N2BE32(statbuf.st_mtime);
         node.uid            = N2BE16(statbuf.st_uid);
@@ -215,15 +227,15 @@ int add_dir(const char *path, int parent_id)
 
         if(S_ISDIR(statbuf.st_mode))
         {
-            node.flags  = RN_DIR;
+            node.flags  = N2BE16(RN_DIR);
             node.offset = 0;
             node.size   = 0;
         }
         else if(S_ISREG(statbuf.st_mode))
         {
-            node.size           = N2BE32(statbuf.st_size);
-            node.offset         = N2BE32(add_data(pathname, statbuf.st_size));
-            node.flags          = RN_FILE;
+            node.flags  = N2BE16(RN_FILE);
+            node.offset = N2BE32(add_data(pathname, statbuf.st_size));
+            node.size   = N2BE32(statbuf.st_size);
         }
         else
             continue;       /* Ignore anything that isn't a dir or a file */
@@ -240,6 +252,9 @@ int add_dir(const char *path, int parent_id)
 }
 
 
+/*
+    add_node() - add a romfs_node_t structure to the nodes array, resizing the array if necessary.
+*/
 int add_node(romfs_node_t *node)
 {
     if(nodes_pos == nodes_len)
@@ -258,7 +273,11 @@ int add_node(romfs_node_t *node)
 }
 
 
-int add_name(const char *name)
+/*
+    add_name() - add a node name to the "names" string table, resizing the table if necessary.
+    Return the offset of the name from the start of the string table.
+*/
+unsigned int add_name(const char *name)
 {
     unsigned int name_start, len;
 
@@ -283,6 +302,11 @@ int add_name(const char *name)
 }
 
 
+/*
+    add_data() - append the contents of the file at <pathname> to the data area pointed to by
+    <data>, resizing the area if necessary, and rounding the length of the file contents up to the
+    next multiple of 4.  Return the offset of the file contents from the start of the data area.
+*/
 unsigned int add_data(const char *pathname, unsigned int size)
 {
     FILE *fp;
@@ -325,4 +349,14 @@ unsigned int add_data(const char *pathname, unsigned int size)
     fclose(fp);
 
     return data_start;
+}
+
+
+/*
+    checked_fwrite() - do an fwrite(); abort the program with an error message if it fails.
+*/
+void checked_fwrite(const void *data, size_t len, FILE *fp)
+{
+    if(fwrite(data, 1, len, fp) != len)
+        error(E_IO, errno, "Write failed");
 }
