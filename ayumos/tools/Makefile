@@ -13,23 +13,33 @@ BINDIR=bin
 TARGET=$(BINDIR)/makemap
 CSOURCES=makemap.c
 
-CFLAGS=-c -O3 -Wall -pedantic
+CFLAGS=-c -O3 -Wall -I..
 
 OBJECTS=$(CSOURCES:.c=.o)
 
-all: $(TARGET)
+.PHONY: $(BINDIR)
+
+all: $(BINDIR)/makemap $(BINDIR)/mkromfs
 
 .c.o:
 	echo "(HOSTCC) $<"
-	$(HOSTCC) $(CFLAGS) -o$@ $<
+	$(HOSTCC) -c $(CFLAGS) -o$@ $<
 
-$(TARGET): $(OBJECTS)
+$(BINDIR)/makemap: makemap.o
 	mkdir -p $(BINDIR)
-	echo "(LINK) $(TARGET)"
-	$(HOSTCC) -o$(TARGET) $(OBJECTS)
+	$(HOSTCC) -o$@ $<
 
-clean:
-	rm -f $(TARGET) $(OBJECTS)
+$(BINDIR)/mkromfs: mkromfs.o
+	mkdir -p $(BINDIR)
+	$(HOSTCC) -o$@ $<
+
+makemap_clean:
+	rm -f makemap.o $(BINDIR)/makemap
+
+mkromfs_clean:
+	rm -f mkromfs.o $(BINDIR)/mkromfs
+
+clean: makemap_clean mkromfs_clean
 
 #
 # Dependencies below this point
@@ -37,4 +47,7 @@ clean:
 
 makemap.o: \
 	makemap.c
+
+mkromfs.o: \
+	mkromfs.c
 
