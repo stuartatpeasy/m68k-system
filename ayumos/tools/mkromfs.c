@@ -30,6 +30,7 @@
 #include <kernel/include/types.h>
 #include <kernel/include/fs/node.h>
 
+
 /* Meaningless "magic number" which validates a romfs superblock */
 #define ROMFS_SUPERBLOCK_MAGIC      (0x6c1f39e4)
 
@@ -61,6 +62,7 @@ typedef struct romfs_node
     u16         flags;          /* Flags (see constants defined above)                          */
 } romfs_node_t;
 
+
 /* Program exit codes */
 #define E_SUCCESS       (0)     /* Success exit code            */
 #define E_SYNTAX        (1)     /* Command-line syntax error    */
@@ -70,6 +72,7 @@ typedef struct romfs_node
 #define E_STAT          (5)     /* stat() failed                */
 #define E_PRINTF        (6)     /* snprintf() failed            */
 
+/* Internal configuration constants */
 #define INITIAL_DATA_BUF_LEN    1048576UL       /* Initial size of file data buffer               */
 #define INITIAL_NAMES_BUF_LEN   16384UL         /* Initial size of names buffer                   */
 #define INITIAL_NODES_BUF_LEN   256UL           /* Initial size of nodes buffer                   */
@@ -79,11 +82,13 @@ typedef struct romfs_node
 
 #define LABEL_MAX_LEN           15              /* Max length of a volume label string            */
 
+
 int add_node(romfs_node_t *node);
 int add_dir(const char *path, int parent_id);
 unsigned int add_name(const char *name);
 unsigned int add_data(const char *pathname, unsigned int size);
 void checked_fwrite(const void *data, size_t len, FILE *fp);
+void *checked_malloc(size_t size, const char *name);
 int usage(const char *imagename);
 
 int next_id = 0;
@@ -99,6 +104,7 @@ char *names;
 unsigned int nodes_pos = 0;
 unsigned int nodes_len = 0;
 romfs_node_t *nodes;
+
 
 /*
     main() - entry point
@@ -153,24 +159,15 @@ int main(int argc, char **argv)
         error(E_SYNTAX, 0, "No root directory specified (use '-r')");
 
     /* Allocate initial file data buffer */
-    data = malloc(INITIAL_DATA_BUF_LEN);
-    if(data == NULL)
-        error(E_MALLOC, errno, "Unable to allocate data buffer");
-
+    data = checked_malloc(INITIAL_DATA_BUF_LEN, "data");
     data_len = INITIAL_DATA_BUF_LEN;
 
     /* Allocate initial names buffer */
-    names = malloc(INITIAL_NAMES_BUF_LEN);
-    if(names == NULL)
-        error(E_MALLOC, errno, "Unable to allocate names buffer");
-
+    names = checked_malloc(INITIAL_NAMES_BUF_LEN, "names");
     names_len = INITIAL_NAMES_BUF_LEN;
 
     /* Allocate initial nodes buffer */
-    nodes = malloc(INITIAL_NODES_BUF_LEN * sizeof(romfs_node_t));
-    if(nodes == NULL)
-        error(E_MALLOC, errno, "Unable to allocate nodes buffer");
-
+    nodes = checked_malloc(INITIAL_NODES_BUF_LEN * sizeof(romfs_node_t), "nodes");
     nodes_len = INITIAL_NODES_BUF_LEN;
 
     add_dir(root, next_id);
@@ -383,6 +380,20 @@ void checked_fwrite(const void *data, size_t len, FILE *fp)
 {
     if(fwrite(data, 1, len, fp) != len)
         error(E_IO, errno, "Write failed");
+}
+
+
+/*
+    checked_malloc() - attempt to allocate <size> bytes; abort the program with an error message if
+    the allocation fails.
+*/
+void *checked_malloc(size_t size, const char *name)
+{
+    void *p = malloc(size);
+    if(p == NULL)
+        error(E_MALLOC, 0, "Failed to allocate %d bytes for %s buffer", (int) size, name);
+
+    return p;
 }
 
 
