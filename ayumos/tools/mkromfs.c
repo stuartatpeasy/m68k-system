@@ -73,14 +73,14 @@ typedef struct romfs_node
 #define E_PRINTF        (6)     /* snprintf() failed            */
 
 /* Internal configuration constants */
-#define INITIAL_DATA_BUF_LEN    1048576UL       /* Initial size of file data buffer               */
-#define INITIAL_NAMES_BUF_LEN   16384UL         /* Initial size of names buffer                   */
-#define INITIAL_NODES_BUF_LEN   256UL           /* Initial size of nodes buffer                   */
-#define DATA_BUF_INCREMENT      16384UL         /* Minimum amount by which to extend data buffer  */
-#define NAMES_BUF_INCREMENT     4096UL          /* Minimum amount by which to extend names buffer */
-#define NODES_BUF_INCREMENT     256UL           /* Amount by which to extend nodes buffer         */
+#define INITIAL_DATA_BUF_LEN    1048576UL       /* Initial size of file data buffer             */
+#define INITIAL_NAMES_BUF_LEN   16384UL         /* Initial size of names buffer                 */
+#define INITIAL_NODES_BUF_LEN   256UL           /* Initial size of nodes buffer                 */
+#define DATA_BUF_INCREMENT      16384UL         /* Minimum amount by which to grow data buffer  */
+#define NAMES_BUF_INCREMENT     4096UL          /* Minimum amount by which to grow names buffer */
+#define NODES_BUF_INCREMENT     256UL           /* Amount by which to extend nodes buffer       */
 
-#define LABEL_MAX_LEN           15              /* Max length of a volume label string            */
+#define LABEL_MAX_LEN           15              /* Max length of a volume label string */
 
 
 int add_node(romfs_node_t *node);
