@@ -6,7 +6,8 @@
 
     (c) Stuart Wallace, February 2017.
 
-    Syntax: mkromfs <root_dir> [<image_file>]
+    Syntax: mkromfs [-l <volume_label>] -r <root_dir> [-o <image_file>]
+            mkromfs -h
 */
 
 #define TARGET_LITTLEENDIAN
@@ -16,6 +17,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <error.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,18 +70,21 @@ typedef struct romfs_node
 #define E_STAT          (5)     /* stat() failed                */
 #define E_PRINTF        (6)     /* snprintf() failed            */
 
-#define INITIAL_DATA_BUF_LEN    1048576UL       /* Initial size of file data buffer */
-#define INITIAL_NAMES_BUF_LEN   16384UL         /* Initial size of names buffer */
-#define INITIAL_NODES_BUF_LEN   256UL           /* Initial size of nodes buffer */
-#define DATA_BUF_INCREMENT      16384UL         /* Minimum amount by which to extend data buffer */
+#define INITIAL_DATA_BUF_LEN    1048576UL       /* Initial size of file data buffer               */
+#define INITIAL_NAMES_BUF_LEN   16384UL         /* Initial size of names buffer                   */
+#define INITIAL_NODES_BUF_LEN   256UL           /* Initial size of nodes buffer                   */
+#define DATA_BUF_INCREMENT      16384UL         /* Minimum amount by which to extend data buffer  */
 #define NAMES_BUF_INCREMENT     4096UL          /* Minimum amount by which to extend names buffer */
-#define NODES_BUF_INCREMENT     256UL           /* Amount by which to extend nodes buffer */
+#define NODES_BUF_INCREMENT     256UL           /* Amount by which to extend nodes buffer         */
+
+#define LABEL_MAX_LEN           15              /* Max length of a volume label string            */
 
 int add_node(romfs_node_t *node);
 int add_dir(const char *path, int parent_id);
 unsigned int add_name(const char *name);
 unsigned int add_data(const char *pathname, unsigned int size);
 void checked_fwrite(const void *data, size_t len, FILE *fp);
+int usage(const char *imagename);
 
 int next_id = 0;
 
@@ -104,29 +109,48 @@ int main(int argc, char **argv)
     DIR *dir;
     romfs_superblock_t sblk;
     u32 names_offset, data_offset, i;
+    char label[LABEL_MAX_LEN + 1] = {0}, root[PATH_MAX + 1] = {0};
+    int opt;
 
     fp_out = stdout;
 
     /* Process and validate command-line arguments */
-    switch(argc)
+    while((opt = getopt(argc, argv, "l:r:o:h")) != -1)
     {
-        case 3:
-            fp_out = fopen(argv[2], "w");
-            if(!fp_out)
-                error(E_FILE, errno, "Unable to open output file '%s'", argv[2]);
+        switch(opt)
+        {
+            case 'l':       /* "-l <label>" - specify volume label */
+                if(strlen(optarg) > LABEL_MAX_LEN)
+                    error(E_SYNTAX, 0, "Label too long (%d chars max)", LABEL_MAX_LEN);
+                strcpy(label, optarg);
+                break;
 
-            /* fall through */
-        case 2:
-            dir = opendir(argv[1]);
-            if(!dir)
-                error(E_FILE, errno, "Unable to open root directory '%s'", argv[1]);
+            case 'r':       /* "-r <rootdir>" - specify dir containing files to be added to image */
+                if(strlen(optarg) > PATH_MAX)
+                    error(E_SYNTAX, 0, "Path name too long");
 
-            closedir(dir);
-            break;
+                dir = opendir(optarg);
+                if(!dir)
+                    error(E_FILE, errno, "Unable to open root directory '%s'", optarg);
 
-        default:
-            error(E_SYNTAX, 0, "Syntax: %s <root_dir> [<image_file>]", argv[0]);
+                closedir(dir);
+                strcpy(root, optarg);
+                break;
+
+            case 'o':       /* "-o <outfile>" - specify the output image file name */
+                fp_out = fopen(optarg, "w");
+                if(!fp_out)
+                    error(E_FILE, errno, "Unable to open output file '%s'", optarg);
+                break;
+
+            case 'h':       /* "-h" - show help text */
+            default:
+                return usage(basename(argv[0]));
+        }
     }
+
+    if(root[0] == '\0')
+        error(E_SYNTAX, 0, "No root directory specified (use '-r')");
 
     /* Allocate initial file data buffer */
     data = malloc(INITIAL_DATA_BUF_LEN);
@@ -149,14 +173,14 @@ int main(int argc, char **argv)
 
     nodes_len = INITIAL_NODES_BUF_LEN;
 
-    add_dir(argv[1], next_id);
+    add_dir(root, next_id);
 
     sblk.magic      = N2BE32(ROMFS_SUPERBLOCK_MAGIC);
     sblk.len        = N2BE32(sizeof(romfs_superblock_t) + (nodes_pos * sizeof(romfs_node_t))
                                 + names_pos + data_pos);
     sblk.cdate      = N2BE32(time(NULL));
     sblk.nnodes     = N2BE16(nodes_pos);
-    sblk.label[0]   = '\0';         /* FIXME */
+    strcpy(sblk.label, label);
 
     /* Fix up data and names offsets in nodes */
     data_offset = sizeof(romfs_superblock_t) + (nodes_pos * sizeof(romfs_node_t));
@@ -359,4 +383,26 @@ void checked_fwrite(const void *data, size_t len, FILE *fp)
 {
     if(fwrite(data, 1, len, fp) != len)
         error(E_IO, errno, "Write failed");
+}
+
+
+/*
+    usage() - display usage information.
+*/
+int usage(const char *imagename)
+{
+    fprintf(stderr,
+        "Usage: %s [-l <volume_label>] -r <root_dir> [-o <image_file>]\n"
+        "       %s -h\n\n"
+        "  -l <volume_label>   Set volume label to <volume_label>.\n"
+        "  -r <root_dir>       Specify the directory containing the files to be added.\n"
+        "                      to the romfs image.\n"
+        "  -o <image_file>     Specify the file in which to write the image.  If no\n"
+        "                      output file is specified, the image will be written to\n"
+        "                      stdout.\n"
+        "  -h                  Display this usage information.\n\n"
+        "This tool builds romfs images from files and directories on the local\n"
+        "file system.  It is part of ayumos.\n\n", imagename, imagename);
+
+    return 0;
 }
