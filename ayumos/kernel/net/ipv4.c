@@ -14,6 +14,7 @@
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/net.h>
 #include <kernel/include/net/packet.h>
+#include <kernel/include/preempt.h>
 #include <klibc/include/stdio.h>
 #include <klibc/include/string.h>
 #include <klibc/include/strings.h>
@@ -29,6 +30,8 @@ ipv4_rt_item_t *g_ipv4_routes = NULL;
 /* A pointer to the default route entry */
 ipv4_route_t *ipv4_default_route = NULL;
 
+static u8 ***g_ephem_ports = NULL;
+
 
 /*
     ipv4_init() - initialise the IPv4 protocol driver.
@@ -36,6 +39,16 @@ ipv4_route_t *ipv4_default_route = NULL;
 s32 ipv4_init()
 {
     net_proto_fns_t fns;
+
+    const u32 slab_ptrs_needed = 65536 /                            /* Total number of ports */
+                                 ((SLAB_MAX_SIZE * 8) *             /* Ephem ports per slab  */
+                                  (SLAB_MAX_SIZE / sizeof(u8 *)));  /* Slab ptrs per slab    */
+
+    g_ephem_ports = slab_alloc(slab_ptrs_needed * sizeof(u8 **));
+    if(g_ephem_ports == NULL)
+        return ENOMEM;
+
+    bzero(g_ephem_ports, 32);
 
     net_proto_fns_struct_init(&fns);
 
@@ -499,6 +512,102 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
     puts("Can't route yet");
 
     return EHOSTUNREACH;
+}
+
+
+/*
+    ipv4_ephemeral_port_alloc() - mark an available ephemeral port number as allocated, and return
+    it through <*port>.  Ephemeral port numbers are maintained as a doubly-indirect bitmap.
+*/
+s32 ipv4_ephemeral_port_alloc(ipv4_port_t *port)
+{
+    u32 u, search_port;
+
+    preempt_disable();
+
+    search_port = IPV4_EPHEM_PORT_START;
+    for(u = 0; u < (SLAB_MAX_SIZE / sizeof(u8 **)); ++u)
+    {
+        u8 **slab = g_ephem_ports[u];
+        u32 v;
+
+        if(search_port < IPV4_EPHEM_PORT_END)
+        {
+            if(slab == NULL)
+            {
+                slab = slab_alloc(SLAB_MAX_SIZE);
+                if(slab == NULL)
+                    return ENOMEM;
+
+                bzero(slab, SLAB_MAX_SIZE);
+                g_ephem_ports[u] = slab;
+            }
+        }
+        else
+            break;
+
+        for(v = 0; v < (SLAB_MAX_SIZE / sizeof(u8 *)); ++v)
+        {
+            u8 *bitmap = slab[v];
+            u32 w;
+
+            if(bitmap == NULL)
+            {
+                bitmap = slab_alloc(SLAB_MAX_SIZE);
+                if(bitmap == NULL)
+                    return ENOMEM;
+
+                bzero(bitmap, SLAB_MAX_SIZE);
+                slab[v] = bitmap;
+            }
+
+            for(w = 0; (bitmap[w] == 0xff) && (w < SLAB_MAX_SIZE); ++w, search_port += 8)
+                ;
+
+            if(w < SLAB_MAX_SIZE)
+            {
+                u8 x;
+
+                for(x = 1; x; x <<= 1, ++search_port)
+                {
+                    if(!(bitmap[w] & x))
+                    {
+                        if(search_port >= IPV4_EPHEM_PORT_END)
+                        {
+                            preempt_enable();
+                            return ENFILE;      /* No ephemeral sockets available */
+                        }
+
+                        bitmap[w] |= x;
+                        preempt_enable();
+                        *port = search_port;
+
+                        return SUCCESS;
+                    }
+                }
+            }
+        }
+    }
+
+    preempt_enable();
+
+    return ENFILE;      /* No ephemeral sockets available */
+}
+
+
+/*
+    ipv4_ephemeral_port_free() - mark an allocated ephemeral port number as free.
+*/
+s32 ipv4_ephemeral_port_free(const ipv4_port_t port)
+{
+    preempt_disable();
+
+    /* FIXME */
+    UNUSED(port);
+
+    preempt_enable();
+
+    return SUCCESS;
 }
 
 #endif /* WITH_NETWORKING */

@@ -16,6 +16,8 @@
 #define SLAB_MIN_RADIX  (1)     /* Smallest object size = 2^SLAB_MIN_RADIX      */
 #define SLAB_MAX_RADIX  (6)     /* Largest object size = 2^SLAB_MAX_RADIX       */
 
+#define SLAB_MIN_SIZE   (1 << SLAB_MIN_RADIX)
+#define SLAB_MAX_SIZE   (1 << SLAB_MAX_RADIX)
 
 #define SLAB_SIZE_LOG2  (10)
 #define SLAB_SIZE       (1 << SLAB_SIZE_LOG2)

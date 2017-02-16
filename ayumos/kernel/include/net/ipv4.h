@@ -28,10 +28,19 @@
 #define IPV4_PORT_NONE              ((ipv4_port_t) 0)
 #define IPV4_PREFIX_LEN_MAX         (32)
 
-#define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag             */
-#define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag             */
+#define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag                 */
+#define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag                 */
 
-#define IPV4_DEFAULT_TTL            (64)        /* Is this a sensible default?          */
+#define IPV4_DEFAULT_TTL            (64)        /* Is this a sensible default?              */
+
+
+/* Definitions relating to ephemeral ports */
+#ifndef IPV4_EPHEM_PORT_START
+#define IPV4_EPHEM_PORT_START       (49152)     /* First ephemeral port number      */
+#endif
+#ifndef IPV4_EPHEM_PORT_END
+#define IPV4_EPHEM_PORT_END         (65536)     /* Last ephemeral port number + 1   */
+#endif
 
 
 /* Routing table flags */
@@ -130,6 +139,9 @@ const ipv4_route_t *ipv4_route_get(const net_address_t * const proto_addr);
 s32 ipv4_route_get_iface(const net_address_t * const proto_addr, net_iface_t **iface);
 s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr);
+
+s32 ipv4_ephemeral_port_alloc(ipv4_port_t *port);
+s32 ipv4_ephemeral_port_free(const ipv4_port_t port);
 
 #endif /* WITH_NETWORKING */
 #endif
