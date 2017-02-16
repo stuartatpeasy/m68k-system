@@ -9,6 +9,7 @@
 
 #include <kernel/include/cpu.h>
 #include <kernel/include/memory/slab.h>
+#include <kernel/include/preempt.h>
 #include <klibc/include/errors.h>
 
 
