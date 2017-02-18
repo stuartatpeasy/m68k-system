@@ -31,13 +31,25 @@
 
 net_init_fn_t g_net_init_fns[] =
 {
+#ifdef WITH_NET_ARP
     arp_init,
+#endif
+#ifdef WITH_NET_ICMP
     icmp_init,
+#endif
+#ifdef WITH_NET_IPV4
     ipv4_init,
+#endif
+#ifdef WITH_NET_ETHERNET
     eth_init,
-    raw_init,
+#endif
+#ifdef WITH_NET_TCP
     tcp_init,
-    udp_init
+#endif
+#ifdef WITH_NET_UDP
+    udp_init,
+#endif
+    raw_init
 };
 
 

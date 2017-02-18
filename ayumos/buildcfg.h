@@ -21,7 +21,6 @@
 #define WITH_FS_ROMFS
 #define WITH_KEYBOARD
 #define WITH_MASS_STORAGE
-#define WITH_NETWORKING
 #define WITH_RTC
 
 /* Driver build options */
@@ -33,6 +32,15 @@
 #define WITH_DRV_SER_MC68681
 
 /* Networking options */
+#define WITH_NETWORKING
+#define WITH_NET_ARP
+#define WITH_NET_ETHERNET
+#define WITH_NET_ICMP
+#define WITH_NET_IPV4
+#define WITH_NET_TCP
+#define WITH_NET_UDP
+
+/* Network protocol-specific options */
 #define IPV4_VERIFY_CHECKSUM 1      /* Verify checksum on incoming IPv4 packets                 */
 #define ICMP_VERIFY_CHECKSUM 1      /* Verify checksum on incoming ICMP packets                 */
 

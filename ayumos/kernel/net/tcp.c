@@ -8,6 +8,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_TCP
 
 #include <kernel/include/net/tcp.h>
 #include <kernel/include/net/protocol.h>
@@ -40,4 +41,5 @@ s32 tcp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     return SUCCESS;
 }
 
+#endif /* WITH_NET_TCP */
 #endif /* WITH_NETWORKING */

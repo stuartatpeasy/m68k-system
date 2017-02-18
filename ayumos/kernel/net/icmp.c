@@ -8,6 +8,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_ICMP
 
 #include <kernel/include/net/icmp.h>
 #include <kernel/include/net/packet.h>
@@ -81,4 +82,5 @@ s32 icmp_handle_echo_request(net_address_t *src, net_address_t *dest, net_packet
     return net_protocol_tx(dest, src, packet);
 }
 
+#endif /* WITH_NET_ICMP */
 #endif /* WITH_NETWORKING */

@@ -10,6 +10,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_TCP
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
@@ -19,5 +20,6 @@
 s32 tcp_init();
 s32 tcp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 
+#endif /* WITH_NET_TCP */
 #endif /* WITH_NETWORKING */
 #endif

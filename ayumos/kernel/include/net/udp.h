@@ -10,6 +10,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_UDP
 
 #include <kernel/include/defs.h>
 #include <kernel/include/types.h>
@@ -33,5 +34,6 @@ s32 udp_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet);
 s32 udp_packet_alloc(const net_address_t * const addr, ku32 len, net_iface_t *iface,
                      net_packet_t **packet);
 
+#endif /* WITH_NET_UDP */
 #endif /* WITH_NETWORKING */
 #endif

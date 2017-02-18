@@ -8,6 +8,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_ETHERNET
 
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/ethernet.h>
@@ -246,4 +247,5 @@ s32 eth_print_addr(const net_address_t *addr, char *buf, s32 len)
                     m->b[0], m->b[1], m->b[2], m->b[3], m->b[4], m->b[5]);
 }
 
+#endif /* WITH_NET_ETHERNET */
 #endif /* WITH_NETWORKING */

@@ -8,6 +8,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_IPV4
 
 #include <kernel/include/memory/slab.h>
 #include <kernel/include/net/ipv4.h>
@@ -675,4 +676,5 @@ s32 ipv4_port_free(ipv4_port_alloc_bitmap_t alloc_bitmap, const ipv4_port_t port
     return ENOENT;
 }
 
+#endif /* WITH_NET_IPV4 */
 #endif /* WITH_NETWORKING */

@@ -8,6 +8,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_ARP
 
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/interface.h>
@@ -313,4 +314,5 @@ arp_cache_item_t *arp_cache_get_item(ku32 n)
     return g_arp_cache + n;
 }
 
+#endif /* WITH_NET_ARP */
 #endif /* WITH_NETWORKING */

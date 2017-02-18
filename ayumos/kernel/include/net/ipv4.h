@@ -10,6 +10,7 @@
 */
 
 #ifdef WITH_NETWORKING
+#ifdef WITH_NET_IPV4
 
 #include <kernel/include/byteorder.h>
 #include <kernel/include/defs.h>
@@ -173,5 +174,6 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
 s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku16 type);
 s32 ipv4_port_free(ipv4_port_alloc_bitmap_t alloc_bitmap, const ipv4_port_t port);
 
+#endif /* WITH_NET_IPV4 */
 #endif /* WITH_NETWORKING */
 #endif
