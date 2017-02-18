@@ -517,8 +517,8 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
 */
 s32 ipv4_port_alloc_bitmap_init(ipv4_port_alloc_bitmap_t *bitmap)
 {
+    const u16 slab_ptrs = 65536 / IPV4_PORTS_PER_SLAB;
     ipv4_port_alloc_bitmap_t bitmap_;
-    const u32 slab_ptrs = 65536 / (IPV4_PORTS_PER_BITMAP * IPV4_PORTS_PER_SLAB);
 
     bitmap_= slab_alloc(slab_ptrs * sizeof(u8 **));
     if(bitmap_ == NULL)
@@ -536,7 +536,7 @@ s32 ipv4_port_alloc_bitmap_init(ipv4_port_alloc_bitmap_t *bitmap)
 */
 s32 ipv4_port_alloc_bitmap_free(ipv4_port_alloc_bitmap_t bitmap)
 {
-    const u32 slab_ptrs = 65536 / (IPV4_PORTS_PER_BITMAP * IPV4_PORTS_PER_SLAB);
+    const u16 slab_ptrs = 65536 / IPV4_PORTS_PER_SLAB;
     u16 u;
 
     for(u = 0; u < slab_ptrs; ++u)
