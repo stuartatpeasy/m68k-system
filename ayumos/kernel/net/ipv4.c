@@ -41,18 +41,13 @@ static ipv4_port_alloc_bitmap_t g_ports = NULL;
 s32 ipv4_init()
 {
     net_proto_fns_t fns;
-
-    const u32 slab_ptrs_needed = 65536 /                            /* Total number of ports */
-                                 ((SLAB_MAX_SIZE * 8) *             /* Ports per slab        */
-                                  (SLAB_MAX_SIZE / sizeof(u8 *)));  /* Slab ptrs per slab    */
-
-    g_ports = slab_alloc(slab_ptrs_needed * sizeof(u8 **));
-    if(g_ports == NULL)
-        return ENOMEM;
-
-    bzero(g_ports, 32);
+    s32 ret;
 
     net_proto_fns_struct_init(&fns);
+
+    ret = ipv4_port_alloc_bitmap_init(&g_ports);
+    if(ret != SUCCESS)
+        return ret;
 
     fns.rx              = ipv4_rx;
     fns.tx              = ipv4_tx;
@@ -514,6 +509,50 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
     puts("Can't route yet");
 
     return EHOSTUNREACH;
+}
+
+
+/*
+    ipv4_port_alloc_bitmap_init() - initialise a port-allocation bitmap.
+*/
+s32 ipv4_port_alloc_bitmap_init(ipv4_port_alloc_bitmap_t *bitmap)
+{
+    ipv4_port_alloc_bitmap_t bitmap_;
+    const u32 slab_ptrs = 65536 / (IPV4_PORTS_PER_BITMAP * IPV4_PORTS_PER_SLAB);
+
+    bitmap_= slab_alloc(slab_ptrs * sizeof(u8 **));
+    if(bitmap_ == NULL)
+        return ENOMEM;
+
+    bzero(bitmap_, slab_ptrs * sizeof(u8 **));
+    *bitmap = bitmap_;
+
+    return SUCCESS;
+}
+
+
+/*
+    ipv4_port_alloc_bitmap_free() - release the memory associated with a port-allocation bitmap.
+*/
+s32 ipv4_port_alloc_bitmap_free(ipv4_port_alloc_bitmap_t bitmap)
+{
+    const u32 slab_ptrs = 65536 / (IPV4_PORTS_PER_BITMAP * IPV4_PORTS_PER_SLAB);
+    u16 u;
+
+    for(u = 0; u < slab_ptrs; ++u)
+        if(bitmap[u] != NULL)
+        {
+            u16 v;
+            for(v = 0; v < (SLAB_MAX_SIZE / sizeof(u8 *)); ++v)
+                if(bitmap[u][v] != NULL)
+                    slab_free(bitmap[u][v]);
+
+            slab_free(bitmap[u]);
+        }
+
+    slab_free(bitmap);
+
+    return SUCCESS;
 }
 
 
