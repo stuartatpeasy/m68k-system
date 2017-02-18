@@ -58,19 +58,23 @@ net_init_fn_t g_net_init_fns[] =
 */
 s32 net_init()
 {
-    u32 i;
+    u32 i, fail;
     net_proto_driver_t *drv;
 
+    fail = 0;
     for(i = 0; i < ARRAY_COUNT(g_net_init_fns); ++i)
     {
-        ks32 ret = g_net_init_fns[i]();
-        if(ret != SUCCESS)
-            return ret;
+        if(g_net_init_fns[i]() != SUCCESS)
+            ++fail;
     }
 
-    put("net: registered protocols: ");
+    put("net: registered protocols:");
     for(drv = net_protocol_get_first(); drv; drv = net_protocol_get_next(drv))
-        printf("%s ", net_protocol_get_name(drv));
+        printf(" %s", net_protocol_get_name(drv));
+
+    if(fail)
+        printf("; %u protocol(s) failed to register", fail);
+
     putchar('\n');
 
     return net_interface_init();
