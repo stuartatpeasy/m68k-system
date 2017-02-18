@@ -28,20 +28,47 @@
 #define IPV4_PORT_NONE              ((ipv4_port_t) 0)
 #define IPV4_PREFIX_LEN_MAX         (32)
 
-#define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag                 */
-#define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag                 */
+#define IPV4_HDR_FLAG_DF            BIT(14)     /* Don't Fragment (DF) flag             */
+#define IPV4_HDR_FLAG_MF            BIT(13)     /* More Fragments (MF) flag             */
 
-#define IPV4_DEFAULT_TTL            (64)        /* Is this a sensible default?              */
+#define IPV4_DEFAULT_TTL            (64)        /* Is this a sensible default?          */
 
 
-/* Definitions relating to ephemeral ports */
+/* Definitions relating to port types */
 #ifndef IPV4_EPHEM_PORT_START
-#define IPV4_EPHEM_PORT_START       (49152)     /* First ephemeral port number      */
+#define IPV4_EPHEM_PORT_START       (49152)     /* First ephemeral port number          */
 #endif
 #ifndef IPV4_EPHEM_PORT_END
-#define IPV4_EPHEM_PORT_END         (65536)     /* Last ephemeral port number + 1   */
+#define IPV4_EPHEM_PORT_END         (65536)     /* Last ephemeral port number + 1       */
 #endif
 
+/* Privileged ports: the first is always port 0; the last is configurable. */
+#ifndef IPV4_PRIV_PORT_END
+#define IPV4_PRIV_PORT_END          (1024)      /* Last privileged port + 1             */
+#endif
+
+#ifndef IPV4_GENERAL_PORT_START
+#define IPV4_GENERAL_PORT_START     (1024)      /* First general (unprivileged) port    */
+#endif
+#ifndef IPV4_GENERAL_PORT_END
+#define IPV4_GENERAL_PORT_END       (49152)     /* Last general (unprivileged) port + 1 */
+#endif
+
+/* Constants used to specify a port type to ipv4_port_alloc() */
+#define IPV4_PORT_NUM_SPECIFIC      (0)
+#define IPV4_PORT_NUM_EPHEMERAL     (1)
+
+/*
+    IPV4_PORTS_PER_BITMAP specifies the number of port-numbers covered by a bitmap the size of a
+    slab.
+*/
+#define IPV4_PORTS_PER_BITMAP       (SLAB_MAX_SIZE * 8)
+
+/*
+    IPV4_PORTS_PER_SLAB specifies the number of port-numbers contained within one slab's worth of
+    port-allocation bitmaps.
+*/
+#define IPV4_PORTS_PER_SLAB         (IPV4_PORTS_PER_BITMAP * (SLAB_MAX_SIZE / sizeof(u8 *)))
 
 /* Routing table flags */
 #define IPV4_ROUTE_UP           BIT(0)      /* Route is up (active)             */
@@ -58,6 +85,9 @@ typedef u32 ipv4_addr_t;
 
 /* IPv4 port number */
 typedef u16 ipv4_port_t;
+
+/* IPv4 port-allocation bitmap */
+typedef u8 *** ipv4_port_alloc_bitmap_t;
 
 /* IPv4 address/port combination */
 typedef struct ipv4_address
@@ -140,8 +170,8 @@ s32 ipv4_route_get_iface(const net_address_t * const proto_addr, net_iface_t **i
 s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
                            net_address_t *hw_addr);
 
-s32 ipv4_ephemeral_port_alloc(ipv4_port_t *port);
-s32 ipv4_ephemeral_port_free(const ipv4_port_t port);
+s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku16 type);
+s32 ipv4_port_free(ipv4_port_alloc_bitmap_t alloc_bitmap, const ipv4_port_t port);
 
 #endif /* WITH_NETWORKING */
 #endif

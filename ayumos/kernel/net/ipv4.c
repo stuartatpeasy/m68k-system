@@ -15,6 +15,7 @@
 #include <kernel/include/net/net.h>
 #include <kernel/include/net/packet.h>
 #include <kernel/include/preempt.h>
+#include <kernel/include/process.h>
 #include <klibc/include/stdio.h>
 #include <klibc/include/string.h>
 #include <klibc/include/strings.h>
@@ -30,7 +31,7 @@ ipv4_rt_item_t *g_ipv4_routes = NULL;
 /* A pointer to the default route entry */
 ipv4_route_t *ipv4_default_route = NULL;
 
-static u8 ***g_ephem_ports = NULL;
+static ipv4_port_alloc_bitmap_t g_ports = NULL;
 
 
 /*
@@ -41,14 +42,14 @@ s32 ipv4_init()
     net_proto_fns_t fns;
 
     const u32 slab_ptrs_needed = 65536 /                            /* Total number of ports */
-                                 ((SLAB_MAX_SIZE * 8) *             /* Ephem ports per slab  */
+                                 ((SLAB_MAX_SIZE * 8) *             /* Ports per slab        */
                                   (SLAB_MAX_SIZE / sizeof(u8 *)));  /* Slab ptrs per slab    */
 
-    g_ephem_ports = slab_alloc(slab_ptrs_needed * sizeof(u8 **));
-    if(g_ephem_ports == NULL)
+    g_ports = slab_alloc(slab_ptrs_needed * sizeof(u8 **));
+    if(g_ports == NULL)
         return ENOMEM;
 
-    bzero(g_ephem_ports, 32);
+    bzero(g_ports, 32);
 
     net_proto_fns_struct_init(&fns);
 
@@ -516,40 +517,63 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
 
 
 /*
-    ipv4_ephemeral_port_alloc() - mark an available ephemeral port number as allocated, and return
-    it through <*port>.  Ephemeral port numbers are maintained as a doubly-indirect bitmap.
+    ipv4_port_alloc() - mark an available port number as allocated, and return it through
+    <*port>.  The allocated/free status of port numbers is maintained as a doubly-indirect bitmap.
+
+    Terminology:
+        slab_nr     index of the slab containing pointers to the appropriate bitmaps
+        bitmap_nr   index of the bitmap containing free/used status
+        byte_nr     index of the bitmap byte containing free/used status
+        bit_nr      the bit number, within a bitmap byte, relating to a requested port
 */
-s32 ipv4_ephemeral_port_alloc(ipv4_port_t *port)
+s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku16 type)
 {
-    u32 u, search_port;
+    u16 search_port, slab_nr, bitmap_nr, byte_nr;
+    u8 bit_nr;
 
-    preempt_disable();
-
-    search_port = IPV4_EPHEM_PORT_START;
-    for(u = 0; u < (SLAB_MAX_SIZE / sizeof(u8 **)); ++u)
+    if(type == IPV4_PORT_NUM_SPECIFIC)
     {
-        u8 **slab = g_ephem_ports[u];
-        u32 v;
+        /* Caller has requested a specific port number.  Set up slab, bitmap, byte and bit_offset */
+        search_port = *port;
 
-        if(search_port < IPV4_EPHEM_PORT_END)
+        /* If a privileged port was requested, ensure that the current task is running as uid 0 */
+        if((search_port <= IPV4_PRIV_PORT_END) && proc_current_uid())
+            return EPERM;
+    }
+    else if(type == IPV4_PORT_NUM_EPHEMERAL)
+    {
+        /* Caller has requested an ephemeral port number. */
+        search_port = IPV4_EPHEM_PORT_START;
+    }
+    else
+        return EINVAL;
+
+    slab_nr = search_port / IPV4_PORTS_PER_SLAB;
+    bitmap_nr = (search_port / IPV4_PORTS_PER_BITMAP)
+                - (slab_nr * (search_port / IPV4_PORTS_PER_SLAB));
+    byte_nr = (search_port / 8) - ((slab_nr * (search_port / IPV4_PORTS_PER_SLAB))
+                                   + (bitmap_nr * (search_port / IPV4_PORTS_PER_BITMAP)));
+    bit_nr = search_port % 8;
+
+    preempt_disable();                                              /* BEGIN locked section */
+
+    for(; slab_nr < (SLAB_MAX_SIZE / sizeof(u8 **)); ++slab_nr)
+    {
+        u8 **slab = alloc_bitmap[slab_nr];
+
+        if(slab == NULL)
         {
+            slab = slab_alloc(SLAB_MAX_SIZE);
             if(slab == NULL)
-            {
-                slab = slab_alloc(SLAB_MAX_SIZE);
-                if(slab == NULL)
-                    return ENOMEM;
+                return ENOMEM;
 
-                bzero(slab, SLAB_MAX_SIZE);
-                g_ephem_ports[u] = slab;
-            }
+            bzero(slab, SLAB_MAX_SIZE);
+            alloc_bitmap[slab_nr] = slab;
         }
-        else
-            break;
 
-        for(v = 0; v < (SLAB_MAX_SIZE / sizeof(u8 *)); ++v)
+        for(; bitmap_nr < (SLAB_MAX_SIZE / sizeof(u8 *)); ++bitmap_nr)
         {
-            u8 *bitmap = slab[v];
-            u32 w;
+            u8 *bitmap = slab[bitmap_nr];
 
             if(bitmap == NULL)
             {
@@ -558,56 +582,97 @@ s32 ipv4_ephemeral_port_alloc(ipv4_port_t *port)
                     return ENOMEM;
 
                 bzero(bitmap, SLAB_MAX_SIZE);
-                slab[v] = bitmap;
+                slab[bitmap_nr] = bitmap;
             }
 
-            for(w = 0; (bitmap[w] == 0xff) && (w < SLAB_MAX_SIZE); ++w, search_port += 8)
-                ;
-
-            if(w < SLAB_MAX_SIZE)
+            /*
+                If we're looking for a specific port: check that it's free, fail if not; mark it as
+                in use and return accordingly.
+            */
+            if(type == IPV4_PORT_NUM_SPECIFIC)
             {
-                u8 x;
-
-                for(x = 1; x; x <<= 1, ++search_port)
+                if(bitmap[byte_nr] & (1 << bit_nr))
                 {
-                    if(!(bitmap[w] & x))
+                    preempt_enable();
+                    return EADDRINUSE;
+                }
+
+                bitmap[byte_nr] |= 1 << bit_nr;
+                preempt_enable();
+
+                return SUCCESS;
+            }
+            else
+            {
+                u8 x = (1 << bit_nr);
+
+                for(; (bitmap[byte_nr] == 0xff) && (byte_nr < SLAB_MAX_SIZE);
+                    ++byte_nr, search_port += 8)
+                    ;
+
+                if(byte_nr == SLAB_MAX_SIZE)
+                    continue;
+
+                for(; bit_nr < 8; x <<= 1, ++bit_nr)
+                {
+                    if(!(bitmap[byte_nr] & x))
                     {
-                        if(search_port >= IPV4_EPHEM_PORT_END)
+                        if((search_port + bit_nr) >= IPV4_EPHEM_PORT_END)
                         {
                             preempt_enable();
-                            return ENFILE;      /* No ephemeral sockets available */
+                            return ENFILE;      /* No ports available */
                         }
 
-                        bitmap[w] |= x;
+                        bitmap[byte_nr] |= x;
                         preempt_enable();
-                        *port = search_port;
+
+                        *port = search_port + bit_nr;
 
                         return SUCCESS;
                     }
                 }
+
+                search_port += 8;
             }
         }
     }
 
-    preempt_enable();
+    preempt_enable();                                               /* END locked section */
 
-    return ENFILE;      /* No ephemeral sockets available */
+    return ENFILE;      /* No ports available */
 }
 
 
 /*
-    ipv4_ephemeral_port_free() - mark an allocated ephemeral port number as free.
+    ipv4_port_free() - mark an allocated port number as free.
 */
-s32 ipv4_ephemeral_port_free(const ipv4_port_t port)
+s32 ipv4_port_free(ipv4_port_alloc_bitmap_t alloc_bitmap, const ipv4_port_t port)
 {
+    u16 slab_nr, bitmap_nr, byte_nr;
+    u8 *byte, bit_nr;
+
+    slab_nr = port / IPV4_PORTS_PER_SLAB;
+    bitmap_nr = (port / IPV4_PORTS_PER_BITMAP) - (slab_nr * (port / IPV4_PORTS_PER_SLAB));
+    byte_nr = (port / 8) - ((slab_nr * (port / IPV4_PORTS_PER_SLAB))
+                            + (bitmap_nr * (port / IPV4_PORTS_PER_BITMAP)));
+    bit_nr = port % 8;
+
+    byte = alloc_bitmap[slab_nr][bitmap_nr] + byte_nr;
+
     preempt_disable();
 
-    /* FIXME */
-    UNUSED(port);
+    if(*byte & (1 << bit_nr))
+    {
+        /* Port was not in use */
+        *byte &= ~(1 << bit_nr);
 
+        preempt_enable();
+        return SUCCESS;
+    }
+
+    /* Port was not in use */
     preempt_enable();
-
-    return SUCCESS;
+    return ENOENT;
 }
 
 #endif /* WITH_NETWORKING */
