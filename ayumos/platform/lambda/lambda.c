@@ -154,7 +154,7 @@ s32 plat_get_serial_number(u8 sn[8])
         return SUCCESS;
     }
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -175,7 +175,7 @@ s32 plat_get_cpu_clock(u32 *clk)
     /* Find the first RTC */
     rtc = dev_find("rtc0");
     if(rtc == NULL)
-        return ENOSYS;
+        return -ENOSYS;
 
     rtc_get_time = rtc->read;
 

@@ -30,10 +30,10 @@ s32 tftp_read_request(net_address_t *peer_addr, const char *fn)
     /* TODO: validate filename */
     fn_len = strlen(fn);
     if(!fn_len || (fn_len > TFTP_MAX_FN_LEN))
-        return EINVAL;
+        return -EINVAL;
 
     if(net_address_get_type(peer_addr) != na_ipv4)
-        return EPROTONOSUPPORT;     /* Only IPv4 addresses are supported at the moment */
+        return -EPROTONOSUPPORT;    /* Only IPv4 addresses are supported at the moment */
 
     /* Force the server port to the TFTP well-known port number */
     ipv4_make_addr(ipv4_get_addr(peer_addr), TFTP_SERVER_PORT, peer_addr);

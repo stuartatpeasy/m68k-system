@@ -84,11 +84,11 @@ s32 dfu(ku16 *data, ku32 len)
     ku32 write_flash_len = (ku32) dfu - (ku32) write_flash;
 
     if(!len || (len > LAMBDA_ROM_LENGTH) || (len & 1))
-        return EINVAL;
+        return -EINVAL;
 
     p_write_flash = (void (*)(ku16 *, ku32)) kmalloc(write_flash_len);
     if(p_write_flash == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     /* Copy the Flash-update routine into RAM */
     memcpy(p_write_flash, write_flash, write_flash_len);
@@ -98,6 +98,6 @@ s32 dfu(ku16 *data, ku32 len)
     /* This shouldn't return */
     p_write_flash(data, len);
 
-    return EUNKNOWN; /* Should not be reached */
+    return -EUNKNOWN;   /* Should not be reached */
 }
 

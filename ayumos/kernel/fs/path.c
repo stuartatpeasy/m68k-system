@@ -43,11 +43,11 @@ s32 path_open(const char *path, vfs_t **vfs, fs_node_t **node)
     s32 ret;
 
     if(!path_is_absolute(path))
-        return EINVAL;
+        return -EINVAL;
 
     path_canon = strdup(path);
     if(path_canon == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     p = path_canonicalise(path_canon);
     parent = NULL;

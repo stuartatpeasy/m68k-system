@@ -31,7 +31,7 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
         if(flags & O_EXCL)
         {
             slab_free(node);
-            return EEXIST;
+            return -EEXIST;
         }
 
         /* Check perms */
@@ -43,7 +43,7 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
 
         return SUCCESS;
     }
-    else if(ret == ENOENT)
+    else if(ret == -ENOENT)
     {
         /* File does not exist.  Was creation requested? */
         if(flags & O_CREATE)
@@ -51,12 +51,12 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
             /* Check perms; create file; set offset = 0 */
             /* TODO */
             slab_free(node);
-            return ENOSYS;
+            return -ENOSYS;
         }
         else
         {
             slab_free(node);
-            return ENOENT;      /* File does not exist */
+            return -ENOENT;     /* File does not exist */
         }
     }
     else

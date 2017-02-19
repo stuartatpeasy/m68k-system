@@ -24,7 +24,7 @@ s32 fs_node_alloc(fs_node_t **node)
 
     node_ = (fs_node_t *) slab_alloc(sizeof(fs_node_t));
     if(node_ == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     node_->name = NULL;
     *node = node_;
@@ -42,7 +42,7 @@ s32 fs_node_set_name(fs_node_t *node, const char * const name)
     char *name_ = strdup(name);
 
     if(name_ == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     if(node->name != NULL)
         kfree(node->name);
@@ -90,7 +90,7 @@ s32 fs_node_check_perms(const file_perm_t op, const fs_node_t * const node)
 
     perm &= FS_PERM_MASK;
 
-    return ((perm & op) == op) ? SUCCESS : EPERM;
+    return ((perm & op) == op) ? SUCCESS : -EPERM;
 }
 
 

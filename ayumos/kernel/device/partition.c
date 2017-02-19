@@ -61,7 +61,7 @@ s32 partition_init()
             dev_t *part_dev;
 
             if(part > DEVICE_MAX_SUBDEVICES)
-                return ENFILE;
+                return -ENFILE;
 
             if(!p->num_sectors)
                 continue;       /* Skip zero-length partitions */
@@ -163,7 +163,7 @@ s32 partition_read(dev_t *dev, ku32 offset, u32 *len, void* buf)
     dev_t * const block_dev = part_data->device;
 
     if((offset + *len) > dev->len)
-        return EINVAL;
+        return -EINVAL;
 
     return block_dev->read(block_dev, part_data->offset + offset, len, buf);
 }
@@ -178,7 +178,7 @@ s32 partition_write(dev_t *dev, ku32 offset, u32 *len, const void* buf)
     dev_t * const block_dev = part_data->device;
 
     if((offset + *len) > dev->len)
-        return EINVAL;
+        return -EINVAL;
 
     return block_dev->write(block_dev, part_data->offset + offset, len, buf);
 }
@@ -223,7 +223,7 @@ s32 partition_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *ou
             break;
 
         default:
-            return ENOSYS;
+            return -ENOSYS;
     }
 
     return SUCCESS;

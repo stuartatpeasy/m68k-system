@@ -95,11 +95,11 @@ s32 net_tx(net_packet_t *packet)
     /* Routing must be complete by the time this function is called */
     iface = net_packet_get_interface(packet);
     if(iface == NULL)
-        return EHOSTUNREACH;
+        return -EHOSTUNREACH;
 
     /* The packet protocol must match the interface protocol */
     if(net_packet_get_proto(packet) != net_interface_get_proto(iface))
-        return EPROTONOSUPPORT;
+        return -EPROTONOSUPPORT;
 
     dev = net_interface_get_device(iface);
 

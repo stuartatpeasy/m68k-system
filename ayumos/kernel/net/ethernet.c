@@ -96,14 +96,14 @@ s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
         const net_iface_t * const iface = net_packet_get_interface(packet);
 
         if(!iface)
-            return EHOSTUNREACH;    /* No source address and no interface - packet unrouteable. */
+            return -EHOSTUNREACH;   /* No source address and no interface - packet unrouteable. */
 
         src = (net_address_t *) net_interface_get_hw_addr(iface);
     }
 
     /* Source and destination addresses must be an Ethernet address */
     if((net_address_get_type(src) != na_ethernet) || (net_address_get_type(dest) != na_ethernet))
-        return EAFNOSUPPORT;
+        return -EAFNOSUPPORT;
 
     proto = net_packet_get_proto(packet);
 
@@ -115,7 +115,7 @@ s32 eth_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     hdr->type = eth_ethertype_from_proto(proto);
 
     if(hdr->type == ethertype_unknown)
-        return EPROTONOSUPPORT;
+        return -EPROTONOSUPPORT;
 
     hdr->src = *eth_get_addr(src);
     hdr->dest = *eth_get_addr(dest);

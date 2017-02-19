@@ -36,7 +36,7 @@ vfs_driver_t * g_fs_drivers[] =
 };
 
 
-/* Default versions of the functions in vfs_driver_t.  These all return ENOSYS. */
+/* Default versions of the functions in vfs_driver_t.  These all return -ENOSYS. */
 s32 vfs_default_mount(vfs_t *vfs);
 s32 vfs_default_unmount(vfs_t *vfs);
 s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
@@ -63,7 +63,7 @@ s32 vfs_init()
         {
             /*
                 If the driver has chosen not to expose any function, point it at the default version
-                of that function.  The default version simply returns ENOSYS.
+                of that function.  The default version simply returns -ENOSYS.
             */
             if(NULL == pdrv->mount)         pdrv->mount         = vfs_default_mount;
             if(NULL == pdrv->unmount)       pdrv->unmount       = vfs_default_unmount;
@@ -78,7 +78,7 @@ s32 vfs_init()
         else
         {
             /* TODO handle this - make the fs driver unavailable */
-            printf("vfs: failed to initialise '%s' fs driver: %s\n", pdrv->name, kstrerror(ret));
+            printf("vfs: failed to initialise '%s' fs driver: %s\n", pdrv->name, kstrerror(-ret));
         }
     }
 
@@ -90,7 +90,7 @@ s32 vfs_init()
     ret = nvram_bpb_read(&bpb);
     if(ret != SUCCESS)
     {
-        printf("vfs: failed to read rootfs from BPB: %s\n", kstrerror(ret));
+        printf("vfs: failed to read rootfs from BPB: %s\n", kstrerror(-ret));
         return ret;
     }
 
@@ -98,13 +98,13 @@ s32 vfs_init()
     if(dev == NULL)
     {
         printf("vfs: rootfs partition '%s' not found\n", bpb.rootfs);
-        return ENODEV;
+        return -ENODEV;
     }
 
     if((dev->type != DEV_TYPE_BLOCK) || (dev->subtype != DEV_SUBTYPE_PARTITION))
     {
         printf("vfs: rootfs '%s' is not a partition device\n", bpb.rootfs);
-        return ENODEV;
+        return -ENODEV;
     }
 
     /* Find FS driver corresponding to bpb.fstype */
@@ -112,7 +112,7 @@ s32 vfs_init()
     if(!driver)
     {
         printf("vfs: unknown filesystem type '%s' specified\n", bpb.fstype);
-        return EINVAL;
+        return -EINVAL;
     }
 
     /* Found fs driver */
@@ -134,7 +134,7 @@ s32 vfs_attach(vfs_driver_t * const driver, dev_t * const dev, vfs_t **vfs)
 
     new_vfs = (vfs_t *) slab_alloc(sizeof(vfs_t));
     if(new_vfs == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     new_vfs->driver = driver;
     new_vfs->dev = dev;
@@ -175,7 +175,7 @@ s32 vfs_default_mount(vfs_t *vfs)
 {
     UNUSED(vfs);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -183,7 +183,7 @@ s32 vfs_default_unmount(vfs_t *vfs)
 {
     UNUSED(vfs);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -192,7 +192,7 @@ s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node)
     UNUSED(vfs);
     UNUSED(node);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -202,7 +202,7 @@ s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
     UNUSED(node);
     UNUSED(ctx);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -213,7 +213,7 @@ s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *nod
     UNUSED(node);
     UNUSED(name);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -222,7 +222,7 @@ s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
     UNUSED(vfs);
     UNUSED(ctx);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -231,7 +231,7 @@ s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st)
     UNUSED(vfs);
     UNUSED(st);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 /* === END default handlers for functions in vfs_driver_t === */
 
@@ -274,11 +274,11 @@ s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx)
     s32 ret;
 
     if(node->type != FSNODE_TYPE_DIR)
-        return ENOTDIR;
+        return -ENOTDIR;
 
     context = (vfs_dir_ctx_t *) slab_alloc(sizeof(vfs_dir_ctx_t));
     if(context == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     context->vfs = vfs;
 
@@ -371,7 +371,7 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
 
         /* The only valid operation with <*vfs> == NULL is to retrieve the root fs node. */
         if((parent != NULL) || (child != NULL))
-            return EINVAL;
+            return -EINVAL;
 
         ret = mount_find(NULL, NULL, &root_fs, &root_node);
         if(ret != SUCCESS)
@@ -398,7 +398,7 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
     {
         /* Non-null <parent> implies a specific dir within <*vfs>.  <child> must be non-null. */
         if(child == NULL)
-            return EINVAL;
+            return -EINVAL;
 
         parent_ = parent;
     }
@@ -435,7 +435,7 @@ s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs,
 
         return SUCCESS;
     }
-    else if(ret == ENOENT)
+    else if(ret == -ENOENT)
         return SUCCESS;     /* <*vfs>:<*node> is not a mount point - this isn't an error */
     else
         return ret;

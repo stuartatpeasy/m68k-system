@@ -40,14 +40,14 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
     /* TODO: auto-detect driver, if driver == NULL */
 
     if(driver == NULL)
-        return EINVAL;      /* No driver auto-detection yet */
+        return -EINVAL;     /* No driver auto-detection yet */
 
     /*
         Validate args: either host_vfs and host_node must be NULL (implying that we are mounting the
         root filesystem) or they must both be non-NULL (implying that we are mounting a child fs).
     */
     if(((host_vfs != NULL) && (host_node == NULL)) || ((host_vfs != NULL) && (host_node == NULL)))
-        return EINVAL;
+        return -EINVAL;
 
     preempt_disable();                              /* BEGIN locked section */
 
@@ -60,7 +60,7 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
             ||(ent->host_vfs->dev == dev) || (ent->inner_vfs->dev == dev))
         {
             preempt_enable();
-            return EBUSY;
+            return -EBUSY;
         }
 
     ret = vfs_attach(driver, dev, &inner_vfs);      /* Create a new VFS for the mount */
@@ -75,7 +75,7 @@ s32 mount_add(vfs_t * const host_vfs, fs_node_t * const host_node, vfs_driver_t 
     {
         vfs_detach(inner_vfs);
         preempt_enable();
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     new_ent->host_vfs  = host_vfs;
@@ -111,7 +111,7 @@ s32 mount_remove(const vfs_t * const host_vfs, const fs_node_t * const host_node
         both must be NULL.
     */
     if(((host_vfs != NULL) && (host_node == NULL)) || ((host_vfs != NULL) && (host_node == NULL)))
-        return EINVAL;
+        return -EINVAL;
 
     preempt_disable();
     for(ent = g_mount_table, ent_prev = NULL; ent != NULL; ent_prev = ent, ent = ent->next)
@@ -123,7 +123,7 @@ s32 mount_remove(const vfs_t * const host_vfs, const fs_node_t * const host_node
             if((dev != NULL) && (dev != ent->inner_vfs->dev))
             {
                 preempt_enable();
-                return ENOENT;      /* Incorrect device specified */
+                return -ENOENT;     /* Incorrect device specified */
             }
 
             /* Unmount the filesystem */
@@ -155,7 +155,7 @@ s32 mount_remove(const vfs_t * const host_vfs, const fs_node_t * const host_node
 
     preempt_enable();
 
-    return ENOENT;      /* Mount not found */
+    return -ENOENT;     /* Mount not found */
 }
 
 
@@ -198,6 +198,6 @@ s32 mount_find(const vfs_t * const host_vfs, const fs_node_t * const host_node, 
 
     preempt_enable();               /* END locked section */
 
-    return ENOENT;
+    return -ENOENT;
 }
 

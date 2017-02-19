@@ -71,11 +71,11 @@ s32 slab_create(ku8 radix, slab_header_t * const prev, slab_header_t **slab)
     u8 *bitmap;
 
     if((radix < SLAB_MIN_RADIX) || (radix > SLAB_MAX_RADIX))
-        return EINVAL;
+        return -EINVAL;
 
     /* Allocate the entire slab, and obtain a pointer to the header */
     if(g_slab_next >= g_slab_end)
-        return ENOMEM;
+        return -ENOMEM;
 
     hdr = (slab_header_t *) g_slab_next;
     g_slab_next = (u8 *) g_slab_next + SLAB_SIZE;
@@ -281,7 +281,7 @@ s32 slab_get_stats(ku8 radix, u32 *total, u32 *free)
     slab_header_t *slab;
 
     if((radix < SLAB_MIN_RADIX) || (radix > SLAB_MAX_RADIX))
-        return EINVAL;
+        return -EINVAL;
 
     *total = 0;
     *free = 0;

@@ -52,7 +52,7 @@ s32 net_interface_init()
             ks32 ret = net_interface_add(dev);
 
             if(ret != SUCCESS)
-                printf("net: failed to add %s: %s\n", dev->name, kstrerror(ret));
+                printf("net: failed to add %s: %s\n", dev->name, kstrerror(-ret));
         }
 
     return SUCCESS;
@@ -75,7 +75,7 @@ s32 net_interface_add(dev_t *dev)
 
     iface = (net_iface_t *) slab_alloc(sizeof(net_iface_t));
     if(iface == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     iface->next         = NULL;
     iface->dev          = dev;
@@ -141,7 +141,7 @@ s32 net_interface_rx(net_iface_t * const iface, net_packet_t *packet)
         net_interface_stats_inc_rx_packets(iface);
     else
     {
-        if(ret == ECKSUM)
+        if(ret == -ECKSUM)
             net_interface_stats_inc_cksum_err(iface);
 
         net_interface_stats_inc_rx_dropped(iface);

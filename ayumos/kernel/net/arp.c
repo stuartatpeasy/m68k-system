@@ -73,7 +73,7 @@ s32 arp_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 
     /* Ensure that a complete header is present, and then verify that the packet is complete */
     if(net_packet_get_len(packet) < sizeof(arp_eth_ipv4_packet_t))
-        return EINVAL;      /* Incomplete packet */
+        return -EINVAL;     /* Incomplete packet */
 
     /* Only interested in ARP packets containing Ethernet+IPv4 addresses */
     if(hdr->hw_type != BE2N16(arp_hw_type_ethernet) || hdr->proto_type != BE2N16(ethertype_ipv4))
@@ -150,14 +150,14 @@ s32 arp_send_request(const net_address_t *addr)
     s32 ret;
 
     if(net_address_get_type(addr) != na_ipv4)
-        return EPROTONOSUPPORT;
+        return -EPROTONOSUPPORT;
 
     ret = net_route_get_iface(addr, &iface);
     if(ret != SUCCESS)
         return ret;
 
     if(net_interface_get_proto(iface) != np_ethernet)
-        return EPROTONOSUPPORT;
+        return -EPROTONOSUPPORT;
 
     eth_make_broadcast_addr(&bcast);
 
@@ -211,7 +211,7 @@ s32 arp_lookup(net_iface_t *iface, const net_address_t *proto_addr, net_address_
     }
 
     if(p == NULL)
-        return ENOENT;
+        return -ENOENT;
 
     *hw_addr = p->hw_addr;
     return SUCCESS;

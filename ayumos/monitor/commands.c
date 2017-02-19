@@ -55,7 +55,7 @@ MONITOR_CMD_HANDLER(arp)
             net_address_t proto_addr;
 
             if((num_args != 2) || (strtoipv4(args[1], &addr) != SUCCESS))
-                return EINVAL;
+                return -EINVAL;
 
             ipv4_make_addr(addr, IPV4_PORT_NONE, &proto_addr);
 
@@ -63,7 +63,7 @@ MONITOR_CMD_HANDLER(arp)
         }
     }
 
-    return EINVAL;
+    return -EINVAL;
 }
 #endif /* WITH_NETWORKING */
 
@@ -80,12 +80,12 @@ MONITOR_CMD_HANDLER(date)
     dev_t *dev;
 
     if(num_args > 1)
-        return EINVAL;
+        return -EINVAL;
 
     /* Find an RTC */
     dev = dev_find("rtc0");
     if(dev == NULL)
-        return ENODEV;
+        return -ENODEV;
 
     if(num_args  == 0)
     {
@@ -112,7 +112,7 @@ MONITOR_CMD_HANDLER(date)
         return dev->write(dev, 0, &one, &tm);
     }
     else
-        return EINVAL;
+        return -EINVAL;
 
     return SUCCESS;
 }
@@ -131,7 +131,7 @@ MONITOR_CMD_HANDLER(dfu)
     s8 *data;
 
     if(num_args != 2)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &len, MPA_NOT_ZERO);
     if(ret != SUCCESS)
@@ -149,7 +149,7 @@ MONITOR_CMD_HANDLER(dfu)
     buffer_len = (len & 1) ? len + 1 : len;
 
     if((data = umalloc(buffer_len)) == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     printf("Send %u bytes\n", len);
     for(i = 0; i < len; i++)
@@ -160,10 +160,10 @@ MONITOR_CMD_HANDLER(dfu)
 
     cksum_calculated = fletcher16(data, len);
     if(cksum_calculated != cksum_sent)
-        return ECKSUM;
+        return -ECKSUM;
 
     if((ret = dfu((ku16 *) data, buffer_len)))
-        printf("Firmware update failed: %s\n", kstrerror(ret));
+        printf("Firmware update failed: %s\n", kstrerror(-ret));
 
     ufree(data);
 
@@ -184,7 +184,7 @@ MONITOR_CMD_HANDLER(disassemble)
     s8 line[80], instr_printed;
 
     if(!num_args || (num_args > 2))
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -250,7 +250,7 @@ MONITOR_CMD_HANDLER(dump)
     s32 ret;
 
     if(!num_args || (num_args > 2))
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_NONE);
     if(ret != SUCCESS)
@@ -279,7 +279,7 @@ MONITOR_CMD_HANDLER(dumph)
     s32 ret;
 
     if(!num_args || (num_args > 2))
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -309,7 +309,7 @@ MONITOR_CMD_HANDLER(dumpw)
     s32 ret;
 
     if(!num_args || (num_args > 2))
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &start, MPA_ALIGN_WORD);
     if(ret != SUCCESS)
@@ -362,7 +362,7 @@ MONITOR_CMD_HANDLER(fill)
     s32 ret;
 
     if(num_args != 3)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_NONE);
     if(ret != SUCCESS)
@@ -396,7 +396,7 @@ MONITOR_CMD_HANDLER(fillh)
     s32 ret;
 
     if(num_args != 3)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -428,7 +428,7 @@ MONITOR_CMD_HANDLER(fillw)
     s32 ret;
 
     if(num_args != 3)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) &start, MPA_ALIGN_WORD);
     if(ret != SUCCESS)
@@ -471,7 +471,7 @@ MONITOR_CMD_HANDLER(go)
     void (*addr)() = NULL;
 
     if(num_args != 1)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], (unsigned int *) addr, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -642,7 +642,7 @@ MONITOR_CMD_HANDLER(ls)
 
         if(ret != SUCCESS)
         {
-            puts(kstrerror(ret));
+            puts(kstrerror(-ret));
             return SUCCESS;
         }
 
@@ -654,19 +654,19 @@ MONITOR_CMD_HANDLER(ls)
             ret = vfs_open_dir(vfs, node, &ctx);
             if(ret != SUCCESS)
             {
-                puts(kstrerror(ret));
+                puts(kstrerror(-ret));
                 fs_node_free(node);
                 return SUCCESS;
             }
 
-            while((ret = vfs_read_dir(ctx, NULL, node)) != ENOENT)
+            while((ret = vfs_read_dir(ctx, NULL, node)) != -ENOENT)
             {
                 printf("%9d %s %9d %s\n", node->first_block, fs_node_perm_str(node, perms),
                        node->size, node->name);
             }
 
-            if(ret != ENOENT)
-                puts(kstrerror(ret));
+            if(ret != -ENOENT)
+                puts(kstrerror(-ret));
 
             vfs_close_dir(ctx);
         }
@@ -680,7 +680,7 @@ MONITOR_CMD_HANDLER(ls)
         fs_node_free(node);
     }
     else
-        return EINVAL;
+        return -EINVAL;
 
     return SUCCESS;
 }
@@ -770,7 +770,7 @@ MONITOR_CMD_HANDLER(mount)
     UNUSED(num_args);
     UNUSED(args);
 
-    return ENOSYS;
+    return -ENOSYS;
 #if 0
     if(num_args == 0)
     {
@@ -791,7 +791,7 @@ MONITOR_CMD_HANDLER(mount)
         return mount_add(args[2], vfs_get_driver_by_name(args[1]), dev_find(args[0]));
     }
     else
-        return EINVAL;
+        return -EINVAL;
 
     return SUCCESS;
 #endif
@@ -815,11 +815,11 @@ MONITOR_CMD_HANDLER(netif)
             netif ipv4 eth0 172.1.2.3
     */
     if(num_args < 2)
-        return EINVAL;
+        return -EINVAL;
 
     iface = net_interface_get_by_dev(args[1]);
     if(!iface)
-        return ENOENT;
+        return -ENOENT;
 
     if(!strcmp(args[0], "show"))
     {
@@ -844,13 +844,13 @@ MONITOR_CMD_HANDLER(netif)
         net_address_t addr;
 
         if(strtoipv4(args[2], &ipv4addr) != SUCCESS)
-            return EINVAL;
+            return -EINVAL;
 
         ipv4_make_addr(ipv4addr, IPV4_PORT_NONE, &addr);
         return net_interface_set_proto_addr(iface, &addr);
     }
 
-    return EINVAL;
+    return -EINVAL;
 }
 #endif /* WITH_NETWORKING */
 
@@ -892,7 +892,7 @@ MONITOR_CMD_HANDLER(rootfs)
     s32 ret;
 
     if((num_args != 0) && (num_args != 2))
-        return EINVAL;
+        return -EINVAL;
 
     if(num_args == 0)
     {
@@ -917,7 +917,7 @@ MONITOR_CMD_HANDLER(rootfs)
         /* Set root filesystem in BPB */
         if((strlen(args[0]) > sizeof(bpb.rootfs)) || (strlen(args[1]) > sizeof(bpb.fstype))
            || !vfs_get_driver_by_name(args[1]))
-            return EINVAL;
+            return -EINVAL;
 
         /*
             Optimistically ignore errors here.  If there's a checksum error,
@@ -1000,7 +1000,7 @@ MONITOR_CMD_HANDLER(route)
 
             if(ret || ret2 || (metric_ < IPV4_ROUTE_METRIC_MIN) || (metric_ > IPV4_ROUTE_METRIC_MAX)
                || !r.iface)
-                return EINVAL;
+                return -EINVAL;
 
             r.metric = metric_;
 
@@ -1015,10 +1015,10 @@ MONITOR_CMD_HANDLER(route)
         else if((num_args == 4) && !strcmp(args[0], "rm"))
             return ipv4_route_delete(&r);
         else
-            return EINVAL;
+            return -EINVAL;
     }
     else
-        return EINVAL;
+        return -EINVAL;
 }
 #endif /* WITH_NETWORKING */
 
@@ -1063,7 +1063,7 @@ MONITOR_CMD_HANDLER(serial)
         }
     }
 
-    return EINVAL;
+    return -EINVAL;
 }
 
 
@@ -1103,7 +1103,7 @@ MONITOR_CMD_HANDLER(srec)
     UNUSED(args);
 
     if(num_args)
-        return EINVAL;
+        return -EINVAL;
 
     struct srec_data s;
 
@@ -1136,7 +1136,7 @@ MONITOR_CMD_HANDLER(symbol)
     if(num_args == 2)
     {
         if(strcmp(args[0], "-v"))
-            return EINVAL;
+            return -EINVAL;
 
         verbose = 1;
         sym = args[1];
@@ -1147,7 +1147,7 @@ MONITOR_CMD_HANDLER(symbol)
         sym = args[0];
     }
     else
-        return EINVAL;
+        return -EINVAL;
 
     ret = ksym_find_by_name(sym, &ent);
     if(ret != SUCCESS)
@@ -1179,7 +1179,7 @@ MONITOR_CMD_HANDLER(test)
     s32 ret;
 
     if(num_args < 1)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &testnum, MPA_NONE);
     if(ret != SUCCESS)
@@ -1248,7 +1248,7 @@ MONITOR_CMD_HANDLER(test)
         {
             ret = elf_load_exe(addr, sizeof(testapp), &(img[i]));
             if(ret != SUCCESS)
-                printf("elf_load_exe() returned %u: %s\n", ret, kstrerror(ret));
+                printf("elf_load_exe() returned %u: %s\n", ret, kstrerror(-ret));
 
             /* FIXME - there's currently no way to free an exe_img_t cleanly */
 
@@ -1295,14 +1295,14 @@ MONITOR_CMD_HANDLER(upload)
     s8 *data, *data_;
 
     if(num_args != 1)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &len, MPA_NOT_ZERO);
     if(ret)
         return ret;
 
     if((data = umalloc(len)) == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     for(data_ = data; len--;)
         *data_++ = console_getc();
@@ -1324,7 +1324,7 @@ MONITOR_CMD_HANDLER(write)
     s32 ret;
 
     if(num_args != 2)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &addr, MPA_NONE);
     if(ret != SUCCESS)
@@ -1351,7 +1351,7 @@ MONITOR_CMD_HANDLER(writeh)
     s32 ret;
 
     if(num_args != 2)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &addr, MPA_ALIGN_HWORD);
     if(ret != SUCCESS)
@@ -1378,7 +1378,7 @@ MONITOR_CMD_HANDLER(writew)
     s32 ret;
 
     if(num_args != 2)
-        return EINVAL;
+        return -EINVAL;
 
     ret = monitor_parse_arg(args[0], &addr, MPA_ALIGN_WORD);
     if(ret != SUCCESS)

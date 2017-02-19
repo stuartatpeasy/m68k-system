@@ -38,31 +38,31 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
     if((ehdr->e_ident[EI_MAG0] != ELFMAG0) || (ehdr->e_ident[EI_MAG1] != ELFMAG1) ||
         (ehdr->e_ident[EI_MAG2] != ELFMAG2) || (ehdr->e_ident[EI_MAG3] != ELFMAG3))
     {
-        return EEXEBADHDR;
+        return -EEXEBADHDR;
     }
 
     /* Verify that this is a 32-bit ELF file */
     if(ehdr->e_ident[EI_CLASS] != ELFCLASS32)
-        return EEXEBADARCH;
+        return -EEXEBADARCH;
 
     /* Get the endianness of the file.  We only support big-endian files. */
     if(ehdr->e_ident[EI_DATA] != ELFDATA2MSB)
-        return EEXEENDIAN;
+        return -EEXEENDIAN;
 
     /* Verify that this is an executable image (vs. an object file, etc.) */
     if(BE2N16(ehdr->e_type) != ET_EXEC)
-        return ENOTEXE;
+        return -ENOTEXE;
 
     /* Verify that this file matches our architecture */
     /* FIXME: architecture-specific */
     if((BE2N16(ehdr->e_machine) != EM_68K) ||
         ((BE2N32(ehdr->e_flags) & EF_M68K_ARCH_MASK) != EF_M68K_M68000))
     {
-        return EEXEBADARCH;
+        return -EEXEBADARCH;
     }
 
     if(!ehdr->e_phoff)
-        return EEXENOSECTION;   /* Program header table missing */
+        return -EEXENOSECTION;      /* Program header table missing */
 
     /* Parse section headers */
     shdr = (Elf32_Shdr *) ((u8 *) buf + BE2N32(ehdr->e_shoff));
@@ -70,7 +70,7 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
 
     /* Check that the section headers don't run past the end of the file */
     if((u8 *) &shdr[nshdr] > ((u8 *) buf + len))
-        return EEXEBADSECTION;
+        return -EEXEBADSECTION;
 
     /* Search the section headers for the string table */
     for(strtab = NULL, sh = shdr; sh < &shdr[nshdr]; ++sh)
@@ -78,7 +78,7 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
             strtab = (s8 *) buf + BE2N32(sh->sh_offset);        /* Found the string table */
 
     if(strtab == NULL)
-        return EEXENOSECTION;   /* String table missing */
+        return -EEXENOSECTION;      /* String table missing */
 
     /* Search the section headers for program sections */
     vaddr_start = 0xffffffff;
@@ -104,13 +104,13 @@ s32 elf_load_exe(const void * const buf, ku32 len, exe_img_t **img)
 
     imgbuf = (u8 *) umalloc(size);
     if(!imgbuf)
-        return ENOMEM;
+        return -ENOMEM;
 
     image = kmalloc(sizeof(exe_img_t));
     if(!image)
     {
         ufree(imgbuf);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     /* Pass 2: copy segments into buffer; initialise as required */

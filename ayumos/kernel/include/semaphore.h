@@ -30,7 +30,7 @@ void sem_release(sem_t *sem);
 */
 inline s32 sem_try_acquire(sem_t *sem)
 {
-    return cpu_tas(sem) ? EAGAIN : SUCCESS;
+    return cpu_tas(sem) ? -EAGAIN : SUCCESS;
 }
 
 #endif

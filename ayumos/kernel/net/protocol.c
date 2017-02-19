@@ -55,7 +55,7 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
 
     driver = (net_proto_driver_t *) slab_alloc(sizeof(net_proto_driver_t));
     if(driver == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     driver->proto           = proto;
     driver->name            = strdup(name);
@@ -66,7 +66,7 @@ s32 net_protocol_register_driver(const net_protocol_t proto, const char * const 
     if(!driver->name)
     {
         slab_free(driver);
-        return EINVAL;
+        return -EINVAL;
     }
 
     if(g_net_proto_drivers)
@@ -135,7 +135,7 @@ s32 net_protocol_rx(net_address_t *src, net_address_t *dest, net_packet_t * cons
     if(driver)
         return driver->fn.rx(src, dest, packet);
 
-    return EPROTONOSUPPORT;
+    return -EPROTONOSUPPORT;
 }
 
 
@@ -148,7 +148,7 @@ s32 net_protocol_tx(net_address_t *src, net_address_t *dest, net_packet_t *packe
     const net_proto_driver_t *driver = net_protocol_get_driver(net_address_get_proto(dest));
 
     if(!driver)
-        return EPROTONOSUPPORT;
+        return -EPROTONOSUPPORT;
 
     return driver->fn.tx(src, dest, packet);
 }
@@ -180,7 +180,7 @@ s32 net_protocol_packet_alloc(const net_protocol_t proto, const net_address_t * 
     net_proto_driver_t * const drv = net_protocol_get_driver(proto);
 
     if(!drv || (proto == np_unknown))
-        return EPROTONOSUPPORT;
+        return -EPROTONOSUPPORT;
 
     return drv->fn.packet_alloc(addr, len, iface, packet);
 }
@@ -194,7 +194,7 @@ s32 net_route_get_iface(const net_address_t * const addr, net_iface_t **iface)
     net_proto_driver_t * const drv = net_protocol_get_driver(net_address_get_proto(addr));
 
     if(!drv)
-        return EPROTONOSUPPORT;
+        return -EPROTONOSUPPORT;
 
     return drv->fn.route_get_iface(addr, iface);
 }
@@ -208,7 +208,7 @@ s32 net_rx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *
     UNUSED(src);
     UNUSED(dest);
     UNUSED(packet);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -220,7 +220,7 @@ s32 net_tx_unimplemented(net_address_t *src, net_address_t *dest, net_packet_t *
     UNUSED(src);
     UNUSED(dest);
     UNUSED(packet);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -234,7 +234,7 @@ s32 net_packet_alloc_unimplemented(const net_address_t * const addr, ku32 len,
     UNUSED(len);
     UNUSED(iface);
     UNUSED(packet);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -245,7 +245,7 @@ s32 net_addr_compare_unimplemented(const net_address_t * const a1, const net_add
 {
     UNUSED(a1);
     UNUSED(a2);
-    return ENOSYS;      /* Any nonzero retval indicates that the "addresses" do not match */
+    return -ENOSYS;     /* Any nonzero retval indicates that the "addresses" do not match */
 }
 
 
@@ -256,7 +256,7 @@ s32 net_route_get_iface_unimplemented(const net_address_t * const addr, net_ifac
 {
     UNUSED(addr);
     UNUSED(iface);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 

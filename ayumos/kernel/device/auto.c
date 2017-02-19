@@ -74,5 +74,5 @@ s32 dev_auto_init(ku8 hw_id, void *base_addr, ku32 irql, dev_t *parent_dev, dev_
             return ret;
         }
 
-    return ENOENT;
+    return -ENOENT;
 }

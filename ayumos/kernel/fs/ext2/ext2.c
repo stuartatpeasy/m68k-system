@@ -90,7 +90,7 @@ s32 ext2_mount(vfs_t *vfs)
     /* Allocate a buffer large enough to hold the number of blocks occupied by the superblock */
     buf = kmalloc(sblk_nblocks * BLOCK_SIZE);
     if(!buf)
-        return ENOMEM;
+        return -ENOMEM;
 
     ret = block_read_multi(vfs->dev, 1024 / BLOCK_SIZE, sblk_nblocks, buf);
 
@@ -104,7 +104,7 @@ s32 ext2_mount(vfs_t *vfs)
     if(!fs)
     {
         kfree(buf);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     /*
@@ -116,7 +116,7 @@ s32 ext2_mount(vfs_t *vfs)
     {
         kfree(fs);
         kfree(buf);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     memcpy(fs->sblk, buf, sizeof(ext2_superblock_t));
@@ -127,7 +127,7 @@ s32 ext2_mount(vfs_t *vfs)
         kfree(fs->sblk);
         kfree(fs);
 
-        return EBADSBLK;    /* bad superblock (invalid magic number) */
+        return -EBADSBLK;   /* bad superblock (invalid magic number) */
     }
 
     /* TODO: more superblock validation */
@@ -148,7 +148,7 @@ s32 ext2_mount(vfs_t *vfs)
     {
         kfree(fs->sblk);
         kfree(fs);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     ret = block_read_multi(vfs->dev,
@@ -298,7 +298,7 @@ u32 ext2_read_block(vfs_t *vfs, ku32 block, void **ppbuf)
         buf = kmalloc(1024 << fs->sblk->s_log_block_size);
         if(buf == NULL)
         {
-            return ENOMEM;
+            return -ENOMEM;
         }
     }
     else
@@ -340,7 +340,7 @@ u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode)
         u8 *buf;
 
         if(!(buf = kmalloc(BLOCK_SIZE)))
-            return ENOMEM;
+            return -ENOMEM;
 
         --inum; /* because the first inode in the first block group is 1, not 0 */
 
@@ -366,7 +366,7 @@ u32 ext2_read_inode(vfs_t *vfs, u32 inum, ext2_inode_t *inode)
         return SUCCESS;
     }
 
-    return EINVAL; /* inum is out of bounds */
+    return -EINVAL;     /* inum is out of bounds */
 }
 
 
@@ -413,7 +413,7 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
     }
     else if(num >= (16777216 + 65536 + 256))
     {
-        return EINVAL;  /* block ID out of range */
+        return -EINVAL;     /* block ID out of range */
     }
 
     /* indirect blocks */
@@ -426,7 +426,7 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
         num -= (65536 + 256);   /* adjust num to the range [0, 16777215] */
 
         if(!block_id)
-            return EINVAL;  /* past EOF */
+            return -EINVAL;     /* past EOF */
 
         ret = ext2_read_block(vfs, block_id, (void **) &buf);
         if(ret)
@@ -442,7 +442,7 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
         if(!block_id)
         {
             kfree(buf);
-            return EINVAL;  /* past EOF */
+            return -EINVAL;     /* past EOF */
         }
     }
 
@@ -460,7 +460,7 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
         if(!block_id)
         {
             kfree(buf);
-            return EINVAL;  /* past EOF */
+            return -EINVAL;     /* past EOF */
         }
 
         ret = ext2_read_block(vfs, block_id, (void **) &buf);
@@ -477,7 +477,7 @@ u32 ext2_inode_get_block(vfs_t *vfs, const ext2_inode_t *inode, u32 num, u32 *bl
         if(!block_id)
         {
             kfree(buf);
-            return EINVAL;  /* past EOF */
+            return -EINVAL;     /* past EOF */
         }
 
     }
@@ -522,7 +522,7 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
        e.g. the path is non-absolute, or is empty */
     if(*path != DIR_SEPARATOR)
     {
-        return ENOENT;
+        return -ENOENT;
     }
 
     for(; *path; path = end)
@@ -540,7 +540,7 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
             if(len > NAME_MAX_LEN)
             {
                 kfree(buf);
-                return ENAMETOOLONG;
+                return -ENAMETOOLONG;
             }
 
             /* FIXME remove */
@@ -588,7 +588,7 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
                         if(*end && (d_ent->file_type != EXT2_FT_DIR))
                         {
                             kfree(buf);
-                            return ENOTDIR;
+                            return -ENOTDIR;
                         }
 
                         in = d_ent->inode;
@@ -601,7 +601,7 @@ u32 ext2_parse_path(vfs_t *vfs, ks8 *path, inum_t *inum)
             if(!found)
             {
                 kfree(buf);
-                return ENOENT;
+                return -ENOENT;
             }
         }
     }
@@ -662,7 +662,7 @@ void ext2()
 
     ret = ext2_parse_path(fs, (ks8 *) "/foo/bar/baz/meh.txt", &inum);
     if(ret)
-        printf("ext2_parse_path() failed: %s\n", strerror(ret));
+        printf("ext2_parse_path() failed: %s\n", strerror(-ret));
     else
     {
         ext2_inode_t inode;
@@ -673,7 +673,7 @@ void ext2()
         ret = ext2_read_inode(fs, inum, &inode);
         if(ret)
         {
-            printf("ext2_read_inode() failed: %s\n", strerror(ret));
+            printf("ext2_read_inode() failed: %s\n", strerror(-ret));
         }
         else
         {
@@ -682,7 +682,7 @@ void ext2()
             ret = ext2_inode_get_block(fs, &inode, 0, &block_num);
             if(ret)
             {
-                printf("ext2_inode_get_block() failed: %s\n", strerror(ret));
+                printf("ext2_inode_get_block() failed: %s\n", strerror(-ret));
             }
             else
             {

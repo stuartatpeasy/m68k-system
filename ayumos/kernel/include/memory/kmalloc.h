@@ -78,7 +78,7 @@ u32 uusedmem();
 __extension__ ({                        \
     void *_ptr = kmalloc(size);         \
     if(_ptr == NULL)                    \
-        return ENOMEM;                  \
+        return -ENOMEM;                 \
     _ptr;                               \
 })
 
@@ -86,7 +86,7 @@ __extension__ ({                        \
 __extension__ ({                        \
     void *_ptr = kcalloc(nmemb, size);  \
     if(_ptr == NULL)                    \
-        return ENOMEM;                  \
+        return -ENOMEM;                 \
     _ptr;                               \
 })
 
@@ -94,7 +94,7 @@ __extension__ ({                        \
 __extension__ ({                        \
     void *_ptr = umalloc(size);         \
     if(_ptr) == NULL)                   \
-        return ENOMEM;                  \
+        return -ENOMEM;                 \
     _ptr;                               \
 })
 
@@ -102,7 +102,7 @@ __extension__ ({                        \
 __extension__ ({                        \
     void *_ptr = ucalloc(nmemb, size);  \
     if(_ptr) == NULL)                   \
-        return ENOMEM;                  \
+        return -ENOMEM;                 \
     _ptr;                               \
 })
 

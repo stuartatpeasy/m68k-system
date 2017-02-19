@@ -20,10 +20,10 @@ s32 dump_hex(const void *p, ku32 word_size, ku32 offset, ku32 num_bytes)
     u32 line_offset, data, start = (u32) p;
 
     if((word_size != 4) && (word_size != 2) && (word_size != 1))
-        return EINVAL;
+        return -EINVAL;
 
     if(!(line = (s8 *) kmalloc(line_length)))
-        return ENOMEM;
+        return -ENOMEM;
 
     for(line_offset = 0; line_offset < num_bytes; line_offset += line_length)
     {

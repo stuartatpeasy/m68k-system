@@ -17,7 +17,7 @@
 s32 history_init(command_history_t **h, s32 len)
 {
     if(len < 1)
-        return EINVAL;
+        return -EINVAL;
 
     *h = CHECKED_KMALLOC(sizeof(command_history_t));
 
@@ -25,7 +25,7 @@ s32 history_init(command_history_t **h, s32 len)
     if(!(*h)->item)
     {
         kfree(*h);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     (*h)->next = 0;

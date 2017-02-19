@@ -258,7 +258,7 @@ s32 ps2controller_init(dev_t *dev)
 
     data = slab_calloc(sizeof(ps2controller_data_t));
     if(data == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     dev->data = data;
 
@@ -760,7 +760,7 @@ s32 ps2controller_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
 
     /* Can only read one register at a time, and can't read past the last register */
     if((offset >= PS2CONTROLLER_NUM_REGISTERS) || (*len != 1))
-        return EINVAL;
+        return -EINVAL;
 
     *((u8 *) buf) = *(((u8 *) base_addr) + offset);
 
@@ -777,7 +777,7 @@ s32 ps2controller_write(dev_t *dev, ku32 offset, u32 *len, const void *buf)
 
     /* Can only write one register at a time, and can't write past the last register */
     if((offset >= PS2CONTROLLER_NUM_REGISTERS) || (*len != 1))
-        return EINVAL;
+        return -EINVAL;
 
     *(((u8 *) base_addr) + offset) = *((u8 *) buf);
 
@@ -798,7 +798,7 @@ s32 ps2controller_control(dev_t *dev, const devctl_fn_t fn, const void *in, void
     switch(fn)
     {
         default:
-            return ENOSYS;
+            return -ENOSYS;
     }
 }
 
@@ -826,7 +826,7 @@ s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in,
 
                 default:
                     /* No other power states are supported */
-                    return EINVAL;
+                    return -EINVAL;
             }
             break;
 
@@ -839,7 +839,7 @@ s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in,
         /* Set keyboard LED state */
         case dc_set_leds:
             if(port->dev_type != PS2_DEV_KEYBOARD)
-                return EPERM;
+                return -EPERM;
 
             port->data.kb.leds = *((u8 *) in) & PS2_KB_LED_MASK;
             CIRCBUF_WRITE(port->tx_buf, PS2_CMD_SET_LEDS);
@@ -850,13 +850,13 @@ s32 ps2controller_port_control(dev_t *dev, const devctl_fn_t fn, const void *in,
         /* Get keyboard LED state */
         case dc_get_leds:
             if(port->dev_type != PS2_DEV_KEYBOARD)
-                return EPERM;
+                return -EPERM;
 
             *((u8 *) out) = port->data.kb.leds;
             break;
 
         default:
-            return ENOSYS;
+            return -ENOSYS;
     }
 
     return SUCCESS;

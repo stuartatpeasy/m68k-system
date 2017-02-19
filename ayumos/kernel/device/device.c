@@ -38,7 +38,7 @@ s32 dev_init()
 
     /* FIXME - init root_dev as an actual device, duh. */
 
-    return root_dev ? SUCCESS : ENOMEM;
+    return root_dev ? SUCCESS : -ENOMEM;
 }
 
 
@@ -52,7 +52,7 @@ s32 dev_enumerate()
     /* Populating the device tree is a board-specific operation */
     ret = plat_dev_enumerate();
     if(ret != SUCCESS)
-        printf("Platform device enumeration failed: %s\nContinuing boot...", kstrerror(ret));
+        printf("Platform device enumeration failed: %s\nContinuing boot...", kstrerror(-ret));
 
     return ret;
 }
@@ -75,7 +75,7 @@ s32 dev_add_child(dev_t *parent, dev_t *child)
     /* TODO - mutex */
     /* Check that no device with a matching name exists */
     if(dev_find(child->name) != NULL)
-        return EEXIST;
+        return -EEXIST;
 
     if(parent == NULL)
         parent = root_dev;
@@ -187,7 +187,7 @@ s32 dev_add_suffix(char * const name)
             return SUCCESS;
     }
 
-    return EMFILE;
+    return -EMFILE;
 }
 
 
@@ -229,7 +229,7 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
     if(ret != SUCCESS)
     {
         printf("%s: failed to add %s to device tree: %s\n", d->name, human_name,
-                kstrerror(ret));
+                kstrerror(-ret));
         kfree(d);
         return ret;
     }
@@ -239,7 +239,7 @@ s32 dev_create(const dev_type_t type, const dev_subtype_t subtype, const char * 
         ret = init_fn(d);
         if(ret != SUCCESS)
         {
-            printf("%s: %s device init failed: %s\n", d->name, human_name, kstrerror(ret));
+            printf("%s: %s device init failed: %s\n", d->name, human_name, kstrerror(-ret));
             dev_destroy(d);
             return ret;
         }
@@ -265,7 +265,7 @@ s32 dev_destroy(dev_t *dev)
         dev_destroy(dev->first_child);
 
     ks32 ret = dev->shut_down(dev);
-    if((ret != SUCCESS) && (ret != ENOSYS))
+    if((ret != SUCCESS) && (ret != -ENOSYS))
         return ret;
 
     if(dev->parent && (dev->parent->first_child == dev))
@@ -316,7 +316,7 @@ s32 dev_read_unimplemented(dev_t * const dev, ku32 offset, u32 *len, void *buf)
     UNUSED(len);
     UNUSED(buf);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -330,7 +330,7 @@ s32 dev_write_unimplemented(dev_t * const dev, ku32 offset, u32 *len, const void
     UNUSED(len);
     UNUSED(buf);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -344,7 +344,7 @@ s32 dev_control_unimplemented(dev_t * const dev, devctl_fn_t function, const voi
     UNUSED(in);
     UNUSED(out);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -355,7 +355,7 @@ s16 dev_getc_unimplemented(dev_t * const dev)
 {
     UNUSED(dev);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -367,7 +367,7 @@ s32 dev_putc_unimplemented(dev_t * const dev, const char c)
     UNUSED(dev);
     UNUSED(c);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -378,5 +378,5 @@ s32 dev_shut_down_unimplemented(dev_t * const dev)
 {
     UNUSED(dev);
 
-    return ENOSYS;
+    return -ENOSYS;
 }

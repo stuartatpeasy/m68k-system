@@ -180,7 +180,7 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
             else if(fn == mc68681_pin_fn_rxb_clk)   /* OP3 -> RxB clock             */
                 *opcr |= BIT(3) | BIT(2);
             else
-                return EINVAL;
+                return -EINVAL;
         }
         else if(pin == mc68681_pin_op2)
         {
@@ -197,10 +197,10 @@ s32 mc68681_set_output_pin_fn(dev_t *dev, const mc68681_output_pin_t pin, const 
             else if(fn == mc68681_pin_fn_rxa_clk)   /* OP2 -> RxA clock             */
                 *opcr |= BIT(1) | BIT(0);
             else
-                return EINVAL;
+                return -EINVAL;
         }
         else
-            return EINVAL;
+            return -EINVAL;
     }
 
     MC68681_REG(dev->base_addr, MC68681_OPCR) = *opcr;
@@ -373,7 +373,7 @@ s32 mc68681_control(dev_t *dev, ku32 channel, const devctl_fn_t fn, const void *
             return mc68681_set_baud_rate(dev, channel, *((u32 *) in));
 
         default:
-            return ENOSYS;
+            return -ENOSYS;
     }
 }
 
@@ -435,7 +435,7 @@ s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
     mc68681_state_t *state = (mc68681_state_t *) dev->data;
 
     if(channel > MC68681_CHANNEL_B)
-        return EINVAL;  /* 0 = channel A; 1 = channel B; anything else = invalid */
+        return -EINVAL;     /* 0 = channel A; 1 = channel B; anything else = invalid */
 
     for(p = g_mc68681_baud_rates; p < &(g_mc68681_baud_rates[ARRAY_COUNT(g_mc68681_baud_rates)]);
         ++p)
@@ -463,7 +463,7 @@ s32 mc68681_set_baud_rate(dev_t *dev, ku16 channel, ku32 rate)
         }
     }
 
-    return EINVAL;      /* No such baud rate */
+    return -EINVAL;      /* No such baud rate */
 }
 
 
@@ -487,7 +487,7 @@ u32 mc68681_get_baud_rate(dev_t *dev, ku16 channel)
 s32 mc68681_reset_rx(void * const base_addr, ku16 channel)
 {
     if(channel > MC68681_CHANNEL_B)
-        return EINVAL;
+        return -EINVAL;
 
     if(channel == MC68681_CHANNEL_A)        /* Channel A */
         MC68681_REG(base_addr, MC68681_CRA) = /* 0x20 */
@@ -506,7 +506,7 @@ s32 mc68681_reset_rx(void * const base_addr, ku16 channel)
 s32 mc68681_reset_tx(void * const base_addr, ku16 channel)
 {
     if(channel > MC68681_CHANNEL_B)
-        return EINVAL;
+        return -EINVAL;
 
     if(channel == MC68681_CHANNEL_A)        /* Channel A */
         MC68681_REG(base_addr, MC68681_CRA) = /* 0x30 */

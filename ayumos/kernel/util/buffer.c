@@ -123,11 +123,11 @@ s32 lbuffer_alloc(ku32 len, lbuffer_t **lbuf)
     lbuffer_t *lbuffer;
 
     if(!len)
-        return EINVAL;
+        return -EINVAL;
 
     lbuffer = (lbuffer_t *) kmalloc(membersize(lbuffer_t, len) + len);
     if(lbuffer == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     lbuffer->len = len;
 
@@ -152,7 +152,7 @@ s32 lbuffer_dup(const lbuffer_t * const lbuf, lbuffer_t **newlbuf)
 {
     lbuffer_t *lb = (lbuffer_t *) kmalloc(membersize(lbuffer_t, len) + lbuf->len);
     if(lb == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     lb->len = lbuf->len;
     memcpy(lbuffer_dptr(b), lbuffer_dptr(buf), lbuf->len);
@@ -197,7 +197,7 @@ s32 circbuf_free(circbuf_t *cbuf)
 s32 circbuf_read(circbuf_t *cbuf, u8 *val)
 {
     if(cbuf->read_ptr == cbuf->write_ptr)
-        return EAGAIN;          /* Buffer empty */
+        return -EAGAIN;         /* Buffer empty */
 
     *val = *cbuf->read_ptr++;
     if(cbuf->read_ptr == cbuf->buf_end)
@@ -217,7 +217,7 @@ s32 circbuf_write(circbuf_t *cbuf, u8 val)
         next = cbuf->buf;
 
     if(next == cbuf->read_ptr)
-        return EAGAIN;          /* Buffer full */
+        return -EAGAIN;         /* Buffer full */
 
     *cbuf->write_ptr = val;
     cbuf->write_ptr = next;

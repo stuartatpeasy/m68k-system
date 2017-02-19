@@ -124,32 +124,32 @@ s32 ata_drive_do_init(dev_t *dev)
 
     /* Check whether anything is plugged in */
     if((ATA_REG(base_addr, ATA_R_STATUS) & 0x7f) == 0x7f)
-        return ENOMEDIUM;       /* Nothing plugged in - bus floating high */
+        return -ENOMEDIUM;      /* Nothing plugged in - bus floating high */
 
     /* Wait for BSY to become low */
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;
+        return -ETIME;
 
     /* Wait for DRDY to become high */
     if(!ATA_WAIT_DRDY(base_addr))
-        return ENODATA;     // FIXME - better error here
+        return -ENODATA;        /* FIXME - better error here */
 
     if(drive == ata_drive_master)
         ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = 0;
     else if(drive == ata_drive_slave)
         ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = ATA_DH_DEV;
     else
-        return EINVAL;
+        return -EINVAL;
 
     ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_IDENTIFY_DEVICE;
 
     /* A device is present. Wait for BSY to go low */
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;   /* Device did not negate BSY in a timely fashion */
+        return -ETIME;      /* Device did not negate BSY in a timely fashion */
 
     /* Wait for DRDY to go high */
     if(!ATA_WAIT_DRDY(base_addr))
-        return ENODATA;
+        return -ENODATA;
 
     /* Did an error occur? */
     if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
@@ -165,12 +165,12 @@ s32 ata_drive_do_init(dev_t *dev)
                ((ATA_REG(base_addr, ATA_R_DEVICE_HEAD) & 0xef) == 0x00))    /* /                */
             {
                 /* This is a packet device; these are not supported. */
-                return EMEDIUMTYPE;
+                return -EMEDIUMTYPE;
             }
         }
 
         /* Some other failure occurred; shouldn't happen during IDENTIFY DEVICE. Hey ho. */
-        return EUNKNOWN;
+        return -EUNKNOWN;
     }
 
     if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_DRQ)
@@ -202,7 +202,7 @@ s32 ata_drive_do_init(dev_t *dev)
         return SUCCESS;
     }
 
-    return ENODATA;
+    return -ENODATA;
 }
 
 
@@ -253,23 +253,23 @@ s32 ata_send_command(void * const base_addr, const ata_drive_t drive, const ata_
     else if(drive == ata_drive_slave)
         ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
     else
-        return ENODEV;
+        return -ENODEV;
 
     /* Wait for the device to become ready */
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;
+        return -ETIME;
 
     ATA_REG(base_addr, ATA_R_COMMAND) = cmd;
 
     /* Wait for the command to complete */
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;
+        return -ETIME;
 
     /* Did an error occur? */
     if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
     {
         /* Note: it is up to the caller to determine which error occurred */
-        return EDEVOPFAILED;
+        return -EDEVOPFAILED;
     }
 
     return SUCCESS;
@@ -291,13 +291,13 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf)
     else if(drive == ata_drive_slave)
         ATA_REG(base_addr, ATA_R_DEVICE_HEAD) = ATA_DH_DEV;
     else
-        return ENODEV;
+        return -ENODEV;
 
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;
+        return -ETIME;
 
     if((offset + len_ < offset) || (offset + len_ > dev->len))
-       return EINVAL;
+       return -EINVAL;
 
     /* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
@@ -312,21 +312,21 @@ s32 ata_read(dev_t *dev, ku32 offset, u32 *len, void * buf)
     ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_READ_SECTORS;
 
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;
+        return -ETIME;
 
     if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
     {
         ku8 err = ATA_REG(base_addr, ATA_R_ERROR);
         if((err & ATA_ERROR_ABRT) || (err & ATA_ERROR_IDNF))
-            return EINVAL;
+            return -EINVAL;
         else if(err & ATA_ERROR_UNC)
-            return EDATA;
+            return -EDATA;
         else if((err & ATA_ERROR_MC) || (err & ATA_ERROR_MCR))
-            return EMEDIACHANGED;
+            return -EMEDIACHANGED;
         else if(err & ATA_ERROR_NM)
-            return ENOMEDIUM;
+            return -ENOMEDIUM;
         else
-            return EUNKNOWN;
+            return -EUNKNOWN;
     }
 
     for(; len_--; buf += ATA_SECTOR_SIZE)
@@ -354,13 +354,13 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
     else if(drive == ata_drive_slave)
         ATA_REG(base_addr, ATA_R_DEVICE_HEAD) |= ATA_DH_DEV;
     else
-        return ENODEV;
+        return -ENODEV;
 
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;
+        return -ETIME;
 
     if((offset + len_ < offset) || (offset + len_ > dev->len))
-       return EINVAL;
+       return -EINVAL;
 
     /* TODO: check that requested # sectors is allowed by the device; split into smaller reads if not. */
 
@@ -378,24 +378,24 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
         ata_write_data(ATA_REG_DATA_ADDR(base_addr), buf);
 
     if(!ATA_WAIT_NBSY(base_addr))
-        return ETIME;
+        return -ETIME;
 
     /* Did an error occur? */
     if(ATA_REG(base_addr, ATA_R_STATUS) & ATA_STATUS_ERR)
     {
         ku8 err = ATA_REG(base_addr, ATA_R_ERROR);
         if((err & ATA_ERROR_ABRT) || (err & ATA_ERROR_IDNF))
-            return EINVAL;
+            return -EINVAL;
         else if(err & ATA_ERROR_WP)
-            return EROFS;
+            return -EROFS;
         else if(err & ATA_ERROR_UNC)
-            return EDATA;
+            return -EDATA;
         else if((err & ATA_ERROR_MC) || (err & ATA_ERROR_MCR))
-            return EMEDIACHANGED;
+            return -EMEDIACHANGED;
         else if(err & ATA_ERROR_NM)
-            return ENOMEDIUM;
+            return -ENOMEDIUM;
         else
-            return EUNKNOWN;
+            return -EUNKNOWN;
     }
 
     g_ata_stats.blocks_written += *len;
@@ -498,7 +498,7 @@ s32 ata_control(dev_t *dev, ku32 function, const void *in, void *out)
     UNUSED(in);
     UNUSED(out);
 
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -536,7 +536,7 @@ s32 ata_drive_control(dev_t *dev, const devctl_fn_t fn, const void *in, void *ou
             break;
 
         default:
-            return ENOSYS;
+            return -ENOSYS;
     }
 
     return SUCCESS;

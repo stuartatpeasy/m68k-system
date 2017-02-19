@@ -216,7 +216,7 @@ s32 cpu_proc_init(regs_t *r, void *entry_point, void *arg, void *ustack_top, voi
 
     /* MC680x0 requires that the PC and SP are aligned to an even-numbered address */
     if(((u32) entry_point & 1) || (((u32) kstack_top) & 1) || (((u32) ustack_top) & 1))
-        return EINVAL;
+        return -EINVAL;
 
     /* Set flags and store the argument to the process on the correct stack. */
     if(flags & PROC_TYPE_KERNEL)

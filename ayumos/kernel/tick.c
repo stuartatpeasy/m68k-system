@@ -37,7 +37,7 @@ s32 tick_init()
     if(!timer)
     {
         puts("timer_init: no timer device found");
-        return ENODEV;
+        return -ENODEV;
     }
 
     /* Set timer frequency */
@@ -50,7 +50,7 @@ s32 tick_init()
     else
     {
         printf("timer_init: %s: requested tick rate %dHz; error: %s\n",
-               dev_name, requested_freq, kstrerror(ret));
+               dev_name, requested_freq, kstrerror(-ret));
         return ret;
     }
 
@@ -59,7 +59,7 @@ s32 tick_init()
     if(ret != SUCCESS)
     {
         printf("timer_init: %s: failed to register tick function: %s\n",
-               dev_name, kstrerror(ret));
+               dev_name, kstrerror(-ret));
         return ret;
     }
 
@@ -67,7 +67,7 @@ s32 tick_init()
     ret = timer->control(timer, dc_timer_set_enable, &enable, NULL);
     if(ret != SUCCESS)
     {
-        printf("timer_init: %s: failed: %s\n", dev_name, kstrerror(ret));
+        printf("timer_init: %s: failed: %s\n", dev_name, kstrerror(-ret));
         return ret;
     }
 
@@ -109,7 +109,7 @@ void tick()
         enable = 1;
         ret = timer->control(timer, dc_timer_set_enable, &enable, NULL);
         if(ret != SUCCESS)
-            printf("timer_tick: failed to re-enable timer: %s\n", kstrerror(ret));
+            printf("timer_tick: failed to re-enable timer: %s\n", kstrerror(-ret));
     }
 }
 
@@ -132,11 +132,11 @@ s32 tick_add_callback(tick_callback_fn_t fn, void *arg, ku32 interval, tick_fn_t
     tick_callback_t *cbnew;
 
     if(!interval)
-        return EINVAL;
+        return -EINVAL;
 
     cbnew = (tick_callback_t *) slab_alloc(sizeof(tick_callback_t));
     if(!cbnew)
-        return ENOMEM;
+        return -ENOMEM;
 
     cbnew->id       = ++next_id;
     cbnew->fn       = fn;
@@ -197,5 +197,5 @@ s32 tick_remove_callback(const tick_fn_t id)
     }
 
     preempt_enable();
-    return ENOENT;
+    return -ENOENT;
 }

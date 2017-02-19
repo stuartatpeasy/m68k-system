@@ -258,7 +258,7 @@ u32 strtoul(ks8 *nptr, s8 **endptr, s32 base)
     if(overflow)
     {
         errno = ERANGE;
-        return U32_MAX;;
+        return U32_MAX;
     }
 
     return neg ? -n : n;

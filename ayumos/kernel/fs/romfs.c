@@ -46,14 +46,14 @@ s32 romfs_init()
 s32 romfs_mount(vfs_t *vfs)
 {
     UNUSED(vfs);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
 s32 romfs_unmount(vfs_t *vfs)
 {
     UNUSED(vfs);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -61,7 +61,7 @@ s32 romfs_get_root_node(vfs_t *vfs, fs_node_t **node)
 {
     UNUSED(vfs);
     UNUSED(node);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -70,7 +70,7 @@ s32 romfs_open_dir(vfs_t *vfs, u32 node, void **ctx)
     UNUSED(vfs);
     UNUSED(node);
     UNUSED(ctx);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -80,7 +80,7 @@ s32 romfs_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
     UNUSED(ctx);
     UNUSED(node);
     UNUSED(name);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -88,7 +88,7 @@ s32 romfs_close_dir(vfs_t *vfs, void *ctx)
 {
     UNUSED(vfs);
     UNUSED(ctx);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 
@@ -96,7 +96,7 @@ s32 romfs_stat(vfs_t *vfs, fs_stat_t *st)
 {
     UNUSED(vfs);
     UNUSED(st);
-    return ENOSYS;
+    return -ENOSYS;
 }
 
 #endif /* WITH_FS_ROMFS */

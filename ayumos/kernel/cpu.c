@@ -43,7 +43,7 @@ s32 cpu_irq_set_default_handler(ku32 irql)
     irq_handler_table_entry_t *ent;
 
     if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
-        return EINVAL;
+        return -EINVAL;
 
     ent = &g_irq_handlers[irql];
 
@@ -64,7 +64,7 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
     irq_handler_table_entry_t *ent;
 
     if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
-        return EINVAL;
+        return -EINVAL;
 
     preempt_disable();              /* BEGIN locked section */
 
@@ -80,7 +80,7 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
 
         next = slab_alloc(sizeof(irq_handler_table_entry_t));
         if(next == NULL)
-            return ENOMEM;
+            return -ENOMEM;
 
         /* Append the specified IRQ handler to the chain of handlers */
         while(ent->next != NULL)
@@ -111,7 +111,7 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
     irq_handler_table_entry_t *ent, *ent_prev;
 
     if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
-        return EINVAL;
+        return -EINVAL;
 
     for(ent_prev = NULL, ent = &g_irq_handlers[irql]; ent; ent_prev = ent, ent = ent->next)
     {
@@ -150,7 +150,7 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
         }
     }
 
-    return ENOENT;
+    return -ENOENT;
 }
 
 

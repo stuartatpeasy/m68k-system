@@ -81,7 +81,7 @@ s32 fat_mount(vfs_t *vfs)
     {
         printf("%s: bad FAT superblock: incorrect jump bytes: expected 0xeb 0xxx 0x90, "
                "read 0x%02x 0xxx 0x%02x\n", vfs->dev->name, bpb.jmp[0], bpb.jmp[2]);
-        return EBADSBLK;
+        return -EBADSBLK;
     }
 
     /* Validate partition signature */
@@ -89,12 +89,12 @@ s32 fat_mount(vfs_t *vfs)
     {
         printf("%s: bad FAT superblock: incorrect partition signature: expected 0x%04x, "
                "read 0x%04x\n", vfs->dev->name, FAT_PARTITION_SIG, LE2N16(bpb.partition_signature));
-        return EBADSBLK;
+        return -EBADSBLK;
     }
 
     fs = slab_alloc(sizeof(struct fat_fs));
     if(!fs)
-        return ENOMEM;
+        return -ENOMEM;
 
     /* FIXME - use BLOCK_SIZE everywhere?  e.g. retire ATA_SECTOR_SIZE, etc. */
     if(LE2N16(bpb.bytes_per_sector) != BLOCK_SIZE)
@@ -102,7 +102,7 @@ s32 fat_mount(vfs_t *vfs)
         printf("%s: bad FAT sector size %d; can only handle %d-byte sectors\n",
                vfs->dev->name, LE2N16(bpb.bytes_per_sector), BLOCK_SIZE);
         slab_free(fs);
-        return EBADSBLK;
+        return -EBADSBLK;
     }
 
     /* Precalculate some useful figures.  TODO: maybe some validation on these numbers? */
@@ -262,7 +262,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     /* Allocate space to hold a directory context */
     dir_ctx = (fat_dir_ctx_t *) slab_alloc(sizeof(fat_dir_ctx_t));
     if(!dir_ctx)
-        return ENOMEM;
+        return -ENOMEM;
 
     /* Allocate space within the directory context to hold a block */
     bytes_per_cluster = ((fat_fs_t *) vfs->data)->bytes_per_cluster;
@@ -270,7 +270,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     if(!dir_ctx->buffer)
     {
         slab_free(dir_ctx);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     /* Read the cluster into dir_ctx->buffer */
@@ -309,9 +309,9 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
         for(lfn_len = 0; dir_ctx->de < dir_ctx->buffer_end; ++dir_ctx->de)
         {
             if(dir_ctx->de->file_name[0] == FAT_DIRENT_END)
-                return ENOENT;  /* No more entries in this directory */
+                return -ENOENT;     /* No more entries in this directory */
             else if((u8) dir_ctx->de->file_name[0] == FAT_DIRENT_UNUSED)
-                continue;       /* This entry represents a deleted item */
+                continue;           /* This entry represents a deleted item */
             else if(dir_ctx->de->attribs == FAT_FILEATTRIB_LFN)
             {
                 /* This is a long filename component */
@@ -461,7 +461,7 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
         }
     }
 
-    return ENOENT;  /* Reached the end of the chain */
+    return -ENOENT;     /* Reached the end of the chain */
 }
 
 
@@ -620,7 +620,7 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node)
                 if(!strcasecmp(node->name, lfn))
                 {
                     fat_close_dir(vfs, dir_ctx);
-                    return EEXIST;
+                    return -EEXIST;
                 }
             }
         }
@@ -680,7 +680,7 @@ s32 fat_find_free_block(vfs_t *vfs, u32 *node)
         }
     }
 
-    return ENOSPC;   /* No free nodes found */
+    return -ENOSPC;     /* No free nodes found */
 }
 
 

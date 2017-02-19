@@ -76,7 +76,7 @@ s32 ipv4_rx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
     */
 #if(IPV4_VERIFY_CHECKSUM)
     if(net_cksum(hdr, (hdr->version_hdr_len & 0xf) << 2) != 0x0000)
-        return ECKSUM;      /* Drop packet */
+        return -ECKSUM;     /* Drop packet */
 #endif
 
     ret = net_packet_consume(packet, sizeof(ipv4_hdr_t));
@@ -339,7 +339,7 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
     ipv4_route_t *newent;
 
     if(!ipv4_mask_valid(r->mask) || (r->metric < 0))
-        return EINVAL;
+        return -EINVAL;
 
     for(p = &g_ipv4_routes; *p != NULL; p = &(*p)->next)
     {
@@ -352,12 +352,12 @@ s32 ipv4_route_add(const ipv4_route_t * const r)
         */
         if((rt->mask == r->mask) && (rt->dest == r->dest) &&
            ((rt->gateway == r->gateway) || (rt->dest == IPV4_ADDR_NONE)))
-            return EEXIST;
+            return -EEXIST;
     }
 
     *p = slab_alloc(sizeof(ipv4_rt_item_t));
     if(!*p)
-        return ENOMEM;
+        return -ENOMEM;
 
     newent = &((*p)->r);
 
@@ -405,7 +405,7 @@ s32 ipv4_route_delete(const ipv4_route_t * const r)
         }
     }
 
-    return ENOENT;
+    return -ENOENT;
 }
 
 
@@ -416,7 +416,7 @@ s32 ipv4_route_get_entry(ipv4_rt_item_t **e)
 {
     *e = (*e == NULL) ? g_ipv4_routes : (*e)->next;
 
-    return *e ? SUCCESS : ENOENT;
+    return *e ? SUCCESS : -ENOENT;
 }
 
 
@@ -472,7 +472,7 @@ s32 ipv4_route_get_iface(const net_address_t * const proto_addr, net_iface_t **i
         return SUCCESS;
     }
 
-    return EHOSTUNREACH;
+    return -EHOSTUNREACH;
 }
 
 
@@ -487,7 +487,7 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
     net_address_t ipv4_addr_broadcast;
 
     if(net_address_get_type(proto_addr) != na_ipv4)
-        return EHOSTUNREACH;        /* Should this be EPROTONOSUPPORT? */
+        return -EHOSTUNREACH;       /* Should this be EPROTONOSUPPORT? */
 
     /* Check ARP cache */
     item = arp_cache_lookup(iface, proto_addr);
@@ -508,7 +508,7 @@ s32 ipv4_route_get_hw_addr(net_iface_t *iface, const net_address_t *proto_addr,
     /* Attempt to do ARP lookup */
     puts("Can't route yet");
 
-    return EHOSTUNREACH;
+    return -EHOSTUNREACH;
 }
 
 
@@ -522,7 +522,7 @@ s32 ipv4_port_alloc_bitmap_init(ipv4_port_alloc_bitmap_t *bitmap)
 
     bitmap_= slab_alloc(slab_ptrs * sizeof(u8 **));
     if(bitmap_ == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     bzero(bitmap_, slab_ptrs * sizeof(u8 **));
     *bitmap = bitmap_;
@@ -578,7 +578,7 @@ s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku
 
         /* If a privileged port was requested, ensure that the current task is running as uid 0 */
         if((search_port <= IPV4_PRIV_PORT_END) && proc_current_uid())
-            return EPERM;
+            return -EPERM;
     }
     else if(type == IPV4_PORT_NUM_EPHEMERAL)
     {
@@ -586,7 +586,7 @@ s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku
         search_port = IPV4_EPHEM_PORT_START;
     }
     else
-        return EINVAL;
+        return -EINVAL;
 
     slab_nr = search_port / IPV4_PORTS_PER_SLAB;
     bitmap_nr = (search_port / IPV4_PORTS_PER_BITMAP)
@@ -605,7 +605,7 @@ s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku
         {
             slab = slab_alloc(SLAB_MAX_SIZE);
             if(slab == NULL)
-                return ENOMEM;
+                return -ENOMEM;
 
             bzero(slab, SLAB_MAX_SIZE);
             alloc_bitmap[slab_nr] = slab;
@@ -619,7 +619,7 @@ s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku
             {
                 bitmap = slab_alloc(SLAB_MAX_SIZE);
                 if(bitmap == NULL)
-                    return ENOMEM;
+                    return -ENOMEM;
 
                 bzero(bitmap, SLAB_MAX_SIZE);
                 slab[bitmap_nr] = bitmap;
@@ -634,7 +634,7 @@ s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku
                 if(bitmap[byte_nr] & (1 << bit_nr))
                 {
                     preempt_enable();
-                    return EADDRINUSE;
+                    return -EADDRINUSE;
                 }
 
                 bitmap[byte_nr] |= 1 << bit_nr;
@@ -660,7 +660,7 @@ s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku
                         if((search_port + bit_nr) >= IPV4_EPHEM_PORT_END)
                         {
                             preempt_enable();
-                            return ENFILE;      /* No ports available */
+                            return -ENFILE;     /* No ports available */
                         }
 
                         bitmap[byte_nr] |= x;
@@ -679,7 +679,7 @@ s32 ipv4_port_alloc(ipv4_port_alloc_bitmap_t alloc_bitmap, ipv4_port_t *port, ku
 
     preempt_enable();                                               /* END locked section */
 
-    return ENFILE;      /* No ports available */
+    return -ENFILE;     /* No ports available */
 }
 
 
@@ -712,7 +712,7 @@ s32 ipv4_port_free(ipv4_port_alloc_bitmap_t alloc_bitmap, const ipv4_port_t port
 
     /* Port was not in use */
     preempt_enable();
-    return ENOENT;
+    return -ENOENT;
 }
 
 #endif /* WITH_NET_IPV4 */

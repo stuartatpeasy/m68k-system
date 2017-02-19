@@ -37,7 +37,7 @@ void sem_destroy(sem_t *sem)
 */
 void sem_acquire_busy(sem_t *sem)
 {
-    while(sem_try_acquire(sem) == EAGAIN)
+    while(sem_try_acquire(sem) == -EAGAIN)
         ;
 }
 
@@ -48,7 +48,7 @@ void sem_acquire_busy(sem_t *sem)
 */
 void sem_acquire(sem_t *sem)
 {
-    while(sem_try_acquire(sem) == EAGAIN)
+    while(sem_try_acquire(sem) == -EAGAIN)
         cpu_switch_process();
 }
 

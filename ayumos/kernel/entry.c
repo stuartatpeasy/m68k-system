@@ -150,11 +150,11 @@ void _main()
 
     /* ret is set by the call to sched_init(), above */
     if(ret != SUCCESS)
-        printf("sched: init failed: %s\n", kstrerror(ret));
+        printf("sched: init failed: %s\n", kstrerror(-ret));
 
     ret = vfs_init();
     if(ret != SUCCESS)
-        printf("vfs: init failed: %s\n", kstrerror(ret));
+        printf("vfs: init failed: %s\n", kstrerror(-ret));
 
     /* Display approximate CPU clock speed */
     if(plat_get_cpu_clock(&cpu_clk_hz) == SUCCESS)
@@ -195,7 +195,7 @@ void _main()
     /* Initialise networking system */
     ret = net_init();
     if(ret != SUCCESS)
-        printf("net: init failed: %s\n", kstrerror(ret));
+        printf("net: init failed: %s\n", kstrerror(-ret));
 #endif /* WITH_NETWORKING */
 
     /* Startup complete - activate green LED */

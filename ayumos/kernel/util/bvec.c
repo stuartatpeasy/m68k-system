@@ -31,18 +31,18 @@ u32 bvec_init(u32 block_size, ku32 element_size, bvec_t *bv)
 
     /* ensure that the requested block and elements sizes are nonzero */
     if(!block_size || !element_size)
-        return EINVAL;
+        return -EINVAL;
 
     bvec = (bvec_t) kmalloc(sizeof(struct bvec));
     if(!bvec)
-        return ENOMEM;
+        return -ENOMEM;
 
     /* the vector will initially contain one block's worth of elements */
     bvec->elements = kmalloc(block_size * sizeof(void *));
     if(!bvec->elements)
     {
         kfree(bvec);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     /* allocate initial elements */
@@ -51,7 +51,7 @@ u32 bvec_init(u32 block_size, ku32 element_size, bvec_t *bv)
     {
         kfree(bvec->elements);
         kfree(bvec);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     /* fill in element pointers */

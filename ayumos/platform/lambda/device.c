@@ -172,7 +172,7 @@ void expansion_init()
 
             if(ret == SUCCESS)
                 puts(dev->human_name);
-            else if(ret == ENOENT)
+            else if(ret == -ENOENT)
                 printf("unknown peripheral (hardware ID %02x)\n", id);
         }
     }

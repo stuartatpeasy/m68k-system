@@ -134,7 +134,7 @@ static ks8 g_days_in_month_leap[] =
 s32 date_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return EINVAL;
+        return -EINVAL;
 
     return snprintf(buffer, len, "%04u-%02u-%02u %02u:%02u:%02u",
                         tm->year, tm->month, tm->day,
@@ -149,7 +149,7 @@ s32 date_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 s32 date_short(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return EINVAL;
+        return -EINVAL;
 
     return snprintf(buffer, len, "%s %u %s %u",
                         g_day_names_short[tm->day_of_week - 1], tm->day,
@@ -164,7 +164,7 @@ s32 date_short(const rtc_time_t * const tm, char * const buffer, ku32 len)
 s32 date_long(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return EINVAL;
+        return -EINVAL;
 
     snprintf(buffer, len, "%s %u%s %s %u",
                 g_day_names_long[tm->day_of_week - 1], tm->day, day_number_suffix(tm->day),
@@ -181,7 +181,7 @@ s32 date_long(const rtc_time_t * const tm, char * const buffer, ku32 len)
 s32 time_iso8601(const rtc_time_t * const tm, char * const buffer, ku32 len)
 {
     if(!VALID_RTC_DATE(tm))
-        return EINVAL;
+        return -EINVAL;
 
     snprintf(buffer, len, "%02u:%02u:%02u", tm->hour, tm->minute, tm->second);
 
@@ -201,14 +201,14 @@ s32 rtc_time_from_str(const char * const str, rtc_time_t * const tm)
     // Set the date and time.  Acceptable format:
     //      date YYYYMMDDHHMMSS
     if(strlen(str) != 14)
-        return EINVAL;
+        return -EINVAL;
 
     for(i = 0; i < 14; i++)
     {
         if((str[i] >= '0') && (str[i] <= '9'))
             s[i] = str[i] - '0';
         else
-            return EINVAL;
+            return -EINVAL;
     }
 
     tm->year    = (s[0] * 1000) + (s[1] * 100) + (s[2] * 10) + s[3];
@@ -221,7 +221,7 @@ s32 rtc_time_from_str(const char * const str, rtc_time_t * const tm)
     // Day of week
     tm->day_of_week = day_of_week(tm->year, tm->month, tm->day);
 
-    return VALID_RTC_DATE(tm) ? SUCCESS : EINVAL;
+    return VALID_RTC_DATE(tm) ? SUCCESS : -EINVAL;
 }
 
 
@@ -404,7 +404,7 @@ s32 rtc_time_to_timestamp(const rtc_time_t *dt, time_t *timestamp)
     */
     if((dt->year <= 1901) && (dt->month <= 12) && (dt->day <= 13) &&
        (dt->hour <= 20) && (dt->minute <= 45) && (dt->second <= 52))
-        return EINVAL;
+        return -EINVAL;
 
     /*
         Latest date representable as a timestamp: 2038-01-19 03:14:07
@@ -412,7 +412,7 @@ s32 rtc_time_to_timestamp(const rtc_time_t *dt, time_t *timestamp)
     */
     if((dt->year >= 2038) && (dt->month >= 1) && (dt->day >= 19) &&
        (dt->hour >= 3) && (dt->minute >= 14) && (dt->second >= 7))
-        return EINVAL;
+        return -EINVAL;
 
     ts = g_ts_year_offset[dt->year - 1901];
 
@@ -444,7 +444,7 @@ s32 get_time(rtc_time_t *tm)
 
     rtc = dev_find("rtc0");
     if(rtc == NULL)
-        return ENOSYS;
+        return -ENOSYS;
 
     return rtc->read(rtc, 0, &one, tm);
 }

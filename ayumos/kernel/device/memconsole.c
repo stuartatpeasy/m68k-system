@@ -28,7 +28,7 @@ s32 memconsole_init(dev_t *dev)
     dev->data = 0;
 
     if(!state)
-        return ENOMEM;
+        return -ENOMEM;
 
     state->buffer = (char *) kmalloc(MEMCONSOLE_DEFAULT_SIZE);
 
@@ -77,7 +77,7 @@ s32 memconsole_putc(dev_t *dev, const char c)
         return SUCCESS;
     }
 
-    return ENOSPC;
+    return -ENOSPC;
 }
 
 

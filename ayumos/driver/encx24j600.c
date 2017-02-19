@@ -49,14 +49,14 @@ s32 encx24j600_reset(dev_t *dev)
     } while(--x && ENCX24_REG(base_addr, EUDAST) != init_val);
 
     if(!x)
-        return ETIME;
+        return -ETIME;
 
     /* Wait for CLKRDY (ESTAT<12>) to become set */
     for(x = 10000; !(ENCX24_REG(base_addr, ESTAT) & BIT(ESTAT_CLKRDY)) && --x;)
         ;
 
     if(!x)
-        return ETIME;
+        return -ETIME;
 
     /* Issue a "system reset" command by setting ETHRST (ECON2<4>) */
     ENCX24_REG(base_addr, ECON2) |= BIT(ECON2_ETHRST);
@@ -67,7 +67,7 @@ s32 encx24j600_reset(dev_t *dev)
 
     /* Check that EUDAST has returned to its post-reset value of 0x0000 */
     if(!x)
-        return EDEVINITFAILED;
+        return -EDEVINITFAILED;
 
     /* Wait at least 256us for the PHY to initialise */
     for(x = 1000; --x;)
@@ -87,7 +87,7 @@ s32 encx24j600_packet_tx(dev_t *dev, void *buf, u32 len)
     void * const base_addr = dev->base_addr;
 
     if((len < ENCX24_MIN_TX_PACKET_LEN) || (len > ENCX24_MAX_TX_PACKET_LEN))
-        return EINVAL;
+        return -EINVAL;
 
     /* Clear EIR.TXIF (TX done) and EIR.TXABITIF (TX aborted) flags in interrupt flag register */
     ENCX24_REG(base_addr, EIR) &= ~(BIT(EIR_TXIF) | BIT(EIR_TXABTIF));
@@ -182,7 +182,7 @@ s32 encx24j600_packet_read(dev_t *dev, void *buf, u32 *len)
         if(*len < packet_len)
         {
             *len = packet_len;
-            return EFBIG;   /* Packet too big for the supplied buffer */
+            return -EFBIG;  /* Packet too big for the supplied buffer */
         }
 
         *len = packet_len;
@@ -270,7 +270,7 @@ s32 encx24j600_init(dev_t *dev)
 
     state = slab_calloc(sizeof(encx24j600_state_t));
     if(state == NULL)
-        return ENOMEM;
+        return -ENOMEM;
 
     /* Reset the controller */
     ret = encx24j600_reset(dev);
@@ -356,7 +356,7 @@ s32 encx24j600_read(dev_t *dev, ku32 offset, u32 *len, void *buf)
     UNUSED(offset);
 
     if(state->rx_wait_pid)
-        return EBUSY;
+        return -EBUSY;
 
     /* Is a packet available? */
     while(state->rx_packets_pending == 0)
@@ -388,7 +388,7 @@ s32 encx24j600_write(dev_t *dev, ku32 offset, u32 *len, const void *buf)
     UNUSED(offset);
 
     if((len_ < ENCX24_PACKET_LEN_MIN) || (len_ > ENCX24_PACKET_LEN_MAX))
-        return EINVAL;
+        return -EINVAL;
 
     /* Is a transmission in progress? */
     /* FIXME - put process to sleep, instead of busy-waiting */

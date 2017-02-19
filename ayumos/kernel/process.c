@@ -39,7 +39,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
 
     /* Validate supplied working directory, if any */
     if((wd != PROC_DEFAULT_WD) && !path_is_absolute(wd))
-        return EINVAL;
+        return -EINVAL;
 
     p = CHECKED_KCALLOC(1, sizeof(proc_t));
 
@@ -50,7 +50,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
         if(!p->ustack)
         {
             kfree(p);
-            return ENOMEM;
+            return -ENOMEM;
         }
     }
     else
@@ -59,7 +59,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
         if(!(flags & PROC_TYPE_KERNEL))
         {
             kfree(p);
-            return EINVAL;
+            return -EINVAL;
         }
 
         p->ustack = NULL;
@@ -71,7 +71,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     {
         ufree(p->ustack);
         kfree(p);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     /* Set up the initial working directory for the new process */
@@ -102,7 +102,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
         ufree(p->ustack);
         kfree(p->kstack);
         kfree(p);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     ustack_top = (u32 *) ((u8 *) p->ustack + stack_len);
@@ -203,7 +203,7 @@ s32 proc_setcwd(proc_t *proc, ks8 *dir)
 {
     s8 *new_cwd = strdup((dir == PROC_DEFAULT_WD) ? ROOT_DIR : dir);
     if(!new_cwd)
-        return ENOMEM;
+        return -ENOMEM;
 
     if(proc == NULL)
         proc = proc_current();

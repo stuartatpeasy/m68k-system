@@ -198,7 +198,7 @@ void dispatch_command(char *cmdline)
 
     ret = pcommand->handler(num_args, args);
     if(ret != SUCCESS)
-        puts(kstrerror(ret));
+        puts(kstrerror(-ret));
 
     for(c = 0; c < num_args; ++c)
         kfree(args[c]);
@@ -228,7 +228,7 @@ s32 monitor_parse_arg(const char *arg, unsigned int *val, unsigned int flags)
 
             addr = strtoul(++arg, &endptr, 0);
             if(*endptr)
-                return EINVAL;
+                return -EINVAL;
 
             val_ = *((u8 *) addr);
         }
@@ -253,7 +253,7 @@ s32 monitor_parse_arg(const char *arg, unsigned int *val, unsigned int flags)
        ((flags & MPA_ALIGN_WORD) && (val_ & 0x3)) ||
        ((flags & MPA_NOT_ZERO) && !val_) ||
        ((flags & MPA_AT_LEAST_2) && (val_ < 2)))
-        return EINVAL;
+        return -EINVAL;
 
     *val = val_;
 

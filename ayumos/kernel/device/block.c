@@ -34,13 +34,13 @@ s32 block_cache_init(ku32 size)
 
     bc.descriptors = (block_descriptor_t *) umalloc(size * sizeof(block_descriptor_t));
     if(!bc.descriptors)
-        return ENOMEM;
+        return -ENOMEM;
 
     bc.cache = (u8 *) umalloc(size * BLOCK_SIZE);
     if(!bc.cache)
     {
         ufree(bc.descriptors);
-        return ENOMEM;
+        return -ENOMEM;
     }
 
     for(i = 0; i < size; ++i)
@@ -83,7 +83,7 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
     s32 ret;
 
     if(dev->type != DEV_TYPE_BLOCK)
-        return EINVAL;
+        return -EINVAL;
 
     if(!bc.nblocks)
         return dev->read(dev, 0, &one, buf);

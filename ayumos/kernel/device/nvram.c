@@ -22,7 +22,7 @@ s32 nvram_bpb_read(nvram_bpb_t *pbpb)
 
     nvram = dev_find("nvram0");
     if(nvram == NULL)
-        return ENOSYS;
+        return -ENOSYS;
 
     /* Read the parameter block from battery-backed RAM */
     ret = nvram->read(nvram, 0, &len, pbpb);
@@ -36,7 +36,7 @@ s32 nvram_bpb_read(nvram_bpb_t *pbpb)
     checksum = CHECKSUM16(pbpb, len - sizeof(u16));
 
     if((pbpb->checksum != checksum) || (pbpb->magic != NVRAM_BPB_MAGIC))
-        return ECKSUM;
+        return -ECKSUM;
 
     return SUCCESS;
 }
@@ -54,7 +54,7 @@ s32 nvram_bpb_write(nvram_bpb_t *pbpb)
 
     nvram = dev_find("nvram0");
     if(nvram == NULL)
-        return ENOSYS;
+        return -ENOSYS;
 
     ret = get_time(&tm);
     if(ret != SUCCESS)

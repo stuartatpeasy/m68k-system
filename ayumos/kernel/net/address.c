@@ -46,7 +46,7 @@ net_addr_type_t net_address_get_type(const net_address_t * const addr)
 s32 net_address_set_type(const net_addr_type_t type, net_address_t * const addr)
 {
     if(type >= na_invalid)
-        return EINVAL;
+        return -EINVAL;
 
     addr->type = type;
     return SUCCESS;

@@ -140,7 +140,7 @@ s32 ds17485_init(dev_t * const dev)
 
     state = slab_alloc(sizeof(ds17485_state_t));
     if(!state)
-        return ENOMEM;
+        return -ENOMEM;
 
     state->tick_fn = ds17485_default_tick_handler;
     dev->data = state;
@@ -223,7 +223,7 @@ s32 ds17485_rtc_read(dev_t * const dev, ku32 offset, u32 *len, void *buffer)
     rtc_time_t * const tm = (rtc_time_t *) buffer;
 
     if(offset || (*len != 1))
-        return EINVAL;
+        return -EINVAL;
 
     /* Set the "SET" bit in register B, to prevent updates while we read */
     DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
@@ -263,7 +263,7 @@ s32 ds17485_rtc_write(dev_t * const dev, ku32 offset, u32 *len, const void *buff
     const rtc_time_t * const tm = (const rtc_time_t *) buffer;
 
     if(offset || (*len != 1))
-        return EINVAL;
+        return -EINVAL;
 
     /* Set the "SET" bit in register B, to prevent updates while we write */
     DS17485_REG_SET_BITS(base_addr, DS17485_REG_B, DS17485_SET);
@@ -329,7 +329,7 @@ s32 ds17485_user_ram_read(dev_t * const dev, u32 addr, u32 *len, void * buffer)
     u32 len_ = *len;
 
     if((addr + len_) > DS17485_USER_RAM_LEN)
-        return EINVAL;
+        return -EINVAL;
 
     DS17485_SELECT_STD_REG(base_addr);
     for(addr += DS17485_USER_RAM_START; len_; --len_, ++addr)
@@ -348,7 +348,7 @@ s32 ds17485_user_ram_write(dev_t * const dev, u32 addr, u32 *len, const void * b
     u32 len_ = *len;
 
     if((addr + len_) > DS17485_USER_RAM_LEN)
-        return EINVAL;
+        return -EINVAL;
 
     DS17485_SELECT_STD_REG(base_addr);
     for(addr += 14; len_ && (addr < 128); --len_, ++addr)
@@ -368,7 +368,7 @@ s32 ds17485_ext_ram_read(dev_t * const dev, u32 addr, u32 *len, void * buffer)
     u32 len_ = *len;
 
     if((addr + len_) > DS17485_EXT_RAM_LEN)
-        return EINVAL;
+        return -EINVAL;
 
     /* Switch to the extended register set in order to read the extended RAM area */
     DS17485_SELECT_EXT_REG(base_addr);
@@ -392,7 +392,7 @@ s32 ds17485_ext_ram_write(dev_t * const dev, u32 addr, u32 *len, const void * bu
     u32 len_ = *len;
 
     if((addr + len_) > DS17485_EXT_RAM_LEN)
-        return EINVAL;
+        return -EINVAL;
 
     /* Switch to the extended register set in order to read the extended RAM area */
     DS17485_SELECT_EXT_REG(base_addr);
@@ -521,7 +521,7 @@ s32 ds17485_timer_control(dev_t *dev, const devctl_fn_t fn, const void *in, void
             return SUCCESS;
 
         default:
-            return ENOSYS;
+            return -ENOSYS;
     }
 }
 

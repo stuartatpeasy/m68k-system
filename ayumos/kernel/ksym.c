@@ -35,7 +35,7 @@ s32 ksym_find_by_name(const char * const name, symentry_t **ent)
     UNUSED(ent);
 #endif
 
-    return ENOENT;
+    return -ENOENT;
 }
 
 
@@ -66,7 +66,7 @@ s32 ksym_find_nearest_prev(void *addr, symentry_t **ent)
     UNUSED(ent);
 #endif
 
-    return ENOENT;
+    return -ENOENT;
 }
 
 
@@ -93,7 +93,7 @@ s32 ksym_format_nearest_prev(void *addr, char *buf, u32 buf_len)
 #endif
 
     strncpy(buf, "<\?\?\?>", buf_len);  /* \-escape '?' chars to avoid trigraph warning */
-    return ENOENT;
+    return -ENOENT;
 }
 
 

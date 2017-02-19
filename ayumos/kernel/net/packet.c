@@ -180,7 +180,7 @@ u32 net_packet_get_buffer_len(const net_packet_t * const packet)
 s32 net_packet_set_len(net_packet_t * const packet, ku32 new_len)
 {
     if(new_len > packet->raw.len)
-        return EINVAL;
+        return -EINVAL;
 
     packet->len = new_len;
     return SUCCESS;
@@ -223,7 +223,7 @@ s32 net_packet_encapsulate(net_packet_t * const packet, const net_protocol_t pro
 s32 net_packet_insert(net_packet_t * const packet, ku32 len)
 {
     if((packet->len) + len > packet->raw.len)
-        return EINVAL;      /* Underflow */
+        return -EINVAL;     /* Underflow */
 
     packet->start -= len;
     packet->len += len;
@@ -240,7 +240,7 @@ s32 net_packet_insert(net_packet_t * const packet, ku32 len)
 s32 net_packet_consume(net_packet_t * const packet, ku32 len)
 {
     if(packet->len < len)
-        return EINVAL;      /* Overflow */
+        return -EINVAL;     /* Overflow */
 
     packet->start += len;
     packet->len -= len;

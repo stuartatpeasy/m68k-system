@@ -67,7 +67,7 @@ s32 udp_tx(net_address_t *src, net_address_t *dest, net_packet_t *packet)
 
     /* FIXME - make this work with "IP-family" addresses, not just IPv4 addresses specifically */
     if((net_address_get_type(src) != na_ipv4) || (net_address_get_type(dest) != na_ipv4))
-        return EAFNOSUPPORT;
+        return -EAFNOSUPPORT;
 
     ret = net_packet_insert(packet, sizeof(udp_hdr_t));
     if(ret != SUCCESS)
