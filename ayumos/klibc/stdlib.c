@@ -237,16 +237,9 @@ u32 strtoul(ks8 *nptr, s8 **endptr, s32 base)
         else
             digit_found = 1;
 
-        /* tedious way of avoiding 32-bit multiplies (expensive on a 16-bit platform).  Also detects over/underflow */
-        n_ = 0;
-        if(base & 0x20) n_ += n << 5;
-        if(base & 0x10) n_ += n << 4;
-        if(base & 0x8)  n_ += n << 3;
-        if(base & 0x4)  n_ += n << 2;
-        if(base & 0x2)  n_ += n << 1;
-        if(base & 0x1)  n_ += n;
+        n_ = ((u64) n) * base;
 
-        if(n_ > 0xffffffff)
+        if(n_ > 0xffffffffULL)
             overflow = 1;
 
         n = (u32) n_ + digit;;
