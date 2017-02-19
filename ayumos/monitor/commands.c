@@ -1277,6 +1277,16 @@ MONITOR_CMD_HANDLER(test)
         return tftp_read_request(&server, "test.txt");
     }
 #endif /* WITH_NETWORKING */
+    else if(testnum == 4)
+    {
+        file_handle_t *fh;
+
+        ret = file_open(args[1], O_RD, &fh);
+        if(ret == SUCCESS)
+            file_close(fh);
+
+        return ret;
+    }
 
     return SUCCESS;
 }

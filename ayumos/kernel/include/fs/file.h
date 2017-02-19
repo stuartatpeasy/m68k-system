@@ -26,20 +26,21 @@
 #define O_RDWR (O_RD | O_WR)        /* Open file for reading and writing */
 
 
-struct file_info
+typedef struct file_handle
 {
     vfs_t *vfs;
     fs_node_t *node;
     u32 offset;
     u16 flags;
     pid_t pid;
-};
-
-typedef struct file_info file_info_t;
+} file_handle_t;
 
 
-s32 file_open(ks8 * const path, u16 flags, file_info_t **fp);
+s32 file_open(ks8 * const path, u16 flags, file_handle_t **fi);
 s32 file_create(ks8 * const path, file_perm_t perm, fs_node_t **node);
+void file_close(file_handle_t *fh);
+s32 file_read(file_handle_t *fh, void *buffer, size_t count);
+s32 file_write(file_handle_t *fh, const void *buffer, size_t count);
 
 s32 syscall_open(const char * const path, u16 mode);
 s32 syscall_create(const char * const path, ku16 mode);

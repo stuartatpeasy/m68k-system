@@ -16,12 +16,12 @@
 /*
     file_open() - open a file
 */
-s32 file_open(ks8 * const path, u16 flags, file_info_t **fp)
+s32 file_open(ks8 * const path, u16 flags, file_handle_t **fh)
 {
     vfs_t *vfs;
     fs_node_t *node;
     file_perm_t perm_needed;
-    file_info_t *fp_new;
+    file_handle_t *fh_new;
     s32 ret;
 
     /* At least one of O_RD and O_WR must be present in flags */
@@ -77,24 +77,21 @@ s32 file_open(ks8 * const path, u16 flags, file_info_t **fp)
         }
     }
     else
-    {
-        slab_free(node);
-        return ret;     /* Something went wrong in vfs_lookup() */
-    }
+        return ret;     /* Something went wrong in path_open() */
 
-    fp_new = slab_alloc(sizeof(file_info_t));
-    if(fp_new == NULL)
+    fh_new = slab_alloc(sizeof(file_handle_t));
+    if(fh_new == NULL)
     {
         slab_free(node);
         return -ENOMEM;
     }
 
-    fp_new->vfs = vfs;
-    fp_new->node = node;
-    fp_new->flags = flags;
-    fp_new->offset = 0;
+    fh_new->vfs = vfs;
+    fh_new->node = node;
+    fh_new->flags = flags;
+    fh_new->offset = 0;
 
-    *fp = fp_new;
+    *fh = fh_new;
 
     return SUCCESS;
 }
@@ -108,6 +105,44 @@ s32 file_create(ks8 * const path, file_perm_t perm, fs_node_t **node)
     UNUSED(path);
     UNUSED(perm);
     UNUSED(node);
+
+    /* TODO - a whole world of TODO, right here. */
+
+    return -ENOSYS;
+}
+
+
+/*
+    file_handle_free() - release resources associated with a file handle.
+*/
+void file_close(file_handle_t *fh)
+{
+    slab_free(fh->node);
+    slab_free(fh);
+}
+
+
+/*
+    file_read() - read <count> bytes from the file specified by handle <fh> into <buffer>.
+*/
+s32 file_read(file_handle_t *fh, void *buffer, size_t count)
+{
+    UNUSED(fh);
+    UNUSED(buffer);
+    UNUSED(count);
+
+    return -ENOSYS;
+}
+
+
+/*
+    file_write() - write <count> bytes from <buffer> into the file specified by handle <fh>.
+*/
+s32 file_write(file_handle_t *fh, const void *buffer, size_t count)
+{
+    UNUSED(fh);
+    UNUSED(buffer);
+    UNUSED(count);
 
     return -ENOSYS;
 }

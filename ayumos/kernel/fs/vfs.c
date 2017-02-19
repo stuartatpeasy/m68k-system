@@ -43,6 +43,8 @@ s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
+s32 vfs_default_read(vfs_t *vfs, void *buffer, size_t count);
+s32 vfs_default_write(vfs_t *vfs, const void *buffer, size_t count);
 s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
 
 
@@ -71,6 +73,8 @@ s32 vfs_init()
             if(NULL == pdrv->open_dir)      pdrv->open_dir      = vfs_default_open_dir;
             if(NULL == pdrv->read_dir)      pdrv->read_dir      = vfs_default_read_dir;
             if(NULL == pdrv->close_dir)     pdrv->close_dir     = vfs_default_close_dir;
+            if(NULL == pdrv->read)          pdrv->read          = vfs_default_read;
+            if(NULL == pdrv->write)         pdrv->write         = vfs_default_write;
             if(NULL == pdrv->stat)          pdrv->stat          = vfs_default_stat;
 
             printf("vfs: initialised '%s' fs driver\n", pdrv->name);
@@ -224,6 +228,27 @@ s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
 
     return -ENOSYS;
 }
+
+
+s32 vfs_default_read(vfs_t *vfs, void *buffer, size_t count)
+{
+    UNUSED(vfs);
+    UNUSED(buffer);
+    UNUSED(count);
+
+    return -ENOSYS;
+}
+
+
+s32 vfs_default_write(vfs_t *vfs, const void *buffer, size_t count)
+{
+    UNUSED(vfs);
+    UNUSED(buffer);
+    UNUSED(count);
+
+    return -ENOSYS;
+}
+
 
 
 s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st)

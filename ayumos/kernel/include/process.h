@@ -68,7 +68,7 @@ struct proc_struct
     s8 *cwd;                    /* Current working directory */
 
     file_perm_t default_perm;   /* Default permissions for new files */
-    file_info_t *files;         /* Open file list */
+    file_handle_t *files;       /* Open file list */
 
     const proc_t *parent;
     list_t queue;

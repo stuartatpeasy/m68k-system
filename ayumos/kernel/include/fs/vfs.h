@@ -35,6 +35,8 @@ typedef struct vfs_driver
     s32 (*open_dir)(vfs_t *vfs, u32 block, void **ctx);
     s32 (*read_dir)(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
     s32 (*close_dir)(vfs_t *vfs, void *ctx);
+    s32 (*read)(vfs_t *vfs, void *buffer, size_t count);
+    s32 (*write)(vfs_t *vfs, const void *buffer, size_t count);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
 
