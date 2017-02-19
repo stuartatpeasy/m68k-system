@@ -8,6 +8,7 @@
 */
 
 #include <kernel/include/console.h>
+#include <kernel/include/fs/file.h>
 #include <kernel/include/process.h>
 #include <kernel/include/syscall.h>
 #include <klibc/include/stdio.h>
@@ -25,7 +26,12 @@ const syscall_table_entry_t g_syscalls[MAX_SYSCALL + 1] =
     {1,     syscall_console_putchar},
     {0,     syscall_console_getchar},
     {1,     syscall_leds},
-    {0,     syscall_yield}
+    {0,     syscall_yield},
+    {2,     syscall_open},
+    {2,     syscall_create},
+    {2,     syscall_close},
+    {3,     syscall_read},
+    {3,     syscall_write},
 };
 
 

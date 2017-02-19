@@ -22,9 +22,13 @@
 #define SYS_console_getchar     3       /* read a character from the console                */
 #define SYS_leds                4       /* switch on/off the motherboard LEDs               */
 #define SYS_yield               5       /* yield the remainder of the process quantum       */
-
+#define SYS_open                6       /* Open a file                                      */
+#define SYS_create              7       /* Create a file                                    */
+#define SYS_close               8       /* Close a file                                     */
+#define SYS_read                9       /* Read from a file descriptor                      */
+#define SYS_write               10      /* Write to a file descriptor                       */
 
 /* The highest system call number */
-#define MAX_SYSCALL             5
+#define MAX_SYSCALL             10
 
 #endif

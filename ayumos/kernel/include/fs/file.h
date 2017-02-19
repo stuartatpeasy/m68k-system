@@ -39,4 +39,10 @@ typedef struct file_info file_info_t;
 
 s32 file_open(ks8 * const path, u32 flags, file_info_t *fp);
 
+s32 syscall_open(const char * const path, u16 mode);
+s32 syscall_create(const char * const path, u16 mode);
+s32 syscall_close(s32 filenum);
+s32 syscall_read(const s32 filenum, void * const buf, size_t count);
+s32 syscall_write(const s32 filenum, const void * const buf, size_t count);
+
 #endif

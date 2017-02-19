@@ -66,3 +66,66 @@ s32 file_open(ks8 * const path, u32 flags, file_info_t *fp)
     }
 }
 
+
+/*
+    syscall_open() - attempt to open (or create) the file at <path>, taking into account the options
+    specified in <mode>.  Return a file descriptor number, or an error code.
+*/
+s32 syscall_open(const char * const path, u16 mode)
+{
+    UNUSED(path);
+    UNUSED(mode);
+
+    return -ENOSYS;
+}
+
+
+/*
+    syscall_create() - attempt to create a file at <path>, taking into account the options specified
+    in <mode>.  Return a file descriptor number, or an error code.
+*/
+s32 syscall_create(const char * const path, u16 mode)
+{
+    UNUSED(path);
+    UNUSED(mode);
+
+    return -ENOSYS;
+}
+
+
+/*
+    syscall_close() - close the file descriptor <filenum>.
+*/
+s32 syscall_close(const s32 filenum)
+{
+    UNUSED(filenum);
+
+    return -ENOSYS;
+}
+
+
+/*
+    syscall_read() - read <count> bytes from the file descriptor <filenum> into <buf>.
+*/
+s32 syscall_read(const s32 filenum, void * const buf, size_t count)
+{
+    UNUSED(filenum);
+    UNUSED(buf);
+    UNUSED(count);
+
+    return -ENOSYS;
+}
+
+
+/*
+    syscall_write() - write <count> bytes from <buf> into the file identified by descriptor
+    <filenum>.
+*/
+s32 syscall_write(const s32 filenum, const void * const buf, size_t count)
+{
+    UNUSED(filenum);
+    UNUSED(buf);
+    UNUSED(count);
+
+    return -ENOSYS;
+}
