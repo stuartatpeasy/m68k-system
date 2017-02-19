@@ -70,6 +70,9 @@ typedef struct fs_node
 #define FS_PERM_URX         (FS_PERM_UR | FS_PERM_UX)                       /* r-x------ */
 #define FS_PERM_GRX         (FS_PERM_GR | FS_PERM_GX)                       /* ---r-x--- */
 #define FS_PERM_ORX         (FS_PERM_OR | FS_PERM_OX)                       /* ------r-x */
+#define FS_PERM_URW         (FS_PERM_UR | FS_PERM_UW)                       /* rw------- */
+#define FS_PERM_GRW         (FS_PERM_GR | FS_PERM_GW)                       /* ---rw---- */
+#define FS_PERM_ORW         (FS_PERM_OR | FS_PERM_OW)                       /* ------rw- */
 
 #define FS_PERM_UGORWX      (FS_PERM_URWX | FS_PERM_GRWX | FS_PERM_ORWX)    /* rwxrwxrwx */
 #define FS_PERM_UGORX       (FS_PERM_URX | FS_PERM_GRX | FS_PERM_ORX)       /* r-xr-xr-x */

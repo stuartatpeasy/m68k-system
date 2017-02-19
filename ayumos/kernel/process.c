@@ -109,6 +109,7 @@ s32 proc_create(const uid_t uid, const gid_t gid, const s8* name, exe_img_t *img
     kstack_top = (u32 *) ((u8 *) p->kstack + PROC_KSTACK_LEN);
 
     p->exit_code = S32_MIN;
+    p->default_perm = PROC_DEFAULT_FILE_PERM;
     p->parent = parent;
     p->uid = uid;
     p->gid = gid;
@@ -182,6 +183,16 @@ uid_t proc_current_uid()
 gid_t proc_current_gid()
 {
     return g_current_proc->gid;
+}
+
+
+/*
+    proc_current_default_perm() - return a file_perm_t object representing the default permissions
+    for files created by the current process.
+*/
+file_perm_t proc_current_default_perm()
+{
+    return g_current_proc->default_perm;
 }
 
 

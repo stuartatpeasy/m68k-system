@@ -11,6 +11,7 @@
 
 #include <kernel/include/cpu.h>
 #include <kernel/include/defs.h>
+#include <kernel/include/fs/file.h>
 #include <kernel/include/list.h>
 #include <kernel/include/types.h>
 #include <kernel/include/user.h>
@@ -20,6 +21,9 @@
 #define PROC_USTACK_LEN     (2048)      /* Per-process default user stack size                  */
 
 #define PROC_DEFAULT_WD     (NULL)      /* Default process working dir -> inherit from parent   */
+
+/* Default permissions for files created by a process */
+#define PROC_DEFAULT_FILE_PERM  (FS_PERM_URW | FS_PERM_GR | FS_PERM_OR)
 
 /*
     Process type flags
@@ -57,15 +61,18 @@ struct proc_struct
 
     exe_img_t *img;
 
-    void *kstack;   /* ptr to mem alloc'ed for kernel stack, i.e. bottom of stack   */
-    void *ustack;   /* ptr to mem alloc'ed for user stack, i.e. bottom of stack     */
+    void *kstack;               /* ptr to mem alloc'ed for kernel stack, i.e. bottom of stack   */
+    void *ustack;               /* ptr to mem alloc'ed for user stack, i.e. bottom of stack     */
 
     void *arg;
-    s8 *cwd;        /* Current working directory */
+    s8 *cwd;                    /* Current working directory */
+
+    file_perm_t default_perm;   /* Default permissions for new files */
+    file_info_t *files;         /* Open file list */
 
     const proc_t *parent;
     list_t queue;
-}; /* sizeof(proc_t) = 80 + sizeof(regs_t) */
+}; /* sizeof(proc_t) = 90 + sizeof(regs_t) */
 
 
 s32 proc_create(const uid_t uid, const gid_t gid, const s8 *name, exe_img_t *img,
@@ -83,6 +90,6 @@ void proc_sleep_for(s32 secs);
 void proc_wake_by_id(const pid_t pid);
 uid_t proc_current_uid();
 gid_t proc_current_gid();
-
+file_perm_t proc_current_default_perm();
 
 #endif
