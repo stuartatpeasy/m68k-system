@@ -43,8 +43,8 @@ s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
-s32 vfs_default_read(vfs_t *vfs, void *buffer, size_t count);
-s32 vfs_default_write(vfs_t *vfs, const void *buffer, size_t count);
+s32 vfs_default_read(vfs_t *vfs, fs_node_t *node, void *buffer, size_t count);
+s32 vfs_default_write(vfs_t *vfs, fs_node_t *node, const void *buffer, size_t count);
 s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
 
 
@@ -230,9 +230,10 @@ s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
 }
 
 
-s32 vfs_default_read(vfs_t *vfs, void *buffer, size_t count)
+s32 vfs_default_read(vfs_t *vfs, fs_node_t *node, void *buffer, size_t count)
 {
     UNUSED(vfs);
+    UNUSED(node);
     UNUSED(buffer);
     UNUSED(count);
 
@@ -240,9 +241,10 @@ s32 vfs_default_read(vfs_t *vfs, void *buffer, size_t count)
 }
 
 
-s32 vfs_default_write(vfs_t *vfs, const void *buffer, size_t count)
+s32 vfs_default_write(vfs_t *vfs, fs_node_t *node, const void *buffer, size_t count)
 {
     UNUSED(vfs);
+    UNUSED(node);
     UNUSED(buffer);
     UNUSED(count);
 
@@ -350,6 +352,24 @@ s32 vfs_close_dir(vfs_dir_ctx_t *ctx)
     slab_free(ctx);
 
     return ret;
+}
+
+
+/*
+    vfs_read() - read <count> bytes from the specified <node> into <buffer>.
+*/
+s32 vfs_read(vfs_t *vfs, fs_node_t *node, void *buffer, size_t count)
+{
+    return vfs->driver->read(vfs, node, buffer, count);
+}
+
+
+/*
+    vfs_write() - write <count> bytes from <buffer> to the specified <node>.
+*/
+s32 vfs_write(vfs_t *vfs, fs_node_t *node, const void *buffer, size_t count)
+{
+    return vfs->driver->write(vfs, node, buffer, count);
 }
 
 

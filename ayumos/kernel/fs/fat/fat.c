@@ -27,6 +27,8 @@ s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
+s32 fat_read(vfs_t *vfs, fs_node_t *node, void *buffer, size_t count);
+s32 fat_write(vfs_t *vfs, fs_node_t *node, const void *buffer, size_t count);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 
 s32 fat_read_block(vfs_t *vfs, u32 block, void *buffer);
@@ -80,7 +82,7 @@ s32 fat_mount(vfs_t *vfs)
     if((bpb.jmp[0] != 0xeb) || (bpb.jmp[2] != 0x90))
     {
         printf("%s: bad FAT superblock: incorrect jump bytes: expected 0xeb 0xxx 0x90, "
-               "read 0x%02x 0xxx 0x%02x\n", vfs->dev->name, bpb.jmp[0], bpb.jmp[2]);
+               "read 0x%02x 0x%02x 0x%02x\n", vfs->dev->name, bpb.jmp[0], bpb.jmp[1], bpb.jmp[2]);
         return -EBADSBLK;
     }
 
@@ -476,6 +478,38 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx)
     slab_free(ctx);
 
     return SUCCESS;
+}
+
+
+/*
+    fat_read() - read <count> bytes into <buffer> from the file indicated by <node>.
+*/
+s32 fat_read(vfs_t *vfs, fs_node_t *node, void *buffer, size_t count)
+{
+    UNUSED(vfs);
+    UNUSED(node);
+    UNUSED(buffer);
+    UNUSED(count);
+
+    /* FIXME */
+
+    return -ENOSYS;
+}
+
+
+/*
+    fat_write() - write <count> bytes from <buffer> into the file indicated by <node>.
+*/
+s32 fat_write(vfs_t *vfs, fs_node_t *node, const void *buffer, size_t count)
+{
+    UNUSED(vfs);
+    UNUSED(node);
+    UNUSED(buffer);
+    UNUSED(count);
+
+    /* FIXME */
+
+    return -ENOSYS;
 }
 
 
