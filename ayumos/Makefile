@@ -38,16 +38,9 @@ SOURCES := $(CSOURCES) $(ASMSOURCES)
 
 LDSCRIPT := platform/$(PLATFORM)/kernel.ld
 
-DEPDIR := .deps
-OBJDIR := .obj
-
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
-
 OBJECTS := $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(CSOURCES)) $(patsubst %.S,%.o,$(ASMSOURCES)))
 
 TOOLS := tools/bin/makemap
-
-LDFLAGS := -g -T $(LDSCRIPT) -nostdlib -static -L$(LIBGCCDIR) -L.
 
 LIBS := -lgcc -lplatform
 
@@ -84,7 +77,7 @@ $(APPNAME): $(OBJECTS) $(TOOLS)
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	echo "=== creating images for '$(APPNAME)' ==="
 	echo "(TARGET_LD) $(APPNAME)"
-	$(TARGET_LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
+	$(TARGET_LD) $(OBJECTS) -o$(APPNAME) $(TARGET_LDFLAGS) --start-group $(LIBS) --end-group
 	$(TARGET_OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(ROM)
 	truncate --size %4 $(ROM)
 	echo "(TARGET_NM) $(ROM)"

@@ -27,8 +27,18 @@ APPNAME=ayumos
 # Path to libgcc.a for the target architecture
 LIBGCCDIR=$(TOOLDIR)/lib/gcc/$(TOOLPREFIX)/$(TARGET_GCC_VERSION)/$(ARCH)
 
+# Target compile/link options
 TARGET_CFLAGS=-I. -Iklibc -Wall -Wextra -O2 -$(ARCH) -g -include buildcfg.h -ffreestanding \
               -fomit-frame-pointer -fno-delete-null-pointer-checks
+
+TARGET_LDFLAGS=-g -T $(LDSCRIPT) -nostdlib -static -L$(LIBGCCDIR) -L.
+
+# Standard directories
+DEPDIR = .deps
+OBJDIR = .obj
+
+# Dependency-generation flags used by the compiler
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
 ifndef VERBOSE
 .SILENT:
