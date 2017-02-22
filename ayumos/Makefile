@@ -57,13 +57,13 @@ ROM_ODD := $(APPNAME).O.rom
 
 $(OBJDIR)/%.o : %.c $(DEPDIR)/%.d
 	mkdir -p $(dir $@)
-	echo "(TARGETCC) $<"
-	$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
+	echo "(TARGET_CC) $<"
+	$(TARGET_CC) $(DEPFLAGS) $(TARGET_CFLAGS) -c -o$@ $<
 
 $(OBJDIR)/%.o : %.S $(DEPDIR)/%.d
 	mkdir -p $(dir $@)
-	echo "(TARGETAS) $<"
-	$(CC) $(DEPFLAGS) $(CFLAGS) -c -o$@ $<
+	echo "(TARGET_AS) $<"
+	$(TARGET_CC) $(DEPFLAGS) $(TARGET_CFLAGS) -c -o$@ $<
 
 $(DEPDIR)/%.d:
 	mkdir -p $(dir $@)
@@ -83,16 +83,16 @@ $(APPNAME): $(OBJECTS) $(TOOLS)
 	echo "=== building platform '$(PLATFORM)' ==="
 	$(MAKE) $(MFLAGS) -Cplatform/$(PLATFORM)
 	echo "=== creating images for '$(APPNAME)' ==="
-	echo "(TARGETLD) $(APPNAME)"
-	$(LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
-	$(OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(ROM)
+	echo "(TARGET_LD) $(APPNAME)"
+	$(TARGET_LD) $(OBJECTS) -o$(APPNAME) $(LDFLAGS) --start-group $(LIBS) --end-group
+	$(TARGET_OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(ROM)
 	truncate --size %4 $(ROM)
-	echo "(TARGETNM) $(ROM)"
-	$(NM) $(APPNAME) | tools/bin/makemap >> $(ROM)
-	echo "(TARGETOBJCOPY) $(ROM_EVEN)"
-	$(OBJCOPY) -i 2 -b 0 -I binary -O binary $(ROM) $(ROM_EVEN)
-	echo "(TARGETOBJCOPY) $(ROM_ODD)"
-	$(OBJCOPY) -i 2 -b 1 -I binary -O binary $(ROM) $(ROM_ODD)
+	echo "(TARGET_NM) $(ROM)"
+	$(TARGET_NM) $(APPNAME) | tools/bin/makemap >> $(ROM)
+	echo "(TARGET_OBJCOPY) $(ROM_EVEN)"
+	$(TARGET_OBJCOPY) -i 2 -b 0 -I binary -O binary $(ROM) $(ROM_EVEN)
+	echo "(TARGET_OBJCOPY) $(ROM_ODD)"
+	$(TARGET_OBJCOPY) -i 2 -b 1 -I binary -O binary $(ROM) $(ROM_ODD)
 	chmod -f -x $(ROM_EVEN) $(ROM_ODD) $(ROM) || true
 
 $(TOOLS):

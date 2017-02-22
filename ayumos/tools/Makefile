@@ -22,16 +22,16 @@ OBJECTS=$(CSOURCES:.c=.o)
 all: $(BINDIR)/makemap $(BINDIR)/mkromfs
 
 .c.o:
-	echo "(HOSTCC) $<"
-	$(HOSTCC) -c $(CFLAGS) -o$@ $<
+	echo "(CC) $<"
+	$(CC) -c $(CFLAGS) -o$@ $<
 
 $(BINDIR)/makemap: makemap.o
 	mkdir -p $(BINDIR)
-	$(HOSTCC) -o$@ $<
+	$(CC) -o$@ $<
 
 $(BINDIR)/mkromfs: mkromfs.o
 	mkdir -p $(BINDIR)
-	$(HOSTCC) -o$@ $<
+	$(CC) -o$@ $<
 
 makemap_clean:
 	rm -f makemap.o $(BINDIR)/makemap

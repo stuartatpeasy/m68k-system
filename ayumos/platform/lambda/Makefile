@@ -11,7 +11,7 @@ SRC_ROOT=../..
 
 include $(SRC_ROOT)/global.mk
 
-CFLAGS += -I$(SRC_ROOT)
+TARGET_CFLAGS += -I$(SRC_ROOT)
 
 LIBNAME := $(SRC_ROOT)/libplatform.a
 
@@ -24,20 +24,17 @@ OBJDIR := .obj
 
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
-#OBJECTS := $(CSOURCES:.c=.o) $(ASMSOURCES:.S=.o)
 OBJECTS := $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(CSOURCES)) $(patsubst %.S,%.o,$(ASMSOURCES)))
-
-#COMPILE.S = $(CC) $(DEPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c
 
 $(OBJDIR)/%.o : %.c $(DEPDIR)/%.d
 	@mkdir -p $(dir $@)
-	@echo "(TARGETCC) $<"
-	@$(CC) $(DEPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c -o$@ $<
+	@echo "(TARGET_CC) $<"
+	@$(TARGET_CC) $(DEPFLAGS) $(TARGET_CFLAGS) $(TARGET_ARCH) -c -o$@ $<
 
 $(OBJDIR)/%.o : %.S $(DEPDIR)/%.d
 	@mkdir -p $(dir $@)
-	@echo "(TARGETAS) $<"
-	@$(CC) $(DEPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c -o$@ $<
+	@echo "(TARGET_AS) $<"
+	@$(TARGET_CC) $(DEPFLAGS) $(TARGET_CFLAGS) $(TARGET_ARCH) -c -o$@ $<
 
 $(DEPDIR)/%.d:
 	@mkdir -p $(dir $@)
