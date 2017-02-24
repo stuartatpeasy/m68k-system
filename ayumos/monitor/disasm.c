@@ -8,14 +8,88 @@
 */
 
 #include <monitor/include/disasm.h>
+#include <klibc/include/stdio.h>
+#include <klibc/include/string.h>
+#include <klibc/include/assert.h>
+#include <kernel/util/kutil.h>
 
 
-static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
-                     const unsigned char src_reg, char *a1, char *a2, ea_size_t *size);
-static void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
-                     const unsigned char src_reg, char *a1, char *a2);
-static char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p,
-                const ea_size_t sz);
+/* "binary extract from word" macros - extract various fields from an instruction word */
+#define BEW_DISPLACEMENT(x)     ((char) ((x) & 0xff))
+#define BEW_REGISTER(x)         (((x) & 0x7000) >> 12)
+#define BEW_SCALE(x)            (((x) & 0x0600) >> 9)
+#define BEW_DA(x)               (((x) & 0x8000) ? 'a' : 'd')
+
+/* Determine whether bit <y> of value <x> is set. */
+#define TEST(x, y)              (((x) & (1 << (y))) ? 1 : 0)
+
+/*
+    Addressing modes used in effective addresses
+*/
+#define EAMODE_DN               (0) /* data register direct                                  */
+#define EAMODE_AN               (1) /* address register direct                               */
+#define EAMODE_AN_IND           (2) /* address register indirect                             */
+#define EAMODE_AN_IND_POSTINC   (3) /* address register indirect with postincrement          */
+#define EAMODE_AN_IND_PREDEC    (4) /* address register indirect with predecrement           */
+#define EAMODE_AN_DISP          (5) /* address register indirect with displacement           */
+#define EAMODE_AN_DISP_INDEX    (6) /* address register indirect with displacement and index */
+#define EAMODE_IMM              (7) /* immediate / absolute word/long / PC+disp / PC+d+index */
+
+/*
+    Addressing sub-modes used to identify the type of "immediate" address in an effective address
+*/
+#define EAMODE_IMM_ABSW             (0)     /* absolute word                                */
+#define EAMODE_IMM_ABSL             (1)     /* absolute long                                */
+#define EAMODE_IMM_PC_DISP          (2)     /* program counter indirect with displacement   */
+#define EAMODE_IMM_PC_DISP_INDEX    (3)     /* program counter indirect with disp + index   */
+#define EAMODE_IMM_IMM              (4)     /* immediate value                              */
+
+/*
+    host-to-platform (HTOP_*) macros
+
+    If the host is little-endian, this module must be compiled with -DHOST_LITTLEENDIAN -
+    the HTOP_* macros will then swap the byte order of short ints and ints.  Otherwise
+    the code in this module will assume a big-endian host (e.g. m68k hardware).
+*/
+#ifdef HOST_LITTLEENDIAN
+#define HTOP_SHORT(x)           ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
+#define HTOP_INT(x)             (((x) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | \
+                                    ((x) >> 24))
+#else
+#define HTOP_SHORT(x)           (x)
+#define HTOP_INT(x)             (x)
+#endif
+
+/* Effective address size indicator */
+typedef enum ea_size
+{
+    ea_unsized = 0,
+    ea_byte = 'b',
+    ea_word = 'w',
+    ea_long = 'l',
+    ea_sr = 's'         /* flag used to indicate an operation on the status register */
+} ea_size_t;
+
+
+/* Disassembler context object */
+typedef struct dis_context
+{
+    dis_machtype_t      machtype;
+    unsigned short **   p;
+    char                a1[32];
+    char                a2[32];
+    const char *        pf;
+    unsigned short      instr;
+    unsigned char       src_mode;
+    unsigned char       src_reg;
+    ea_size_t           size;
+} dis_context_t;
+
+
+static void mmu_instr(dis_context_t * const ctx);
+static void fp_instr(dis_context_t * const ctx);
+static char *ea(const dis_machtype_t machtype, char *str, unsigned char mode, unsigned char reg,
+                unsigned short **p, const ea_size_t sz);
 static void movem_regs(char *str, unsigned short regs, char mode);
 
 
@@ -97,102 +171,113 @@ static const ea_size_t move_sizemap[] =
 };
 
 
-int disassemble(unsigned short **p, char *str)
+/*
+    disassemble() - disassemble the machine instruction at the address pointed to by <*p>; return
+    the disassembled string through <str>.  Updates <*p> to point at the next instruction.
+*/
+int disassemble(const dis_machtype_t machtype, unsigned short **p, char *str)
 {
-    char a1[32], a2[32];
-    const char *pf = NULL;
+    dis_context_t ctx;
+    unsigned char bit7_6, dest_mode, dest_reg;
+    int x;
 
-    const unsigned short instr = HTOP_SHORT(*(*p)++);
-    const unsigned char bit7_6 = (instr >> 6) & 3,
-                        src_mode = (instr >> 3) & 0x7,
-                        src_reg = (instr & 0x7),
-                        dest_mode = (instr >> 6) & 0x7,
-                        dest_reg = (instr >> 9) & 0x7;
-
-    ea_size_t size = ea_unsized;
+    ctx.instr    = HTOP_SHORT(*(*p)++);
+    ctx.p        = p;
+    ctx.src_mode = (ctx.instr >> 3) & 0x7;
+    ctx.src_reg  = ctx.instr & 0x7;
+    ctx.size     = ea_unsized;
+    ctx.pf       = NULL;
+    ctx.machtype = machtype;
 
     *str = '\0';
+    bit7_6 = (ctx.instr >> 6) & 3;
+    dest_mode = (ctx.instr >> 6) & 0x7;
+    dest_reg = (ctx.instr >> 9) & 0x7;
 
-    int x;
-    for(x = 0; x < 32; a1[x] = a2[x] = 0, ++x) ;
+    for(x = 0; x < 32; ctx.a1[x] = ctx.a2[x] = 0, ++x) ;
 
-    switch(instr >> 12)
+    switch(ctx.instr >> 12)
     {
         case 0x0:
-            if(TEST(instr, 8) || (((instr >> 8) & 0xf) == 8))       /* static/dynamic bit / movep */
+            if(TEST(ctx.instr, 8) || ((ctx.instr >> 8) & 0xf) == 8) /* static/dynamic bit / movep */
             {
-                if(src_mode == 1)   /* movep */
+                if(ctx.src_mode == 1)       /* movep */
                 {
-                    const unsigned char dir = TEST(instr, 7),
-                                        sz = TEST(instr, 6);
+                    const unsigned char dir = TEST(ctx.instr, 7),
+                                        sz = TEST(ctx.instr, 6);
 
-                    pf = "movep";
-                    size = sz ? ea_long : ea_word;
+                    ctx.pf = "movep";
+                    ctx.size = sz ? ea_long : ea_word;
 
-                    if(dir)     /* reg -> mem */
+                    if(dir)             /* reg -> mem */
                     {
-                        a1[0] = 'd';
-                        a1[1] = '0' + dest_reg;
+                        ctx.a1[0] = 'd';
+                        ctx.a1[1] = '0' + dest_reg;
 
-                        sprintf(a2, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
+                        sprintf(ctx.a2, "%d(a%c)",
+                                (short) HTOP_SHORT(*(*ctx.p)++), '0' + ctx.src_reg);
                     }
                     else        /* mem -> reg */
                     {
-                        sprintf(a1, "%d(a%c)", (short) HTOP_SHORT(*(*p)++), '0' + src_reg);
+                        sprintf(ctx.a1, "%d(a%c)",
+                                (short) HTOP_SHORT(*(*ctx.p)++), '0' + ctx.src_reg);
 
-                        a2[0] = 'd';
-                        a2[1] = '0' + dest_reg;
+                        ctx.a2[0] = 'd';
+                        ctx.a2[1] = '0' + dest_reg;
                     }
                 }
-                else                /* static/dynamic bit */
+                else                    /* static/dynamic bit */
                 {
-                    pf = bits[bit7_6];
+                    ctx.pf = bits[bit7_6];
 
-                    if(TEST(instr, 8))  /* dynamic bit */
+                    if(TEST(ctx.instr, 8))  /* dynamic bit */
                     {
-                        size = src_mode ? ea_byte : ea_long;
+                        ctx.size = ctx.src_mode ? ea_byte : ea_long;
 
-                        a1[0] = 'd';
-                        a1[1] = '0' + dest_reg;
+                        ctx.a1[0] = 'd';
+                        ctx.a1[1] = '0' + dest_reg;
                     }
-                    else                /* static bit */
+                    else                    /* static bit */
                     {
-                        sprintf(a1, "#%d", HTOP_SHORT(*(*p)++) & 0xff);
+                        sprintf(ctx.a1, "#%d", HTOP_SHORT(*(*ctx.p)++) & 0xff);
                     }
-                    ea(a2, src_mode, src_reg, p, size);
+                    ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
                 }
             }
             else
             {
                 /* ori / andi / subi / addi / <static bit, handled above> / eori / cmpi / moves */
-                pf = misc2[(instr >> 9) & 0x7];
+                ctx.pf = misc2[(ctx.instr >> 9) & 0x7];
 
-                if((src_mode == 7) && (src_reg == 4))       /* -> ccr/sr */
+                if((ctx.src_mode == 7) && (ctx.src_reg == 4))       /* -> ccr/sr */
                 {
                     /* TODO: only andi/eori/ori are permitted here - validate this */
-                    if(TEST(instr, 6))
+                    if(TEST(ctx.instr, 6))
                     {
-                        size = ea_word;
-                        a2[0] = 's'; a2[1] = 'r';
+                        ctx.size = ea_word;
+                        ctx.a2[0] = 's';
+                        ctx.a2[1] = 'r';
                     }
                     else
                     {
-                        size = ea_byte;
-                        a2[0] = 'c'; a2[1] = 'c'; a2[2] = 'r';
+                        ctx.size = ea_byte;
+                        ctx.a2[0] = 'c';
+                        ctx.a2[1] = 'c';
+                        ctx.a2[2] = 'r';
                     }
-                    ea(a1, EAMODE_IMM, EAMODE_IMM_IMM, p, size);
+                    ea(ctx.machtype, ctx.a1, EAMODE_IMM, EAMODE_IMM_IMM, ctx.p, ctx.size);
                 }
                 else
                 {
-                    size = disasm_sizemap[bit7_6];
+                    ctx.size = disasm_sizemap[bit7_6];
 
-                    if(size)
+                    if(ctx.size)
                     {
-                        ea(a1, EAMODE_IMM, EAMODE_IMM_IMM, p, size);
-                        ea(a2, src_mode, src_reg, p, size);
+                        ea(ctx.machtype, ctx.a1, EAMODE_IMM, EAMODE_IMM_IMM, ctx.p, ctx.size);
+                        ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
                     }
                     else
-                        pf = NULL;
+                        ctx.pf = NULL;
                 }
             }
             break;
@@ -200,55 +285,55 @@ int disassemble(unsigned short **p, char *str)
         case 0x1:
         case 0x2:
         case 0x3:
-            size = move_sizemap[instr >> 12];
+            ctx.size = move_sizemap[ctx.instr >> 12];
 
             if(dest_mode == 1)      /* movea */
             {
-                if(size == ea_byte)
+                if(ctx.size == ea_byte)
                     break;      /* movea.b is not allowed */
 
-                pf = "movea";
+                ctx.pf = "movea";
             }
             else
-                pf = "move";
+                ctx.pf = "move";
 
-            ea(a1, src_mode, src_reg, p, size);
-            ea(a2, dest_mode, dest_reg, p, size);
+            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
+            ea(ctx.machtype, ctx.a2, dest_mode, dest_reg, p, ctx.size);
             break;
 
         case 0x4:
-            if(TEST(instr, 8))
+            if(TEST(ctx.instr, 8))
             {
                 if(bit7_6 == 2)     /* chk */
                 {
-                    pf = "chk";
-                    size = ea_word;
-                    a2[0] = 'd';
+                    ctx.pf = "chk";
+                    ctx.size = ea_word;
+                    ctx.a2[0] = 'd';
                 }
                 else                /* lea */
                 {
-                    pf = "lea";
-                    size = ea_long;
-                    a2[0] = 'a';
+                    ctx.pf = "lea";
+                    ctx.size = ea_long;
+                    ctx.a2[0] = 'a';
                 }
-                ea(a1, src_mode, src_reg, p, size);
-                a2[1] = '0' + dest_reg;
+                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
+                ctx.a2[1] = '0' + dest_reg;
             }
             else
             {
-                if(src_mode && (bit7_6 & 2) && ((dest_reg & 5) == 4))       /* movem */
+                if(ctx.src_mode && (bit7_6 & 2) && ((dest_reg & 5) == 4))       /* movem */
                 {
-                    pf = "movem";
-                    size = TEST(instr, 6) ? ea_long : ea_word;
+                    ctx.pf = "movem";
+                    ctx.size = TEST(ctx.instr, 6) ? ea_long : ea_word;
                     if(dest_reg == 4)       /* movem regs -> <ea> */
                     {
-                        movem_regs(a1, HTOP_SHORT(*(*p)++), src_mode == 4);
-                        ea(a2, src_mode, src_reg, p, ea_long);
+                        movem_regs(ctx.a1, HTOP_SHORT(*(*ctx.p)++), ctx.src_mode == 4);
+                        ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                     }
                     else                    /* movem <ea> -> regs */
                     {
-                        movem_regs(a2, HTOP_SHORT(*(*p)++), src_mode == 4);
-                        ea(a1, src_mode, src_reg, p, ea_long);
+                        movem_regs(ctx.a2, HTOP_SHORT(*(*ctx.p)++), ctx.src_mode == 4);
+                        ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                     }
                     break;
                 }
@@ -258,225 +343,258 @@ int disassemble(unsigned short **p, char *str)
                     switch(dest_reg)
                     {
                         case 0:     /* move from sr */
-                            pf = "move";
-                            size = ea_word;
-                            a1[0] = 's';
-                            a1[1] = 'r';
-                            ea(a2, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "move";
+                            ctx.size = ea_word;
+                            ctx.a1[0] = 's';
+                            ctx.a1[1] = 'r';
+                            ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
 
                         case 1:     /* move from ccr */
-                            pf = "move";
-                            size = ea_word;
-                            a1[0] = 'c';
-                            a1[1] = 'c';
-                            a1[2] = 'r';
-                            ea(a2, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "move";
+                            ctx.size = ea_word;
+                            ctx.a1[0] = 'c';
+                            ctx.a1[1] = 'c';
+                            ctx.a1[2] = 'r';
+                            ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
 
                         case 2:     /* move to ccr */
-                            pf = "move";
-                            size = ea_word;
-                            ea(a1, src_mode, src_reg, p, ea_long);
-                            a2[0] = 'c';
-                            a2[1] = 'c';
-                            a2[2] = 'r';
+                            ctx.pf = "move";
+                            ctx.size = ea_word;
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
+                            ctx.a2[0] = 'c';
+                            ctx.a2[1] = 'c';
+                            ctx.a2[2] = 'r';
                             break;
 
                         case 3:     /* move to sr */
-                            pf = "move";
-                            size = ea_word;
-                            ea(a1, src_mode, src_reg, p, ea_long);
-                            a2[0] = 's';
-                            a2[1] = 'r';
+                            ctx.pf = "move";
+                            ctx.size = ea_word;
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
+                            ctx.a2[0] = 's';
+                            ctx.a2[1] = 'r';
                             break;
 
                         case 4:     /* ext.l */
-                            pf = "ext";
-                            size = ea_long;
-                            a1[0] = 'd';
-                            a1[1] = '0' + src_reg;
+                            ctx.pf = "ext";
+                            ctx.size = ea_long;
+                            ctx.a1[0] = 'd';
+                            ctx.a1[1] = '0' + ctx.src_reg;
                             break;
 
                         case 5:     /* tas / illegal */
-                            if((src_mode == 7) && (src_reg == 4))
-                                pf = "illegal";
+                            if((ctx.src_mode == 7) && (ctx.src_reg == 4))
+                                ctx.pf = "illegal";
                             else
                             {
-                                pf = "tas";
-                                size = ea_byte;
-                                ea(a1, src_mode, src_reg, p, ea_long);
+                                ctx.pf = "tas";
+                                ctx.size = ea_byte;
+                                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             }
                             break;
 
                         case 7:     /* jmp */
-                            pf = "jmp";
-                            ea(a1, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "jmp";
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
                     }
                 }
                 else
                 {
-                    size = disasm_sizemap[bit7_6];
+                    ctx.size = disasm_sizemap[bit7_6];
 
                     switch(dest_reg)
                     {
                         case 0:     /* negx */
-                            pf = "negx";
-                            ea(a1, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "negx";
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
 
                         case 1:     /* clr */
-                            pf = "clr";
-                            ea(a1, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "clr";
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
 
                         case 2:     /* neg */
-                            pf = "neg";
-                            ea(a1, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "neg";
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
 
                         case 3:     /* not */
-                            pf = "not";
-                            ea(a1, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "not";
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
 
                         case 4:     /* nbcd / swap / pea / ext.w */
-                            if(size == ea_byte)         /* nbcd */
+                            if(ctx.size == ea_byte)         /* nbcd */
                             {
-                                pf = "nbcd";
+                                ctx.pf = "nbcd";
                                 break;
                             }
 
-                            if(!src_mode)
+                            if(!ctx.src_mode)
                             {
-                                if(size == ea_word)     /* swap */
+                                if(ctx.size == ea_word)     /* swap */
                                 {
-                                    pf = "swap";
-                                    a1[0] = 'd';
-                                    a1[1] = '0' + src_reg;
+                                    ctx.pf = "swap";
+                                    ctx.a1[0] = 'd';
+                                    ctx.a1[1] = '0' + ctx.src_reg;
                                 }
-                                else                    /* ext.w */
+                                else                        /* ext.w */
                                 {
-                                    pf = "ext";
-                                    size = ea_word;
-                                    a1[0] = 'd';
-                                    a1[1] = '0' + src_reg;
+                                    ctx.pf = "ext";
+                                    ctx.size = ea_word;
+                                    ctx.a1[0] = 'd';
+                                    ctx.a1[1] = '0' + ctx.src_reg;
                                 }
                             }
                             else if(bit7_6 == 1)            /* pea */
                             {
-                                pf = "pea";
-                                size = ea_long;
-                                ea(a1, src_mode, src_reg, p, ea_long);
+                                ctx.pf = "pea";
+                                ctx.size = ea_long;
+                                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             }
                             break;
 
                         case 5:     /* tst */
-                            pf = "tst";
-                            ea(a1, src_mode, src_reg, p, ea_long);
+                            ctx.pf = "tst";
+                            ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             break;
 
                         case 7:                 /* trap / link / unlk / move -> usp /             */
                             if(bit7_6 == 1)     /* move <- usp /reset / nop / stop / rte / rtd /  */
                             {                   /* rts / trapv / rtr / movec / jsr                */
-                                switch(src_mode)
+                                switch(ctx.src_mode)
                                 {
                                     case 0:                     /* trap */
                                     case 1:
-                                        pf = "trap";
-                                        size = ea_unsized;
-                                        sprintf(a1, "#%d", instr & 0xf);
+                                        ctx.pf = "trap";
+                                        ctx.size = ea_unsized;
+                                        sprintf(ctx.a1, "#%d", ctx.instr & 0xf);
                                         break;
 
                                     case 2:                     /* link */
-                                        pf = "link";
-                                        size = ea_unsized;
-                                        a1[0] = 'a';
-                                        a1[1] = '0' + src_reg;
-                                        sprintf(a2, "#%d", (short) HTOP_SHORT(*(*p)++));
+                                        ctx.pf = "link";
+                                        ctx.size = ea_unsized;
+                                        ctx.a1[0] = 'a';
+                                        ctx.a1[1] = '0' + ctx.src_reg;
+                                        sprintf(ctx.a2, "#%d", (short) HTOP_SHORT(*(*ctx.p)++));
                                         break;
 
                                     case 3:                     /* unlk */
-                                        pf = "unlk";
-                                        size = ea_unsized;
-                                        a1[0] = 'a';
-                                        a1[1] = '0' + src_reg;
+                                        ctx.pf = "unlk";
+                                        ctx.size = ea_unsized;
+                                        ctx.a1[0] = 'a';
+                                        ctx.a1[1] = '0' + ctx.src_reg;
                                         break;
 
                                     case 4:                     /* move -> usp */
-                                        pf = "move";
-                                        size = ea_long;
-                                        a1[0] = 'a';
-                                        a1[1] = '0' + src_reg;
-                                        a2[0] = 'u';
-                                        a2[1] = 's';
-                                        a2[2] = 'p';
+                                        ctx.pf = "move";
+                                        ctx.size = ea_long;
+                                        ctx.a1[0] = 'a';
+                                        ctx.a1[1] = '0' + ctx.src_reg;
+                                        ctx.a2[0] = 'u';
+                                        ctx.a2[1] = 's';
+                                        ctx.a2[2] = 'p';
                                         break;
 
                                     case 5:                     /* move <- usp */
-                                        pf = "move";
-                                        size = ea_long;
-                                        a1[0] = 'u';
-                                        a1[1] = 's';
-                                        a1[2] = 'p';
-                                        a2[0] = 'a';
-                                        a2[1] = '0' + src_reg;
+                                        ctx.pf = "move";
+                                        ctx.size = ea_long;
+                                        ctx.a1[0] = 'u';
+                                        ctx.a1[1] = 's';
+                                        ctx.a1[2] = 'p';
+                                        ctx.a2[0] = 'a';
+                                        ctx.a2[1] = '0' + ctx.src_reg;
                                         break;
 
                                     case 6:                     /* reset / nop / stop / rte /   */
-                                        switch(src_reg)         /* rtd / rts / trapv / rtr      */
+                                        switch(ctx.src_reg)     /* rtd / rts / trapv / rtr      */
                                         {
                                             case 2:
-                                                sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+                                                sprintf(ctx.a1, "#%d",
+                                                        (short) HTOP_SHORT(*(*ctx.p)++));
                                                 /* fall through */
                                             default:
-                                                size = ea_unsized;
-                                                pf = misc1[src_reg];
+                                                ctx.size = ea_unsized;
+                                                ctx.pf = misc1[ctx.src_reg];
                                                 break;
                                         }
                                         break;
 
                                     case 7:                     /* movec */
-                                        pf = "movec";
-                                        size = ea_long;
-                                        if(TEST(instr, 0))          /* general reg -> control reg */
+                                        ctx.pf = "movec";
+                                        ctx.size = ea_long;
+                                        if(TEST(ctx.instr, 0))      /* general reg -> control reg */
                                         {
-                                            a1[0] = TEST(**p, 15) ? 'a' : 'd';
-                                            a1[1] = '0' + (((**p) >> 12) & 0x7);
-                                            switch(**p & 0xfff)
+                                            ctx.a1[0] = TEST(**ctx.p, 15) ? 'a' : 'd';
+                                            ctx.a1[1] = '0' + (((**ctx.p) >> 12) & 0x7);
+                                            switch(**ctx.p & 0xfff)
                                             {
                                                 case 0x000:
-                                                    a2[0] = 's'; a2[1] = 'f'; a2[2] = 'c';  break;
+                                                    ctx.a2[0] = 's';
+                                                    ctx.a2[1] = 'f';
+                                                    ctx.a2[2] = 'c';
+                                                    break;
+
                                                 case 0x001:
-                                                    a2[0] = 'd'; a2[1] = 'f'; a2[2] = 'c';  break;
+                                                    ctx.a2[0] = 'd';
+                                                    ctx.a2[1] = 'f';
+                                                    ctx.a2[2] = 'c';
+                                                    break;
+
                                                 case 0x800:
-                                                    a2[0] = 'u'; a2[1] = 's'; a2[2] = 'p';  break;
+                                                    ctx.a2[0] = 'u';
+                                                    ctx.a2[1] = 's';
+                                                    ctx.a2[2] = 'p'; 
+                                                    break;
+
                                                 case 0x801:
-                                                    a2[0] = 'v'; a2[1] = 'b'; a2[2] = 'r';  break;
+                                                    ctx.a2[0] = 'v';
+                                                    ctx.a2[1] = 'b';
+                                                    ctx.a2[2] = 'r'; 
+                                                    break;
+
                                                 default:            /* invalid register */
-                                                    pf = NULL;
+                                                    ctx.pf = NULL;
                                                     break;
                                             }
                                         }
                                         else                        /* control reg -> general reg */
                                         {
-                                            switch(**p & 0xfff)
+                                            switch(**ctx.p & 0xfff)
                                             {
                                                 case 0x000:
-                                                    a1[0] = 's'; a1[1] = 'f'; a1[2] = 'c';  break;
+                                                    ctx.a1[0] = 's';
+                                                    ctx.a1[1] = 'f';
+                                                    ctx.a1[2] = 'c';
+                                                    break;
+
                                                 case 0x001:
-                                                    a1[0] = 'd'; a1[1] = 'f'; a1[2] = 'c';  break;
+                                                    ctx.a1[0] = 'd';
+                                                    ctx.a1[1] = 'f';
+                                                    ctx.a1[2] = 'c';
+                                                    break;
+
                                                 case 0x800:
-                                                    a1[0] = 'u'; a1[1] = 's'; a1[2] = 'p';  break;
+                                                    ctx.a1[0] = 'u';
+                                                    ctx.a1[1] = 's';
+                                                    ctx.a1[2] = 'p';
+                                                    break;
+
                                                 case 0x801:
-                                                    a1[0] = 'v'; a1[1] = 'b'; a1[2] = 'r';  break;
+                                                    ctx.a1[0] = 'v';
+                                                    ctx.a1[1] = 'b';
+                                                    ctx.a1[2] = 'r';
+                                                    break;
+
                                                 default:            /* invalid register */
-                                                    pf = NULL;
+                                                    ctx.pf = NULL;
                                                     break;
                                             }
-                                            a2[0] = TEST(**p, 15) ? 'a' : 'd';
-                                            a2[1] = '0' + (((**p) >> 12) & 0x7);
+                                            ctx.a2[0] = TEST(**ctx.p, 15) ? 'a' : 'd';
+                                            ctx.a2[1] = '0' + (((**ctx.p) >> 12) & 0x7);
                                         }
                                         (*p)++;
                                         break;
@@ -484,9 +602,9 @@ int disassemble(unsigned short **p, char *str)
                             }
                             else if(bit7_6 == 2)            /* jsr */
                             {
-                                pf = "jsr";
-                                size = ea_unsized;
-                                ea(a1, src_mode, src_reg, p, ea_long);
+                                ctx.pf = "jsr";
+                                ctx.size = ea_unsized;
+                                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                             }
                             break;
                     }
@@ -497,144 +615,144 @@ int disassemble(unsigned short **p, char *str)
         case 0x5:
             if(bit7_6 == 3)         /* scc / dbcc */
             {
-                if(src_mode == 1)       /* dbcc */
+                if(ctx.src_mode == 1)       /* dbcc */
                 {
-                    pf = dbranches[(instr >> 8) & 0xf];
+                    ctx.pf = dbranches[(ctx.instr >> 8) & 0xf];
 
-                    size = ea_word;
-                    a1[0] = 'd';
-                    a1[1] = '0' + src_reg;
-                    sprintf(a2, "%d", (short) HTOP_SHORT(*(*p)++));
+                    ctx.size = ea_word;
+                    ctx.a1[0] = 'd';
+                    ctx.a1[1] = '0' + ctx.src_reg;
+                    sprintf(ctx.a2, "%d", (short) HTOP_SHORT(*(*ctx.p)++));
                 }
-                else                    /* scc */
+                else                        /* scc */
                 {
-                    pf = sets[(instr >> 8) & 0xf];
+                    ctx.pf = sets[(ctx.instr >> 8) & 0xf];
 
-                    size = ea_byte;
-                    ea(a1, src_mode, src_reg, p, ea_long);
+                    ctx.size = ea_byte;
+                    ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
                 }
             }
             else                    /* addq / subq */
             {
-                pf = TEST(instr, 8) ? "subq" : "addq";
-                size = disasm_sizemap[bit7_6];
+                ctx.pf = TEST(ctx.instr, 8) ? "subq" : "addq";
+                ctx.size = disasm_sizemap[bit7_6];
 
-                a1[0] = '#';
-                a1[1] = (dest_reg == 0) ? '8' : '0' + dest_reg;
-                ea(a2, src_mode, src_reg, p, ea_long);
+                ctx.a1[0] = '#';
+                ctx.a1[1] = (dest_reg == 0) ? '8' : '0' + dest_reg;
+                ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
             }
             break;
 
         case 0x6:                   /* bcc / bra / bsr */
-            pf = branches[(instr >> 8) & 0xf];
+            ctx.pf = branches[(ctx.instr >> 8) & 0xf];
 
-            if(!(instr & 0xff))
+            if(!(ctx.instr & 0xff))
             {
-                size = ea_word;
-                sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+                ctx.size = ea_word;
+                sprintf(ctx.a1, "#%d", (short) HTOP_SHORT(*(*ctx.p)++));
             }
             else
             {
-                size = ea_byte;
-                sprintf(a1, "#%d", (char) (instr & 0xff));
+                ctx.size = ea_byte;
+                sprintf(ctx.a1, "#%d", (char) (ctx.instr & 0xff));
             }
             break;
 
         case 0x7:
-            if(!TEST(instr, 8))
+            if(!TEST(ctx.instr, 8))
             {
-                pf = "moveq";
-                size = ea_long;
+                ctx.pf = "moveq";
+                ctx.size = ea_long;
 
-                sprintf(a1, "#%d", instr & 0xff);
+                sprintf(ctx.a1, "#%d", ctx.instr & 0xff);
 
-                a2[0] = 'd';
-                a2[1] = '0' + dest_reg;
+                ctx.a2[0] = 'd';
+                ctx.a2[1] = '0' + dest_reg;
             }
             break;
 
         case 0xc:                   /* and / mulu / abcd / exg / muls */
             if(dest_mode == 5)
             {
-                if(src_mode == 0)           /* exg dx, dy */
+                if(ctx.src_mode == 0)           /* exg dx, dy */
                 {
-                    pf = "exg";
-                    size = ea_long;
-                    a1[0] = a2[0] = 'd';
-                    a1[1] = '0' + dest_reg;
-                    a2[1] = '0' + src_reg;
+                    ctx.pf = "exg";
+                    ctx.size = ea_long;
+                    ctx.a1[0] = ctx.a2[0] = 'd';
+                    ctx.a1[1] = '0' + dest_reg;
+                    ctx.a2[1] = '0' + ctx.src_reg;
                     break;
                 }
-                else if(src_mode == 1)      /* exg ax, ay */
+                else if(ctx.src_mode == 1)      /* exg ax, ay */
                 {
-                    pf = "exg";
-                    size = ea_long;
-                    a1[0] = a2[0] = 'a';
-                    a1[1] = '0' + dest_reg;
-                    a2[1] = '0' + src_reg;
+                    ctx.pf = "exg";
+                    ctx.size = ea_long;
+                    ctx.a1[0] = ctx.a2[0] = 'a';
+                    ctx.a1[1] = '0' + dest_reg;
+                    ctx.a2[1] = '0' + ctx.src_reg;
                     break;
                 }
             }
-            else if((dest_mode == 6) && (src_mode == 1))
+            else if((dest_mode == 6) && (ctx.src_mode == 1))
             {
-                pf = "exg";
-                size = ea_long;
-                a1[0] = 'd';
-                a1[1] = '0' + dest_reg;
-                a2[0] = 'a';
-                a2[1] = '0' + src_reg;
+                ctx.pf = "exg";
+                ctx.size = ea_long;
+                ctx.a1[0] = 'd';
+                ctx.a1[1] = '0' + dest_reg;
+                ctx.a2[0] = 'a';
+                ctx.a2[1] = '0' + ctx.src_reg;
             }
 
         case 0x8:                   /* or / divu / sbcd / divs */
             if((dest_mode == 3) || (dest_mode == 7))
             {
-                pf = ((instr >> 12) == 0x8) ? ((dest_mode == 3) ? "divu" : "divs")
-                                            : ((dest_mode == 3) ? "mulu" : "muls");
-                size = ea_word;
+                ctx.pf = ((ctx.instr >> 12) == 0x8) ? ((dest_mode == 3) ? "divu" : "divs")
+                                                    : ((dest_mode == 3) ? "mulu" : "muls");
+                ctx.size = ea_word;
 
-                ea(a1, src_mode, src_reg, p, ea_word);
-                a2[0] = 'd';
-                a2[1] = '0' + dest_reg;
+                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_word);
+                ctx.a2[0] = 'd';
+                ctx.a2[1] = '0' + dest_reg;
             }
             else
             {
-                if((dest_mode == 4) && !(src_mode & 6)) /* abcd / sbcd */
+                if((dest_mode == 4) && !(ctx.src_mode & 6)) /* abcd / sbcd */
                 {
-                    pf = ((instr >> 12) == 0x8) ? "sbcd" : "abcd";
-                    size = ea_byte;
-                    if(TEST(instr, 3))
+                    ctx.pf = ((ctx.instr >> 12) == 0x8) ? "sbcd" : "abcd";
+                    ctx.size = ea_byte;
+                    if(TEST(ctx.instr, 3))
                     {
-                        a1[0] = a2[0] = '-';
-                        a1[1] = a2[1] = '(';
-                        a1[2] = a2[2] = 'a';
-                        a1[4] = a2[4] = ')';
+                        ctx.a1[0] = ctx.a2[0] = '-';
+                        ctx.a1[1] = ctx.a2[1] = '(';
+                        ctx.a1[2] = ctx.a2[2] = 'a';
+                        ctx.a1[4] = ctx.a2[4] = ')';
 
-                        a1[3] = '0' + src_reg;
-                        a2[3] = '0' + dest_reg;
+                        ctx.a1[3] = '0' + ctx.src_reg;
+                        ctx.a2[3] = '0' + dest_reg;
                     }
                     else
                     {
-                        a1[0] = a2[0] = 'd';
-                        a1[1] = '0' + src_reg;
-                        a2[1] = '0' + dest_reg;
+                        ctx.a1[0] = ctx.a2[0] = 'd';
+                        ctx.a1[1] = '0' + ctx.src_reg;
+                        ctx.a2[1] = '0' + dest_reg;
                     }
                 }
                 else                                    /* and / or */
                 {
-                    pf = ((instr >> 12) == 0x8) ? "or" : "and";
-                    size = disasm_sizemap[bit7_6];
+                    ctx.pf = ((ctx.instr >> 12) == 0x8) ? "or" : "and";
+                    ctx.size = disasm_sizemap[bit7_6];
 
-                    if(TEST(instr, 8))      /* <ea>, Dn */
+                    if(TEST(ctx.instr, 8))  /* <ea>, Dn */
                     {
-                        ea(a1, src_mode, src_reg, p, size);
-                        a2[0] = 'd';
-                        a2[1] = '0' + dest_reg;
+                        ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
+                        ctx.a2[0] = 'd';
+                        ctx.a2[1] = '0' + dest_reg;
                     }
                     else                    /* Dn, <ea> */
                     {
-                        a1[0] = 'd';
-                        a1[1] = '0' + dest_reg;
-                        ea(a2, src_mode, src_reg, p, size);
+                        ctx.a1[0] = 'd';
+                        ctx.a1[1] = '0' + dest_reg;
+                        ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
                     }
                 }
             }
@@ -642,120 +760,120 @@ int disassemble(unsigned short **p, char *str)
 
         case 0x9:       /* sub / suba / subx */
         case 0xd:       /* add / adda / addx */
-            if((instr & 0x00c0) == 0x00c0)  /* adda / suba */
+            if((ctx.instr & 0x00c0) == 0x00c0)  /* adda / suba */
             {
-                pf = ((instr >> 12) == 0x9) ? "suba" : "adda";
-                size = TEST(instr, 8) ? ea_long : ea_word;
-                ea(a1, src_mode, src_reg, p, size);
-                a2[0] = 'a';
-                a2[1] = '0' + dest_reg;
+                ctx.pf = ((ctx.instr >> 12) == 0x9) ? "suba" : "adda";
+                ctx.size = TEST(ctx.instr, 8) ? ea_long : ea_word;
+                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
+                ctx.a2[0] = 'a';
+                ctx.a2[1] = '0' + dest_reg;
             }
             else
             {
-                size = disasm_sizemap[bit7_6];
+                ctx.size = disasm_sizemap[bit7_6];
 
-                if((instr & 0x0130) == 0x0100)  /* addx / subx */
+                if((ctx.instr & 0x0130) == 0x0100)  /* addx / subx */
                 {
-                    pf = ((instr >> 12) == 0x9) ? "subx" : "addx";
-                    if(src_mode & 0x1)
+                    ctx.pf = ((ctx.instr >> 12) == 0x9) ? "subx" : "addx";
+                    if(ctx.src_mode & 0x1)
                     {
-                        a1[0] = a2[0] = '-';
-                        a1[1] = a2[1] = '(';
-                        a1[2] = a2[2] = 'a';
-                        a1[4] = a2[4] = ')';
+                        ctx.a1[0] = ctx.a2[0] = '-';
+                        ctx.a1[1] = ctx.a2[1] = '(';
+                        ctx.a1[2] = ctx.a2[2] = 'a';
+                        ctx.a1[4] = ctx.a2[4] = ')';
 
-                        a1[3] = '0' + src_reg;
-                        a2[3] = '0' + dest_reg;
+                        ctx.a1[3] = '0' + ctx.src_reg;
+                        ctx.a2[3] = '0' + dest_reg;
                     }
                     else
                     {
-                        a1[0] = a2[0] = 'd';
+                        ctx.a1[0] = ctx.a2[0] = 'd';
 
-                        a1[1] = '0' + src_reg;
-                        a2[1] = '0' + dest_reg;
+                        ctx.a1[1] = '0' + ctx.src_reg;
+                        ctx.a2[1] = '0' + dest_reg;
                     }
                 }
                 else                            /* add / sub */
                 {
-                    pf = ((instr >> 12) == 0x9) ? "sub" : "add";
-                    if(TEST(instr, 8))
+                    ctx.pf = ((ctx.instr >> 12) == 0x9) ? "sub" : "add";
+                    if(TEST(ctx.instr, 8))
                     {
-                        a1[0] = 'd';
-                        a1[1] = '0' + dest_reg;
-                        ea(a2, src_mode, src_reg, p, size);
+                        ctx.a1[0] = 'd';
+                        ctx.a1[1] = '0' + dest_reg;
+                        ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
                     }
                     else
                     {
-                        ea(a1, src_mode, src_reg, p, size);
-                        a2[0] = 'd';
-                        a2[1] = '0' + dest_reg;
+                        ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
+                        ctx.a2[0] = 'd';
+                        ctx.a2[1] = '0' + dest_reg;
                     }
                 }
             }
             break;
 
         case 0xb:       /* cmp / cmpa / cmpm / eor */
-            if((instr & 0x00c0) == 0x00c0)      /* cmpa */
+            if((ctx.instr & 0x00c0) == 0x00c0)  /* cmpa */
             {
-                pf = "cmpa";
-                size = TEST(instr, 8) ? ea_long : ea_word;
-                ea(a1, src_mode, src_reg, p, size);
-                a2[0] = 'a';
-                a2[1] = '0' + dest_reg;
+                ctx.pf = "cmpa";
+                ctx.size = TEST(ctx.instr, 8) ? ea_long : ea_word;
+                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
+                ctx.a2[0] = 'a';
+                ctx.a2[1] = '0' + dest_reg;
             }
             else
             {
-                size = disasm_sizemap[bit7_6];
+                ctx.size = disasm_sizemap[bit7_6];
 
-                if(TEST(instr, 8))
+                if(TEST(ctx.instr, 8))
                 {
-                    if(src_mode == 1)           /* cmpm */
+                    if(ctx.src_mode == 1)       /* cmpm */
                     {
-                        pf = "cmpm";
-                        a1[0] = a2[0] = '(';
-                        a1[1] = a2[1] = 'a';
-                        a1[3] = a2[3] = ')';
-                        a1[4] = a2[4] = '+';
+                        ctx.pf = "cmpm";
+                        ctx.a1[0] = ctx.a2[0] = '(';
+                        ctx.a1[1] = ctx.a2[1] = 'a';
+                        ctx.a1[3] = ctx.a2[3] = ')';
+                        ctx.a1[4] = ctx.a2[4] = '+';
 
-                        a1[2] = '0' + src_reg;
-                        a2[2] = '0' + dest_reg;
+                        ctx.a1[2] = '0' + ctx.src_reg;
+                        ctx.a2[2] = '0' + dest_reg;
                     }
                     else                        /* eor */
                     {
-                        pf = "eor";
-                        a1[0] = 'd';
-                        a1[1] = '0' + dest_reg;
-                        ea(a2, src_mode, src_reg, p, size);
+                        ctx.pf = "eor";
+                        ctx.a1[0] = 'd';
+                        ctx.a1[1] = '0' + dest_reg;
+                        ea(ctx.machtype, ctx.a2, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
                     }
                 }
                 else                            /* cmp */
                 {
-                    pf = "cmp";
-                    ea(a1, src_mode, src_reg, p, size);
-                    a2[0] = 'd';
-                    a2[1] = '0' + dest_reg;
+                    ctx.pf = "cmp";
+                    ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ctx.size);
+                    ctx.a2[0] = 'd';
+                    ctx.a2[1] = '0' + dest_reg;
                 }
             }
             break;
 
         case 0xe:       /* shift/rotate register/memory */
-            pf = (TEST(instr, 8)) ? lshifts[src_mode & 3] : rshifts[src_mode & 3];
+            ctx.pf = (TEST(ctx.instr, 8)) ? lshifts[ctx.src_mode & 3] : rshifts[ctx.src_mode & 3];
 
             if(bit7_6 == 3)     /* memory */
             {
-                size = ea_word;
-                ea(a1, src_mode, src_reg, p, ea_long);
+                ctx.size = ea_word;
+                ea(ctx.machtype, ctx.a1, ctx.src_mode, ctx.src_reg, ctx.p, ea_long);
             }
             else                /* register */
             {
-                size = disasm_sizemap[bit7_6];
+                ctx.size = disasm_sizemap[bit7_6];
 
                 /* immediate shift or register shift? */
-                a1[0] = (src_mode & 4) ? 'd' : '#';
-                a1[1] = '0' + dest_reg;
+                ctx.a1[0] = (ctx.src_mode & 4) ? 'd' : '#';
+                ctx.a1[1] = '0' + dest_reg;
 
-                a2[0] = 'd';
-                a2[1] = '0' + src_reg;
+                ctx.a2[0] = 'd';
+                ctx.a2[1] = '0' + ctx.src_reg;
             }
             break;
 
@@ -763,34 +881,36 @@ int disassemble(unsigned short **p, char *str)
             switch(dest_reg)        /* dest_reg contains CpID for F-line instructions */
             {
                 case 0:             /* CpIP 0 = MMU */
-                    mmu_instr(instr, p, &pf, src_mode, src_reg, a1, a2, &size);
+                    mmu_instr(&ctx);
                     break;
 
                 case 1:             /* CpID 1 = FPU */
-                    fp_instr(instr, p, &pf, src_mode, src_reg, a1, a2);
+                    fp_instr(&ctx);
                     break;
             }
             break;
     }
 
 
+    *p = *(ctx.p);
+
     /* formulate instruction string */
-    if(pf)
+    if(ctx.pf)
     {
-        if(size)
-            sprintf(str, "%s.%c", pf, size);
+        if(ctx.size)
+            sprintf(str, "%s.%c", ctx.pf, ctx.size);
         else
-            strcat(str, pf);
+            strcat(str, ctx.pf);
 
 
-        if(*a1)
+        if(*ctx.a1)
         {
             strcat(str, " ");
-            strcat(str, a1);
-            if(*a2)
+            strcat(str, ctx.a1);
+            if(*ctx.a2)
             {
                 strcat(str, ", ");
-                strcat(str, a2);
+                strcat(str, ctx.a2);
             }
         }
         return 0;
@@ -805,23 +925,26 @@ int disassemble(unsigned short **p, char *str)
     mmu_instr() - decode an MMU instruction
     FIXME - this function needs to be completed.
 */
-static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
-                      const unsigned char src_reg, char *a1, char *a2, ea_size_t *size)
+static void mmu_instr(dis_context_t * const ctx)
 {
-    ku8 bit11_8 = (instr >> 8) & 0xf;
-    ku8 bit7_6 = (instr >> 6) & 0x3;
-    UNUSED(a2);
+    ku8 bit11_8 = (ctx->instr >> 8) & 0xf;
+    ku8 bit7_6 = (ctx->instr >> 6) & 0x3;
 
     if(bit11_8 == 0)
     {
         if(bit7_6 == 0)
         {
-            ku16 word2 = *(*p)++;
+            ku16 word2 = *(*ctx->p)++;
             ku8 op = word2 >> 13;
 
             if(op == 0)
             {
-                /* PMOVE TTx            1111 0000 00mm mrrr    000p ppRF 0000 0000      */
+                ku8 p_reg = word2 >> 10;
+
+                if((p_reg == 2) || (p_reg == 3))
+                {
+                    /* PMOVE TTx            1111 0000 00mm mrrr    000p ppRF 0000 0000      */
+                }
                 /* PMOVE ACx            1111 0000 00mm mrrr    000p ppR0 0000 0000      */
             }
             else if(op == 1)
@@ -843,88 +966,88 @@ static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const uns
             }
             else if(op == 4)
             {
-                /* PTEST ('030)         1111 0000 00mm mmrr    100L LLRA rrrr ffff      */
                 /* PTEST ('EC030)       1111 0000 00mm mrrr    1000 00R0 rrrf ffff      */
+                /* PTEST ('030)         1111 0000 00mm mmrr    100L LLRA rrrr ffff      */
                 /* PTEST (68851)        1111 0000 00mm mrrr    100L LLRA AAff ffff      */
             }
             else if(word2 == 0xa000)            /* effectively: if(op == 5) + checking */
             {
-                if(src_mode < 2)
+                if(ctx->src_mode < 2)
                     return;         /* Invalid instruction */
 
-                *pf = "pflushr";
-                ea(a1, src_mode, src_reg, p, ea_unsized);
+                ctx->pf = "pflushr";
+                ea(ctx->machtype, ctx->a1, ctx->src_mode, ctx->src_reg, ctx->p, ea_unsized);
             }
         }
         else if(bit7_6 == 1)
         {
-            ku16 word2 = *(*p)++;
+            ku16 word2 = *(*ctx->p)++;
 
             if(word2 & 0xfff0)
                 return;             /* Validate second word of the instruction */
 
-            if(src_mode == 1)                                               /* pdbcc */
+            if(ctx->src_mode == 1)                                          /* pdbcc */
             {
-                *size = ea_word;
+                ctx->size = ea_word;
 
-                *a1++ = 'd';
-                *a1++ = '0' + src_reg;
+                ctx->a1[0] = 'd';
+                ctx->a1[1] = '0' + ctx->src_reg;
                 
-                sprintf(a2, "#%d", (short) HTOP_SHORT(*(*p)++));
+                sprintf(ctx->a2, "#%d", (short) HTOP_SHORT(*(*ctx->p)++));
                 
-                *pf = mmu_dbranches[word2];
+                ctx->pf = mmu_dbranches[word2];
             }
             else
             {
-                if((src_mode == 7) && (src_reg > 1))                        /* ptrapcc */
+                if((ctx->src_mode == 7) && (ctx->src_reg > 1))              /* ptrapcc */
                 {
-                    switch(src_reg)
+                    switch(ctx->src_reg)
                     {
                         case 2:             /* one-word operand */
-                            *size = ea_word;
-                            sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+                            ctx->size = ea_word;
+                            sprintf(ctx->a1, "#%d", (short) HTOP_SHORT(*(*ctx->p)++));
                             break;
 
                         case 3:             /* two-word operand */
-                            *size = ea_long;
-                            sprintf(a1, "#%d", HTOP_INT(*(*p)++));
-                            (*p)++;
+                            ctx->size = ea_long;
+                            sprintf(ctx->a1, "#%d", HTOP_INT(*(*ctx->p)++));
+                            (*ctx->p)++;
                             break;
 
                         case 4:             /* no operand */
-                            *size = ea_unsized;
+                            ctx->size = ea_unsized;
                             break;
 
                         default:
                             return;         /* Invalid instruction */
                     }
 
-                    *pf = mmu_traps[word2];
+                    ctx->pf = mmu_traps[word2];
                     return;
                 }
                 else                                                        /* pscc */
-                    *pf = mmu_sets[word2];
+                    ctx->pf = mmu_sets[word2];
             }
         }
         else                                                                /* pbcc */
         {
-            if(instr & 0x30)        /* Finish validating the instruction */
+            if(ctx->instr & 0x30)   /* Finish validating the instruction */
                 return;
 
-            *pf = mmu_branches[instr & 0xf];
+            ctx->pf = mmu_branches[ctx->instr & 0xf];
 
-            if(instr & 0x40)
+            if(ctx->instr & 0x40)
             {
                 /* 32-bit displacement */
-                *size = ea_long;
-                sprintf(a1, "#%d", HTOP_INT(*(*p)++));
-                (*p)++;
+                ctx->size = ea_long;
+                sprintf(ctx->a1, "#%d", HTOP_INT(*(*ctx->p)++));
+                (*ctx->p)++;
             }
             else
             {
                 /* 16-bit displacement */
-                *size = ea_word;
-                sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+                ctx->size = ea_word;
+                sprintf(ctx->a1, "#%d", (short) HTOP_SHORT(*(*ctx->p)++));
             }
         }
     }
@@ -933,19 +1056,21 @@ static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const uns
         switch(bit7_6)
         {
             case 0:                                                         /* psave */
-                if((src_mode < 2) || (src_mode == 3) || ((src_mode == 7) && (src_reg > 1)))
+                if((ctx->src_mode < 2) || (ctx->src_mode == 3)
+                   || ((ctx->src_mode == 7) && (ctx->src_reg > 1)))
                     return;         /* Invalid EA */
 
-                *pf = "psave";
-                ea(a1, src_mode, src_reg, p, ea_unsized);
+                ctx->pf = "psave";
+                ea(ctx->machtype, ctx->a1, ctx->src_mode, ctx->src_reg, ctx->p, ea_unsized);
                 break;
 
             case 1:                                                         /* prestore */
-                if((src_mode < 2) || (src_mode == 4) || ((src_mode == 7) && (src_reg >= 4)))
+                if((ctx->src_mode < 2) || (ctx->src_mode == 4)
+                   || ((ctx->src_mode == 7) && (ctx->src_reg >= 4)))
                     return;         /* Invalid EA */
 
-                *pf = "prestore";
-                ea(a1, src_mode, src_reg, p, ea_unsized);
+                ctx->pf = "prestore";
+                ea(ctx->machtype, ctx->a1, ctx->src_mode, ctx->src_reg, ctx->p, ea_unsized);
                 break;
 
             default:
@@ -956,46 +1081,46 @@ static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const uns
     {
         if(bit7_6 == 0)
         {
-            ku8 bit4_3 = (instr >> 3) & 0x3;
+            ku8 bit4_3 = (ctx->instr >> 3) & 0x3;
 
-            if(instr & 0x20)
+            if(ctx->instr & 0x20)
                 return;                 /* Finish validating the instruction */
 
             switch(bit4_3)
             {
                 case 0:                                                     /* pflushn */
-                    *pf = "pflushn";
+                    ctx->pf = "pflushn";
                     break;
 
                 case 1:                                                     /* pflush */
-                    *pf = "pflush";
+                    ctx->pf = "pflush";
                     break;
 
                 case 2:                                                     /* pflushan */
-                    *pf = "pflushan";
+                    ctx->pf = "pflushan";
                     return;
 
                 case 3:                                                     /* pflusha */
-                    *pf = "pflusha";
+                    ctx->pf = "pflusha";
                     return;
             }
 
-            *a1++ = '(';
-            *a1++ = 'a';
-            *a1++ = '0' + src_reg;
-            *a1 = ')';
+            ctx->a1[0] = '(';
+            ctx->a1[1] = 'a';
+            ctx->a1[2] = '0' + ctx->src_reg;
+            ctx->a1[3] = ')';
         }
         else if(bit7_6 == 1)                                                /* ptestr / ptestw */
         {
-            if((instr & 0x18) != 0x08)  /* Finish validating the instruction */
+            if((ctx->instr & 0x18) != 0x08)     /* Finish validating the instruction */
                 return;
 
-            *pf = (instr & 0x20) ? "ptestr" : "ptestw";
+            ctx->pf = (ctx->instr & 0x20) ? "ptestr" : "ptestw";
 
-            *a1++ = '(';
-            *a1++ = 'a';
-            *a1++ = '0' + src_reg;
-            *a1 = ')';
+            ctx->a1[0] = '(';
+            ctx->a1[1] = 'a';
+            ctx->a1[2] = '0' + ctx->src_reg;
+            ctx->a1[3] = ')';
         }
     }
 }
@@ -1005,11 +1130,10 @@ static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const uns
     fp_instr() - decode an FPU instruction
     FIXME - this function needs to be completed.
 */
-static void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
-                     const unsigned char src_reg, char *a1, char *a2)
+static void fp_instr(dis_context_t * const ctx)
 {
-    const unsigned short ext = HTOP_SHORT(*(*p)++);
-    const unsigned char type = (instr >> 6) & 0x7,     /* Instruction type */
+    const unsigned short ext = HTOP_SHORT(*(*ctx->p)++);
+    const unsigned char type = (ctx->instr >> 6) & 0x7,    /* Instruction type */
             src_spec = (ext >> 10) & 0x7,
             dest_reg = (ext >> 7) & 0x7,
             opmode = ext & 0x7f,
@@ -1017,19 +1141,17 @@ static void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsi
             rm = (ext >> 14) & 1,
             dir = (ext >> 13) & 1;
 
-    UNUSED(src_spec);
-
     if(type == 0)
     {
         if(!ext_bit15 && !dir)
         {
-            if(!src_mode && !src_reg && rm && (src_spec == 7))
+            if(!ctx->src_mode && !ctx->src_reg && rm && (src_spec == 7))
             {
-                *pf = "fmove";
-                sprintf(a1, "cr[%02x]", opmode);
-                *a2++ = 'f';
-                *a2++ = 'p';
-                *a2++ = '0' + dest_reg;
+                ctx->pf = "fmove";
+                sprintf(ctx->a1, "cr[%02x]", opmode);
+                ctx->a2[0] = 'f';
+                ctx->a2[1] = 'p';
+                ctx->a2[2] = '0' + dest_reg;
             }
             else
             {
@@ -1038,35 +1160,35 @@ static void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsi
                 frestore, fdbcc, ftrapcc */
                 switch(opmode)
                 {
-                    case 0x01:      *pf = "fint";       break;
-                    case 0x02:      *pf = "fsinh";      break;
-                    case 0x03:      *pf = "fintrz";     break;
-                    case 0x06:      *pf = "flognp1";    break;
-                    case 0x08:      *pf = "fetoxm1";    break;
-                    case 0x09:      *pf = "ftanh";      break;
-                    case 0x0a:      *pf = "fatan";      break;
-                    case 0x0c:      *pf = "fasin";      break;
-                    case 0x0d:      *pf = "fatanh";     break;
-                    case 0x0e:      *pf = "fsin";       break;
-                    case 0x0f:      *pf = "ftan";       break;
-                    case 0x10:      *pf = "fetox";      break;
-                    case 0x11:      *pf = "ftwotox";    break;
-                    case 0x12:      *pf = "ftentox";    break;
-                    case 0x14:      *pf = "flogn";      break;
-                    case 0x15:      *pf = "flog10";     break;
-                    case 0x16:      *pf = "flog2";      break;
-                    case 0x19:      *pf = "fcosh";      break;
-                    case 0x1c:      *pf = "facos";      break;
-                    case 0x1d:      *pf = "fcos";       break;
-                    case 0x1e:      *pf = "fgetexp";    break;
-                    case 0x1f:      *pf = "fgetman";    break;
-                    case 0x21:      *pf = "fmod";       break;
-                    case 0x24:      *pf = "fsgldiv";    break;
-                    case 0x25:      *pf = "frem";       break;
-                    case 0x26:      *pf = "fscale";     break;
-                    case 0x27:      *pf = "fsglmul";    break;
-                    case 0x38:      *pf = "fcmp";       break;
-                    case 0x3a:      *pf = "ftst";       break;
+                    case 0x01:      ctx->pf = "fint";       break;
+                    case 0x02:      ctx->pf = "fsinh";      break;
+                    case 0x03:      ctx->pf = "fintrz";     break;
+                    case 0x06:      ctx->pf = "flognp1";    break;
+                    case 0x08:      ctx->pf = "fetoxm1";    break;
+                    case 0x09:      ctx->pf = "ftanh";      break;
+                    case 0x0a:      ctx->pf = "fatan";      break;
+                    case 0x0c:      ctx->pf = "fasin";      break;
+                    case 0x0d:      ctx->pf = "fatanh";     break;
+                    case 0x0e:      ctx->pf = "fsin";       break;
+                    case 0x0f:      ctx->pf = "ftan";       break;
+                    case 0x10:      ctx->pf = "fetox";      break;
+                    case 0x11:      ctx->pf = "ftwotox";    break;
+                    case 0x12:      ctx->pf = "ftentox";    break;
+                    case 0x14:      ctx->pf = "flogn";      break;
+                    case 0x15:      ctx->pf = "flog10";     break;
+                    case 0x16:      ctx->pf = "flog2";      break;
+                    case 0x19:      ctx->pf = "fcosh";      break;
+                    case 0x1c:      ctx->pf = "facos";      break;
+                    case 0x1d:      ctx->pf = "fcos";       break;
+                    case 0x1e:      ctx->pf = "fgetexp";    break;
+                    case 0x1f:      ctx->pf = "fgetman";    break;
+                    case 0x21:      ctx->pf = "fmod";       break;
+                    case 0x24:      ctx->pf = "fsgldiv";    break;
+                    case 0x25:      ctx->pf = "frem";       break;
+                    case 0x26:      ctx->pf = "fscale";     break;
+                    case 0x27:      ctx->pf = "fsglmul";    break;
+                    case 0x38:      ctx->pf = "fcmp";       break;
+                    case 0x3a:      ctx->pf = "ftst";       break;
                 }
             }
         }
@@ -1077,9 +1199,11 @@ static void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsi
 /*
     ea() - decode an effective address into a string
 */
-static char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p,
-                const ea_size_t sz)
+static char *ea(const dis_machtype_t machtype, char *str, unsigned char mode, unsigned char reg,
+                unsigned short **p, const ea_size_t sz)
 {
+    UNUSED(machtype);
+
     mode &= 0x7;
     reg &= 0x7;
 
@@ -1242,3 +1366,4 @@ static void movem_regs(char *str, unsigned short regs, char mode)
         else regs >>= 8;
     }
 }
+

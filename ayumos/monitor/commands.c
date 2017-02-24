@@ -202,7 +202,7 @@ MONITOR_CMD_HANDLER(disassemble)
     {
         u16 *addr_ = addr;
 
-        disassemble(&addr_, line);
+        disassemble(mt68010, &addr_, line);
         instr_printed = 0;
         while(addr < addr_)
         {
