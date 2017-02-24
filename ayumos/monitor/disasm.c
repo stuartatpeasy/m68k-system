@@ -76,8 +76,14 @@ static ks8 * const mmu_dbranches[] =
 
 static ks8 * const mmu_sets[] =
 {
-    "sbs", "sbc", "sls", "slc", "sss", "ssc", "sas", "sac",
-    "sws", "swc", "sis", "sic", "sgs", "sgc", "scs", "scc"
+    "psbs", "psbc", "psls", "pslc", "psss", "pssc", "psas", "psac",
+    "psws", "pswc", "psis", "psic", "psgs", "psgc", "pscs", "pscc"
+};
+
+static ks8 * const mmu_traps[] =
+{
+    "ptrapbs", "ptrapbc", "ptrapls", "ptraplc", "ptrapss", "ptrapsc", "ptrapas", "ptrapac",
+    "ptrapws", "ptrapwc", "ptrapis", "ptrapic", "ptrapgs", "ptrapgc", "ptrapcs", "ptrapcc"
 };
 
 static const ea_size_t disasm_sizemap[] =
@@ -800,7 +806,7 @@ int disassemble(unsigned short **p, char *str)
     FIXME - this function needs to be completed.
 */
 static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
-               const unsigned char src_reg, char *a1, char *a2, ea_size_t *size)
+                      const unsigned char src_reg, char *a1, char *a2, ea_size_t *size)
 {
     ku8 bit11_8 = (instr >> 8) & 0xf;
     ku8 bit7_6 = (instr >> 6) & 0x3;
@@ -810,29 +816,95 @@ static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const uns
     {
         if(bit7_6 == 0)
         {
-            /* PFLUSH ('030)        1111 0000 00mm mrrr    001m mm00 MMMf ffff                          */
-            /* PFLUSH[A|S] (68851)  1111 0000 00mm mrrr    001M MM0m mmmf ffff                          */
-            /* PFLUSHR (68851)      1111 0000 00mm mrrr    1010 0000 0000 0000                          */
-            /* PLOAD ('030/68851)   1111 0000 00mm mrrr    0010 00R0 000f ffff                          */
+            ku16 word2 = *(*p)++;
+            ku8 op = word2 >> 13;
 
-            /* PMOVE MMUSR          1111 0000 00mm mrrr    0110 00R0 0000 0000                          */
-            /* PMOVE SRP/CRP/TC/... 1111 0000 00mm mrrr    010p ppRF 0000 0000                          */
-            /* PMOVE TTx            1111 0000 00mm mrrr    000p ppRF 0000 0000                          */
-            /* PMOVE ACx            1111 0000 00mm mrrr    000p ppR0 0000 0000                          */
-            /* PMOVE PSR/PCSR       1111 0000 00mm mrrr    011p ppR0 0000 0000                          */
-            /* PMOVE BADx/BACx      1111 0000 00mm mrrr    011p ppR0 000n nn00                          */
+            if(op == 0)
+            {
+                /* PMOVE TTx            1111 0000 00mm mrrr    000p ppRF 0000 0000      */
+                /* PMOVE ACx            1111 0000 00mm mrrr    000p ppR0 0000 0000      */
+            }
+            else if(op == 1)
+            {
+                /* PFLUSH ('030)        1111 0000 00mm mrrr    001m mm00 MMMf ffff      */
+                /* PFLUSH[A|S] (68851)  1111 0000 00mm mrrr    001M MM0m mmmf ffff      */
+                /* PLOAD ('030/68851)   1111 0000 00mm mrrr    0010 00R0 000f ffff      */
+                /* PVALID               1111 0000 00mm mrrr    0010 1000 0000 0RRR      */
+            }
+            else if(op == 2)
+            {
+                /* PMOVE SRP/CRP/TC/... 1111 0000 00mm mrrr    010p ppRF 0000 0000      */
+            }
+            else if(op == 3)
+            {
+                /* PMOVE MMUSR          1111 0000 00mm mrrr    0110 00R0 0000 0000      */
+                /* PMOVE PSR/PCSR       1111 0000 00mm mrrr    011p ppR0 0000 0000      */
+                /* PMOVE BADx/BACx      1111 0000 00mm mrrr    011p ppR0 000n nn00      */
+            }
+            else if(op == 4)
+            {
+                /* PTEST ('030)         1111 0000 00mm mmrr    100L LLRA rrrr ffff      */
+                /* PTEST ('EC030)       1111 0000 00mm mrrr    1000 00R0 rrrf ffff      */
+                /* PTEST (68851)        1111 0000 00mm mrrr    100L LLRA AAff ffff      */
+            }
+            else if(word2 == 0xa000)            /* effectively: if(op == 5) + checking */
+            {
+                if(src_mode < 2)
+                    return;         /* Invalid instruction */
 
-            /* PTEST ('030)         1111 0000 00mm mmrr    100L LLRA rrrr ffff                          */
-            /* PTEST ('EC030)       1111 0000 00mm mrrr    1000 00R0 rrrf ffff                          */
-            /* PTEST (68851)        1111 0000 00mm mrrr    100L LLRA AAff ffff                          */
-            /* PVALID               1111 0000 00mm mrrr    0010 1000 0000 0RRR                          */
+                *pf = "pflushr";
+                ea(a1, src_mode, src_reg, p, ea_unsized);
+            }
         }
         else if(bit7_6 == 1)
         {
-            /* PDBcc                1111 0000 0100 1rrr    0000 0000 00cc cccc    dddd dddd dddd dddd   */
-            /* PScc                 1111 0000 01mm mrrr    0000 0000 00cc cccc                          */
+            ku16 word2 = *(*p)++;
 
-            /* PTRAPcc              1111 0000 0111 1MMM    0000 0000 00cc cccc   [dddd dddd dddd dddd] [dddd dddd dddd dddd] */
+            if(word2 & 0xfff0)
+                return;             /* Validate second word of the instruction */
+
+            if(src_mode == 1)                                               /* pdbcc */
+            {
+                *size = ea_word;
+
+                *a1++ = 'd';
+                *a1++ = '0' + src_reg;
+                
+                sprintf(a2, "#%d", (short) HTOP_SHORT(*(*p)++));
+                
+                *pf = mmu_dbranches[word2];
+            }
+            else
+            {
+                if((src_mode == 7) && (src_reg > 1))                        /* ptrapcc */
+                {
+                    switch(src_reg)
+                    {
+                        case 2:             /* one-word operand */
+                            *size = ea_word;
+                            sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+                            break;
+
+                        case 3:             /* two-word operand */
+                            *size = ea_long;
+                            sprintf(a1, "#%d", HTOP_INT(*(*p)++));
+                            (*p)++;
+                            break;
+
+                        case 4:             /* no operand */
+                            *size = ea_unsized;
+                            break;
+
+                        default:
+                            return;         /* Invalid instruction */
+                    }
+
+                    *pf = mmu_traps[word2];
+                    return;
+                }
+                else                                                        /* pscc */
+                    *pf = mmu_sets[word2];
+            }
         }
         else                                                                /* pbcc */
         {
@@ -846,6 +918,7 @@ static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const uns
                 /* 32-bit displacement */
                 *size = ea_long;
                 sprintf(a1, "#%d", HTOP_INT(*(*p)++));
+                (*p)++;
             }
             else
             {
