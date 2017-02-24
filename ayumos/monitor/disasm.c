@@ -19,45 +19,45 @@ static char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short
 static void movem_regs(char *str, unsigned short regs, char mode);
 
 
-static ks8 * const disasm_branches[] =
+static ks8 * const branches[] =
 {
     "bra", "bsr", "bhi", "bls", "bcc", "bcs", "bne", "beq",
     "bvc", "bvs", "bpl", "bmi", "bge", "blt", "bgt", "ble"
 };
 
-static ks8 * const disasm_dbranches[] =
+static ks8 * const dbranches[] =
 {
     "dbt",  "dbf",  "dbhi", "dbls", "dbcc", "dbcs", "dbne", "dbeq",
     "dbvc", "dbvs", "dbpl", "dbmi", "dbge", "dblt", "dbgt", "dble"
 };
 
-static ks8 * const disasm_sets[] =
+static ks8 * const sets[] =
 {
     "st",  "sf",  "shi", "sls", "scc", "scs", "sne", "seq",
     "svc", "svs", "spl", "smi", "sge", "slt", "sgt", "sle"
 };
 
-static ks8 * const disasm_bits[] =
+static ks8 * const bits[] =
 {
     "btst", "bchg", "bclr", "bset"
 };
 
-static ks8 * const disasm_lshifts[] =
+static ks8 * const lshifts[] =
 {
     "asl", "lsl", "roxl", "rol"
 };
 
-static ks8 * const disasm_rshifts[] =
+static ks8 * const rshifts[] =
 {
     "asr", "lsr", "roxr", "ror"
 };
 
-static ks8 * const disasm_misc1[] =
+static ks8 * const misc1[] =
 {
     "reset", "nop", "stop", "rte", "rtd", "rts", "trapv", "rtr"
 };
 
-static ks8 * const disasm_misc2[] =
+static ks8 * const misc2[] =
 {
     "ori", "andi", "subi", "addi", "???", "eori", "cmpi", "moves"
 };
@@ -140,7 +140,7 @@ int disassemble(unsigned short **p, char *str)
                 }
                 else                /* static/dynamic bit */
                 {
-                    pf = disasm_bits[bit7_6];
+                    pf = bits[bit7_6];
 
                     if(TEST(instr, 8))  /* dynamic bit */
                     {
@@ -159,7 +159,7 @@ int disassemble(unsigned short **p, char *str)
             else
             {
                 /* ori / andi / subi / addi / <static bit, handled above> / eori / cmpi / moves */
-                pf = disasm_misc2[(instr >> 9) & 0x7];
+                pf = misc2[(instr >> 9) & 0x7];
 
                 if((src_mode == 7) && (src_reg == 4))       /* -> ccr/sr */
                 {
@@ -426,7 +426,7 @@ int disassemble(unsigned short **p, char *str)
                                                 /* fall through */
                                             default:
                                                 size = ea_unsized;
-                                                pf = disasm_misc1[src_reg];
+                                                pf = misc1[src_reg];
                                                 break;
                                         }
                                         break;
@@ -493,7 +493,7 @@ int disassemble(unsigned short **p, char *str)
             {
                 if(src_mode == 1)       /* dbcc */
                 {
-                    pf = disasm_dbranches[(instr >> 8) & 0xf];
+                    pf = dbranches[(instr >> 8) & 0xf];
 
                     size = ea_word;
                     a1[0] = 'd';
@@ -502,7 +502,7 @@ int disassemble(unsigned short **p, char *str)
                 }
                 else                    /* scc */
                 {
-                    pf = disasm_sets[(instr >> 8) & 0xf];
+                    pf = sets[(instr >> 8) & 0xf];
 
                     size = ea_byte;
                     ea(a1, src_mode, src_reg, p, ea_long);
@@ -520,7 +520,7 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0x6:                   /* bcc / bra / bsr */
-            pf = disasm_branches[(instr >> 8) & 0xf];
+            pf = branches[(instr >> 8) & 0xf];
 
             if(!(instr & 0xff))
             {
@@ -733,7 +733,7 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0xe:       /* shift/rotate register/memory */
-            pf = (TEST(instr, 8)) ? disasm_lshifts[src_mode & 3] : disasm_rshifts[src_mode & 3];
+            pf = (TEST(instr, 8)) ? lshifts[src_mode & 3] : rshifts[src_mode & 3];
 
             if(bit7_6 == 3)     /* memory */
             {
