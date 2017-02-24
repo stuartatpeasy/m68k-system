@@ -10,62 +10,82 @@
 #include <monitor/include/disasm.h>
 
 
-void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
-              const unsigned char src_reg, char *a1, char *a2);
-char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz);
-void movem_regs(char *str, unsigned short regs, char mode);
+static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
+                     const unsigned char src_reg, char *a1, char *a2, ea_size_t *size);
+static void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
+                     const unsigned char src_reg, char *a1, char *a2);
+static char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p,
+                const ea_size_t sz);
+static void movem_regs(char *str, unsigned short regs, char mode);
 
 
-ks8 * const g_disasm_branches[] =
+static ks8 * const disasm_branches[] =
 {
     "bra", "bsr", "bhi", "bls", "bcc", "bcs", "bne", "beq",
     "bvc", "bvs", "bpl", "bmi", "bge", "blt", "bgt", "ble"
 };
 
-ks8 * const g_disasm_dbranches[] =
+static ks8 * const disasm_dbranches[] =
 {
     "dbt",  "dbf",  "dbhi", "dbls", "dbcc", "dbcs", "dbne", "dbeq",
     "dbvc", "dbvs", "dbpl", "dbmi", "dbge", "dblt", "dbgt", "dble"
 };
 
-ks8 * const g_disasm_sets[] =
+static ks8 * const disasm_sets[] =
 {
     "st",  "sf",  "shi", "sls", "scc", "scs", "sne", "seq",
     "svc", "svs", "spl", "smi", "sge", "slt", "sgt", "sle"
 };
 
-ks8 * const g_disasm_bits[] =
+static ks8 * const disasm_bits[] =
 {
     "btst", "bchg", "bclr", "bset"
 };
 
-ks8 * const g_disasm_lshifts[] =
+static ks8 * const disasm_lshifts[] =
 {
     "asl", "lsl", "roxl", "rol"
 };
 
-ks8 * const g_disasm_rshifts[] =
+static ks8 * const disasm_rshifts[] =
 {
     "asr", "lsr", "roxr", "ror"
 };
 
-ks8 * const g_disasm_misc1[] =
+static ks8 * const disasm_misc1[] =
 {
     "reset", "nop", "stop", "rte", "rtd", "rts", "trapv", "rtr"
 };
 
-ks8 * const g_disasm_misc2[] =
+static ks8 * const disasm_misc2[] =
 {
     "ori", "andi", "subi", "addi", "???", "eori", "cmpi", "moves"
 };
 
+static ks8 * const mmu_branches[] =
+{
+    "pbbs", "pbbc", "pbls", "pblc", "pbss", "pbsc", "pbas", "pbac",
+    "pbws", "pbwc", "pbis", "pbic", "pbgs", "pbgc", "pbcs", "pbcc"
+};
 
-const ea_size_t g_disasm_sizemap[] =
+static ks8 * const mmu_dbranches[] =
+{
+    "pdbbs", "pdbbc", "pdbls", "pdblc", "pdbss", "pdbsc", "pdbas", "pdbac",
+    "pdbws", "pdbwc", "pdbis", "pdbic", "pdbgs", "pdbgc", "pdbcs", "pdbcc"
+};
+
+static ks8 * const mmu_sets[] =
+{
+    "sbs", "sbc", "sls", "slc", "sss", "ssc", "sas", "sac",
+    "sws", "swc", "sis", "sic", "sgs", "sgc", "scs", "scc"
+};
+
+static const ea_size_t disasm_sizemap[] =
 {
     ea_byte, ea_word, ea_long, ea_unsized
 };
 
-const ea_size_t g_move_sizemap[] =
+static const ea_size_t move_sizemap[] =
 {
     ea_unsized, ea_byte, ea_long, ea_word
 };
@@ -120,7 +140,7 @@ int disassemble(unsigned short **p, char *str)
                 }
                 else                /* static/dynamic bit */
                 {
-                    pf = g_disasm_bits[bit7_6];
+                    pf = disasm_bits[bit7_6];
 
                     if(TEST(instr, 8))  /* dynamic bit */
                     {
@@ -139,7 +159,7 @@ int disassemble(unsigned short **p, char *str)
             else
             {
                 /* ori / andi / subi / addi / <static bit, handled above> / eori / cmpi / moves */
-                pf = g_disasm_misc2[(instr >> 9) & 0x7];
+                pf = disasm_misc2[(instr >> 9) & 0x7];
 
                 if((src_mode == 7) && (src_reg == 4))       /* -> ccr/sr */
                 {
@@ -158,7 +178,7 @@ int disassemble(unsigned short **p, char *str)
                 }
                 else
                 {
-                    size = g_disasm_sizemap[bit7_6];
+                    size = disasm_sizemap[bit7_6];
 
                     if(size)
                     {
@@ -174,7 +194,7 @@ int disassemble(unsigned short **p, char *str)
         case 0x1:
         case 0x2:
         case 0x3:
-            size = g_move_sizemap[instr >> 12];
+            size = move_sizemap[instr >> 12];
 
             if(dest_mode == 1)      /* movea */
             {
@@ -291,7 +311,7 @@ int disassemble(unsigned short **p, char *str)
                 }
                 else
                 {
-                    size = g_disasm_sizemap[bit7_6];
+                    size = disasm_sizemap[bit7_6];
 
                     switch(dest_reg)
                     {
@@ -406,7 +426,7 @@ int disassemble(unsigned short **p, char *str)
                                                 /* fall through */
                                             default:
                                                 size = ea_unsized;
-                                                pf = g_disasm_misc1[src_reg];
+                                                pf = disasm_misc1[src_reg];
                                                 break;
                                         }
                                         break;
@@ -473,7 +493,7 @@ int disassemble(unsigned short **p, char *str)
             {
                 if(src_mode == 1)       /* dbcc */
                 {
-                    pf = g_disasm_dbranches[(instr >> 8) & 0xf];
+                    pf = disasm_dbranches[(instr >> 8) & 0xf];
 
                     size = ea_word;
                     a1[0] = 'd';
@@ -482,7 +502,7 @@ int disassemble(unsigned short **p, char *str)
                 }
                 else                    /* scc */
                 {
-                    pf = g_disasm_sets[(instr >> 8) & 0xf];
+                    pf = disasm_sets[(instr >> 8) & 0xf];
 
                     size = ea_byte;
                     ea(a1, src_mode, src_reg, p, ea_long);
@@ -491,7 +511,7 @@ int disassemble(unsigned short **p, char *str)
             else                    /* addq / subq */
             {
                 pf = TEST(instr, 8) ? "subq" : "addq";
-                size = g_disasm_sizemap[bit7_6];
+                size = disasm_sizemap[bit7_6];
 
                 a1[0] = '#';
                 a1[1] = (dest_reg == 0) ? '8' : '0' + dest_reg;
@@ -500,7 +520,7 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0x6:                   /* bcc / bra / bsr */
-            pf = g_disasm_branches[(instr >> 8) & 0xf];
+            pf = disasm_branches[(instr >> 8) & 0xf];
 
             if(!(instr & 0xff))
             {
@@ -596,7 +616,7 @@ int disassemble(unsigned short **p, char *str)
                 else                                    /* and / or */
                 {
                     pf = ((instr >> 12) == 0x8) ? "or" : "and";
-                    size = g_disasm_sizemap[bit7_6];
+                    size = disasm_sizemap[bit7_6];
 
                     if(TEST(instr, 8))      /* <ea>, Dn */
                     {
@@ -626,7 +646,7 @@ int disassemble(unsigned short **p, char *str)
             }
             else
             {
-                size = g_disasm_sizemap[bit7_6];
+                size = disasm_sizemap[bit7_6];
 
                 if((instr & 0x0130) == 0x0100)  /* addx / subx */
                 {
@@ -679,7 +699,7 @@ int disassemble(unsigned short **p, char *str)
             }
             else
             {
-                size = g_disasm_sizemap[bit7_6];
+                size = disasm_sizemap[bit7_6];
 
                 if(TEST(instr, 8))
                 {
@@ -713,7 +733,7 @@ int disassemble(unsigned short **p, char *str)
             break;
 
         case 0xe:       /* shift/rotate register/memory */
-            pf = (TEST(instr, 8)) ? g_disasm_lshifts[src_mode & 3] : g_disasm_rshifts[src_mode & 3];
+            pf = (TEST(instr, 8)) ? disasm_lshifts[src_mode & 3] : disasm_rshifts[src_mode & 3];
 
             if(bit7_6 == 3)     /* memory */
             {
@@ -722,7 +742,7 @@ int disassemble(unsigned short **p, char *str)
             }
             else                /* register */
             {
-                size = g_disasm_sizemap[bit7_6];
+                size = disasm_sizemap[bit7_6];
 
                 /* immediate shift or register shift? */
                 a1[0] = (src_mode & 4) ? 'd' : '#';
@@ -736,6 +756,10 @@ int disassemble(unsigned short **p, char *str)
         case 0xf:       /* coprocessor instructions */
             switch(dest_reg)        /* dest_reg contains CpID for F-line instructions */
             {
+                case 0:             /* CpIP 0 = MMU */
+                    mmu_instr(instr, p, &pf, src_mode, src_reg, a1, a2, &size);
+                    break;
+
                 case 1:             /* CpID 1 = FPU */
                     fp_instr(instr, p, &pf, src_mode, src_reg, a1, a2);
                     break;
@@ -772,11 +796,144 @@ int disassemble(unsigned short **p, char *str)
 
 
 /*
+    mmu_instr() - decode an MMU instruction
+    FIXME - this function needs to be completed.
+*/
+static void mmu_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
+               const unsigned char src_reg, char *a1, char *a2, ea_size_t *size)
+{
+    ku8 bit11_8 = (instr >> 8) & 0xf;
+    ku8 bit7_6 = (instr >> 6) & 0x3;
+    UNUSED(a2);
+
+    if(bit11_8 == 0)
+    {
+        if(bit7_6 == 0)
+        {
+            /* PFLUSH ('030)        1111 0000 00mm mrrr    001m mm00 MMMf ffff                          */
+            /* PFLUSH[A|S] (68851)  1111 0000 00mm mrrr    001M MM0m mmmf ffff                          */
+            /* PFLUSHR (68851)      1111 0000 00mm mrrr    1010 0000 0000 0000                          */
+            /* PLOAD ('030/68851)   1111 0000 00mm mrrr    0010 00R0 000f ffff                          */
+
+            /* PMOVE MMUSR          1111 0000 00mm mrrr    0110 00R0 0000 0000                          */
+            /* PMOVE SRP/CRP/TC/... 1111 0000 00mm mrrr    010p ppRF 0000 0000                          */
+            /* PMOVE TTx            1111 0000 00mm mrrr    000p ppRF 0000 0000                          */
+            /* PMOVE ACx            1111 0000 00mm mrrr    000p ppR0 0000 0000                          */
+            /* PMOVE PSR/PCSR       1111 0000 00mm mrrr    011p ppR0 0000 0000                          */
+            /* PMOVE BADx/BACx      1111 0000 00mm mrrr    011p ppR0 000n nn00                          */
+
+            /* PTEST ('030)         1111 0000 00mm mmrr    100L LLRA rrrr ffff                          */
+            /* PTEST ('EC030)       1111 0000 00mm mrrr    1000 00R0 rrrf ffff                          */
+            /* PTEST (68851)        1111 0000 00mm mrrr    100L LLRA AAff ffff                          */
+            /* PVALID               1111 0000 00mm mrrr    0010 1000 0000 0RRR                          */
+        }
+        else if(bit7_6 == 1)
+        {
+            /* PDBcc                1111 0000 0100 1rrr    0000 0000 00cc cccc    dddd dddd dddd dddd   */
+            /* PScc                 1111 0000 01mm mrrr    0000 0000 00cc cccc                          */
+
+            /* PTRAPcc              1111 0000 0111 1MMM    0000 0000 00cc cccc   [dddd dddd dddd dddd] [dddd dddd dddd dddd] */
+        }
+        else                                                                /* pbcc */
+        {
+            if(instr & 0x30)        /* Finish validating the instruction */
+                return;
+
+            *pf = mmu_branches[instr & 0xf];
+
+            if(instr & 0x40)
+            {
+                /* 32-bit displacement */
+                *size = ea_long;
+                sprintf(a1, "#%d", HTOP_INT(*(*p)++));
+            }
+            else
+            {
+                /* 16-bit displacement */
+                *size = ea_word;
+                sprintf(a1, "#%d", (short) HTOP_SHORT(*(*p)++));
+            }
+        }
+    }
+    else if(bit11_8 == 1)
+    {
+        switch(bit7_6)
+        {
+            case 0:                                                         /* psave */
+                if((src_mode < 2) || (src_mode == 3) || ((src_mode == 7) && (src_reg > 1)))
+                    return;         /* Invalid EA */
+
+                *pf = "psave";
+                ea(a1, src_mode, src_reg, p, ea_unsized);
+                break;
+
+            case 1:                                                         /* prestore */
+                if((src_mode < 2) || (src_mode == 4) || ((src_mode == 7) && (src_reg >= 4)))
+                    return;         /* Invalid EA */
+
+                *pf = "prestore";
+                ea(a1, src_mode, src_reg, p, ea_unsized);
+                break;
+
+            default:
+                return;     /* Invalid instruction */
+        }
+    }
+    else if(bit11_8 == 5)
+    {
+        if(bit7_6 == 0)
+        {
+            ku8 bit4_3 = (instr >> 3) & 0x3;
+
+            if(instr & 0x20)
+                return;                 /* Finish validating the instruction */
+
+            switch(bit4_3)
+            {
+                case 0:                                                     /* pflushn */
+                    *pf = "pflushn";
+                    break;
+
+                case 1:                                                     /* pflush */
+                    *pf = "pflush";
+                    break;
+
+                case 2:                                                     /* pflushan */
+                    *pf = "pflushan";
+                    return;
+
+                case 3:                                                     /* pflusha */
+                    *pf = "pflusha";
+                    return;
+            }
+
+            *a1++ = '(';
+            *a1++ = 'a';
+            *a1++ = '0' + src_reg;
+            *a1 = ')';
+        }
+        else if(bit7_6 == 1)                                                /* ptestr / ptestw */
+        {
+            if((instr & 0x18) != 0x08)  /* Finish validating the instruction */
+                return;
+
+            *pf = (instr & 0x20) ? "ptestr" : "ptestw";
+
+            *a1++ = '(';
+            *a1++ = 'a';
+            *a1++ = '0' + src_reg;
+            *a1 = ')';
+        }
+    }
+}
+
+
+/*
     fp_instr() - decode an FPU instruction
     FIXME - this function needs to be completed.
 */
-void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
-              const unsigned char src_reg, char *a1, char *a2)
+static void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned char src_mode,
+                     const unsigned char src_reg, char *a1, char *a2)
 {
     const unsigned short ext = HTOP_SHORT(*(*p)++);
     const unsigned char type = (instr >> 6) & 0x7,     /* Instruction type */
@@ -847,7 +1004,8 @@ void fp_instr(ku16 instr, unsigned short **p, const char **pf, const unsigned ch
 /*
     ea() - decode an effective address into a string
 */
-char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, const ea_size_t sz)
+static char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p,
+                const ea_size_t sz)
 {
     mode &= 0x7;
     reg &= 0x7;
@@ -952,7 +1110,7 @@ char *ea(char *str, unsigned char mode, unsigned char reg, unsigned short **p, c
 /*
     movem_regs() - decode a MOVEM register list into a string
 */
-void movem_regs(char *str, unsigned short regs, char mode)
+static void movem_regs(char *str, unsigned short regs, char mode)
 {
     char c, type, any = 0;
     char current_bit, prev_bit;
