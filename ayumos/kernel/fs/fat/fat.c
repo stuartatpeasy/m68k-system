@@ -27,13 +27,18 @@ s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
-s32 fat_read(vfs_t *vfs, fs_node_t *node, void *buffer, size_t count);
-s32 fat_write(vfs_t *vfs, fs_node_t *node, const void *buffer, size_t count);
+s32 fat_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32 offset, ks32 count);
+s32 fat_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, u32 offset,
+              ks32 count);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 
-s32 fat_read_block(vfs_t *vfs, u32 block, void *buffer);
+s32 fat_read_cluster(vfs_t * const vfs, ku32 cluster, void * const buffer);
+s32 fat_read_cluster_partial(vfs_t * const vfs, ku32 cluster, void *buffer, ku16 offset,
+                             ku16 count);
+s32 fat_write_cluster(vfs_t * const vfs, ku32 cluster, const void * const buffer);
+s32 fat_write_cluster_partial(vfs_t *vfs, u32 cluster, const void *buffer, ku16 offset, ku16 count);
 s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node);
-s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node);
+s32 fat_get_next_cluster(vfs_t *vfs, u32 node, u32 *next_node);
 s32 fat_find_free_block(vfs_t *vfs, u32 *node);
 s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
 u8 fat_lfn_checksum(u8 *short_name);
@@ -47,15 +52,17 @@ void fat_debug_dump_superblock(vfs_t *vfs);
 
 vfs_driver_t g_fat_ops =
 {
-    .name = "fat",
-    .init = fat_init,
-    .mount = fat_mount,
-    .unmount = fat_unmount,
-    .get_root_node = fat_get_root_node,
-    .open_dir = fat_open_dir,
-    .read_dir = fat_read_dir,
-    .close_dir = fat_close_dir,
-    .stat = fat_stat
+    .name           = "fat",
+    .init           = fat_init,
+    .mount          = fat_mount,
+    .unmount        = fat_unmount,
+    .get_root_node  = fat_get_root_node,
+    .open_dir       = fat_open_dir,
+    .read_dir       = fat_read_dir,
+    .close_dir      = fat_close_dir,
+    .read           = fat_read,
+    .write          = fat_write,
+    .stat           = fat_stat
 };
 
 
@@ -155,22 +162,79 @@ s32 fat_unmount(vfs_t *vfs)
 
 
 /*
-    fat_read_node() - read cluster <block> into "buffer"
+    fat_read_cluster() - read cluster <cluster> into <buffer>.
 */
-s32 fat_read_block(vfs_t *vfs, u32 block, void *buffer)
+s32 fat_read_cluster(vfs_t * const vfs, ku32 cluster, void * const buffer)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u32 block;
 
-    return block_read_multi(vfs->dev,
-                            ((block - 2) * fs->sectors_per_cluster) + fs->first_data_sector,
-                            fs->sectors_per_cluster, buffer);
+    if(cluster >= fs->total_clusters)
+        return -EINVAL;
+
+    block = ((cluster - 2) * fs->sectors_per_cluster) + fs->first_data_sector;
+
+    return block_read_multi(vfs->dev, block, fs->sectors_per_cluster, buffer);
 }
 
 
 /*
-    fat_get_next_node() - given a node, find the next node in the chain
+    fat_read_cluster_partial() - read <count> blocks, starting from block <offset>, from <cluster>
+    into <buffer>.
 */
-s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node)
+s32 fat_read_cluster_partial(vfs_t * const vfs, ku32 cluster, void *buffer, ku16 offset, ku16 count)
+{
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u32 block;
+
+    if((cluster >= fs->total_clusters) || ((offset + count) > fs->sectors_per_cluster))
+        return -EINVAL;
+
+    block = ((cluster - 2) * fs->sectors_per_cluster) + fs->first_data_sector + offset;
+
+    return block_read_multi(vfs->dev, block, count, buffer);
+}
+
+
+/*
+    fat_write_cluster() - write <buffer> into cluster <cluster>.
+*/
+s32 fat_write_cluster(vfs_t * const vfs, ku32 cluster, const void * const buffer)
+{
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u32 block;
+
+    if(cluster > fs->total_clusters)
+        return -EINVAL;
+
+    block = ((cluster - 2) * fs->sectors_per_cluster) + fs->first_data_sector;
+
+    return block_write_multi(vfs->dev, block, fs->sectors_per_cluster, buffer);
+}
+
+
+/*
+    fat_write_cluster_partial() - write <count> blocks of data from <buffer> to <cluster>, starting
+    <offset> blocks from the beginning of the cluster.
+*/
+s32 fat_write_cluster_partial(vfs_t *vfs, u32 cluster, const void *buffer, ku16 offset, ku16 count)
+{
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u32 block;
+
+    if((offset + count) > fs->sectors_per_cluster)
+        return -EINVAL;
+
+    block = ((cluster - 2) * fs->sectors_per_cluster) + fs->first_data_sector + offset;
+
+    return block_write_multi(vfs->dev, block, count, buffer);
+}
+
+
+/*
+    fat_get_next_cluster() - given a cluster, find the next cluster in the chain.
+*/
+s32 fat_get_next_cluster(vfs_t *vfs, u32 node, u32 *next_node)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)];
@@ -205,7 +269,7 @@ s32 fat_get_next_block(vfs_t *vfs, u32 node, u32 *next_node)
         if(ret != SUCCESS)
             return ret;
 
-        *next_node = sector[ent_offset];
+        *next_node = LE2N16(sector[ent_offset]);
     }
 
     return SUCCESS;
@@ -258,6 +322,7 @@ s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node)
 s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
 {
     fat_dir_ctx_t *dir_ctx;
+    fat_fs_t * const fs = (fat_fs_t *) vfs->data;
     u32 bytes_per_cluster;
     s32 ret;
 
@@ -267,7 +332,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
         return -ENOMEM;
 
     /* Allocate space within the directory context to hold a block */
-    bytes_per_cluster = ((fat_fs_t *) vfs->data)->bytes_per_cluster;
+    bytes_per_cluster = fs->bytes_per_cluster;
     dir_ctx->buffer = (fat_node_t *) kmalloc(bytes_per_cluster);
     if(!dir_ctx->buffer)
     {
@@ -276,7 +341,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     }
 
     /* Read the cluster into dir_ctx->buffer */
-    ret = fat_read_block(vfs, block, dir_ctx->buffer);
+    ret = fat_read_cluster(vfs, block, dir_ctx->buffer);
     if(ret != SUCCESS)
     {
         kfree(dir_ctx->buffer);
@@ -444,20 +509,18 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
                     return SUCCESS;
                 }
             }
-
-            /* Read next cluster in chain */
         }
 
         /* Reached the end of the node without finding a complete entry. */
         /* Find the next node in the chain */
-        ret = fat_get_next_block(vfs, dir_ctx->block, &dir_ctx->block);
+        ret = fat_get_next_cluster(vfs, dir_ctx->block, &dir_ctx->block);
         if(ret != SUCCESS)
             return ret;
 
         if(!FAT_CHAIN_END(dir_ctx->block))
         {
             /* Read the next cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
-            ret = fat_read_block(vfs, dir_ctx->block, dir_ctx->buffer);
+            ret = fat_read_cluster(vfs, dir_ctx->block, dir_ctx->buffer);
             if(ret != SUCCESS)
                 return ret;
         }
@@ -482,34 +545,123 @@ s32 fat_close_dir(vfs_t *vfs, void *ctx)
 
 
 /*
-    fat_read() - read <count> bytes into <buffer> from the file indicated by <node>.
+    fat_read() - read <count> blocks, starting from <offset>, into <buffer> from the file indicated
+    by <node>.
 */
-s32 fat_read(vfs_t *vfs, fs_node_t *node, void *buffer, size_t count)
+s32 fat_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32 offset, ks32 count)
 {
-    UNUSED(vfs);
-    UNUSED(node);
-    UNUSED(buffer);
-    UNUSED(count);
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u8 *buffer_;
+    u32 cluster, remaining;
+    s32 ret;
 
-    /* FIXME */
+    if(count < 0)
+        return -EINVAL;
 
-    return -ENOSYS;
+    buffer_ = (u8 *) buffer;
+    cluster = node->first_block;
+    remaining = count;
+
+    /* Find the first cluster containing the blocks to be read */
+    for(cluster = node->first_block; offset >= fs->sectors_per_cluster;
+        offset -= fs->sectors_per_cluster)
+    {
+        ret = fat_get_next_cluster(vfs, cluster, &cluster);
+        if(ret != SUCCESS)
+            return ret;
+
+        if(cluster == FAT_CHAIN_TERMINATOR)
+            return -EINVAL;
+    }
+
+    /* Read the appropriate part of this cluster into the buffer */
+    ret = fat_read_cluster_partial(vfs, cluster, buffer_, offset, fs->sectors_per_cluster - offset);
+    if(ret != SUCCESS)
+        return ret;
+
+    remaining -= fs->sectors_per_cluster - offset;
+    buffer_ += BLOCK_SIZE * (fs->sectors_per_cluster - offset);
+
+    /* Copy additional clusters, as needed */
+    for(; remaining >= fs->sectors_per_cluster; remaining -= fs->sectors_per_cluster)
+    {
+        ret = fat_get_next_cluster(vfs, cluster, &cluster);
+        if(ret != SUCCESS)
+            return ret;
+
+        if(cluster == FAT_CHAIN_TERMINATOR)
+            return count - remaining;           /* Partial read */
+
+        ret = fat_read_cluster(vfs, cluster, buffer_);
+        if(ret != SUCCESS)
+            return ret;
+
+        buffer_ += BLOCK_SIZE * fs->sectors_per_cluster;
+    }
+
+    /* Final cluster: copy the appropriate part into the buffer */
+    if(remaining)
+        return fat_read_cluster_partial(vfs, cluster, buffer_, 0, remaining);
+
+    return count;
 }
 
 
 /*
-    fat_write() - write <count> bytes from <buffer> into the file indicated by <node>.
+    fat_write() - write <count> blocks from <buffer> into the file indicated by <node>.
+
+    FIXME: at present, this function can't increase the size of a file.
 */
-s32 fat_write(vfs_t *vfs, fs_node_t *node, const void *buffer, size_t count)
+s32 fat_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, u32 offset,
+              ks32 count)
 {
-    UNUSED(vfs);
-    UNUSED(node);
-    UNUSED(buffer);
-    UNUSED(count);
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    u8 *buffer_;
+    u32 cluster, remaining;
+    s32 ret;
+
+    if(count < 0)
+        return -EINVAL;
+
+    buffer_ = (u8 *) buffer;
+    cluster = node->first_block;
+    remaining = count;
+
+    /* FIXME - ensure that the file is long enough for the write */
+
+    /* Find the first cluster containing the blocks to be written */
+    for(cluster = node->first_block; offset >= fs->sectors_per_cluster;
+        offset -= fs->sectors_per_cluster)
+    {
+        ret = fat_get_next_cluster(vfs, cluster, &cluster);
+        if(ret != SUCCESS)
+            return ret;
+
+        if(cluster == FAT_CHAIN_TERMINATOR)
+            return -EINVAL;
+    }
+
+    /* Write the appropriate part of this cluster */
+    ret = fat_write_cluster_partial(vfs, cluster, buffer_, offset,
+                                    fs->sectors_per_cluster - offset);
+    if(ret != SUCCESS)
+        return ret;
+
+    remaining -= fs->sectors_per_cluster - offset;
+    buffer_ += BLOCK_SIZE * (fs->sectors_per_cluster - offset);
+
+    /* Copy additional clusters, as needed */
+    for(; remaining >= fs->sectors_per_cluster; remaining -= fs->sectors_per_cluster)
+    {
+        ret = fat_get_next_cluster(vfs, cluster, &cluster);
+        if(ret != SUCCESS)
+            return ret;
+
+    }
 
     /* FIXME */
 
-    return -ENOSYS;
+    return count;
 }
 
 
@@ -535,7 +687,7 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node)
     while(!FAT_CHAIN_END(dir_ctx->block))
     {
         /* Read the cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
-        ret = fat_read_block(vfs, dir_ctx->block, dir_ctx->buffer);
+        ret = fat_read_cluster(vfs, dir_ctx->block, dir_ctx->buffer);
         if(ret != SUCCESS)
             return ret;
 
@@ -661,7 +813,7 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node)
 
         /* Reached the end of the block without finding a complete entry. */
         /* Find the next block in the chain */
-        ret = fat_get_next_block(vfs, dir_ctx->block, &dir_ctx->block);
+        ret = fat_get_next_cluster(vfs, dir_ctx->block, &dir_ctx->block);
         if(ret != SUCCESS)
         {
             fat_close_dir(vfs, dir_ctx);
