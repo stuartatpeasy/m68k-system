@@ -122,21 +122,19 @@ struct fat_fs
 };
 
 typedef struct fat_fs fat_fs_t;
-
+typedef u16 fat16_cluster_id;
 
 struct fat_dir_ctx
 {
     fat_node_t *buffer;
     fat_node_t *buffer_end;
-    u32 block;
+    fat16_cluster_id cluster;
     fat_node_t *de;
     s8 is_root_dir;
 };
 
 typedef struct fat_dir_ctx fat_dir_ctx_t;
 
-
-typedef u16 fat16_cluster_id;
 
 #define FAT_ROOT_BLOCK              (0)             /* Only valid in FAT12/FAT16 */
 
@@ -169,6 +167,8 @@ typedef u16 fat16_cluster_id;
 
 #define FAT_CHAIN_TERMINATOR        (0xfff7)
 #define FAT_CHAIN_END(x)            ((x) >= FAT_CHAIN_TERMINATOR)
+
+#define FAT_CLUSTERS_PER_FAT_BLOCK  (BLOCK_SIZE / sizeof(fat16_cluster_id))
 
 #define FAT_DIRENT_END              (0x00)  /* End-of-directory-entries marker  */
 #define FAT_DIRENT_UNUSED           (0xe5)  /* Deleted directory entry marker   */
@@ -228,9 +228,9 @@ typedef u16 fat16_cluster_id;
 
 
 s32 fat_init();
-s32 fat_mount(vfs_t *vfs);
-s32 fat_unmount(vfs_t *vfs);
-s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node);
+s32 fat_mount(vfs_t * const vfs);
+s32 fat_unmount(vfs_t * const vfs);
+s32 fat_get_root_node(vfs_t * const vfs, fs_node_t **node);
 s32 fat_open_dir(vfs_t *vfs, u32 node, void **ctx);
 s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8* const name, fs_node_t *node);
 s32 fat_close_dir(vfs_t *vfs, void *ctx);
@@ -241,13 +241,17 @@ s32 fat_reallocate(vfs_t * const vfs, fs_node_t * const node, ks32 new_len);
 s32 fat_stat(vfs_t *vfs, fs_stat_t *st);
 
 s32 fat_read_cluster(vfs_t * const vfs, ku32 cluster, void * const buffer);
-s32 fat_read_cluster_partial(vfs_t * const vfs, ku32 cluster, void *buffer, ku16 offset,
+s32 fat_read_cluster_partial(vfs_t * const vfs, ku32 cluster, void * const buffer, ku16 offset,
                              ku16 count);
 s32 fat_write_cluster(vfs_t * const vfs, ku32 cluster, const void * const buffer);
-s32 fat_write_cluster_partial(vfs_t *vfs, u32 cluster, const void *buffer, ku16 offset, ku16 count);
-s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node);
-s32 fat_get_next_cluster(vfs_t *vfs, u32 node, u32 *next_node);
-s32 fat_alloc_cluster(vfs_t *vfs);
+s32 fat_write_cluster_partial(vfs_t * const vfs, ku32 cluster, const void * const buffer,
+                              ku16 offset, ku16 count);
+s32 fat_create_node(vfs_t * const vfs, ku32 parent_block, fs_node_t * const node);
+s32 fat_get_next_cluster(vfs_t * const vfs, fat16_cluster_id cluster,
+                         fat16_cluster_id * const next_cluster);
+s32 fat_alloc_cluster(vfs_t * const vfs);
+s32 fat_link_chain(vfs_t * const vfs, const fat16_cluster_id from, const fat16_cluster_id to);
+s32 fat_free_chain(vfs_t * const vfs, const fat16_cluster_id cluster);
 s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
 u8 fat_lfn_checksum(u8 *short_name);
 
@@ -285,7 +289,7 @@ s32 fat_init()
 /*
     fat_mount() - attempt to mount a FAT file system.
 */
-s32 fat_mount(vfs_t *vfs)
+s32 fat_mount(vfs_t * const vfs)
 {
     struct fat_bpb_block bpb;
     struct fat_fs *fs;
@@ -334,7 +338,6 @@ s32 fat_mount(vfs_t *vfs)
     fs->bytes_per_cluster       = bpb.sectors_per_cluster * LE2N16(bpb.bytes_per_sector);
     fs->sectors_per_fat         = LE2N16(bpb.sectors_per_fat);
 
-
     fs->first_fat_sector        = LE2N16(bpb.reserved_sectors);
 
     fs->first_data_sector       = LE2N16(bpb.reserved_sectors) + (bpb.fats * fs->sectors_per_fat)
@@ -361,7 +364,7 @@ s32 fat_mount(vfs_t *vfs)
 }
 
 
-s32 fat_unmount(vfs_t *vfs)
+s32 fat_unmount(vfs_t * const vfs)
 {
     /* TODO: (both of these tasks may not be this module's responsibility):
         - flush all dirty sectors
@@ -395,7 +398,8 @@ s32 fat_read_cluster(vfs_t * const vfs, ku32 cluster, void * const buffer)
     fat_read_cluster_partial() - read <count> blocks, starting from block <offset>, from <cluster>
     into <buffer>.
 */
-s32 fat_read_cluster_partial(vfs_t * const vfs, ku32 cluster, void *buffer, ku16 offset, ku16 count)
+s32 fat_read_cluster_partial(vfs_t * const vfs, ku32 cluster, void * const buffer, ku16 offset,
+                             ku16 count)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     u32 block;
@@ -431,7 +435,8 @@ s32 fat_write_cluster(vfs_t * const vfs, ku32 cluster, const void * const buffer
     fat_write_cluster_partial() - write <count> blocks of data from <buffer> to <cluster>, starting
     <offset> blocks from the beginning of the cluster.
 */
-s32 fat_write_cluster_partial(vfs_t *vfs, u32 cluster, const void *buffer, ku16 offset, ku16 count)
+s32 fat_write_cluster_partial(vfs_t * const vfs, ku32 cluster, const void * const buffer,
+                              ku16 offset, ku16 count)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     u32 block;
@@ -449,29 +454,30 @@ s32 fat_write_cluster_partial(vfs_t *vfs, u32 cluster, const void *buffer, ku16 
 /*
     fat_get_next_cluster() - given a cluster, find the next cluster in the chain.
 */
-s32 fat_get_next_cluster(vfs_t *vfs, u32 node, u32 *next_node)
+s32 fat_get_next_cluster(vfs_t * const vfs, const fat16_cluster_id cluster,
+                         fat16_cluster_id * const next_cluster)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)];
 
-    if((node - FAT_ROOT_BLOCK) < fs->root_dir_clusters)
+    if((cluster - FAT_ROOT_BLOCK) < fs->root_dir_clusters)
     {
         /*
             This node is within the root directory area.  The next node is node+1, unless we have
             reached the end of the root dir nodes.
         */
-        if(++*next_node == (fs->root_dir_clusters - FAT_ROOT_BLOCK))
-            *next_node = FAT_CHAIN_TERMINATOR;
+        if(++*next_cluster == (fs->root_dir_clusters - FAT_ROOT_BLOCK))
+            *next_cluster = FAT_CHAIN_TERMINATOR;
     }
-    else if(FAT_CHAIN_END(node))
+    else if(FAT_CHAIN_END(cluster))
     {
-        /* node represents an end-of-chain marker; set next_node to an EOC marker too. */
-        *next_node = FAT_CHAIN_TERMINATOR;
+        /* cluster represents an end-of-chain marker; set next_cluster to an EOC marker too. */
+        *next_cluster = FAT_CHAIN_TERMINATOR;
     }
     else
     {
         /* Compute offset from start of FAT, in bytes, of the specified node */
-        ku32 fat_offset = node * sizeof(fat16_cluster_id);
+        ku32 fat_offset = cluster * sizeof(fat16_cluster_id);
 
         /* Determine which sector contains the bytes specified by fat_offset */
         u32 fat_sector = fs->first_fat_sector + (fat_offset >> LOG_BLOCK_SIZE);
@@ -480,11 +486,11 @@ s32 fat_get_next_cluster(vfs_t *vfs, u32 node, u32 *next_node)
         u32 ent_offset = (fat_offset & (BLOCK_SIZE - 1)) >> 1;
 
         /* Read sector */
-        u32 ret = block_read(vfs->dev, fat_sector, &sector);
+        u32 ret = block_read(vfs->dev, fat_sector, sector);
         if(ret != SUCCESS)
             return ret;
 
-        *next_node = LE2N16(sector[ent_offset]);
+        *next_cluster = LE2N16(sector[ent_offset]);
     }
 
     return SUCCESS;
@@ -494,7 +500,7 @@ s32 fat_get_next_cluster(vfs_t *vfs, u32 node, u32 *next_node)
 /*
     fat_get_root_node() - populate a fs_node_t with details of the root directory
 */
-s32 fat_get_root_node(vfs_t *vfs, fs_node_t **node)
+s32 fat_get_root_node(vfs_t * const vfs, fs_node_t **node)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     fs_node_t *root_node;
@@ -565,9 +571,9 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
     }
 
     dir_ctx->buffer_end = ((void *) dir_ctx->buffer) + bytes_per_cluster;
-    dir_ctx->block = block;
+    dir_ctx->cluster = block;
     dir_ctx->de = dir_ctx->buffer;   /* Point de (addr of current node) at start of node buffer */          /////////////////////////////////////////////////////
-    dir_ctx->is_root_dir = (block== FAT_ROOT_BLOCK);
+    dir_ctx->is_root_dir = (block == FAT_ROOT_BLOCK);
 
     *ctx = dir_ctx;
 
@@ -585,7 +591,7 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
     s8 lfn[FAT_LFN_MAX_LEN + 1];
     s32 lfn_len, ret;
 
-    while(!FAT_CHAIN_END(dir_ctx->block))
+    while(!FAT_CHAIN_END(dir_ctx->cluster))
     {
         /* Read the next entry from the node */
         for(lfn_len = 0; dir_ctx->de < dir_ctx->buffer_end; ++dir_ctx->de)
@@ -728,14 +734,14 @@ s32 fat_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
 
         /* Reached the end of the node without finding a complete entry. */
         /* Find the next node in the chain */
-        ret = fat_get_next_cluster(vfs, dir_ctx->block, &dir_ctx->block);
+        ret = fat_get_next_cluster(vfs, dir_ctx->cluster, &dir_ctx->cluster);
         if(ret != SUCCESS)
             return ret;
 
-        if(!FAT_CHAIN_END(dir_ctx->block))
+        if(!FAT_CHAIN_END(dir_ctx->cluster))
         {
             /* Read the next cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
-            ret = fat_read_cluster(vfs, dir_ctx->block, dir_ctx->buffer);
+            ret = fat_read_cluster(vfs, dir_ctx->cluster, dir_ctx->buffer);
             if(ret != SUCCESS)
                 return ret;
         }
@@ -767,7 +773,8 @@ s32 fat_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     u8 *buffer_;
-    u32 cluster, remaining;
+    fat16_cluster_id cluster;
+    u32 remaining;
     s32 ret;
 
     if(count < 0)
@@ -831,7 +838,8 @@ s32 fat_write(vfs_t * const vfs, fs_node_t * const node, const void * const buff
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     u8 *buffer_;
-    u32 cluster, remaining;
+    fat16_cluster_id cluster;
+    u32 remaining;
     s32 ret;
 
     if(count < 0)
@@ -907,7 +915,7 @@ s32 fat_write(vfs_t * const vfs, fs_node_t * const node, const void * const buff
 
     FIXME: we mustn't allow this fn to extend the root directory, for some reason
 */
-s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node)
+s32 fat_create_node(vfs_t * const vfs, ku32 parent_block, fs_node_t * const node)
 {
     fat_dir_ctx_t *dir_ctx;
     s8 lfn[FAT_LFN_MAX_LEN + 1];
@@ -921,10 +929,10 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node)
         Scan the directory, looking for either an entry with a matching name (and fail if one is
         found) or the end of the directory entries.
     */
-    while(!FAT_CHAIN_END(dir_ctx->block))
+    while(!FAT_CHAIN_END(dir_ctx->cluster))
     {
         /* Read the cluster into dir_ctx->buffer (which was alloc'ed by fat_open_dir() */
-        ret = fat_read_cluster(vfs, dir_ctx->block, dir_ctx->buffer);
+        ret = fat_read_cluster(vfs, dir_ctx->cluster, dir_ctx->buffer);
         if(ret != SUCCESS)
             return ret;
 
@@ -1050,7 +1058,7 @@ s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node)
 
         /* Reached the end of the block without finding a complete entry. */
         /* Find the next block in the chain */
-        ret = fat_get_next_cluster(vfs, dir_ctx->block, &dir_ctx->block);
+        ret = fat_get_next_cluster(vfs, dir_ctx->cluster, &dir_ctx->cluster);
         if(ret != SUCCESS)
         {
             fat_close_dir(vfs, dir_ctx);
@@ -1075,31 +1083,52 @@ s32 fat_reallocate(vfs_t * const vfs, fs_node_t * const node, ks32 new_len)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
     u32 current_len_clusters, new_len_clusters;
+    fat16_cluster_id cluster, next_cluster;
     s32 ret;
 
     current_len_clusters = (node->size + fs->bytes_per_cluster - 1) / fs->bytes_per_cluster;
     new_len_clusters = (new_len + fs->bytes_per_cluster - 1) / fs->bytes_per_cluster;
 
-    if(new_len_clusters > current_len_clusters)
+    if(new_len_clusters > current_len_clusters)             /* Extend the cluster chain */
     {
-        u32 cluster, next_cluster;
-
         /* Iterate to the end of the chain */
         for(cluster = node->first_block, next_cluster = 0; !FAT_CHAIN_END(next_cluster);
             cluster = next_cluster)
         {
-            /* Extend the cluster chain */
             ret = fat_get_next_cluster(vfs, cluster, &next_cluster);
             if(ret != SUCCESS)
                 return ret;
         }
 
         /* Reached the end of the chain.  Append new clusters. */
+        for(; current_len_clusters < new_len_clusters; ++current_len_clusters)
+        {
+            s32 new_cluster = fat_alloc_cluster(vfs);
+            if(new_cluster < 0)
+                return new_cluster;     /* = error code */
 
+            ret = fat_link_chain(vfs, cluster, new_cluster);
+            if(ret != SUCCESS)
+                return ret;
+
+            cluster = new_cluster;
+        }
     }
-    else if(new_len_clusters < current_len_clusters)
+    else if(new_len_clusters < current_len_clusters)        /* Truncate the cluster chain */
     {
-        /* Truncate the cluster chain */
+        /* Iterate to the cluster representing the new end of the chain */
+        for(cluster = node->first_block; new_len_clusters--; cluster = next_cluster)
+        {
+            ret = fat_get_next_cluster(vfs, cluster, &next_cluster);
+            if(ret != SUCCESS)
+                return ret;
+
+            if(FAT_CHAIN_END(next_cluster))
+                return -EINVAL;     /* Premature end-of-chain: this indicates corruption. */
+        }
+
+        /* At this point: cluster represents the end of the chain */
+        return fat_free_chain(vfs, cluster);
     }
 
     return SUCCESS;
@@ -1122,13 +1151,13 @@ s32 fat_stat(vfs_t *vfs, fs_stat_t *st)
     the end-of-chain marker.  Return the cluster ID on success, or -ENOSPC if no free clusters are
     available.  Other errors may be returned by the calls to block_read() and block_write().
 */
-s32 fat_alloc_cluster(vfs_t *vfs)
+s32 fat_alloc_cluster(vfs_t * const vfs)
 {
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
-    fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)], start_block,  block;
+    fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)], start_block, block;
 
     /* Calculate starting point, based on the location of the last free cluster found */
-    start_block = fs->last_free_cluster / (BLOCK_SIZE / sizeof(fat16_cluster_id));
+    start_block = fs->last_free_cluster / FAT_CLUSTERS_PER_FAT_BLOCK;
 
     block = start_block;
     do
@@ -1136,7 +1165,7 @@ s32 fat_alloc_cluster(vfs_t *vfs)
         fat16_cluster_id offset;
         s32 ret;
 
-        ret = block_read(vfs->dev, fs->first_fat_sector + block, &sector);
+        ret = block_read(vfs->dev, fs->first_fat_sector + block, sector);
         if(ret != SUCCESS)
             return ret;
 
@@ -1144,14 +1173,21 @@ s32 fat_alloc_cluster(vfs_t *vfs)
         {
             if(!sector[offset])
             {
+                const fat16_cluster_id found = (block * FAT_CLUSTERS_PER_FAT_BLOCK) + offset;
+
                 /* Found a free cluster */
                 sector[offset] = N2LE16(FAT_CHAIN_TERMINATOR);
 
-                ret = block_write(vfs->dev, fs->first_fat_sector + block, &sector);
+                ret = block_write(vfs->dev, fs->first_fat_sector + block, sector);
                 if(ret != SUCCESS)
                     return ret;
 
-                return (block * (BLOCK_SIZE / sizeof(fat16_cluster_id))) + offset;
+                /* Zero the cluster */
+                ret = fat_write_cluster(vfs, found, NULL);
+                if(ret != SUCCESS)
+                    return ret;
+
+                return found;
             }
         }
 
@@ -1162,6 +1198,72 @@ s32 fat_alloc_cluster(vfs_t *vfs)
     return -ENOSPC;     /* No free nodes found */
 }
 
+
+/*
+    fat_link_chain() - link cluster <from> to cluster <to> in the FAT.
+*/
+s32 fat_link_chain(vfs_t * const vfs, const fat16_cluster_id from, const fat16_cluster_id to)
+{
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)];
+    u32 sector_id;
+    s32 ret;
+
+    /* Find the FAT sector containing the <from> cluster ID */
+    sector_id = fs->first_fat_sector + (from / FAT_CLUSTERS_PER_FAT_BLOCK);
+
+    ret = block_read(vfs->dev, sector_id, sector);
+    if(ret != SUCCESS)
+        return ret;
+
+    sector[from % FAT_CLUSTERS_PER_FAT_BLOCK] = N2LE16(to);
+
+    return block_write(vfs->dev, sector_id, sector);
+}
+
+
+/*
+    fat_free_chain() - free the FAT chain starting at <cluster>.  Note that this function doesn't
+    modify any of the data stored in the chain; it just frees the cluster.
+*/
+s32 fat_free_chain(vfs_t * const vfs, const fat16_cluster_id cluster)
+{
+    const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)], next;
+    u32 sector_id;
+    u16 offset;
+    s32 ret;
+    u8 first = 0;
+
+    next = cluster;
+    do
+    {
+        /* Find the FAT sector containing <cluster> */
+        sector_id = fs->first_fat_sector + (next / FAT_CLUSTERS_PER_FAT_BLOCK);
+
+        ret = block_read(vfs->dev, sector_id, sector);
+        if(ret != SUCCESS)
+            return ret;
+
+        offset = next % FAT_CLUSTERS_PER_FAT_BLOCK;
+
+        next = LE2N16(sector[offset]);
+
+        if(!first)
+        {
+            sector[offset] = N2LE16(FAT_CHAIN_TERMINATOR);
+            first = 1;
+        }
+        else
+            sector[offset] = 0;
+
+        ret = block_write(vfs->dev, sector_id, sector);
+        if(ret != SUCCESS)
+            return ret;
+    } while(!FAT_CHAIN_END(next));
+
+    return -ENOSYS;
+}
 
 
 /*
