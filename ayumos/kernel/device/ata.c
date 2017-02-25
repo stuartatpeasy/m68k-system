@@ -456,16 +456,15 @@ void ata_read_data(vu16 * const ata_data_port, void *buf)
 
 
 /*
-    ata_write_data() - write to the ATA data buffer
+    ata_write_data() - write a sector to the ATA data buffer
 */
 void ata_write_data(vu16 * const ata_data_port, const void *buf)
 {
-    ku16 *buf_;
-    u32 count;
-
     if(buf != NULL)
     {
-        for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count--;)
+        ku16 * const end = (ku16 *) ((u8 *) buf + ATA_SECTOR_SIZE), *buf_;
+
+        for(buf_ = buf; buf_ != end;)
         {
 #ifdef BUG_ATA_BYTE_SWAP
             /*
@@ -498,8 +497,10 @@ void ata_write_data(vu16 * const ata_data_port, const void *buf)
     }
     else
     {
-        /* Zero-fill the block */
-        for(count = ATA_SECTOR_SIZE / sizeof(u16); count--;)
+        u16 count = ATA_SECTOR_SIZE / sizeof(u16);
+
+        /* Zero-fill the sector */
+        while(count--)
             *ata_data_port = 0;
     }
 }
