@@ -247,7 +247,7 @@ s32 fat_write_cluster(vfs_t * const vfs, ku32 cluster, const void * const buffer
 s32 fat_write_cluster_partial(vfs_t *vfs, u32 cluster, const void *buffer, ku16 offset, ku16 count);
 s32 fat_create_node(vfs_t *vfs, u32 parent_block, fs_node_t *node);
 s32 fat_get_next_cluster(vfs_t *vfs, u32 node, u32 *next_node);
-s32 fat_find_free_cluster(vfs_t *vfs, u32 *node);
+s32 fat_alloc_cluster(vfs_t *vfs);
 s32 fat_generate_basis_name(s8 * lfn, u32 tailnum, char * const basis_name);
 u8 fat_lfn_checksum(u8 *short_name);
 
@@ -1118,32 +1118,46 @@ s32 fat_stat(vfs_t *vfs, fs_stat_t *st)
 
 
 /*
-    fat_find_free_cluster() - find a free cluster in the FAT.
+    fat_alloc_cluster() - find a free cluster in the FAT and mark it as allocated by setting it to
+    the end-of-chain marker.  Return the cluster ID on success, or -ENOSPC if no free clusters are
+    available.  Other errors may be returned by the calls to block_read() and block_write().
 */
-s32 fat_find_free_cluster(vfs_t *vfs, u32 *node)
+s32 fat_alloc_cluster(vfs_t *vfs)
 {
-    u32 u;
-    u16 sector[BLOCK_SIZE >> 1];
     const fat_fs_t * const fs = (const fat_fs_t *) vfs->data;
+    fat16_cluster_id sector[BLOCK_SIZE / sizeof(fat16_cluster_id)], start_block,  block;
 
-    for(u = 0; u < fs->sectors_per_fat; ++u)
+    /* Calculate starting point, based on the location of the last free cluster found */
+    start_block = fs->last_free_cluster / (BLOCK_SIZE / sizeof(fat16_cluster_id));
+
+    block = start_block;
+    do
     {
-        u32 v;
+        fat16_cluster_id offset;
+        s32 ret;
 
-        /* Read sector */
-        u32 ret = block_read(vfs->dev, fs->first_fat_sector + u, &sector);
+        ret = block_read(vfs->dev, fs->first_fat_sector + block, &sector);
         if(ret != SUCCESS)
             return ret;
 
-        for(v = 0; v < ARRAY_COUNT(sector); ++v)
+        for(offset = 0; offset < BLOCK_SIZE / sizeof(fat16_cluster_id); ++offset)
         {
-            if(!sector[v])
+            if(!sector[offset])
             {
-                *node = v + (u * ARRAY_COUNT(sector));
-                return SUCCESS;
+                /* Found a free cluster */
+                sector[offset] = N2LE16(FAT_CHAIN_TERMINATOR);
+
+                ret = block_write(vfs->dev, fs->first_fat_sector + block, &sector);
+                if(ret != SUCCESS)
+                    return ret;
+
+                return (block * (BLOCK_SIZE / sizeof(fat16_cluster_id))) + offset;
             }
         }
-    }
+
+        if(++block == fs->sectors_per_fat)
+            block = 0;
+    } while(block != start_block);
 
     return -ENOSPC;     /* No free nodes found */
 }
