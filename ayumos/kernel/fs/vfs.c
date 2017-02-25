@@ -37,17 +37,18 @@ vfs_driver_t * g_fs_drivers[] =
 
 
 /* Default versions of the functions in vfs_driver_t.  These all return -ENOSYS. */
-s32 vfs_default_mount(vfs_t *vfs);
-s32 vfs_default_unmount(vfs_t *vfs);
-s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
-s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
-s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
-s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
-s32 vfs_default_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32 offset,
-                     ks32 count);
-s32 vfs_default_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, u32 offset,
-                      ks32 count);
-s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
+static s32 vfs_default_mount(vfs_t *vfs);
+static s32 vfs_default_unmount(vfs_t *vfs);
+static s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
+static s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
+static s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
+static s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
+static s32 vfs_default_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32 offset,
+                            ks32 count);
+static s32 vfs_default_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, u32 offset,
+                             ks32 count);
+static s32 vfs_default_reallocate(vfs_t * const vfs, fs_node_t * const node, ks32 new_len);
+static s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
 
 
 s32 vfs_init()
@@ -77,6 +78,7 @@ s32 vfs_init()
             if(NULL == pdrv->close_dir)     pdrv->close_dir     = vfs_default_close_dir;
             if(NULL == pdrv->read)          pdrv->read          = vfs_default_read;
             if(NULL == pdrv->write)         pdrv->write         = vfs_default_write;
+            if(NULL == pdrv->reallocate)    pdrv->reallocate    = vfs_default_reallocate;
             if(NULL == pdrv->stat)          pdrv->stat          = vfs_default_stat;
 
             printf("vfs: initialised '%s' fs driver\n", pdrv->name);
@@ -177,7 +179,7 @@ s32 vfs_detach(vfs_t *vfs)
 
 
 /* === Default handlers for the functions in vfs_driver_t.  These all return ENOSYS. === */
-s32 vfs_default_mount(vfs_t *vfs)
+static s32 vfs_default_mount(vfs_t *vfs)
 {
     UNUSED(vfs);
 
@@ -185,7 +187,7 @@ s32 vfs_default_mount(vfs_t *vfs)
 }
 
 
-s32 vfs_default_unmount(vfs_t *vfs)
+static s32 vfs_default_unmount(vfs_t *vfs)
 {
     UNUSED(vfs);
 
@@ -193,7 +195,7 @@ s32 vfs_default_unmount(vfs_t *vfs)
 }
 
 
-s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node)
+static s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node)
 {
     UNUSED(vfs);
     UNUSED(node);
@@ -202,7 +204,7 @@ s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node)
 }
 
 
-s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
+static s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
 {
     UNUSED(vfs);
     UNUSED(node);
@@ -212,7 +214,7 @@ s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx)
 }
 
 
-s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
+static s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node)
 {
     UNUSED(vfs);
     UNUSED(ctx);
@@ -223,7 +225,7 @@ s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *nod
 }
 
 
-s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
+static s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
 {
     UNUSED(vfs);
     UNUSED(ctx);
@@ -232,8 +234,8 @@ s32 vfs_default_close_dir(vfs_t *vfs, void *ctx)
 }
 
 
-s32 vfs_default_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32 offset,
-                     ks32 count)
+static s32 vfs_default_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32 offset,
+                            ks32 count)
 {
     UNUSED(vfs);
     UNUSED(node);
@@ -245,8 +247,8 @@ s32 vfs_default_read(vfs_t * const vfs, fs_node_t * const node, void * const buf
 }
 
 
-s32 vfs_default_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer,
-                      u32 offset, ks32 count)
+static s32 vfs_default_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer,
+                             u32 offset, ks32 count)
 {
     UNUSED(vfs);
     UNUSED(node);
@@ -258,8 +260,17 @@ s32 vfs_default_write(vfs_t * const vfs, fs_node_t * const node, const void * co
 }
 
 
+static s32 vfs_default_reallocate(vfs_t * const vfs, fs_node_t * const node, ks32 new_len)
+{
+    UNUSED(vfs);
+    UNUSED(node);
+    UNUSED(new_len);
 
-s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st)
+    return -ENOSYS;
+}
+
+
+static s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st)
 {
     UNUSED(vfs);
     UNUSED(st);

@@ -39,6 +39,7 @@ typedef struct vfs_driver
                 ks32 count);
     s32 (*write)(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, u32 offset,
                  ks32 count);
+    s32 (*reallocate)(vfs_t * const vfs, fs_node_t * const node, ks32 new_len);
     s32 (*stat)(vfs_t *vfs, fs_stat_t *st);
 } vfs_driver_t;
 
