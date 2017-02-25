@@ -99,8 +99,6 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
         if(bd->flags & BC_DIRTY)
         {
             /* Descriptor in use; block is dirty; evict it. */
-
-            /* FIXME: a failed write here should probably not fail the whole operation */
             ret = bd->dev->write(bd->dev, bd->block, &one, data);
             if(ret != SUCCESS)
             {
@@ -138,12 +136,77 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
 
 
 /*
+    block_write() - write a block, via the block cache.
+*/
+s32 block_write(dev_t * const dev, ku32 block, const void * const buf)
+{
+    block_descriptor_t *bd;
+    void *data;
+    u32 slot, one = 1;
+    s32 ret;
+
+    if(dev->type != DEV_TYPE_BLOCK)
+        return -EINVAL;
+
+    if(!bc.nblocks)
+        return dev->write(dev, 0, &one, buf);
+
+    slot = block_cache_get_slot(dev, block);
+    bd = bc.descriptors + slot;
+    data = bc.cache + (slot * BLOCK_SIZE);
+
+    sem_acquire(&bd->sem);
+
+    if((bd->dev != dev) || (bd->block != block))
+    {
+        if(bd->flags & BC_DIRTY)
+        {
+            /* Descriptor in use; block is dirty; evict it. */
+            ret = bd->dev->write(bd->dev, bd->block, &one, data);
+            if(ret != SUCCESS)
+            {
+                sem_release(&bd->sem);
+                return ret;
+            }
+
+            ++bc.stats.evictions;
+            bd->flags = 0;
+        }
+
+        ++bc.stats.misses;
+    }
+    else
+        ++bc.stats.hits;
+
+    /* Write the data to the device */
+    ret = dev->write(dev, block, &one, data);
+    if(ret != SUCCESS)
+    {
+        sem_release(&bd->sem);
+        return ret;
+    }
+
+    /* Copy the new block into the cache */
+    memcpy(data, buf, BLOCK_SIZE);
+
+    /* Update descriptor */
+    bd->dev = dev;
+    bd->block = block;
+
+    ++bc.stats.writes;
+    sem_release(&bd->sem);
+
+    return SUCCESS;
+}
+
+
+/*
     block_read_multi() - read multiple blocks, using the block cache.
 */
 s32 block_read_multi(dev_t * const dev, u32 block, u32 count, void *buf)
 {
     s32 ret;
-    u8 *p = (u8 *) buf;
+    u8 *p;
 
     for(p = (u8 *) buf; count--; ++block, p += BLOCK_SIZE)
     {
@@ -153,6 +216,25 @@ s32 block_read_multi(dev_t * const dev, u32 block, u32 count, void *buf)
     }
 
     return SUCCESS;
+}
+
+
+/*
+    block_write_multi() - write multiple blocks, using the block cache.
+*/
+s32 block_write_multi(dev_t * const dev, u32 block, u32 count, const void *buf)
+{
+    s32 ret;
+    ku8 *p;
+
+    for(p = (ku8 *) buf; count--; ++block, p += BLOCK_SIZE)
+    {
+        ret = block_write(dev, block, p);
+        if(ret != SUCCESS)
+            return ret;
+    }
+
+    return ret;
 }
 
 

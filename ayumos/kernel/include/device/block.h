@@ -64,7 +64,9 @@ typedef struct blockdev_stats
 
 s32 block_cache_init(ku32 size);
 s32 block_read(dev_t * const dev, ku32 block, void *buf);
+s32 block_write(dev_t * const dev, ku32 block, const void *buf);
 s32 block_read_multi(dev_t * const dev, u32 block, u32 count, void *buf);
+s32 block_write_multi(dev_t * const dev, u32 block, u32 count, const void *buf);
 s32 block_cache_sync();
 const block_cache_stats_t *block_cache_stats();
 
