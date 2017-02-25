@@ -374,8 +374,17 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
     /* Issue the command */
     ATA_REG(base_addr, ATA_R_COMMAND) = ATA_CMD_WRITE_SECTORS;
 
-    for(; len_--; buf += ATA_SECTOR_SIZE)
-        ata_write_data(ATA_REG_DATA_ADDR(base_addr), buf);
+    if(buf != NULL)
+    {
+        for(; len_--; buf += ATA_SECTOR_SIZE)
+            ata_write_data(ATA_REG_DATA_ADDR(base_addr), buf);
+    }
+    else
+    {
+        while(len_--)
+            ata_write_data(ATA_REG_DATA_ADDR(base_addr), buf);
+    }
+
 
     if(!ATA_WAIT_NBSY(base_addr))
         return -ETIME;
@@ -454,35 +463,44 @@ void ata_write_data(vu16 * const ata_data_port, const void *buf)
     ku16 *buf_;
     u32 count;
 
-    for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
+    if(buf != NULL)
     {
+        for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count--;)
+        {
 #ifdef BUG_ATA_BYTE_SWAP
-        /*
-            The lambda rev0 pcb has its ATA data bus connected to the CPU data bus as:
+            /*
+                The lambda rev0 pcb has its ATA data bus connected to the CPU data bus as:
 
-                ATA_D[15..8] <=> CPU_D[15..8]
-                ATA_D[7..0]  <=> CPU_D[7..0]
+                    ATA_D[15..8] <=> CPU_D[15..8]
+                    ATA_D[7..0]  <=> CPU_D[7..0]
 
-            This seems correct but creates interop problems with volumes created on little-endian
-            hosts.  The desired electrical arrangement is:
+                This seems correct but creates interop problems with volumes created on
+                little-endian hosts.  The desired electrical arrangement is:
 
-                ATA_D[15..8] <=> CPU_D[7..0]
-                ATA_D[7..0]  <=> CPU_D[15..8]
+                    ATA_D[15..8] <=> CPU_D[7..0]
+                    ATA_D[7..0]  <=> CPU_D[15..8]
 
-            ...i.e. byte-swapping.  This results in single bytes, being stored in memory in the
-            "correct" order when read from / written to little-endian file systems.  Note that
-            16-/32-bit (or larger) numerics need to be converted to target endianness under this
-            arrangement.
+                ...i.e. byte-swapping.  This results in single bytes, being stored in memory in the
+                "correct" order when read from / written to little-endian file systems.  Note that
+                16-/32-bit (or larger) numerics need to be converted to target endianness under this
+                arrangement.
 
-           If the BUG_ATA_BYTE_SWAP constant is defined, we therefore swap the bytes in each 16-bit
-           datum read/written in order to work round the incorrect board design.
-        */
-        u16 data = *buf_++;
-        bswap_16(data);
-        *ata_data_port = data;
+               If the BUG_ATA_BYTE_SWAP constant is defined, we therefore swap the bytes in each
+               16-bit datum read/written in order to work round the incorrect board design.
+            */
+            u16 data = *buf_++;
+            bswap_16(data);
+            *ata_data_port = data;
 #else
-        *ata_data_port = *buf_++;
+            *ata_data_port = *buf_++;
 #endif
+        }
+    }
+    else
+    {
+        /* Zero-fill the block */
+        for(count = ATA_SECTOR_SIZE / sizeof(u16); count--;)
+            *ata_data_port = 0;
     }
 }
 

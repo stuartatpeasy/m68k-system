@@ -17,8 +17,9 @@
 #define GREAT_BIG_PRIME             (0xfffffffb)    /* Largest prime representable as a u32 */
 
 /* Cached-block flags */
-#define BC_DIRTY                    BIT(1)  /* Block has been modified                          */
-#define BC_LOCKED                   BIT(2)  /* Block is locked in cache (cannot be evicted)     */
+#define BC_DIRTY                    BIT(0)  /* Block has been modified                          */
+#define BC_LOCKED                   BIT(1)  /* Block is locked in cache (cannot be evicted)     */
+#define BC_ZERO                     BIT(2)  /* Block is zero-filled - ignore data in memory     */
 
 
 typedef u32 block_id;

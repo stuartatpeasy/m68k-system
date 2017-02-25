@@ -18,6 +18,7 @@
 #include <kernel/include/semaphore.h>
 #include <klibc/include/stdio.h>
 #include <klibc/include/string.h>
+#include <klibc/include/strings.h>
 
 
 static block_cache_t bc;
@@ -99,7 +100,7 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
         if(bd->flags & BC_DIRTY)
         {
             /* Descriptor in use; block is dirty; evict it. */
-            ret = bd->dev->write(bd->dev, bd->block, &one, data);
+            ret = bd->dev->write(bd->dev, bd->block, &one, (bd->flags & BC_ZERO) ? NULL : data);
             if(ret != SUCCESS)
             {
                 sem_release(&bd->sem);
@@ -128,7 +129,12 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
         ++bc.stats.hits;
 
     ++bc.stats.reads;
-    memcpy(buf, data, BLOCK_SIZE);
+
+    if(bd->flags & BC_ZERO)
+        bzero(buf, BLOCK_SIZE);
+    else
+        memcpy(buf, data, BLOCK_SIZE);
+
     sem_release(&bd->sem);
 
     return SUCCESS;
@@ -162,7 +168,7 @@ s32 block_write(dev_t * const dev, ku32 block, const void * const buf)
         if(bd->flags & BC_DIRTY)
         {
             /* Descriptor in use; block is dirty; evict it. */
-            ret = bd->dev->write(bd->dev, bd->block, &one, data);
+            ret = bd->dev->write(bd->dev, bd->block, &one, (bd->flags & BC_ZERO) ? NULL : data);
             if(ret != SUCCESS)
             {
                 sem_release(&bd->sem);
@@ -179,7 +185,7 @@ s32 block_write(dev_t * const dev, ku32 block, const void * const buf)
         ++bc.stats.hits;
 
     /* Write the data to the device */
-    ret = dev->write(dev, block, &one, data);
+    ret = dev->write(dev, block, &one, buf);
     if(ret != SUCCESS)
     {
         sem_release(&bd->sem);
@@ -187,11 +193,13 @@ s32 block_write(dev_t * const dev, ku32 block, const void * const buf)
     }
 
     /* Copy the new block into the cache */
-    memcpy(data, buf, BLOCK_SIZE);
+    if(buf != NULL)
+        memcpy(data, buf, BLOCK_SIZE);
 
     /* Update descriptor */
     bd->dev = dev;
     bd->block = block;
+    bd->flags = (buf == NULL) ? BC_ZERO : 0;
 
     ++bc.stats.writes;
     sem_release(&bd->sem);
@@ -227,11 +235,24 @@ s32 block_write_multi(dev_t * const dev, u32 block, u32 count, const void *buf)
     s32 ret;
     ku8 *p;
 
-    for(p = (ku8 *) buf; count--; ++block, p += BLOCK_SIZE)
+    if(buf != NULL)
     {
-        ret = block_write(dev, block, p);
-        if(ret != SUCCESS)
-            return ret;
+        for(p = (ku8 *) buf; count--; ++block, p += BLOCK_SIZE)
+        {
+            ret = block_write(dev, block, p);
+            if(ret != SUCCESS)
+                return ret;
+        }
+    }
+    else
+    {
+        /* Block should be zero-filled */
+        while(count--)
+        {
+            ret = block_write(dev, block++, NULL);
+            if(ret != SUCCESS)
+                return ret;
+        }
     }
 
     return ret;
