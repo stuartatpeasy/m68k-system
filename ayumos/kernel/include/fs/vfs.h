@@ -3,7 +3,7 @@
 /*
     Virtual file system abstraction
 
-    Part of the as-yet-unnamed MC68010 operating system
+    Part of ayumos
 
 
     (c) Stuart Wallace <stuartw@atom.net>, July 2012.
@@ -65,7 +65,7 @@ s32 vfs_detach(vfs_t *vfs);
 vfs_driver_t *vfs_get_driver_by_name(ks8 * const name);
 s32 vfs_unmount(vfs_t *vfs);
 s32 vfs_get_root_node(vfs_t *vfs, fs_node_t **node);
-s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx);
+s32 vfs_open_dir(vfs_t * const vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx);
 s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
 s32 vfs_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, ku32 offset,
