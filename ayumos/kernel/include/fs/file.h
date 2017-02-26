@@ -45,7 +45,5 @@ s32 file_write(file_handle_t *fh, const void *buffer, size_t count);
 s32 syscall_open(const char * const path, u16 mode);
 s32 syscall_create(const char * const path, ku16 mode);
 s32 syscall_close(s32 filenum);
-s32 syscall_read(const s32 filenum, void * const buf, size_t count);
-s32 syscall_write(const s32 filenum, const void * const buf, size_t count);
 
 #endif

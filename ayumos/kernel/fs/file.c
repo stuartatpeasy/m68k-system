@@ -192,29 +192,3 @@ s32 syscall_close(const s32 filenum)
     return -ENOSYS;
 }
 
-
-/*
-    syscall_read() - read <count> bytes from the file descriptor <filenum> into <buf>.
-*/
-s32 syscall_read(const s32 filenum, void * const buf, size_t count)
-{
-    UNUSED(filenum);
-    UNUSED(buf);
-    UNUSED(count);
-
-    return -ENOSYS;
-}
-
-
-/*
-    syscall_write() - write <count> bytes from <buf> into the file identified by descriptor
-    <filenum>.
-*/
-s32 syscall_write(const s32 filenum, const void * const buf, size_t count)
-{
-    UNUSED(filenum);
-    UNUSED(buf);
-    UNUSED(count);
-
-    return -ENOSYS;
-}

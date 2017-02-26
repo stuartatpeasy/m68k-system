@@ -27,11 +27,11 @@ const syscall_table_entry_t g_syscalls[MAX_SYSCALL + 1] =
     {0,     syscall_console_getchar},
     {1,     syscall_leds},
     {0,     syscall_yield},
-    {2,     syscall_open},
-    {2,     syscall_create},
-    {2,     syscall_close},
-    {3,     syscall_read},
-    {3,     syscall_write},
+    {2,     file_open},
+    {2,     file_create},
+    {2,     file_close},
+    {3,     file_read},
+    {3,     file_write},
 };
 
 

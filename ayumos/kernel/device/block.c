@@ -9,11 +9,10 @@
     NOTE: this abstraction assumes a 512-byte block size.  This is likely to become a problem.
     NOTE: the block cache statistics object is not protected by locking.  The values stored in this
           object should therefore be regarded as approximate.
-
-    TODO: support for writes
 */
 
 #include <kernel/include/device/block.h>
+#include <kernel/include/error.h>
 #include <kernel/include/memory/kmalloc.h>
 #include <kernel/include/semaphore.h>
 #include <klibc/include/stdio.h>
@@ -101,10 +100,10 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
         {
             /* Descriptor in use; block is dirty; evict it. */
             ret = bd->dev->write(bd->dev, bd->block, &one, (bd->flags & BC_ZERO) ? NULL : data);
-            if(ret != SUCCESS)
+            if(ret < 1)
             {
                 sem_release(&bd->sem);
-                return ret;
+                return (ret == 0) ? -EWRITE : ret;
             }
 
             ++bc.stats.evictions;
@@ -113,10 +112,10 @@ s32 block_read(dev_t * const dev, ku32 block, void *buf)
 
         /* Read new block into slot */
         ret = dev->read(dev, block, &one, data);
-        if(ret != SUCCESS)
+        if(ret < 0)
         {
             sem_release(&bd->sem);
-            return ret;
+            return (ret == 0) ? -EREAD : ret;
         }
 
         /* Update descriptor */
@@ -155,7 +154,13 @@ s32 block_write(dev_t * const dev, ku32 block, const void * const buf)
         return -EINVAL;
 
     if(!bc.nblocks)
-        return dev->write(dev, 0, &one, buf);
+    {
+        ret = dev->write(dev, 0, &one, buf);
+        if(ret < 1)
+            return (ret == 0) ? -EWRITE : ret;
+
+        return SUCCESS;
+    }
 
     slot = block_cache_get_slot(dev, block);
     bd = bc.descriptors + slot;
@@ -169,10 +174,10 @@ s32 block_write(dev_t * const dev, ku32 block, const void * const buf)
         {
             /* Descriptor in use; block is dirty; evict it. */
             ret = bd->dev->write(bd->dev, bd->block, &one, (bd->flags & BC_ZERO) ? NULL : data);
-            if(ret != SUCCESS)
+            if(ret < 1)
             {
                 sem_release(&bd->sem);
-                return ret;
+                return (ret < 1) ? -EWRITE : ret;
             }
 
             ++bc.stats.evictions;
@@ -186,10 +191,10 @@ s32 block_write(dev_t * const dev, ku32 block, const void * const buf)
 
     /* Write the data to the device */
     ret = dev->write(dev, block, &one, buf);
-    if(ret != SUCCESS)
+    if(ret < 1)
     {
         sem_release(&bd->sem);
-        return ret;
+        return (ret == 0) ? -EWRITE : ret;
     }
 
     /* Copy the new block into the cache */
