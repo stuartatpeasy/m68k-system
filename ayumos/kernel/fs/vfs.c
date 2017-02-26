@@ -373,20 +373,120 @@ s32 vfs_close_dir(vfs_dir_ctx_t *ctx)
 
 
 /*
-    vfs_read() - read <count> bytes from the specified <node> into <buffer>.
+    vfs_read() - read <count> bytes, starting at <offset>, from the specified <node> into <buffer>.
+    The block drivers deal only with block-sized transfers, so the VFS layer does the necessary work
+    to translate non-block-aligned read requests into block-aligned ones.
 */
-s32 vfs_read(vfs_t *vfs, fs_node_t *node, void *buffer, u32 offset, u32 count)
+s32 vfs_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, ku32 offset,
+             ks32 count)
 {
-    return vfs->driver->read(vfs, node, buffer, offset, count);
+    u32 block;
+    s32 ret, nblocks;
+    u8 *buf;
+    ku32 block_offset = offset % BLOCK_SIZE;
+
+    block = offset / BLOCK_SIZE;
+    nblocks = (block_offset + count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    buf = umalloc(nblocks * BLOCK_SIZE);
+    if(buf == NULL)
+        return -ENOMEM;
+
+    ret = vfs->driver->read(vfs, node, buf, block, nblocks);
+    if(ret < nblocks)
+    {
+        if(ret <= 0)
+        {
+            /* Read error, or zero bytes read */
+            ufree(buf);
+            return ret;
+        }
+        else
+        {
+            /* Partial read - read some, but not all, of the requested blocks */
+            memcpy(buffer, buf + block_offset, (ret * BLOCK_SIZE) - block_offset);
+            ufree(buf);
+
+            return (ret * BLOCK_SIZE) - block_offset;
+        }
+    }
+
+    memcpy(buffer, buf + (offset % BLOCK_SIZE), count);
+    ufree(buf);
+
+    return count;
 }
 
 
 /*
-    vfs_write() - write <count> bytes from <buffer> to the specified <node>.
+    vfs_write() - write <count> bytes from <buffer> to the specified <node>, at the starting
+    position specified by <offset>.  The block drivers deal only with block-sized transfers, so the
+    VFS layer does the necessary work to translate non-block-aligned write requests into block-
+    aligned ones.  This will usually involve read-around-writes.
 */
-s32 vfs_write(vfs_t *vfs, fs_node_t *node, const void *buffer, u32 offset, u32 count)
+s32 vfs_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, ku32 offset,
+              s32 count)
 {
-    return vfs->driver->write(vfs, node, buffer, offset, count);
+    u32 block;
+    s32 ret, nblocks;
+    u8 *buf;
+
+    /* If <offset> and <count> are block-aligned, the write is easy. */
+    if(!(offset % BLOCK_SIZE) && !(count % BLOCK_SIZE))
+    {
+        ret = vfs->driver->write(vfs, node, buffer, offset / BLOCK_SIZE, count / BLOCK_SIZE);
+        if(ret <= 0)
+            return ret;
+
+        return ret * BLOCK_SIZE;
+    }
+
+    /* In most cases, we won't be so lucky. */
+    block = offset / BLOCK_SIZE;
+    nblocks = ((offset % BLOCK_SIZE) + count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    buf = umalloc(nblocks * BLOCK_SIZE);
+    if(buf == NULL)
+        return -ENOMEM;
+
+    ret = vfs->driver->read(vfs, node, buf, block, nblocks);
+    if(ret < nblocks)
+    {
+        if(ret <= 0)
+        {
+            /* Read error, or no data read */
+            ufree(buf);
+            return ret;
+        }
+        else
+        {
+            /* Partial read - read some, but not all, of the requested blocks */
+            count -= (nblocks - ret) * BLOCK_SIZE;
+            nblocks = ret;
+        }
+    }
+
+    memcpy(buf + (offset % BLOCK_SIZE), buffer, count);
+
+    ret = vfs->driver->write(vfs, node, buf, block, nblocks);
+
+    ufree(buf);
+
+    if(ret < nblocks)
+    {
+        if(ret <= 0)
+        {
+            /* Write error, or no data written */
+            return ret;
+        }
+        else
+        {
+            /* Partial write - wrote some, but not all, of the requested blocks */
+            count -= (nblocks - ret) * BLOCK_SIZE;
+        }
+    }
+
+    return count;
 }
 
 

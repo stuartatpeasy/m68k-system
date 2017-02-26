@@ -68,8 +68,10 @@ s32 vfs_get_root_node(vfs_t *vfs, fs_node_t **node);
 s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx);
 s32 vfs_read_dir(vfs_dir_ctx_t *ctx, ks8 * const name, fs_node_t *node);
 s32 vfs_close_dir(vfs_dir_ctx_t *ctx);
-s32 vfs_read(vfs_t *vfs, fs_node_t *node, void *buffer, u32 offset, u32 count);
-s32 vfs_write(vfs_t *vfs, fs_node_t *node, const void *buffer, u32 offset, u32 count);
+s32 vfs_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, ku32 offset,
+             ks32 count);
+s32 vfs_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, ku32 offset,
+              s32 count);
 s32 vfs_get_child_node(fs_node_t *parent, const char * const child, vfs_t **vfs, fs_node_t **node);
 
 #endif

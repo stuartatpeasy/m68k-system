@@ -166,7 +166,7 @@ typedef struct fat_dir_ctx fat_dir_ctx_t;
     (((order_byte) & FAT_LFN_ORDER_MASK) - 1)
 
 #define FAT_CHAIN_TERMINATOR        (0xfff7)
-#define FAT_CHAIN_END(x)            ((x) >= FAT_CHAIN_TERMINATOR)
+#define FAT_CHAIN_END(x)            ((x) >= LE2N16(FAT_CHAIN_TERMINATOR))
 
 #define FAT_CLUSTERS_PER_FAT_BLOCK  (BLOCK_SIZE / sizeof(fat16_cluster_id))
 
