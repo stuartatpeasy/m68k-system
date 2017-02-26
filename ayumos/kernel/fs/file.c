@@ -127,7 +127,15 @@ void file_close(file_handle_t *fh)
 */
 s32 file_read(file_handle_t *fh, void *buffer, size_t count)
 {
-    return vfs_read(fh->vfs, fh->node, buffer, fh->offset, count);
+    s32 ret;
+
+    ret = vfs_read(fh->vfs, fh->node, buffer, fh->offset, count);
+    if(ret <= 0)
+        return ret;
+
+    fh->offset += ret;
+
+    return ret;
 }
 
 
@@ -136,7 +144,15 @@ s32 file_read(file_handle_t *fh, void *buffer, size_t count)
 */
 s32 file_write(file_handle_t *fh, const void *buffer, size_t count)
 {
-    return vfs_write(fh->vfs, fh->node, buffer, fh->offset, count);
+    s32 ret;
+
+    ret = vfs_write(fh->vfs, fh->node, buffer, fh->offset, count);
+    if(ret <= 0)
+        return ret;
+
+    fh->offset += ret;
+
+    return ret;
 }
 
 

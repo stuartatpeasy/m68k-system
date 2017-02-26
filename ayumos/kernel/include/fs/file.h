@@ -36,7 +36,7 @@ typedef struct file_handle
 } file_handle_t;
 
 
-s32 file_open(ks8 * const path, u16 flags, file_handle_t **fi);
+s32 file_open(ks8 * const path, u16 flags, file_handle_t **fh);
 s32 file_create(ks8 * const path, file_perm_t perm, fs_node_t **node);
 void file_close(file_handle_t *fh);
 s32 file_read(file_handle_t *fh, void *buffer, size_t count);
