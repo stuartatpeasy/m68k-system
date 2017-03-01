@@ -17,12 +17,12 @@ inline void mem_gather16v(ku16 * restrict src, vu16 * restrict const dest, u16 c
 {
     asm volatile
     (
-        "L_%=:                          \n"
-        "        movew %0@, %1@+        \n"
-        "        dbf %2, L_%=           \n"
-        :
-        : "a" (src), "a" (dest), "d" (count)
-        : "cc"
+        "mem_gather16v_%=:          bras mem_gather16v_start_%=         \n"
+        "mem_gather16v_loop_%=:     movew %0@, %1@+                     \n"
+        "mem_gather16v_start_%=:    dbf %2, mem_gather16v_loop_%=       \n"
+        : "=a" (src)
+        : "a" (dest), "d" (count)
+        : "cc", "memory"
     );
 };
 
@@ -35,12 +35,12 @@ inline void mem_gather16v_zf(vu16 * restrict const dest, u16 count)
 {
     asm volatile
     (
-        "L_%=:                          \n"
-        "        clrw %0@+              \n"
-        "        dbf %1, L_%=           \n"
+        "mem_gather16v_zf_%=:       bras mem_gather16v_zf_start_%=      \n"
+        "mem_gather16v_zf_loop_%=:  clrw %0@+                           \n"
+        "mem_gather16v_zf_start_%=: dbf %1, mem_gather16v_zf_loop_%=    \n"
         :
         : "a" (dest), "d" (count)
-        : "cc"
+        : "cc", "memory"
     );
 };
 
@@ -54,12 +54,12 @@ inline void mem_scatter16v(vu16 * restrict const src, u16 * restrict dest, u16 c
 {
     asm volatile
     (
-        "L_%=:                          \n"
-        "        movew %1@, %0@+        \n"
-        "        dbf %2, L_%=           \n"
-        :
-        : "a" (src), "a" (dest), "d" (count)
-        : "cc"
+        "mem_scatter16v_%=:         bras mem_scatter16v_start_%=        \n"
+        "mem_scatter16v_loop_%=:    movew %0@, %1@+                     \n"
+        "mem_scatter16v_start_%=:   dbf %2, mem_scatter16v_loop_%=      \n"
+        : "=a" (dest)
+        : "a" (src), "d" (count)
+        : "cc", "memory"
     );
 };
 
