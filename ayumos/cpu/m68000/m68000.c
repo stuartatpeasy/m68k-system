@@ -174,7 +174,10 @@ void cpu_halt(void)
     /* the arg to "stop" causes the CPU to stay in supervisor mode and sets the IRQ mask to 7 */
     asm volatile
     (
-        "stop       #0x2700             \n"
+        "cpu_halt_%=:               stop       #0x2700                  \n"
+        :
+        :
+        :
     );
 
     /* Won't return */
@@ -191,10 +194,10 @@ u32 cpu_swi(ku32 num)
 
     asm volatile
     (
-        "moveml     %%d1/%%a0-%%a2, %%sp@-  \n"
-        "movel      %0, %%a0                \n" /* FIXME - calculated stack offset is wrong */
-        "trap       #15                     \n"
-        "moveml     %%sp@+, %%d1/%%a0-%%a2  \n"
+        "cpu_swi_%=:                moveml     %%d1/%%a0-%%a2, %%sp@-   \n"
+        "                           movel      %0, %%a0                 \n" /* FIXME - calculated stack offset is wrong */
+        "                           trap       #15                      \n"
+        "                           moveml     %%sp@+, %%d1/%%a0-%%a2   \n"
         :
         : "m" (num) /* FIXME - the calculated address of this var is wrong following the movem */
         : "cc"

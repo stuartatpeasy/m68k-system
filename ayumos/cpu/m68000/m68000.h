@@ -133,7 +133,7 @@ inline void cpu_enable_interrupts(void)
     /* Enable interrupts by setting the IRQ mask to 0 in the SR. */
     asm volatile
     (
-        "andiw #0xf8ff, %%sr\n"
+        "cpu_enable_interrupts_%=:  andiw #0xf8ff, %%sr     \n"
         :
         :
     );
@@ -145,7 +145,7 @@ inline void cpu_disable_interrupts(void)
     /* Disable interrupts by setting the IRQ mask to 7 in the SR. */
     asm volatile
     (
-        "oriw #0x0700, %%sr\n"
+        "cpu_disable_interrupts_%=: oriw #0x0700, %%sr      \n"
         :
         :
     );
@@ -164,7 +164,7 @@ inline u16 bswap_16(u16 x)
     register u16 x_ = x;
     asm volatile
     (
-        "rol.w #8, %w0\n"
+        "bswap_16_%=:               rol.w #8, %w0           \n"
         : /* "=d" (x_) */
         : "d" (x_)
         : "cc"
@@ -179,9 +179,9 @@ inline u32 bswap_32(u32 x)
     register u32 x_ = x;
     asm volatile
     (
-        "rol.w #8, %0\n"
-        "swap %0\n"
-        "rol.w #8, %0"
+        "bswap_32_%=:               rol.w #8, %0            \n"
+        "                           swap %0                 \n"
+        "                           rol.w #8, %0            \n"
         :
         : "d" (x_)
         : "cc"
@@ -196,7 +196,7 @@ inline u32 wswap_32(u32 x)
     register u32 x_ = x;
     asm volatile
     (
-        "swap %0\n"
+        "wswap_32_%=:               swap %0                 \n"
         :
         : "d" (x_)
         : "cc"
@@ -216,11 +216,11 @@ inline u8 cpu_tas(u8 *addr)
 
     asm volatile
     (
-        "      moveq    #0, %0          \n"
-        "      tas      %1              \n"
-        "      beq      L_%=            \n"
-        "      moveq    #1, %0          \n"
-        "L_%=:                          \n"
+        "cpu_tas_%=:                moveq    #0, %0         \n"
+        "                           tas      %1             \n"
+        "                           beq      cpu_tas_end_%= \n"
+        "                           moveq    #1, %0         \n"
+        "cpu_tas_end_%=:                                    \n"
         : "=&r" (ret)
         : "m" (*addr)
         : "cc"
