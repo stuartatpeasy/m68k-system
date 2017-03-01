@@ -79,6 +79,7 @@
 		</Unit>
 		<Unit filename="cpu/m68000/m68000.h" />
 		<Unit filename="cpu/m68000/macros.S" />
+		<Unit filename="cpu/m68000/primitives.h" />
 		<Unit filename="cpu/m68000/process.S" />
 		<Unit filename="cpu/m68000/regs.h" />
 		<Unit filename="cpu/m68000/syscall.S" />
@@ -201,6 +202,7 @@
 		<Unit filename="kernel/include/memory/extents.h" />
 		<Unit filename="kernel/include/memory/heap.h" />
 		<Unit filename="kernel/include/memory/kmalloc.h" />
+		<Unit filename="kernel/include/memory/primitives.h" />
 		<Unit filename="kernel/include/memory/slab.h" />
 		<Unit filename="kernel/include/net/address.h" />
 		<Unit filename="kernel/include/net/arp.h" />

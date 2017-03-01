@@ -15,6 +15,7 @@
 #include <kernel/include/device/ata.h>
 #include <kernel/include/byteorder.h>
 #include <kernel/include/error.h>
+#include <kernel/include/memory/primitives.h>
 #include <kernel/util/kutil.h>
 #include <klibc/include/stdio.h>            // FIXME REMOVE
 #include <klibc/include/string.h>
@@ -419,12 +420,13 @@ s32 ata_write(dev_t *dev, ku32 offset, u32 *len, const void * buf)
 */
 void ata_read_data(vu16 * const ata_data_port, void *buf)
 {
-    u16 *buf_;
-    u32 count;
+    u16 *buf_ = (u16 *) buf;
 
-    for(buf_ = buf, count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
-    {
 #ifdef BUG_ATA_BYTE_SWAP
+    u16 count;
+
+    for(count = ATA_SECTOR_SIZE / sizeof(u16); count; count--)
+    {
         /*
             The lambda rev0 pcb has its ATA data bus connected to the CPU data bus as:
 
@@ -448,10 +450,10 @@ void ata_read_data(vu16 * const ata_data_port, void *buf)
         u16 data = *ata_data_port;
         bswap_16(data);
         *buf_++ = data;
-#else
-        *buf_++ = *ata_data_port;
-#endif
     }
+#else
+    mem_scatter16v(ata_data_port, buf_, ATA_SECTOR_SIZE / sizeof(u16));
+#endif
 }
 
 
@@ -462,11 +464,11 @@ void ata_write_data(vu16 * const ata_data_port, const void *buf)
 {
     if(buf != NULL)
     {
+#ifdef BUG_ATA_BYTE_SWAP
         ku16 * const end = (ku16 *) ((u8 *) buf + ATA_SECTOR_SIZE), *buf_;
 
         for(buf_ = buf; buf_ != end;)
         {
-#ifdef BUG_ATA_BYTE_SWAP
             /*
                 The lambda rev0 pcb has its ATA data bus connected to the CPU data bus as:
 
@@ -490,18 +492,15 @@ void ata_write_data(vu16 * const ata_data_port, const void *buf)
             u16 data = *buf_++;
             bswap_16(data);
             *ata_data_port = data;
-#else
-            *ata_data_port = *buf_++;
-#endif
         }
+#else
+        mem_gather16v(buf, ata_data_port, ATA_SECTOR_SIZE / sizeof(u16));
+#endif
     }
     else
     {
-        u16 count = ATA_SECTOR_SIZE / sizeof(u16);
-
         /* Zero-fill the sector */
-        while(count--)
-            *ata_data_port = 0;
+        mem_gather16v_zf(ata_data_port, ATA_SECTOR_SIZE / sizeof(u16));
     }
 }
 

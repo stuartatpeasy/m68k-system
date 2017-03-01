@@ -1,5 +1,5 @@
-#ifndef CPU_MC68000_MC68000_H_INC
-#define CPU_MC68000_MC68000_H_INC
+#ifndef CPU_M68000_M68000_H_INC
+#define CPU_M68000_M68000_H_INC
 /*
     Declarations relating to the Motorola 68000 CPU
 
@@ -11,6 +11,7 @@
 
 #include <kernel/include/types.h>
 #include <cpu/m68000/exceptions.h>
+#include <cpu/m68000/primitives.h>
 
 #define CPU_MAX_IRQL        255
 
