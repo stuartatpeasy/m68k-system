@@ -29,7 +29,7 @@ LIBGCCDIR=$(TOOLDIR)/lib/gcc/$(TOOLPREFIX)/$(TARGET_GCC_VERSION)/$(ARCH)
 
 # Target compile/link options
 TARGET_CFLAGS=-I. -Iklibc -Wall -Wextra -O2 -$(ARCH) -g -include buildcfg.h -ffreestanding \
-              -fomit-frame-pointer -fno-delete-null-pointer-checks -floop-unroll-and-jam
+              -fomit-frame-pointer -fno-delete-null-pointer-checks
 
 TARGET_LDFLAGS=-g -T $(LDSCRIPT) -nostdlib -static -L$(LIBGCCDIR) -L.
 
