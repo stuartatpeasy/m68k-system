@@ -467,12 +467,12 @@ s32 fat_get_next_cluster(vfs_t * const vfs, const fat16_cluster_id cluster,
             reached the end of the root dir nodes.
         */
         if(++*next_cluster == (fs->root_dir_clusters - FAT_ROOT_BLOCK))
-            *next_cluster = FAT_CHAIN_TERMINATOR;
+            *next_cluster = N2LE16(FAT_CHAIN_TERMINATOR);
     }
     else if(FAT_CHAIN_END(cluster))
     {
         /* cluster represents an end-of-chain marker; set next_cluster to an EOC marker too. */
-        *next_cluster = FAT_CHAIN_TERMINATOR;
+        *next_cluster = N2LE16(FAT_CHAIN_TERMINATOR);
     }
     else
     {
@@ -572,7 +572,7 @@ s32 fat_open_dir(vfs_t *vfs, u32 block, void **ctx)
 
     dir_ctx->buffer_end = ((void *) dir_ctx->buffer) + bytes_per_cluster;
     dir_ctx->cluster = block;
-    dir_ctx->de = dir_ctx->buffer;   /* Point de (addr of current node) at start of node buffer */          /////////////////////////////////////////////////////
+    dir_ctx->de = dir_ctx->buffer;   /* Point de (addr of current node) at start of node buffer */
     dir_ctx->is_root_dir = (block == FAT_ROOT_BLOCK);
 
     *ctx = dir_ctx;

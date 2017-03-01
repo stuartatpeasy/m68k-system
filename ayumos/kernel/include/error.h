@@ -28,6 +28,8 @@
 #define EBADSBLK            (505)   /* Bad superblock                                   */
 #define EDEVINITFAILED      (506)   /* Device initialisation failed                     */
 #define EDEVOPFAILED        (507)   /* Command sent to hardware device failed           */
+#define EREAD               (508)   /* Read failed                                      */
+#define EWRITE              (509)   /* Write failed                                     */
 
 #define ENOTEXE             (600)   /* Not an executable file                           */
 #define EEXEBADHDR          (601)   /* Bad header in executable file                    */

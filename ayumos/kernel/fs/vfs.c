@@ -43,10 +43,10 @@ static s32 vfs_default_get_root_node(vfs_t *vfs, fs_node_t **node);
 static s32 vfs_default_open_dir(vfs_t *vfs, u32 node, void **ctx);
 static s32 vfs_default_read_dir(vfs_t *vfs, void *ctx, ks8 * const name, fs_node_t *node);
 static s32 vfs_default_close_dir(vfs_t *vfs, void *ctx);
-static s32 vfs_default_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, u32 offset,
-                            ks32 count);
-static s32 vfs_default_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer, u32 offset,
-                             ks32 count);
+static s32 vfs_default_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer,
+                            u32 offset, ks32 count);
+static s32 vfs_default_write(vfs_t * const vfs, fs_node_t * const node, const void * const buffer,
+                             u32 offset, ks32 count);
 static s32 vfs_default_reallocate(vfs_t * const vfs, fs_node_t * const node, ks32 new_len);
 static s32 vfs_default_stat(vfs_t *vfs, fs_stat_t *st);
 
@@ -312,7 +312,7 @@ s32 vfs_unmount(vfs_t *vfs)
     vfs_open_dir() - "open" the directory at <node>, i.e. ensure that <node> represents a directory,
     and prepare to iterate over directory entries.
 */
-s32 vfs_open_dir(vfs_t *vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx)
+s32 vfs_open_dir(vfs_t * const vfs, fs_node_t * const node, vfs_dir_ctx_t **ctx)
 {
     vfs_dir_ctx_t *context;
     s32 ret;
