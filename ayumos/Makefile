@@ -81,7 +81,7 @@ $(APPNAME): $(OBJECTS) $(TOOLS)
 	$(TARGET_OBJCOPY) -j .text -j .rodata -j .data -O binary $(APPNAME) $(ROM)
 	truncate --size %4 $(ROM)
 	echo "(TARGET_NM) $(ROM)"
-	$(TARGET_NM) $(APPNAME) | tools/bin/makemap >> $(ROM)
+	$(TARGET_NM) -g $(APPNAME) | tools/bin/makemap >> $(ROM)
 	echo "(TARGET_OBJCOPY) $(ROM_EVEN)"
 	$(TARGET_OBJCOPY) -i 2 -b 0 -I binary -O binary $(ROM) $(ROM_EVEN)
 	echo "(TARGET_OBJCOPY) $(ROM_ODD)"

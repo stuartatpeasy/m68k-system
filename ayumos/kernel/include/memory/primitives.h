@@ -18,7 +18,7 @@
     primitive can be used to copy a block of data to a data port in a 16-bit peripheral.
 */
 #ifndef HAVE_mem_gather16v
-inline void mem_gather16v(ku16 * restrict src, vu16 * restrict const dest, u16 count)
+inline void mem_gather16v(ku16 * restrict src, vu16 * restrict dest, u16 count)
 {
     while(count--)
         *dest = *(src++);
@@ -33,7 +33,7 @@ inline void mem_gather16v(ku16 * restrict src, vu16 * restrict const dest, u16 c
     mem_gather16v().
 */
 #ifndef HAVE_mem_gather16v_zf
-inline void mem_gather16v_zf(vu16 * restrict const dest, u16 count)
+inline void mem_gather16v_zf(vu16 * restrict dest, u16 count)
 {
     while(count--)
         *dest = 0;
@@ -46,7 +46,7 @@ inline void mem_gather16v_zf(vu16 * restrict const dest, u16 count)
     primitive can be used to copy a block of data from a data port in a 16-bit peripheral.
 */
 #ifndef HAVE_mem_scatter16v
-inline void mem_scatter16v(vu16 * restrict const src, u16 * restrict dest, u16 count)
+inline void mem_scatter16v(vu16 * restrict src, u16 * restrict dest, u16 count)
 {
     while(count--)
         *(dest++) = *src;

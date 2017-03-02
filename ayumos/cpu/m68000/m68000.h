@@ -165,8 +165,8 @@ inline u16 bswap_16(u16 x)
     asm volatile
     (
         "bswap_16_%=:               rol.w #8, %w0           \n"
-        : /* "=d" (x_) */
-        : "d" (x_)
+        : "=d" (x_)
+        : /* "d" (x_) */
         : "cc"
     );
 
@@ -182,8 +182,8 @@ inline u32 bswap_32(u32 x)
         "bswap_32_%=:               rol.w #8, %0            \n"
         "                           swap %0                 \n"
         "                           rol.w #8, %0            \n"
-        :
-        : "d" (x_)
+        : "=d" (x_)
+        : /* "d" (x_) */
         : "cc"
     );
 
@@ -197,8 +197,8 @@ inline u32 wswap_32(u32 x)
     asm volatile
     (
         "wswap_32_%=:               swap %0                 \n"
-        :
-        : "d" (x_)
+        : "=d" (x_)
+        : /* "d" (x_) */
         : "cc"
     );
 
