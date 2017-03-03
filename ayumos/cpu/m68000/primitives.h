@@ -20,8 +20,8 @@ inline void mem_gather16v(ku16 * restrict src, vu16 * restrict dest, u16 count)
         "mem_gather16v_%=:          bras mem_gather16v_start_%=         \n"
         "mem_gather16v_loop_%=:     movew %0@, %1@+                     \n"
         "mem_gather16v_start_%=:    dbf %2, mem_gather16v_loop_%=       \n"
-        : "=a" (src)
-        : "a" (dest), "d" (count)
+        : "+a" (src), "+a" (dest), "+d" (count)
+        :
         : "cc", "memory"
     );
 };
@@ -38,8 +38,8 @@ inline void mem_gather16v_zf(vu16 * restrict dest, u16 count)
         "mem_gather16v_zf_%=:       bras mem_gather16v_zf_start_%=      \n"
         "mem_gather16v_zf_loop_%=:  clrw %0@+                           \n"
         "mem_gather16v_zf_start_%=: dbf %1, mem_gather16v_zf_loop_%=    \n"
+        : "+a" (dest), "+d" (count)
         :
-        : "a" (dest), "d" (count)
         : "cc", "memory"
     );
 };
