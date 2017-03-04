@@ -69,6 +69,41 @@ MONITOR_CMD_HANDLER(arp)
 
 
 /*
+    cat
+
+    Copy the contents of a file to the terminal
+*/
+MONITOR_CMD_HANDLER(cat)
+{
+    file_handle_t *fh;
+    char buf[128];
+    s32 ret;
+    UNUSED(num_args);       /* TODO: allow cat of multiple files? */
+
+    ret = file_open(args[0], O_RD, &fh);
+    if(ret == SUCCESS)
+    {
+        bzero(buf, sizeof(buf));
+
+        ret = file_read(fh, buf, sizeof(buf) - 1);
+        if(ret < 0)
+        {
+            file_close(fh);
+            return ret;
+        }
+
+        buf[ret] = '\0';
+        puts(buf);
+
+        file_close(fh);
+        return SUCCESS;
+    }
+
+    return ret;
+}
+
+
+/*
     date
 
     Get/set the date
@@ -1256,6 +1291,8 @@ MONITOR_CMD_HANDLER(test)
                               proc_current(), &pid);
             printf("(%d)\n", pid);
         }
+
+        return SUCCESS;
     }
 #ifdef WITH_NETWORKING
     else if(testnum == 2)
@@ -1267,6 +1304,8 @@ MONITOR_CMD_HANDLER(test)
         }
         else
             puts("Interface eth0 not found");
+
+        return SUCCESS;
     }
     else if(testnum == 3)
     {
@@ -1277,34 +1316,8 @@ MONITOR_CMD_HANDLER(test)
         return tftp_read_request(&server, "test.txt");
     }
 #endif /* WITH_NETWORKING */
-    else if(testnum == 4)
-    {
-        file_handle_t *fh;
-        char buf[128];
 
-        ret = file_open(args[1], O_RD, &fh);
-        if(ret == SUCCESS)
-        {
-            bzero(buf, sizeof(buf));
-
-            ret = file_read(fh, buf, sizeof(buf) - 1);
-            if(ret < 0)
-            {
-                file_close(fh);
-                return ret;
-            }
-
-            buf[ret] = '\0';
-            puts(buf);
-
-            file_close(fh);
-            return SUCCESS;
-        }
-
-        return ret;
-    }
-
-    return SUCCESS;
+    return -EINVAL;
 }
 
 

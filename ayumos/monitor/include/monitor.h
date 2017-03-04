@@ -10,6 +10,7 @@
 */
 
 #include <platform/lambda/include/dfu.h>
+#include <kernel/include/fs/file.h>
 #include <kernel/include/fs/mount.h>
 #include <kernel/include/fs/path.h>
 #include <kernel/include/fs/vfs.h>
@@ -87,6 +88,7 @@ MONITOR_CMD_HANDLER(route);
 MONITOR_CMD_HANDLER(date);
 #endif /* WITH_RTC */
 
+MONITOR_CMD_HANDLER(cat);
 MONITOR_CMD_HANDLER(dfu);
 MONITOR_CMD_HANDLER(disassemble);
 MONITOR_CMD_HANDLER(dump);

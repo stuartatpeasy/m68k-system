@@ -23,6 +23,7 @@ const struct command g_commands[] =
 #ifdef WITH_NETWORKING
     {"arp",             cmd_arp},
 #endif /* WITH_NETWORKING */
+    {"cat",             cmd_cat},
     {"date",            cmd_date},
     {"dfu",             cmd_dfu},
     {"disassemble",     cmd_disassemble},
