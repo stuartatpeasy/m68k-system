@@ -220,15 +220,16 @@ s32 block_read_multi(dev_t * const dev, u32 block, u32 count, void *buf)
 {
     s32 ret;
     u8 *p;
+    u32 remaining;
 
-    for(p = (u8 *) buf; count--; ++block, p += BLOCK_SIZE)
+    for(remaining = count, p = (u8 *) buf; remaining--; ++block, p += BLOCK_SIZE)
     {
         ret = block_read(dev, block, p);
         if(ret != SUCCESS)
             return ret;
     }
 
-    return SUCCESS;
+    return count;
 }
 
 
@@ -239,10 +240,11 @@ s32 block_write_multi(dev_t * const dev, u32 block, u32 count, const void *buf)
 {
     s32 ret;
     ku8 *p;
+    u32 remaining;
 
     if(buf != NULL)
     {
-        for(p = (ku8 *) buf; count--; ++block, p += BLOCK_SIZE)
+        for(remaining = count, p = (ku8 *) buf; remaining--; ++block, p += BLOCK_SIZE)
         {
             ret = block_write(dev, block, p);
             if(ret != SUCCESS)
@@ -252,7 +254,7 @@ s32 block_write_multi(dev_t * const dev, u32 block, u32 count, const void *buf)
     else
     {
         /* Block should be zero-filled */
-        while(count--)
+        for(remaining = count; remaining--;)
         {
             ret = block_write(dev, block++, NULL);
             if(ret != SUCCESS)
@@ -260,7 +262,7 @@ s32 block_write_multi(dev_t * const dev, u32 block, u32 count, const void *buf)
         }
     }
 
-    return ret;
+    return count;
 }
 
 

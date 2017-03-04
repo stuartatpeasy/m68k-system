@@ -384,11 +384,13 @@ s32 vfs_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, ku3
     s32 ret, nblocks;
     u8 *buf;
     ku32 block_offset = offset % BLOCK_SIZE;
+    s32 count_;
 
     block = offset / BLOCK_SIZE;
     nblocks = (block_offset + count + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     buf = umalloc(nblocks * BLOCK_SIZE);
+
     if(buf == NULL)
         return -ENOMEM;
 
@@ -411,10 +413,15 @@ s32 vfs_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, ku3
         }
     }
 
-    memcpy(buffer, buf + (offset % BLOCK_SIZE), count);
+    if((offset + count) > node->size)
+        count_ = node->size - offset;
+    else
+        count_ = count;
+
+    memcpy(buffer, buf + (offset % BLOCK_SIZE), count_);
     ufree(buf);
 
-    return count;
+    return count_;
 }
 
 

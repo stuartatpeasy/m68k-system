@@ -1280,10 +1280,28 @@ MONITOR_CMD_HANDLER(test)
     else if(testnum == 4)
     {
         file_handle_t *fh;
+        char buf[128];
 
         ret = file_open(args[1], O_RD, &fh);
         if(ret == SUCCESS)
+        {
+            bzero(buf, sizeof(buf));
+
+            ret = file_read(fh, buf, sizeof(buf) - 1);
+            if(ret < 0)
+            {
+                file_close(fh);
+                return ret;
+            }
+
+            printf("file_read() returned %d\n", ret);
+
+            buf[ret] = '\0';
+            puts(buf);
+
             file_close(fh);
+            return SUCCESS;
+        }
 
         return ret;
     }
