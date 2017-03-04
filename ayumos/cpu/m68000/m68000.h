@@ -153,60 +153,6 @@ inline void cpu_disable_interrupts(void)
 
 
 /*
-    Byte-/word-swapping "intrinsics"
-
-    FIXME - these don't work when used on memory operands, e.g. *p = bswap_16(*p).
-    For some reason the compiler optimises away the writeback, or something.
-*/
-
-inline u16 bswap_16(u16 x)
-{
-    register u16 x_ = x;
-    asm volatile
-    (
-        "bswap_16_%=:               rol.w #8, %w0           \n"
-        : "=d" (x_)
-        : /* "d" (x_) */
-        : "cc"
-    );
-
-    return x_;
-}
-
-
-inline u32 bswap_32(u32 x)
-{
-    register u32 x_ = x;
-    asm volatile
-    (
-        "bswap_32_%=:               rol.w #8, %0            \n"
-        "                           swap %0                 \n"
-        "                           rol.w #8, %0            \n"
-        : "=d" (x_)
-        : /* "d" (x_) */
-        : "cc"
-    );
-
-    return x_;
-}
-
-
-inline u32 wswap_32(u32 x)
-{
-    register u32 x_ = x;
-    asm volatile
-    (
-        "wswap_32_%=:               swap %0                 \n"
-        : "=d" (x_)
-        : /* "d" (x_) */
-        : "cc"
-    );
-
-    return x_;
-}
-
-
-/*
     cpu_tas() - atomically test and set a byte-sized memory location to 1, returning the previous
     contents of the location.
 */

@@ -19,6 +19,7 @@
 #include <kernel/include/fs/vfs.h>
 #include <kernel/include/ksym.h>
 #include <kernel/include/memory/kmalloc.h>
+#include <kernel/include/memory/primitives.h>
 #include <kernel/include/memory/slab.h>
 #include <kernel/include/net/arp.h>
 #include <kernel/include/net/ipv4.h>

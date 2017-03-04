@@ -38,10 +38,6 @@ u32 cpu_swi();                                  /* Raise a software IRQ (=TRAP #
 */
 inline u8 cpu_tas(u8 *addr);
 
-inline u16 bswap_16(u16 x);
-inline u32 bswap_32(u32 x);
-inline u32 wswap_32(u32 x);
-
 /*
     Process-related declarations
     ----------------------------

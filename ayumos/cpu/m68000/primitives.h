@@ -9,6 +9,71 @@
 */
 
 
+/* Byte-/word-swapping primitives */
+
+
+/*
+    bswap_16() - swap the endianness of a 16-bit half-word.
+*/
+#define HAVE_bswap_16
+inline u16 bswap_16(u16 x)
+{
+    register u16 x_ = x;
+    asm volatile
+    (
+        "bswap_16_%=:               rol.w #8, %w0           \n"
+        : "+d" (x_)
+        :
+        : "cc"
+    );
+
+    return x_;
+};
+
+
+/*
+    bswap_32() - swap the endianness of a 32-bit word.
+*/
+#define HAVE_bswap_32
+inline u32 bswap_32(u32 x)
+{
+    register u32 x_ = x;
+    asm volatile
+    (
+        "bswap_32_%=:               rol.w #8, %0            \n"
+        "                           swap %0                 \n"
+        "                           rol.w #8, %0            \n"
+        : "+d" (x_)
+        :
+        : "cc"
+    );
+
+    return x_;
+};
+
+
+/*
+    wswap_32() - swap the 16-bit half-words in a 32-bit word.
+*/
+#define HAVE_wswap_32
+inline u32 wswap_32(u32 x)
+{
+    register u32 x_ = x;
+    asm volatile
+    (
+        "wswap_32_%=:               swap %0                 \n"
+        : "+d" (x_)
+        :
+        : "cc"
+    );
+
+    return x_;
+};
+
+
+/* Scatter/gather primitives */
+
+
 /*
     mem_gather16v() - "gather" <count> half-words from <src> into the volatile destination <dest>.
 */

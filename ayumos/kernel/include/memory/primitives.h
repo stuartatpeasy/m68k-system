@@ -13,17 +13,59 @@
 #include <kernel/include/types.h>
 
 
+/* Byte-/word-swapping primitves */
+
+
+/*
+    bswap_16() - swap the endianness of a 16-bit half-word.
+*/
+#ifndef HAVE_bswap_16
+#define HAVE_bswap_16
+inline u16 bswap_16(u16 x)
+{
+    return (x << 8) | (x >> 8);
+}
+#endif
+
+
+/*
+    bswap_32() - swap the endianness of a 32-bit word.
+*/
+#ifndef HAVE_bswap_32
+#define HAVE_bswap_32
+inline u32 bswap_32(u32 x)
+{
+    return (x << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | (x >> 24);
+};
+#endif
+
+
+/*
+    wswap_32() - swap the 16-bit half-words in a 32-bit word.
+*/
+#ifndef HAVE_wswap_32
+#define HAVE_wswap_32
+inline u32 wswap_32(u32 x)
+{
+    return (x << 16) | (x >> 16);
+};
+#endif
+
+
+/* Scatter/gather primitives */
+
+
 /*
     mem_gather16v() - perform a "gather" operation to a 16-bit-wide volatile destination.  This
     primitive can be used to copy a block of data to a data port in a 16-bit peripheral.
 */
 #ifndef HAVE_mem_gather16v
+#define HAVE_mem_gather16v
 inline void mem_gather16v(ku16 * restrict src, vu16 * restrict dest, u16 count)
 {
     while(count--)
         *dest = *(src++);
 };
-#define HAVE_mem_gather16v
 #endif
 
 
@@ -33,25 +75,26 @@ inline void mem_gather16v(ku16 * restrict src, vu16 * restrict dest, u16 count)
     mem_gather16v().
 */
 #ifndef HAVE_mem_gather16v_zf
+#define HAVE_mem_gather16v_zf
 inline void mem_gather16v_zf(vu16 * restrict dest, u16 count)
 {
     while(count--)
         *dest = 0;
-}
-#define HAVE_mem_gather16v_zf
+};
 #endif
+
 
 /*
     mem_scatter16v() - perform a "scatter" operation from a 16-bit-wide volatile source.  This
     primitive can be used to copy a block of data from a data port in a 16-bit peripheral.
 */
 #ifndef HAVE_mem_scatter16v
+#define HAVE_mem_scatter16v
 inline void mem_scatter16v(vu16 * restrict src, u16 * restrict dest, u16 count)
 {
     while(count--)
         *(dest++) = *src;
 };
-#define HAVE_mem_scatter16v
 #endif
 
 #endif
