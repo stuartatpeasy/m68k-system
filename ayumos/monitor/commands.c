@@ -1294,8 +1294,6 @@ MONITOR_CMD_HANDLER(test)
                 return ret;
             }
 
-            printf("file_read() returned %d\n", ret);
-
             buf[ret] = '\0';
             puts(buf);
 
