@@ -98,6 +98,23 @@ inline void mem_gather16v(ku16 * restrict src, vu16 * restrict dest, u16 count)
 #define HAVE_mem_gather16v_zf
 inline void mem_gather16v_zf(vu16 * restrict dest, u16 count)
 {
+#ifdef TARGET_MC68000
+    /*
+        MC68000 has a microcode bug causing the "clr" instruction to read the location to be cleared
+        before zeroing it.  For the MC68000, we therefore clear a register and write it to the
+        destination location instead of using clr directly on the destination.
+    */
+    asm volatile
+    (
+        "mem_gather16v_zf_%=:       clrw %%d0                           \n"
+        "                           bras mem_gather16v_zf_start_%=      \n"
+        "mem_gather16v_zf_loop_%=:  movew %%d0, %0@+                    \n"
+        "mem_gather16v_zf_start_%=: dbf %1, mem_gather16v_zf_loop_%=    \n"
+        : "+a" (dest), "+d" (count)
+        :
+        : "cc", "memory", "d0"
+    );
+#else
     asm volatile
     (
         "mem_gather16v_zf_%=:       bras mem_gather16v_zf_start_%=      \n"
@@ -107,6 +124,7 @@ inline void mem_gather16v_zf(vu16 * restrict dest, u16 count)
         :
         : "cc", "memory"
     );
+#endif
 };
 
 
