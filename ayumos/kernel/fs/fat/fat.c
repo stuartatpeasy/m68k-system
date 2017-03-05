@@ -819,8 +819,8 @@ static s32 fat_read(vfs_t * const vfs, fs_node_t * const node, void * const buff
         return fat_read_cluster_partial(vfs, cluster, buffer_, offset, remaining);
 
     ret = fat_read_cluster_partial(vfs, cluster, buffer_, offset, fs->sectors_per_cluster - offset);
-    if(ret != SUCCESS)
-        return ret;
+    if(ret < (s32) (fs->sectors_per_cluster - offset))
+        return ret;     /* Bail out following a short read or an error */
 
     remaining -= fs->sectors_per_cluster - offset;
     buffer_ += BLOCK_SIZE * (fs->sectors_per_cluster - offset);
@@ -844,7 +844,14 @@ static s32 fat_read(vfs_t * const vfs, fs_node_t * const node, void * const buff
 
     /* Final cluster: copy the appropriate part into the buffer */
     if(remaining)
-        return fat_read_cluster_partial(vfs, cluster, buffer_, 0, remaining);
+    {
+        ret = fat_get_next_cluster(vfs, cluster, &cluster);
+        if(ret != SUCCESS)
+            return ret;
+
+        if(!FAT_CHAIN_END(cluster))
+            return fat_read_cluster_partial(vfs, cluster, buffer_, 0, remaining);
+    }
 
     return count;
 }
