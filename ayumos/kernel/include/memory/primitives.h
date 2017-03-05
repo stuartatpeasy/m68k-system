@@ -11,6 +11,7 @@
 */
 
 #include <kernel/include/types.h>
+#include <kernel/include/cpu.h>
 
 
 /* Byte-/word-swapping primitves */
@@ -52,6 +53,34 @@ inline u32 wswap_32(u32 x)
 #endif
 
 
+/* Memory copying / zeroing primitives */
+
+/*
+    memcpy_align4() - copy <count> bytes from <src> to <dest>, with the assumption that both <src>
+    and <dest> are aligned on a four-byte boundary.
+*/
+#ifndef HAVE_memcpy_align4
+#define HAVE_memcpy_align4
+inline void memcpy_align4(void *dest, void *src, u32 count)
+{
+    if(count & 0x3)
+    {
+        switch(count)
+        {
+            case 3:     *((u8 *) dest++) = *((u8 *) src++);     /* Fall through */
+            case 2:     *((u8 *) dest++) = *((u8 *) src++);     /* Fall through */
+            case 1:     *((u8 *) dest++) = *((u8 *) src++);     /* Fall through */
+        }
+    }
+
+    count >>= 2;
+
+    while(count--)
+        *((u32 *) dest++) = *((u32 *) src++);
+};
+#endif
+
+
 /* Scatter/gather primitives */
 
 
@@ -61,7 +90,7 @@ inline u32 wswap_32(u32 x)
 */
 #ifndef HAVE_mem_gather16v
 #define HAVE_mem_gather16v
-inline void mem_gather16v(ku16 * restrict src, vu16 * restrict dest, u16 count)
+inline void mem_gather16v(vu16 * restrict dest, ku16 * restrict src, u16 count)
 {
     while(count--)
         *dest = *(src++);
@@ -90,7 +119,7 @@ inline void mem_gather16v_zf(vu16 * restrict dest, u16 count)
 */
 #ifndef HAVE_mem_scatter16v
 #define HAVE_mem_scatter16v
-inline void mem_scatter16v(vu16 * restrict src, u16 * restrict dest, u16 count)
+inline void mem_scatter16v(u16 * restrict dest, vu16 * restrict src, u16 count)
 {
     while(count--)
         *(dest++) = *src;

@@ -452,7 +452,7 @@ void ata_read_data(vu16 * const ata_data_port, void *buf)
         *buf_++ = data;
     }
 #else
-    mem_scatter16v(ata_data_port, buf_, ATA_SECTOR_SIZE / sizeof(u16));
+    mem_scatter16v(buf_, ata_data_port, ATA_SECTOR_SIZE / sizeof(u16));
 #endif
 }
 
@@ -494,7 +494,7 @@ void ata_write_data(vu16 * const ata_data_port, const void *buf)
             *ata_data_port = data;
         }
 #else
-        mem_gather16v(buf, ata_data_port, ATA_SECTOR_SIZE / sizeof(u16));
+        mem_gather16v(ata_data_port, buf, ATA_SECTOR_SIZE / sizeof(u16));
 #endif
     }
     else

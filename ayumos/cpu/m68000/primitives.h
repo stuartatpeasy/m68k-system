@@ -71,6 +71,50 @@ inline u32 wswap_32(u32 x)
 };
 
 
+/* Memory copying / zeroing primitives */
+
+/*
+    memcpy_align4() - copy <count> bytes from <src> to <dest>, with the assumption that both <src>
+    and <dest> are aligned on a four-byte boundary.
+*/
+#define HAVE_memcpy_align4
+inline void memcpy_align4(void *dest, void *src, u32 count)
+{
+    u16 iter, count_;
+    u8 trail = count, *src_, *dest_;
+
+    trail = count & 0x3;
+    count >>= 2;
+    iter = count >> 16;
+    count_ = (u16) count;
+
+    do
+    {
+        asm volatile
+        (
+            "memcpy_align4_%=:          bras memcpy_align4_start_%=         \n"
+            "memcpy_align4_loop_%=:     movel %0@+, %1@+                    \n"
+            "memcpy_align4_start_%=:    dbf %2, memcpy_align4_loop_%=       \n"
+            : "+a" (src), "+a" (dest), "+d" (count_)
+            :
+            : "cc", "memory"
+        );
+    } while(iter--);
+
+    src_ = (u8 *) src;
+    dest_ = (u8 *) dest;
+
+    switch(trail)
+    {
+        case 3:     *dest_++ = *src_++;     /* Fall through */
+        case 2:     *dest_++ = *src_++;     /* Fall through */
+        case 1:     *dest_++ = *src_++;     /* Fall through */
+        default:
+            ;       /* Do nothing */
+    }
+};
+
+
 /* Scatter/gather primitives */
 
 
@@ -78,7 +122,7 @@ inline u32 wswap_32(u32 x)
     mem_gather16v() - "gather" <count> half-words from <src> into the volatile destination <dest>.
 */
 #define HAVE_mem_gather16v
-inline void mem_gather16v(ku16 * restrict src, vu16 * restrict dest, u16 count)
+inline void mem_gather16v(vu16 * restrict dest, ku16 * restrict src, u16 count)
 {
     asm volatile
     (
@@ -133,7 +177,7 @@ inline void mem_gather16v_zf(vu16 * restrict dest, u16 count)
     <dest>.
 */
 #define HAVE_mem_scatter16v
-inline void mem_scatter16v(vu16 * restrict src, u16 * restrict dest, u16 count)
+inline void mem_scatter16v(u16 * restrict dest, vu16 * restrict src, u16 count)
 {
     asm volatile
     (

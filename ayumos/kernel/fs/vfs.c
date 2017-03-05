@@ -12,6 +12,7 @@
 #include <kernel/include/device/nvram.h>
 #include <kernel/include/fs/vfs.h>
 #include <kernel/include/fs/mount.h>
+#include <kernel/include/memory/primitives.h>
 #include <kernel/include/memory/slab.h>
 
 
@@ -406,7 +407,7 @@ s32 vfs_read(vfs_t * const vfs, fs_node_t * const node, void * const buffer, ku3
         else
         {
             /* Partial read - read some, but not all, of the requested blocks */
-            memcpy(buffer, buf + block_offset, (ret * BLOCK_SIZE) - block_offset);
+            memcpy_align4(buffer, buf + block_offset, (ret * BLOCK_SIZE) - block_offset);
             ufree(buf);
 
             return (ret * BLOCK_SIZE) - block_offset;
