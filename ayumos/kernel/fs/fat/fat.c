@@ -850,7 +850,13 @@ static s32 fat_read(vfs_t * const vfs, fs_node_t * const node, void * const buff
             return ret;
 
         if(!FAT_CHAIN_END(cluster))
-            return fat_read_cluster_partial(vfs, cluster, buffer_, 0, remaining);
+        {
+            ret = fat_read_cluster_partial(vfs, cluster, buffer_, 0, remaining);
+            if(ret < 0)
+                return ret;
+
+            return count - (remaining - ret);
+        }
     }
 
     return count;
@@ -900,8 +906,8 @@ static s32 fat_write(vfs_t * const vfs, fs_node_t * const node, const void * con
 
     ret = fat_write_cluster_partial(vfs, cluster, buffer_, offset,
                                     fs->sectors_per_cluster - offset);
-    if(ret != SUCCESS)
-        return ret;
+    if(ret < (s32) (fs->sectors_per_cluster - offset))
+        return ret;     /* Bail out following a short read or an error */
 
     remaining -= fs->sectors_per_cluster - offset;
     buffer_ += BLOCK_SIZE * (fs->sectors_per_cluster - offset);
@@ -933,8 +939,10 @@ static s32 fat_write(vfs_t * const vfs, fs_node_t * const node, const void * con
             return -EINVAL;     /* Premature end-of-chain: this indicates corruption. */
 
         ret = fat_write_cluster_partial(vfs, cluster, buffer_, 0, remaining);
-        if(ret != SUCCESS)
+        if(ret < 0)
             return ret;
+
+        return count - (remaining - ret);
     }
 
     return count;
