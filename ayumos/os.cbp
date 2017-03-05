@@ -237,9 +237,6 @@
 		<Unit filename="kernel/ksym.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="kernel/memory/blockalloc.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="kernel/memory/buddy.c">
 			<Option compilerVar="CC" />
 		</Unit>

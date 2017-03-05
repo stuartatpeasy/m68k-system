@@ -71,10 +71,7 @@ s32 file_open(ks8 * const path, u16 flags, file_handle_t **fh)
             }
         }
         else
-        {
-            slab_free(node);
             return -ENOENT;     /* File does not exist */
-        }
     }
     else
         return ret;     /* Something went wrong in path_open() */
