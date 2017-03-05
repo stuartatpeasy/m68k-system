@@ -71,35 +71,50 @@ MONITOR_CMD_HANDLER(arp)
 /*
     cat
 
-    Copy the contents of a file to the terminal
+    Copy the contents of the specified files to the terminal
 */
 MONITOR_CMD_HANDLER(cat)
 {
     file_handle_t *fh;
-    char buf[128];
+    char *buffer;
+    ku16 buf_len = 4096;
+    u16 u;
     s32 ret;
-    UNUSED(num_args);       /* TODO: allow cat of multiple files? */
 
-    ret = file_open(args[0], O_RD, &fh);
-    if(ret == SUCCESS)
+    buffer = umalloc(buf_len);
+    if(buffer == NULL)
+        return -ENOMEM;
+
+    for(u = 0; u < num_args; ++u)
     {
-        bzero(buf, sizeof(buf));
-
-        ret = file_read(fh, buf, sizeof(buf) - 1);
-        if(ret < 0)
+        ret = file_open(args[u], O_RD, &fh);
+        if(ret != SUCCESS)
         {
-            file_close(fh);
+            ufree(buffer);
             return ret;
         }
 
-        buf[ret] = '\0';
-        puts(buf);
+        do
+        {
+            ret = file_read(fh, buffer, buf_len - 1);
+            if(ret < 0)
+            {
+                file_close(fh);
+                ufree(buffer);
+                return ret;
+            }
+
+            buffer[ret] = '\0';
+            put(buffer);
+        } while(ret == buf_len - 1);
 
         file_close(fh);
-        return SUCCESS;
     }
 
-    return ret;
+    ufree(buffer);
+    putchar('\n');
+
+    return SUCCESS;
 }
 
 
