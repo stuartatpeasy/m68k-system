@@ -1,0 +1,29 @@
+Unique IDs exposed by devices, for auto-configuration
+
+Part of ayumos
+
+(c) Stuart Wallace, April 2017.
+
+
+On some supported platforms, expansion cards may respond to an "ID cycle", issued by the CPU as
+part of the boot process.  The nature of an ID cycle is not defined by the kernel.  For the lambda
+platform, it is implemented by asserting the peripheral nID signal during a regular 8-bit read
+cycle addressed to the first byte of the peripheral's address space.  The peripheral may respond by
+placing an 8-bit identifier on the upper 8 bits of the data bus, and terminating the cycle in the
+usual way.  The identifier is passed to the kernel, which uses it to select an appropriate inbuilt
+driver for the device.  See the file ayumos/kernel/device/auto.c for more information.
+
+All defined IDs are in the range 0x80 - 0xff.  IDs below 0x80 are reserved; eventually these may be
+used to indicate devices which contain additional identification information that may be read from
+other parts of the device address space.
+
+
+---------------------------------------------------------------------------------------------------
+ID      name                                description
+---------------------------------------------------------------------------------------------------
+0x81    ENCx24J600 Ethernet controller      10/100Mbps Ethernet controller using ENC624J600
+0x82    PS/2 port controller                Dual-port PS/2 controller
+0x83    QuadUSB                             Four-port USB2 controller (FT313HL and TUSB2046)
+0x84    FVGA1                               VGA video card implemented using iCE40HX1K FPGA
+---------------------------------------------------------------------------------------------------
+
