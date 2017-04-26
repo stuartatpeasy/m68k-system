@@ -35,8 +35,8 @@ TARGET_CFLAGS=-I. -Iklibc -Wall -Wextra -O2 -$(ARCH) -g -include buildcfg.h -ffr
               -fomit-frame-pointer -fno-delete-null-pointer-checks
 
 # [2017-04-26] Exceptions are disabled in C++ code until I work out how to deal with the generated
-# .eh_frame section.
-TARGET_CXXFLAGS=$(TARGET_CFLAGS) -fno-exceptions
+# .eh_frame section.  Ditto RTTI, until I can work out how to link the necessary vtable.
+TARGET_CXXFLAGS=$(TARGET_CFLAGS) -fno-exceptions -fno-rtti
 
 TARGET_LDFLAGS=-g -T $(LDSCRIPT) -nostdlib -static -L$(LIBGCCDIR) -L.
 
