@@ -13,7 +13,7 @@
 #include <klibc/include/errors.h>
 
 
-irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL + 1];
+irq_handler_table_entry_t g_irq_handlers[CPU_MAX_IRQL + 1] = {0};
 
 s32 cpu_irq_set_default_handler(ku32 irql);
 
@@ -36,21 +36,37 @@ void cpu_irq_init_table()
 
 
 /*
-    cpu_irq_set_default_handler() - install the default handler for the specified IRQ level
+    cpu_irq_set_default_handler() - install the default handler for the specified IRQ level,
+    replacing any existing chain of handlers.
 */
 s32 cpu_irq_set_default_handler(ku32 irql)
 {
-    irq_handler_table_entry_t *ent;
+    irq_handler_table_entry_t *ent, *next;
 
     if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
         return -EINVAL;
 
+    preempt_disable();                  /* BEGIN locked section */
+
     ent = &g_irq_handlers[irql];
+
+    /*
+        If a chain of handlers already exists on this irql, release all but the first handler
+        (which will subsequently be overwritten by the default handler)
+    */
+    for(next = ent->next; next;)
+    {
+        irq_handler_table_entry_t * const tmp = next;
+        next = next->next;
+        slab_free(tmp);
+    }
 
     ent->handler    = cpu_default_irq_handler;
     ent->data       = NULL;
     ent->flags      = IRQ_HANDLER_DEFAULT;
     ent->next       = NULL;
+
+    preempt_enable();                   /* END locked section */
 
     return SUCCESS;
 }
@@ -80,7 +96,10 @@ s32 cpu_irq_add_handler(ku32 irql, void *data, irq_handler handler)
 
         next = slab_alloc(sizeof(irq_handler_table_entry_t));
         if(next == NULL)
-            return -ENOMEM;
+        {
+            preempt_enable();
+            return -ENOMEM;         /* END locked section */
+        }
 
         /* Append the specified IRQ handler to the chain of handlers */
         while(ent->next != NULL)
@@ -113,6 +132,8 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
     if((irql == IRQL_NONE) || (irql > CPU_MAX_IRQL))
         return -EINVAL;
 
+    preempt_disable();                                      /* BEGIN locked section */
+
     for(ent_prev = NULL, ent = &g_irq_handlers[irql]; ent; ent_prev = ent, ent = ent->next)
     {
         /* Look for matching handler function and (optionally) a match on the data arg */
@@ -123,6 +144,8 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
                 /* This is not the first handler in a chain */
                 ent_prev->next = ent->next;
                 slab_free(ent);
+                preempt_enable();                           /* END locked section */
+
                 return SUCCESS;
             }
             else
@@ -139,16 +162,22 @@ s32 cpu_irq_remove_handler(ku32 irql, irq_handler handler, void *data)
                     *ent = *next;
 
                     slab_free(next);
+                    preempt_enable();                       /* END locked section */
+
                     return SUCCESS;
                 }
                 else
                 {
                     /* There are no subsequent handlers: install the default handler */
+                    preempt_enable();                       /* END locked section */
+
                     return cpu_irq_set_default_handler(irql);
                 }
             }
         }
     }
+
+    preempt_enable();                                       /* END locked section */
 
     return -ENOENT;
 }
