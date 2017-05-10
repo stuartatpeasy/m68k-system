@@ -93,16 +93,16 @@ set_io  HOST_A[2]        74
 set_io  HOST_A[1]        73
 
 # Host control signals
-set_io  HOST_nID         58     # Host ID request input
-set_io  HOST_nRESET      60     # Host reset input
+set_io  HOST_ID          58     # Host ID request input
+set_io  HOST_RESET       60     # Host reset input
 set_io  HOST_nIRQ        61     # Host IRQ output
 set_io  HOST_nW          62     # Host write request
 set_io  HOST_nUCS        63     # Host upper byte chip select
 set_io  HOST_nLCS        64     # Host lower byte chip select
 
 # VGA outputs
-set_io  VGA_VSYNC        43     # Vertical sync output
-set_io  VGA_HSYNC        42     # Horizontal sync output
+set_io  VGA_nVSYNC       43     # Vertical sync output
+set_io  VGA_nHSYNC       42     # Horizontal sync output
 set_io  VGA_R[2]         50     # Red output, bit 2
 set_io  VGA_R[1]         52     # Red output, bit 1
 set_io  VGA_R[0]         56     # Red output, bit 0

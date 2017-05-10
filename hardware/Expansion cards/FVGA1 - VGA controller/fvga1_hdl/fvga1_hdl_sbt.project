@@ -4,7 +4,7 @@ Version=Lattice Semiconductor Corporation iCEcube - Release: 2016.02.27810 - Bui
 ProjectName=fvga1_hdl
 Vendor=SiliconBlue
 Synthesis=synplify
-ProjectVFiles=../fvga1_hdl/fvga1.vhdl=work,../fvga1_hdl/pll.vhdl
+ProjectVFiles=fvga1.vhdl=work,pll.vhdl=work,bidir_bus.vhdl
 ProjectCFiles=
 CurImplementation=fvga1_hdl_Implmnt
 Implementations=fvga1_hdl_Implmnt
@@ -25,7 +25,7 @@ DesignCell=fvga1
 SynthesisSDCFile=fvga1_hdl_Implmnt/fvga1_hdl.scf
 UserPinConstraintFile=
 UserSDCFile=
-PhysicalConstraintFile=../fvga1_hdl/constraints.pcf
+PhysicalConstraintFile=constraints.pcf
 BackendImplPathName=
 Devicevoltage=1.2
 DevicevoltagePerformance=+/-5%(datasheet default)
@@ -67,7 +67,7 @@ VHDL2008=False
 VerilogIncludeSearchPath=
 
 [tool options]
-PlacerEffortLevel=high
+PlacerEffortLevel=mid
 PlacerAutoLutCascade=yes
 PlacerAutoRamCascade=yes
 PlacerPowerDriven=no
