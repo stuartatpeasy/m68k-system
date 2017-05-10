@@ -68,16 +68,30 @@ architecture behaviour of fvga1 is
     constant mem_d_width    : integer := 16;                    -- width of memory data bus
     constant host_d_width   : integer := 16;
 
-    constant vga_h_fp       : integer := 16;
-    constant vga_h_bp       : integer := 48;
-    constant vga_h_sync     : integer := 96;
-    constant vga_h_pixels   : integer := 640;
+    -- 640x480 timings
+--    constant vga_h_fp       : integer := 16;
+--    constant vga_h_bp       : integer := 48;
+--    constant vga_h_sync     : integer := 96;
+--    constant vga_h_pixels   : integer := 640;
+--    constant vga_h_sync_pol : std_logic := '0';
+--
+--    constant vga_v_fp       : integer := 10;
+--    constant vga_v_bp       : integer := 33;
+--    constant vga_v_sync     : integer := 2;
+--    constant vga_v_pixels   : integer := 480;
+--    constant vga_v_sync_pol : std_logic := '0';
+
+    -- 1024x768 timings
+    constant vga_h_fp       : integer := 24;
+    constant vga_h_bp       : integer := 160;
+    constant vga_h_sync     : integer := 136;
+    constant vga_h_pixels   : integer := 1024;
     constant vga_h_sync_pol : std_logic := '0';
 
-    constant vga_v_fp       : integer := 10;
-    constant vga_v_bp       : integer := 33;
-    constant vga_v_sync     : integer := 2;
-    constant vga_v_pixels   : integer := 480;
+    constant vga_v_fp       : integer := 3;
+    constant vga_v_bp       : integer := 29;
+    constant vga_v_sync     : integer := 6;
+    constant vga_v_pixels   : integer := 768;
     constant vga_v_sync_pol : std_logic := '0';
 
     constant h_period       : integer := vga_h_sync + vga_h_bp + vga_h_pixels + vga_h_fp;
@@ -106,16 +120,16 @@ begin
             pll_fr          => "001",
 
             -- 640x480
-            pll_divf        => "1010000",
-            pll_divq        => "101"
+            -- pll_divf        => "1010000",
+            -- pll_divq        => "101"
 
             -- 800x600
             -- pll_divf        => "0111111",
             -- pll_divq        => "100"
 
             -- 1024x768
-            -- pll_divf        => "1100111",
-            -- pll_divq        => "100"
+            pll_divf        => "1100111",
+            pll_divq        => "100"
         )
         port map(
             REFERENCECLK    => SYSCLK,
@@ -312,14 +326,16 @@ begin
 
             if(h_count < (h_period - 1)) then
                 h_count := h_count + 1;
-                if(cycle = 1) then
+                -- the following statement causes a significant usage of LUTs
+                if(h_count < (vga_h_pixels - 1)) and (cycle = 1) then
                     pixel_addr := pixel_addr + 1;
                 end if;
             else
                 h_count := 0;
                 if(v_count < (v_period - 1)) then
                     v_count := v_count + 1;
-                    if(cycle = 1) then
+                    -- the following statement causes a significant usage of LUTs
+                    if(v_count < (vga_v_pixels - 1)) and (cycle = 1) then
                         pixel_addr := pixel_addr + 1;
                     end if;
                 else
