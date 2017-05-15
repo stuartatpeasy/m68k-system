@@ -21,7 +21,7 @@
 -- -------  ------------------  -----  -----  -----
 --  25.175  0100  001  1010000   101    100    011
 --  40.000  0100  001  0111111   100    011    010
---  65.000  0100  001  1100111   100    010    010
+--  65.000  0100  001  1100111   100    011    010
 -- -------  ------------------  -----  -----  -----
 
 
@@ -82,36 +82,35 @@ architecture behaviour of fvga1 is
 --    constant vga_v_sync_pol : std_logic := '0';
 
     -- 1024x768 timings
-    constant vga_h_fp       : integer := 24;
-    constant vga_h_bp       : integer := 160;
-    constant vga_h_sync     : integer := 136;
-    constant vga_h_pixels   : integer := 1024;
-    constant vga_h_sync_pol : std_logic := '0';
+    constant vga_h_fp               : integer := 24;
+    constant vga_h_bp               : integer := 160;
+    constant vga_h_sync             : integer := 136;
+    constant vga_h_pixels           : integer := 1024;
+    constant vga_h_sync_pol         : std_logic := '0';
 
-    constant vga_v_fp       : integer := 3;
-    constant vga_v_bp       : integer := 29;
-    constant vga_v_sync     : integer := 6;
-    constant vga_v_pixels   : integer := 768;
-    constant vga_v_sync_pol : std_logic := '0';
+    constant vga_v_fp               : integer := 3;
+    constant vga_v_bp               : integer := 29;
+    constant vga_v_sync             : integer := 6;
+    constant vga_v_pixels           : integer := 768;
+    constant vga_v_sync_pol         : std_logic := '0';
 
-    constant h_period       : integer := vga_h_sync + vga_h_bp + vga_h_pixels + vga_h_fp;
-    constant v_period       : integer := vga_v_sync + vga_v_bp + vga_v_pixels + vga_v_fp;
+    constant device_id              : std_logic_vector(mem_d_width - 1 downto 0) := x"8400";
 
-    signal mem_d_r          : std_logic_vector(mem_d_width - 1 downto 0);   -- memory read bus
-    signal mem_d_w          : std_logic_vector(mem_d_width - 1 downto 0);   -- memory write bus
-    signal mem_we           : std_logic := '0';                             -- memory write enable
+    constant h_period               : integer := vga_h_sync + vga_h_bp + vga_h_pixels + vga_h_fp;
+    constant v_period               : integer := vga_v_sync + vga_v_bp + vga_v_pixels + vga_v_fp;
 
-    signal host_d_r         : std_logic_vector(host_d_width - 1 downto 0);  -- host data bus read
-    signal host_d_w         : std_logic_vector(host_d_width - 1 downto 0);  -- host data bus write
-    signal host_we          : std_logic := '0';                             -- enable write to host
+    signal mem_d_r                  : std_logic_vector(mem_d_width - 1 downto 0);   -- memory read bus
+    signal mem_d_w                  : std_logic_vector(mem_d_width - 1 downto 0);   -- memory write bus
+    signal mem_we                   : std_logic := '0';                             -- memory write enable
 
-    signal pixel_clk    : std_logic;
-    signal pixel_data   : std_logic_vector(15 downto 0);
-    signal pixel_next   : std_logic_vector(7 downto 0);
+    signal host_d_r                 : std_logic_vector(host_d_width - 1 downto 0);  -- host data bus read
+    signal host_d_w                 : std_logic_vector(host_d_width - 1 downto 0);  -- host data bus write
+    signal host_we                  : std_logic := '0';                             -- enable write to host
 
-    signal r            : std_logic_vector(2 downto 0);
-    signal g            : std_logic_vector(2 downto 0);
-    signal b            : std_logic_vector(1 downto 0);
+    signal host_cycle_in_progress   : std_logic := '0';
+
+    signal pixel_clk                : std_logic;
+    signal pixel                    : std_logic_vector(15 downto 0);
 begin
     pll_inst: entity work.pll
         generic map(
@@ -129,7 +128,7 @@ begin
 
             -- 1024x768
             pll_divf        => "1100111",
-            pll_divq        => "100"
+            pll_divq        => "010"
         )
         port map(
             REFERENCECLK    => SYSCLK,
@@ -160,9 +159,8 @@ begin
             ENABLE          => host_we
         );
 
-
     process(HOST_RESET, pixel_clk, HOST_nUCS, HOST_nLCS, HOST_nW, HOST_A)
-        variable cycle      : integer range 0 to 1 := 0;
+        variable state      : integer range 0 to 7 := 0;
         variable pixel_addr : std_logic_vector(18 downto 0) := (others => '0');    -- address of the next pair of pixels
         variable h_count    : integer range 0 to h_period - 1 := 0;
         variable v_count    : integer range 0 to v_period - 1 := 0;
@@ -193,119 +191,126 @@ begin
             VGA_nVSYNC  <= not vga_h_sync_pol;
             VGA_nHSYNC  <= not vga_v_sync_pol;
 
-            r           <= (others => '0');
-            g           <= (others => '0');
-            b           <= (others => '0');
-
             h_count     := 0;
             v_count     := 0;
 
-            pixel_data  <= (others => '0');
-            pixel_next  <= (others => '0');
+            pixel       <= (others => '0');
             pixel_addr  := 0;
-            cycle       := 0;
+            state       := 0;
+
+            host_cycle_in_progress <= '0';
         elsif(rising_edge(pixel_clk)) then
-            if(cycle = 0) then
-                -- Cycle 0: latch host read data, if a read cycle was requested; set the bus up to
-                -- read pixel data.
-                if(HOST_nUCS = '0') then
-                    mem_we                <= '0';
-                    host_we               <= '0';
-                    host_d_w(15 downto 8) <= mem_d_r(15 downto 8);
-                    host_d_w(7 downto 0)  <= (others => '0');
-                end if;
+            case state is
+                when 0 =>                       -- state 0: begin host cycle; scan out first pixel
+                    VGA_R <= pixel(15 downto 13);
+                    VGA_G <= pixel(12 downto 10);
+                    VGA_B <= pixel(9 downto 8);
 
-                if(HOST_nLCS = '0') then
-                    mem_we                <= '0';
-                    host_we               <= '0';
-                    host_d_w(15 downto 8) <= (others => '0');
-                    host_d_w(7 downto 0)  <= mem_d_r(7 downto 0);
-                end if;
+                    if((HOST_nUCS = '0') or (HOST_nLCS = '0')) then
+                        if(host_cycle_in_progress = '0') then
+                            host_cycle_in_progress <= '1';
 
-                -- Start a 16-bit read cycle to obtain pixel data
-                mem_we <= '0';
-                MEM_A(17 downto 0) <= pixel_addr(17 downto 0);
-
-                if(pixel_addr(18) = '1') then
-                    MEM_nCE1 <= '0';
-                    MEM_nCE0 <= '1';
-                else
-                    MEM_nCE1 <= '1';
-                    MEM_nCE0 <= '0';
-                end if;
-
-                MEM_nUB <= '0';
-                MEM_nLB <= '0';
-                MEM_nWE <= '1';
-                MEM_nOE <= '0';
-
-                -- Select the upper half of pixel_data
-                r <= pixel_data(15 downto 13);
-                g <= pixel_data(12 downto 10);
-                b <= pixel_data(9 downto 8);
-
-                pixel_next <= pixel_data(7 downto 0);
-
-                cycle := 1;
-            else
-                -- Cycle 1: latch pixel data; run a host memory cycle, if one has been requested.
-                pixel_data <= mem_d_r;
-
-                if((HOST_nUCS = '0') or (HOST_nLCS = '0')) then
-                    MEM_A(17 downto 0) <= HOST_A(18 downto 1);
-                    MEM_nWE <= HOST_nW;
-                    MEM_nOE <= not HOST_nW;
-                    MEM_nUB <= HOST_nUCS;
-                    MEM_nLB <= HOST_nLCS;
-
-                    if(HOST_A(19) = '1') then
-                        MEM_nCE1 <= '0';
-                        MEM_nCE0 <= '1';
-                    else
-                        MEM_nCE1 <= '1';
-                        MEM_nCE0 <= '0';
-                    end if;
-
-                    if(HOST_nW = '1') then
-                        -- Host read cycle
-                        mem_we   <= '0';
-                        host_we  <= '1';
-                        host_d_w <= mem_d_r;
-                    else
-                        -- Host write cycle
-                        mem_we  <= '1';
-                        host_we <= '0';
-                        mem_d_w <= host_d_r;
-                    end if;
-                else
-                    MEM_nCE1    <= '1';
-                    MEM_nCE0    <= '1';
-                    MEM_nUB     <= '1';
-                    MEM_nLB     <= '1';
-                    MEM_nWE     <= '1';
-                    MEM_nOE     <= '1';
+                            if(HOST_ID = '0') then          -- regular (non-ID) cycle
+                                MEM_A(17 downto 0) <= HOST_A(18 downto 1);
+                                MEM_nWE <= HOST_nW;
+                                MEM_nOE <= not HOST_nW;
+                                MEM_nUB <= HOST_nUCS;
+                                MEM_nLB <= HOST_nLCS;
     
-                    MEM_A       <= (others => '0');
-                    mem_we      <= '0';
-                    mem_d_w     <= (others => '0');
-                end if;
+                                if(HOST_A(19) = '1') then
+                                    MEM_nCE1 <= '0';
+                                    MEM_nCE0 <= '1';
+                                else
+                                    MEM_nCE1 <= '1';
+                                    MEM_nCE0 <= '0';
+                                end if;
 
-                r <= pixel_next(7 downto 5);
-                g <= pixel_next(4 downto 2);
-                b <= pixel_next(1 downto 0);
+                                if(HOST_nW = '0') then
+                                    mem_we  <= '1';         -- host write cycle
+                                    host_we <= '0';
+                                    mem_d_w <= host_d_r;
+                                else
+                                    mem_we  <= '0';         -- host read cycle
+                                    host_we <= '1';
+                                end if;
+                            else                            -- ID cycle
+                                MEM_nCE1    <= '1';
+                                MEM_nCE0    <= '1';
+                                MEM_nUB     <= '1';
+                                MEM_nLB     <= '1';
+                                MEM_nWE     <= '1';
+                                MEM_nOE     <= '1';
 
-                cycle := 0;
-            end if;
+                                MEM_A       <= (others => '0');
+                                mem_we      <= '0';
+                                mem_d_w     <= (others => '0');
+                                host_we     <= '1';
+                                host_d_w    <= device_id;
+                            end if;
+                        end if;
+                    else
+                        MEM_nCE1    <= '1';
+                        MEM_nCE0    <= '1';
+                        MEM_nUB     <= '1';
+                        MEM_nLB     <= '1';
+                        MEM_nWE     <= '1';
+                        MEM_nOE     <= '1';
+        
+                        MEM_A       <= (others => '0');
+                        mem_we      <= '0';
+                        mem_d_w     <= (others => '0');
+                        host_we     <= '0';
+                    end if;
+                    state := state + 1;
 
-            -- Scan out the pixel
-            if((h_count < vga_h_pixels) and (v_count < vga_v_pixels)) then
-                VGA_R <= r;
-                VGA_G <= g;
-                VGA_B <= b;
-            else
-                VGA_R <= (others => '0');
-                VGA_G <= (others => '0');
-                VGA_B <= (others => '0');
+                when 3 =>                       -- state 3: end host cycle
+                    if(((HOST_nUCS = '0') or (HOST_nLCS = '0'))
+                       and (host_cycle_in_progress = '1')
+                       and (HOST_nW = '1') 
+                       and (HOST_ID = '0')) then
+                        host_d_w <= mem_d_r;        -- host read cycle
+                    end if;
+                    state := state + 1;
+
+                when 4 =>                       -- state 4: begin pixel read cycle; scan out second pixel
+                    VGA_R <= pixel(7 downto 5);
+                    VGA_G <= pixel(4 downto 2);
+                    VGA_B <= pixel(1 downto 0);
+
+                    mem_we <= '0';
+
+                    if((h_count < vga_h_pixels) and (v_count < vga_v_pixels)) then
+                        MEM_A(17 downto 0) <= pixel_addr(17 downto 0);
+    
+                        if(pixel_addr(18) = '1') then
+                            MEM_nCE1 <= '0';
+                            MEM_nCE0 <= '1';
+                        else
+                            MEM_nCE1 <= '1';
+                            MEM_nCE0 <= '0';
+                        end if;
+    
+                        MEM_nUB <= '0';
+                        MEM_nLB <= '0';
+                        MEM_nWE <= '1';
+                        MEM_nOE <= '0';
+                    end if;
+                    state := state + 1;
+                
+                when 7 =>                      -- state 7: end pixel read cycle
+                    if((h_count < vga_h_pixels) and (v_count < vga_v_pixels)) then
+                        pixel <= mem_d_r;
+                    else
+                        pixel <= (others => '0');
+                    end if;
+                    state := 0;
+
+                when others =>
+                    state := state + 1;
+            end case;
+
+            if((HOST_nUCS = '1') and (HOST_nLCS = '1')) then
+                host_cycle_in_progress <= '0';
             end if;
 
             -- Generate horizontal sync
@@ -324,23 +329,28 @@ begin
                 VGA_nVSYNC <= not vga_v_sync_pol;
             end if;
 
-            if(h_count < (h_period - 1)) then
-                h_count := h_count + 1;
-                -- the following statement causes a significant usage of LUTs
-                if(h_count < (vga_h_pixels - 1)) and (cycle = 1) then
-                    pixel_addr := pixel_addr + 1;
-                end if;
-            else
-                h_count := 0;
-                if(v_count < (v_period - 1)) then
-                    v_count := v_count + 1;
-                    -- the following statement causes a significant usage of LUTs
-                    if(v_count < (vga_v_pixels - 1)) and (cycle = 1) then
+            -- Update h/v counts and pixel address
+            if((state = 0) or (state = 4)) then
+                if(h_count < vga_h_pixels) then
+                    h_count := h_count + 1;
+                    if(state = 0) then
                         pixel_addr := pixel_addr + 1;
                     end if;
+                elsif(h_count < h_period) then
+                    h_count := h_count + 1;
                 else
-                    v_count := 0;
-                    pixel_addr := 0;
+                    h_count := 0;
+                    if(v_count < vga_v_pixels) then
+                        v_count := v_count + 1;
+                        if(state = 0) then
+                            pixel_addr := pixel_addr + 1;
+                        end if;
+                    elsif(v_count < v_period) then
+                        v_count := v_count + 1;
+                    else
+                        v_count := 0;
+                        pixel_addr := 0;
+                    end if;
                 end if;
             end if;
         end if;
