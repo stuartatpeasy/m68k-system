@@ -101,11 +101,11 @@ architecture behaviour of fvga1 is
 
     signal mem_d_r                  : std_logic_vector(mem_d_width - 1 downto 0);   -- memory read bus
     signal mem_d_w                  : std_logic_vector(mem_d_width - 1 downto 0);   -- memory write bus
-    signal mem_we                   : std_logic := '0';                             -- memory write enable
+    signal mem_d_we                 : std_logic := '0';                             -- memory write enable
 
     signal host_d_r                 : std_logic_vector(host_d_width - 1 downto 0);  -- host data bus read
     signal host_d_w                 : std_logic_vector(host_d_width - 1 downto 0);  -- host data bus write
-    signal host_we                  : std_logic := '0';                             -- enable write to host
+    signal host_d_we                : std_logic := '0';                             -- enable write to host
 
     signal host_cycle_in_progress   : std_logic := '0';
 
@@ -145,7 +145,7 @@ begin
             PIN             => MEM_D,
             READ            => mem_d_r,
             WRITE           => mem_d_w,
-            ENABLE          => mem_we
+            ENABLE          => mem_d_we
         );
 
     host_d_inst: entity work.bidir_bus
@@ -156,7 +156,7 @@ begin
             PIN             => HOST_D,
             READ            => host_d_r,
             WRITE           => host_d_w,
-            ENABLE          => host_we
+            ENABLE          => host_d_we
         );
 
     process(HOST_RESET, pixel_clk, HOST_nUCS, HOST_nLCS, HOST_nW, HOST_A)
@@ -169,12 +169,12 @@ begin
             -- Negate host interrupt request
             HOST_nIRQ   <= '1';
 
-            host_we     <= '0';
+            host_d_we   <= '0';
             host_d_w    <= (others => '0');
 
             -- Deactivate local memory interface
             MEM_A       <= (others => '0');
-            mem_we      <= '0';
+            mem_d_we    <= '0';
             mem_d_w     <= (others => '0');
 
             MEM_nCE1    <= '1';
@@ -226,12 +226,12 @@ begin
                                 end if;
 
                                 if(HOST_nW = '0') then
-                                    mem_we  <= '1';         -- host write cycle
-                                    host_we <= '0';
-                                    mem_d_w <= host_d_r;
+                                    mem_d_we  <= '1';       -- host write cycle
+                                    host_d_we <= '0';
+                                    mem_d_w  <= host_d_r;
                                 else
-                                    mem_we  <= '0';         -- host read cycle
-                                    host_we <= '1';
+                                    mem_d_we  <= '0';       -- host read cycle
+                                    host_d_we <= '1';
                                 end if;
                             else                            -- ID cycle
                                 MEM_nCE1    <= '1';
@@ -242,9 +242,9 @@ begin
                                 MEM_nOE     <= '1';
 
                                 MEM_A       <= (others => '0');
-                                mem_we      <= '0';
+                                mem_d_we    <= '0';
                                 mem_d_w     <= (others => '0');
-                                host_we     <= '1';
+                                host_d_we   <= '1';
                                 host_d_w    <= device_id;
                             end if;
                         end if;
@@ -257,19 +257,32 @@ begin
                         MEM_nOE     <= '1';
         
                         MEM_A       <= (others => '0');
-                        mem_we      <= '0';
+                        mem_d_we    <= '0';
                         mem_d_w     <= (others => '0');
-                        host_we     <= '0';
+                        host_d_we   <= '0';
+
+                        host_cycle_in_progress <= '0';
                     end if;
                     state := state + 1;
 
                 when 3 =>                       -- state 3: end host cycle
-                    if(((HOST_nUCS = '0') or (HOST_nLCS = '0'))
-                       and (host_cycle_in_progress = '1')
-                       and (HOST_nW = '1') 
-                       and (HOST_ID = '0')) then
-                        host_d_w <= mem_d_r;        -- host read cycle
+                    if(host_cycle_in_progress = '1') then
+                        if((HOST_nW = '1') and (HOST_ID = '0')) then
+                            host_d_w <= mem_d_r;    -- host read cycle
+                        end if;
+
+                        MEM_nCE1 <= '1';
+                        MEM_nCE0 <= '1';
+                        MEM_nUB  <= '1';
+                        MEM_nLB  <= '1';
+                        MEM_nWE  <= '1';
+                        MEM_nOE  <= '1';
+
+                        MEM_A    <= (others => '0');
+                        mem_d_we <= '0';
+                        mem_d_w  <= (others => '0');
                     end if;
+
                     state := state + 1;
 
                 when 4 =>                       -- state 4: begin pixel read cycle; scan out second pixel
@@ -277,7 +290,7 @@ begin
                     VGA_G <= pixel(4 downto 2);
                     VGA_B <= pixel(1 downto 0);
 
-                    mem_we <= '0';
+                    mem_d_we <= '0';
 
                     if((h_count < vga_h_pixels) and (v_count < vga_v_pixels)) then
                         MEM_A(17 downto 0) <= pixel_addr(17 downto 0);
@@ -308,10 +321,6 @@ begin
                 when others =>
                     state := state + 1;
             end case;
-
-            if((HOST_nUCS = '1') and (HOST_nLCS = '1')) then
-                host_cycle_in_progress <= '0';
-            end if;
 
             -- Generate horizontal sync
             if((h_count >= (vga_h_pixels + vga_h_fp)) and
