@@ -2,9 +2,11 @@
 #-- Project file C:\Users\swallace\Documents\Electronics\Designs\m68k-system\hardware\Expansion cards\FVGA1 - VGA controller\\fvga1_hdl\fvga1_hdl_syn.prj
 #project files
 
-add_file -vhdl -lib work "fvga1.vhdl" 
 add_file -vhdl -lib work "pll.vhdl" 
 add_file -vhdl -lib work "bidir_bus.vhdl" 
+add_file -vhdl -lib work "dff.vhdl" 
+add_file -vhdl -lib work "mux.vhdl" 
+add_file -vhdl -lib work "fvga1.vhdl" 
 #implementation: "fvga1_hdl_Implmnt"
 impl -add fvga1_hdl_Implmnt -type fpga
 

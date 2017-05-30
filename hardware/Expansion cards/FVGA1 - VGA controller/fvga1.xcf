@@ -17,11 +17,12 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.hex</File>
-			<FileTime>05/08/17 18:05:10</FileTime>
+			<File>C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.bin</File>
+			<FileTime>05/29/17 20:05:17</FileTime>
 			<Operation>SPI Flash Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
+				<SVFProcessor>SVF Processor</SVFProcessor>
 				<AccessMode>SPI Flash Programming</AccessMode>
 			</Option>
 			<FPGALoader>
@@ -44,7 +45,7 @@
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
 						<IOState>HighZ</IOState>
-						<IOVectorData>êO</IOVectorData>
+						<SVFProcessor>SVF Processor</SVFProcessor>
 						<AccessMode>JTAG</AccessMode>
 					</Option>
 				</Device>
@@ -58,11 +59,11 @@
 					<IDCode>0x13</IDCode>
 					<Package>8-pin SOIC</Package>
 					<Operation>SPI Flash Erase,Program,Verify</Operation>
-					<File>C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.hex</File>
+					<File>C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.bin</File>
 					<AddressBase>0x00000000</AddressBase>
 					<EndAddress>0x00010000</EndAddress>
 					<DeviceSize>8</DeviceSize>
-					<DataSize>32298</DataSize>
+					<DataSize>32300</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
 					<ReInitialize value="FALSE"/>
 				</Device>
@@ -71,14 +72,15 @@
 				<Device>
 					<Pos>1</Pos>
 					<Name></Name>
-					<File>C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.hex</File>
+					<File>C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.bin</File>
 					<LocalChainList>
 						<LocalDevice index="-99"
 							name="Unknown"
-							file="C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.hex"/>
+							file="C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.bin"/>
 					</LocalChainList>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
+						<SVFProcessor>SVF Processor</SVFProcessor>
 					</Option>
 				</Device>
 			</FPGADevice>
@@ -93,7 +95,7 @@
 		<EndTAP>TLR</EndTAP>
 		<DisableCheckBoard value="TRUE"/>
 		<VerifyUsercode value="FALSE"/>
-		<TCKDelay>4</TCKDelay>
+		<TCKDelay>2</TCKDelay>
 	</ProjectOptions>
 	<CableOptions>
 		<CableName>USB</CableName>

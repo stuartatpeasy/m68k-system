@@ -4,7 +4,7 @@ Version=Lattice Semiconductor Corporation iCEcube - Release: 2016.02.27810 - Bui
 ProjectName=fvga1_hdl
 Vendor=SiliconBlue
 Synthesis=synplify
-ProjectVFiles=fvga1.vhdl=work,pll.vhdl=work,bidir_bus.vhdl
+ProjectVFiles=pll.vhdl=work,bidir_bus.vhdl=work,dff.vhdl,mux.vhdl,fvga1.vhdl=work
 ProjectCFiles=
 CurImplementation=fvga1_hdl_Implmnt
 Implementations=fvga1_hdl_Implmnt
