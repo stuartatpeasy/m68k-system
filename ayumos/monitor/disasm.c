@@ -672,6 +672,7 @@ int disassemble(const dis_machtype_t machtype, unsigned short **p, char *str)
             break;
 
         case 0xc:                   /* and / mulu / abcd / exg / muls */
+            /* FIXME - this case doesn't appear to handle all the instructions listed above */
             if(dest_mode == 5)
             {
                 if(ctx.src_mode == 0)           /* exg dx, dy */
@@ -681,7 +682,6 @@ int disassemble(const dis_machtype_t machtype, unsigned short **p, char *str)
                     ctx.a1[0] = ctx.a2[0] = 'd';
                     ctx.a1[1] = '0' + dest_reg;
                     ctx.a2[1] = '0' + ctx.src_reg;
-                    break;
                 }
                 else if(ctx.src_mode == 1)      /* exg ax, ay */
                 {
@@ -690,7 +690,6 @@ int disassemble(const dis_machtype_t machtype, unsigned short **p, char *str)
                     ctx.a1[0] = ctx.a2[0] = 'a';
                     ctx.a1[1] = '0' + dest_reg;
                     ctx.a2[1] = '0' + ctx.src_reg;
-                    break;
                 }
             }
             else if((dest_mode == 6) && (ctx.src_mode == 1))
@@ -702,6 +701,7 @@ int disassemble(const dis_machtype_t machtype, unsigned short **p, char *str)
                 ctx.a2[0] = 'a';
                 ctx.a2[1] = '0' + ctx.src_reg;
             }
+            break;
 
         case 0x8:                   /* or / divu / sbcd / divs */
             if((dest_mode == 3) || (dest_mode == 7))
@@ -1221,6 +1221,8 @@ static char *ea(const dis_machtype_t machtype, char *str, unsigned char mode, un
 
         case 3:     /* address register indirect with postincrement */
             str[4] = '+';
+            /* fall through */
+
         case 2:     /* address register indirect */
             str[0] = '(';
             str[1] = 'a';

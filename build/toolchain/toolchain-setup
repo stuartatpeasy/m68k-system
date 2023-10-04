@@ -1,9 +1,10 @@
 Setting up a toolchain to build ayumos for the m68k architecture
 ================================================================
 
-Stuart Wallace, 2011-2016.
+Stuart Wallace, 2011-2017.
 
-Last updated 2017-04-11: updated to binutils v2.28.
+Last updated 2017-07-08: updated to gcc v7.1.0.
+Updated 2017-04-11: updated to binutils v2.28.
 Updated 2017-01-28: updated to gcc v6.3.
 Updated 2016-08-30: updated to gcc v6.2.
 Updated 2016-01-29: updated to binutils v2.27.
@@ -71,13 +72,13 @@ Building the toolchain
 	$ cd ..
 
 
-2. build and install gcc-6.3.0
+2. build and install gcc-7.1.0
 
-	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-6.3.0/gcc-6.3.0.tar.bz2
-	$ tar xf gcc-6.3.0.tar.bz2
+	$ wget http://www.mirrorservice.org/sites/ftp.gnu.org/gnu/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2
+	$ tar xf gcc-7.1.0.tar.bz2
 	$ mkdir gcc-build
 	$ cd gcc-build
-	$ ../gcc-6.3.0/configure --prefix=/opt/m68k --target=m68k-elf --enable-languages=c,c++
+	$ ../gcc-7.1.0/configure --prefix=/opt/m68k --target=m68k-elf --enable-languages=c,c++
 	$ make -j$(nproc) all-gcc all-target-libgcc
 	$ make install-gcc install-target-libgcc
 	$ cd ..
