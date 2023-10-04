@@ -18,7 +18,7 @@
 				<BScanVal>0</BScanVal>
 			</Bypass>
 			<File>C:/Users/swallace/Documents/Electronics/Designs/m68k-system/hardware/Expansion cards/FVGA1 - VGA controller/fvga1_hdl/fvga1_hdl_Implmnt/sbt/outputs/bitmap/fvga1_bitmap.bin</File>
-			<FileTime>05/29/17 20:05:17</FileTime>
+			<FileTime>05/30/17 20:37:02</FileTime>
 			<Operation>SPI Flash Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>

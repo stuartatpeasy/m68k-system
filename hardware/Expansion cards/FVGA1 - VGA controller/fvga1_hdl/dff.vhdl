@@ -12,7 +12,7 @@ use ieee.numeric_std.all;
 --
 entity dff_oe_areset is
     generic(
-        width       : integer   := 8;
+        width       : integer   := 1;
         pol_clk     : std_logic := '1';
         pol_oe      : std_logic := '1';
         pol_reset   : std_logic := '1'
@@ -31,7 +31,11 @@ end dff_oe_areset;
 architecture behaviour of dff_oe_areset is
     signal q_int: std_logic_vector(width - 1 downto 0);
 begin
-    process(CLK, OE, RESET)
+    Q <= q_int when ((pol_oe = '1') and (OE = '1')) or
+                    ((pol_oe = '0') and (OE = '0'))
+         else (others => 'Z');
+
+    process(CLK, RESET)
     begin
         if(((pol_reset = '1') and (RESET = '1')) or
            ((pol_reset = '0') and (RESET = '0'))) then
@@ -39,13 +43,6 @@ begin
         elsif(((pol_clk = '1') and rising_edge(CLK)) or
               ((pol_clk = '0') and falling_edge(CLK))) then
             q_int <= D;
-        end if;
-
-        if(((pol_oe = '1') and (OE = '1')) or
-           ((pol_oe = '0') and (OE = '0'))) then
-            Q <= q_int;
-        else
-            Q <= (others => 'Z');
         end if;
     end process;
 end behaviour;

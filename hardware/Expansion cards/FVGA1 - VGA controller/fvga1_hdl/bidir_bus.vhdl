@@ -26,13 +26,21 @@ end bidir_bus;
 
 architecture behaviour of bidir_bus is
 begin
-    process(ENABLE, WRITE)
-    begin
-        if(ENABLE = '1') then
-            PIN <= WRITE;
-        else
-            PIN <= (others => 'Z');
-        end if;
-        READ <= PIN;
-    end process;
+    PIN <= WRITE           when ENABLE = '1' else
+           (others => 'Z') when ENABLE = '0' else
+           (others => 'X');
+
+--    PIN <= (others => 'H');     -- pullup
+
+    READ <= TO_X01(PIN);
+
+--    process(ENABLE, WRITE)
+--    begin
+--        if(ENABLE = '1') then
+--            PIN <= WRITE;
+--        else
+--            PIN <= (others => 'Z');
+--        end if;
+--        READ <= PIN;
+--    end process;
 end behaviour;

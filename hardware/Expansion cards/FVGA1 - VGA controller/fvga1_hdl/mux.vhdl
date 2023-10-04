@@ -10,7 +10,7 @@ use ieee.numeric_std.all;
 
 entity mux_2ch_oe is
     generic(
-        width       : integer := 8
+        width       : integer := 1
     );
 
     port(
@@ -25,17 +25,8 @@ end mux_2ch_oe;
 
 architecture behaviour of mux_2ch_oe is
 begin
-    process(SEL, OE, A, B)
-    begin
-        if(OE = '1') then
-            if(SEL = '1') then
-                Q <= B;
-            else
-                Q <= A;
-            end if;
-        else
-            Q <= (others => 'Z');
-        end if;
-    end process;
+    Q <= A when ((SEL = '0') and (OE = '1')) else
+         B when ((SEL = '1') and (OE = '1')) else
+         (others => 'Z');
 end behaviour;
 
